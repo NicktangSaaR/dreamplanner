@@ -20,6 +20,9 @@ export function useCounselorStudents() {
     queryFn: async () => {
       console.log("Fetching counselor's students");
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       const { data: relationships, error: relationshipsError } = await supabase
         .from("counselor_student_relationships")
         .select(`
@@ -32,7 +35,7 @@ export function useCounselorStudents() {
             interested_majors
           )
         `)
-        .eq('counselor_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('counselor_id', user.id);
 
       if (relationshipsError) {
         console.error("Error fetching relationships:", relationshipsError);
