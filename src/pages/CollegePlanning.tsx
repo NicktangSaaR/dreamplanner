@@ -5,10 +5,11 @@ import ExtracurricularSection from "@/components/college-planning/Extracurricula
 import AcademicsSection from "@/components/college-planning/AcademicsSection";
 import NotesSection from "@/components/college-planning/NotesSection";
 import TodoSection from "@/components/college-planning/TodoSection";
-import ProfileSection from "@/components/college-planning/ProfileSection";
 import SharedFoldersSection from "@/components/college-planning/SharedFoldersSection";
 import { BookOpen, Activity, StickyNote, GraduationCap, ListTodo, User, CheckCircle2, Star, Folder } from "lucide-react";
 import { useTodos } from "@/hooks/useTodos";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 interface Course {
   id: string;
@@ -38,7 +39,6 @@ export default function CollegePlanning() {
   const [notes, setNotes] = useState<Note[]>([]);
   const { todos } = useTodos();
 
-  // Calculate GPA from courses
   const calculateGPA = (courses: Course[]) => {
     const gradePoints: { [key: string]: number } = {
       'A': 4.0, 'A-': 3.7,
@@ -83,9 +83,17 @@ export default function CollegePlanning() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <div className="flex items-center gap-2">
-        <GraduationCap className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold">College Planning Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <GraduationCap className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold">College Planning Dashboard</h1>
+        </div>
+        <Link to="/profile">
+          <Button variant="outline" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            View Profile
+          </Button>
+        </Link>
       </div>
 
       {/* Dashboard Summary */}
@@ -167,7 +175,7 @@ export default function CollegePlanning() {
       </div>
 
       <Tabs defaultValue="academics" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger 
             value="academics" 
             className="flex items-center gap-2 data-[state=active]:bg-[#F2FCE2]"
@@ -203,13 +211,6 @@ export default function CollegePlanning() {
             <Folder className="h-4 w-4" />
             Shared Folders
           </TabsTrigger>
-          <TabsTrigger 
-            value="profile" 
-            className="flex items-center gap-2 data-[state=active]:bg-[#F1F0FB]"
-          >
-            <User className="h-4 w-4" />
-            Profile
-          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="academics" className="bg-[#D3E4FD] p-4 rounded-lg">
@@ -230,10 +231,6 @@ export default function CollegePlanning() {
 
         <TabsContent value="shared-folders" className="bg-[#D3E4FD] p-4 rounded-lg">
           <SharedFoldersSection />
-        </TabsContent>
-
-        <TabsContent value="profile" className="bg-[#D3E4FD] p-4 rounded-lg">
-          <ProfileSection />
         </TabsContent>
       </Tabs>
     </div>
