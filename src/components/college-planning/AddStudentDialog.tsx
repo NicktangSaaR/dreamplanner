@@ -15,25 +15,22 @@ interface AddStudentDialogProps {
 export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStudentDialogProps) {
   const [email, setEmail] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
   const handleAddStudent = async () => {
     try {
       setIsAdding(true);
-      console.log("Adding student with email:", email);
+      console.log("Looking for student with email:", email);
 
-      const { data: { user } } = await supabase.auth.signInWithOtp({ email });
-      if (!user) {
-        throw new Error("No user found");
-      }
-
-      const { data: userProfile, error: profileError } = await supabase
+      // First find the student's profile using their email
+      const { data: userProfiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('id', user.id)
+        .select('id, user_type')
+        .eq('id', (await supabase.auth.admin.listUsers()).data.users.find(u => u.email === email)?.id)
         .single();
 
-      if (profileError || !userProfile) {
+      if (profileError || !userProfiles) {
         console.error("Error finding student profile:", profileError);
         toast({
           title: "Error",
@@ -43,18 +40,45 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         return;
       }
 
+      if (userProfiles.user_type !== 'student') {
+        toast({
+          title: "Error",
+          description: "The provided email does not belong to a student account.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if relationship already exists
+      const { data: existingRelationship } = await supabase
+        .from('counselor_student_relationships')
+        .select('id')
+        .eq('counselor_id', counselorId)
+        .eq('student_id', userProfiles.id)
+        .single();
+
+      if (existingRelationship) {
+        toast({
+          title: "Error",
+          description: "This student is already assigned to you.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create the relationship
       const { error: relationshipError } = await supabase
         .from('counselor_student_relationships')
         .insert({
           counselor_id: counselorId,
-          student_id: userProfile.id,
+          student_id: userProfiles.id,
         });
 
       if (relationshipError) {
         console.error("Error creating relationship:", relationshipError);
         toast({
           title: "Error",
-          description: "Failed to add student. They might already be assigned to you.",
+          description: "Failed to add student. Please try again.",
           variant: "destructive",
         });
         return;
@@ -67,11 +91,12 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
       
       onStudentAdded();
       setEmail("");
+      setOpen(false);
     } catch (error) {
       console.error("Error adding student:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -80,7 +105,7 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <UserPlus className="mr-2 h-4 w-4" />
