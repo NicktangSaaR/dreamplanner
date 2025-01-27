@@ -1,6 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface StudentProfile {
+  id: string;
+  full_name: string | null;
+  grade: string | null;
+  school: string | null;
+}
+
+interface CounselorStudentRelationship {
+  student_id: string;
+  students: StudentProfile | null;
+}
+
 export function useCounselorStudents() {
   return useQuery({
     queryKey: ["counselor-students"],
@@ -11,7 +23,7 @@ export function useCounselorStudents() {
         .from("counselor_student_relationships")
         .select(`
           student_id,
-          students:profiles(
+          students:profiles!inner(
             id,
             full_name,
             grade,
@@ -26,7 +38,7 @@ export function useCounselorStudents() {
       }
 
       console.log("Fetched relationships:", relationships);
-      return relationships;
+      return relationships as CounselorStudentRelationship[];
     },
   });
 }
