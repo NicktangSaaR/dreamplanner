@@ -6,6 +6,14 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, UserPlus, GraduationCap, School, BookOpen } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+interface StudentProfile {
+  id: string;
+  full_name: string | null;
+  grade: string | null;
+  school: string | null;
+  interested_majors: string[] | null;
+}
+
 export default function CounselorView() {
   const { profile } = useProfile();
   const { data: students, isLoading } = useCounselorStudents();

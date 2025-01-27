@@ -73,6 +73,7 @@ export default function StudentDashboard() {
       />
 
       <DashboardTabs
+        courses={courses}
         onCoursesChange={setCourses}
         onActivitiesChange={setActivities}
         onNotesChange={setNotes}
