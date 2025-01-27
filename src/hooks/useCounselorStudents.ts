@@ -11,13 +11,14 @@ export function useCounselorStudents() {
         .from("counselor_student_relationships")
         .select(`
           student_id,
-          students:profiles!counselor_student_relationships_student_id_fkey(
+          students:profiles(
             id,
             full_name,
             grade,
             school
           )
-        `);
+        `)
+        .eq('counselor_id', (await supabase.auth.getUser()).data.user?.id);
 
       if (relationshipsError) {
         console.error("Error fetching relationships:", relationshipsError);

@@ -33,15 +33,15 @@ export default function CounselorView() {
           {students?.map((relationship) => (
             <Card key={relationship.student_id}>
               <CardHeader>
-                <CardTitle>{relationship.students.full_name}</CardTitle>
+                <CardTitle>{relationship.students?.full_name}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    Grade: {relationship.students.grade || 'Not set'}
+                    Grade: {relationship.students?.grade || 'Not set'}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    School: {relationship.students.school || 'Not set'}
+                    School: {relationship.students?.school || 'Not set'}
                   </p>
                   <Button 
                     className="w-full"
