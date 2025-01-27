@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, UserPlus, GraduationCap, School, BookOpen } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-// This interface should match the profiles table structure from Supabase
+// Updated interface to match the profiles table structure from Supabase
 interface StudentProfile {
   id: string;
   full_name: string | null;
@@ -16,6 +16,12 @@ interface StudentProfile {
   user_type: string;
   created_at: string;
   updated_at: string;
+  social_media: {
+    instagram?: string;
+    linkedin?: string;
+    twitter?: string;
+  } | null;
+  personal_website: string | null;
 }
 
 export default function CounselorView() {
