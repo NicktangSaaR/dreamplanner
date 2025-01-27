@@ -112,9 +112,11 @@ export type Database = {
       }
       profiles: {
         Row: {
+          background_intro: string | null
           created_at: string
           full_name: string | null
           grade: string | null
+          graduation_school: string | null
           id: string
           interested_majors: string[] | null
           personal_website: string | null
@@ -124,9 +126,11 @@ export type Database = {
           user_type: string
         }
         Insert: {
+          background_intro?: string | null
           created_at?: string
           full_name?: string | null
           grade?: string | null
+          graduation_school?: string | null
           id: string
           interested_majors?: string[] | null
           personal_website?: string | null
@@ -136,9 +140,11 @@ export type Database = {
           user_type: string
         }
         Update: {
+          background_intro?: string | null
           created_at?: string
           full_name?: string | null
           grade?: string | null
+          graduation_school?: string | null
           id?: string
           interested_majors?: string[] | null
           personal_website?: string | null

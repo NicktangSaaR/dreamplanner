@@ -8,12 +8,15 @@ import { Edit, Globe, Link } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ProfileFormData {
   full_name: string;
   grade: string;
   school: string;
   interested_majors: string;
+  graduation_school: string;
+  background_intro: string;
   social_media: {
     instagram: string;
     linkedin: string;
@@ -32,6 +35,8 @@ export default function ProfileSection() {
       grade: profile?.grade || "",
       school: profile?.school || "",
       interested_majors: profile?.interested_majors?.join(", ") || "",
+      graduation_school: profile?.graduation_school || "",
+      background_intro: profile?.background_intro || "",
       social_media: {
         instagram: profile?.social_media?.instagram || "",
         linkedin: profile?.social_media?.linkedin || "",
@@ -47,17 +52,21 @@ export default function ProfileSection() {
       grade: data.grade,
       school: data.school,
       interested_majors: data.interested_majors.split(",").map(m => m.trim()),
+      graduation_school: data.graduation_school,
+      background_intro: data.background_intro,
       social_media: data.social_media,
       personal_website: data.personal_website,
     });
     setIsEditing(false);
   };
 
+  const isCounselor = profile?.user_type === 'counselor';
+
   return (
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Student Profile</CardTitle>
+          <CardTitle>{isCounselor ? "Counselor Profile" : "Student Profile"}</CardTitle>
           <Button onClick={() => setIsEditing(true)} size="sm">
             <Edit className="h-4 w-4 mr-2" />
             Edit Profile
@@ -69,18 +78,33 @@ export default function ProfileSection() {
               <Label>Name</Label>
               <p className="text-sm">{profile?.full_name || "Not set"}</p>
             </div>
-            <div>
-              <Label>Grade</Label>
-              <p className="text-sm">{profile?.grade || "Not set"}</p>
-            </div>
-            <div>
-              <Label>School</Label>
-              <p className="text-sm">{profile?.school || "Not set"}</p>
-            </div>
-            <div>
-              <Label>Interested Majors</Label>
-              <p className="text-sm">{profile?.interested_majors?.join(", ") || "Not set"}</p>
-            </div>
+            {isCounselor ? (
+              <>
+                <div>
+                  <Label>Graduation School</Label>
+                  <p className="text-sm">{profile?.graduation_school || "Not set"}</p>
+                </div>
+                <div className="col-span-2">
+                  <Label>Background</Label>
+                  <p className="text-sm whitespace-pre-wrap">{profile?.background_intro || "Not set"}</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <Label>Grade</Label>
+                  <p className="text-sm">{profile?.grade || "Not set"}</p>
+                </div>
+                <div>
+                  <Label>School</Label>
+                  <p className="text-sm">{profile?.school || "Not set"}</p>
+                </div>
+                <div>
+                  <Label>Interested Majors</Label>
+                  <p className="text-sm">{profile?.interested_majors?.join(", ") || "Not set"}</p>
+                </div>
+              </>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Social Media</Label>
@@ -133,42 +157,73 @@ export default function ProfileSection() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="grade"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Grade</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="school"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>School</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="interested_majors"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Interested Majors (comma-separated)</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              {isCounselor ? (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="graduation_school"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Graduation School</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="background_intro"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Background Introduction</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </>
+              ) : (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="grade"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Grade</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="school"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>School</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="interested_majors"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Interested Majors (comma-separated)</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
               <FormField
                 control={form.control}
                 name="social_media.instagram"
