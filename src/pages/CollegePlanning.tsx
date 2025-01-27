@@ -194,27 +194,27 @@ export default function CollegePlanning() {
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="academics">
+        <TabsContent value="academics" className="bg-[#F2FCE2] p-4 rounded-lg">
           <AcademicsSection onCoursesChange={setCourses} />
         </TabsContent>
         
-        <TabsContent value="extracurricular">
+        <TabsContent value="extracurricular" className="bg-[#FEC6A1] p-4 rounded-lg">
           <ExtracurricularSection onActivitiesChange={setActivities} />
         </TabsContent>
         
-        <TabsContent value="notes">
+        <TabsContent value="notes" className="bg-[#E5DEFF] p-4 rounded-lg">
           <NotesSection onNotesChange={setNotes} />
         </TabsContent>
 
-        <TabsContent value="todos">
+        <TabsContent value="todos" className="bg-[#FFDEE2] p-4 rounded-lg">
           <TodoSection />
         </TabsContent>
 
-        <TabsContent value="shared-folders">
+        <TabsContent value="shared-folders" className="bg-[#D3E4FD] p-4 rounded-lg">
           <SharedFoldersSection />
         </TabsContent>
 
-        <TabsContent value="profile">
+        <TabsContent value="profile" className="bg-[#F1F0FB] p-4 rounded-lg">
           <ProfileSection />
         </TabsContent>
       </Tabs>
