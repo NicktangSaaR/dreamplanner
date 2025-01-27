@@ -12,6 +12,11 @@ interface Note {
   stars?: number;
 }
 
+interface NoteFormData {
+  title: string;
+  content: string;
+}
+
 export function useNotes() {
   const [notes, setNotes] = useState<Note[]>([]);
   const { toast } = useToast();
@@ -36,6 +41,59 @@ export function useNotes() {
       toast({
         title: "Error",
         description: "Failed to load notes",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const createNote = async (data: NoteFormData) => {
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .insert([{
+          title: data.title,
+          content: data.content,
+        }]);
+
+      if (error) throw error;
+
+      fetchNotes();
+      toast({
+        title: "Success",
+        description: "Note created successfully",
+      });
+    } catch (error) {
+      console.error('Error creating note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create note",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateNote = async (note: Note) => {
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .update({
+          title: note.title,
+          content: note.content,
+        })
+        .eq('id', note.id);
+
+      if (error) throw error;
+
+      fetchNotes();
+      toast({
+        title: "Success",
+        description: "Note updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update note",
         variant: "destructive",
       });
     }
@@ -104,6 +162,8 @@ export function useNotes() {
 
   return {
     notes,
+    createNote,
+    updateNote,
     handleTogglePin,
     handleToggleStar,
   };

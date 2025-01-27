@@ -1,4 +1,4 @@
-import { Pin, Star } from "lucide-react";
+import { Pin, Star, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -16,9 +16,10 @@ interface NoteCardProps {
   note: Note;
   onTogglePin: (note: Note) => void;
   onToggleStar: (note: Note) => void;
+  onEdit: (note: Note) => void;
 }
 
-export default function NoteCard({ note, onTogglePin, onToggleStar }: NoteCardProps) {
+export default function NoteCard({ note, onTogglePin, onToggleStar, onEdit }: NoteCardProps) {
   return (
     <Card className={note.is_pinned ? "border-primary" : ""}>
       <CardContent className="pt-6">
@@ -39,6 +40,13 @@ export default function NoteCard({ note, onTogglePin, onToggleStar }: NoteCardPr
             </div>
           </div>
           <div className="flex space-x-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(note)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
