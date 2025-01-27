@@ -1,6 +1,8 @@
 import { Activity, BookOpen, Folder, ListTodo, StickyNote } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AcademicsSection from "./AcademicsSection";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import ExtracurricularSection from "./ExtracurricularSection";
 import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
@@ -17,6 +19,8 @@ export default function DashboardTabs({
   onActivitiesChange, 
   onNotesChange 
 }: DashboardTabsProps) {
+  const navigate = useNavigate();
+
   return (
     <Tabs defaultValue="academics" className="w-full">
       <TabsList className="grid w-full grid-cols-5">
@@ -58,7 +62,22 @@ export default function DashboardTabs({
       </TabsList>
       
       <TabsContent value="academics" className="bg-[#D3E4FD] p-4 rounded-lg">
-        <AcademicsSection onCoursesChange={onCoursesChange} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Academic Records</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <p className="text-muted-foreground">
+              Track your academic progress, grades, and course history.
+            </p>
+            <Button 
+              className="w-full"
+              onClick={() => navigate('/academics')}
+            >
+              View Full Academic Records
+            </Button>
+          </CardContent>
+        </Card>
       </TabsContent>
       
       <TabsContent value="extracurricular" className="bg-[#D3E4FD] p-4 rounded-lg">
