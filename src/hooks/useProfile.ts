@@ -15,6 +15,7 @@ interface Profile {
     twitter?: string;
   } | null;
   personal_website: string | null;
+  user_type: string;  // Added this field
 }
 
 export function useProfile() {
@@ -33,7 +34,7 @@ export function useProfile() {
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .maybeSingle(); // Changed from .single() to .maybeSingle()
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching profile:", error);
@@ -55,8 +56,9 @@ export function useProfile() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .upsert({ // Changed from update to upsert
+        .upsert({
           id: user.id,
+          user_type: 'student', // Added this field with default value
           ...updatedProfile
         })
         .select()
