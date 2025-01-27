@@ -16,8 +16,9 @@ interface Profile {
   } | null;
   personal_website: string | null;
   user_type: string;
-  graduation_school: string | null;  // Added this field
-  background_intro: string | null;   // Added this field
+  graduation_school: string | null;
+  background_intro: string | null;
+  is_admin: boolean | null;  // Added this field
 }
 
 export function useProfile() {
