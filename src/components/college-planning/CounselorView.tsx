@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, UserPlus, GraduationCap, School, BookOpen } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-// Updated interface to match the profiles table structure from Supabase
 interface StudentProfile {
   id: string;
   full_name: string | null;
