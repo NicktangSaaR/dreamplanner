@@ -212,19 +212,19 @@ export default function CollegePlanning() {
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="academics" className="bg-[#F2FCE2] p-4 rounded-lg">
+        <TabsContent value="academics" className="bg-[#D3E4FD] p-4 rounded-lg">
           <AcademicsSection onCoursesChange={setCourses} />
         </TabsContent>
         
-        <TabsContent value="extracurricular" className="bg-[#FEC6A1] p-4 rounded-lg">
+        <TabsContent value="extracurricular" className="bg-[#D3E4FD] p-4 rounded-lg">
           <ExtracurricularSection onActivitiesChange={setActivities} />
         </TabsContent>
         
-        <TabsContent value="notes" className="bg-[#E5DEFF] p-4 rounded-lg">
+        <TabsContent value="notes" className="bg-[#D3E4FD] p-4 rounded-lg">
           <NotesSection onNotesChange={setNotes} />
         </TabsContent>
 
-        <TabsContent value="todos" className="bg-[#FFDEE2] p-4 rounded-lg">
+        <TabsContent value="todos" className="bg-[#D3E4FD] p-4 rounded-lg">
           <TodoSection />
         </TabsContent>
 
@@ -232,7 +232,7 @@ export default function CollegePlanning() {
           <SharedFoldersSection />
         </TabsContent>
 
-        <TabsContent value="profile" className="bg-[#F1F0FB] p-4 rounded-lg">
+        <TabsContent value="profile" className="bg-[#D3E4FD] p-4 rounded-lg">
           <ProfileSection />
         </TabsContent>
       </Tabs>
