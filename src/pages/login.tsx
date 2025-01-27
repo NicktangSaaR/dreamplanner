@@ -22,29 +22,31 @@ export default function Login() {
     console.log("Attempting login with:", { ...formData, password: "REDACTED" });
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
+      const { data: { session }, error } = await supabase.auth.signInWithPassword({
+        email: formData.email.trim(),
         password: formData.password,
       });
 
       if (error) {
-        console.error("Login error:", error.message);
+        console.error("Login error details:", error);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: error.message,
+          title: "Login Failed",
+          description: error.message || "Please check your credentials and try again",
         });
         return;
       }
 
-      console.log("Login successful:", data);
-      toast({
-        title: "Success!",
-        description: "You have been logged in successfully.",
-      });
-      navigate("/");
+      if (session) {
+        console.log("Login successful, session:", session);
+        toast({
+          title: "Success!",
+          description: "You have been logged in successfully.",
+        });
+        navigate("/");
+      }
     } catch (error) {
-      console.error("Unexpected error:", error);
+      console.error("Unexpected error during login:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -72,6 +74,7 @@ export default function Login() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="Enter your email"
               />
             </div>
 
@@ -83,6 +86,7 @@ export default function Login() {
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="Enter your password"
               />
             </div>
 
