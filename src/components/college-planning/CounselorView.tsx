@@ -3,7 +3,8 @@ import { useCounselorStudents } from "@/hooks/useCounselorStudents";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, UserPlus, GraduationCap, School, BookOpen } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function CounselorView() {
   const { profile } = useProfile();
@@ -29,40 +30,55 @@ export default function CounselorView() {
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {students?.map((relationship) => (
-            <Card key={relationship.student_id}>
-              <CardHeader>
-                <CardTitle>{relationship.students?.full_name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Grade: {relationship.students?.grade || 'Not set'}
+        <ScrollArea className="h-[600px]">
+          <div className="grid grid-cols-1 gap-4">
+            {students?.map((relationship) => (
+              <Card 
+                key={relationship.student_id}
+                className="hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => navigate(`/student/${relationship.student_id}/college-planning`)}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>{relationship.students?.full_name}</span>
+                    <Button variant="ghost">View Dashboard</Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Grade: {relationship.students?.grade || 'Not set'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <School className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        School: {relationship.students?.school || 'Not set'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Interested in: {relationship.students?.interested_majors?.join(', ') || 'Not set'}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {students?.length === 0 && (
+              <Card>
+                <CardContent className="p-6">
+                  <p className="text-center text-muted-foreground">
+                    No students found. Add students to get started.
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    School: {relationship.students?.school || 'Not set'}
-                  </p>
-                  <Button 
-                    className="w-full"
-                    onClick={() => navigate(`/student/${relationship.student_id}/college-planning`)}
-                  >
-                    View Dashboard
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {students?.length === 0 && (
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-center text-muted-foreground">
-                  No students found. Add students to get started.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </ScrollArea>
       )}
     </div>
   );
