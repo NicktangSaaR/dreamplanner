@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExtracurricularSection from "@/components/college-planning/ExtracurricularSection";
@@ -6,7 +6,67 @@ import AcademicsSection from "@/components/college-planning/AcademicsSection";
 import NotesSection from "@/components/college-planning/NotesSection";
 import { BookOpen, Activity, StickyNote, GraduationCap } from "lucide-react";
 
+// Create interfaces for our data types
+interface Course {
+  id: string;
+  name: string;
+  grade: string;
+  semester: string;
+}
+
+interface ActivityType {
+  id: string;
+  name: string;
+  role: string;
+  description: string;
+  timeCommitment: string;
+}
+
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  date: string;
+}
+
 export default function CollegePlanning() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [activities, setActivities] = useState<ActivityType[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
+
+  // Calculate GPA from courses
+  const calculateGPA = (courses: Course[]) => {
+    const gradePoints: { [key: string]: number } = {
+      'A': 4.0, 'A-': 3.7,
+      'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+      'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+      'D+': 1.3, 'D': 1.0, 'F': 0.0
+    };
+
+    const validGrades = courses.filter(course => course.grade in gradePoints);
+    if (validGrades.length === 0) return 0;
+
+    const totalPoints = validGrades.reduce((sum, course) => 
+      sum + (gradePoints[course.grade] || 0), 0);
+    return (totalPoints / validGrades.length).toFixed(2);
+  };
+
+  // Calculate total weekly hours from activities
+  const calculateWeeklyHours = (activities: ActivityType[]) => {
+    return activities.reduce((total, activity) => {
+      const hours = activity.timeCommitment.match(/(\d+)\s*hours?\/week/i);
+      return total + (hours ? parseInt(hours[1]) : 0);
+    }, 0);
+  };
+
+  // Get the last update date from notes
+  const getLastUpdateDate = (notes: Note[]) => {
+    if (notes.length === 0) return "No updates";
+    const dates = notes.map(note => new Date(note.date));
+    const latestDate = new Date(Math.max(...dates.map(date => date.getTime())));
+    return latestDate.toLocaleDateString();
+  };
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex items-center gap-2">
@@ -26,8 +86,10 @@ export default function CollegePlanning() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Current GPA: 3.8</div>
-            <p className="text-sm text-muted-foreground">8 courses this semester</p>
+            <div className="text-2xl font-bold">GPA: {calculateGPA(courses)}</div>
+            <p className="text-sm text-muted-foreground">
+              {courses.length} course{courses.length !== 1 ? 's' : ''} this semester
+            </p>
           </CardContent>
         </Card>
 
@@ -41,8 +103,10 @@ export default function CollegePlanning() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5 Activities</div>
-            <p className="text-sm text-muted-foreground">12 hours/week total</p>
+            <div className="text-2xl font-bold">{activities.length} Activities</div>
+            <p className="text-sm text-muted-foreground">
+              {calculateWeeklyHours(activities)} hours/week total
+            </p>
           </CardContent>
         </Card>
 
@@ -56,8 +120,10 @@ export default function CollegePlanning() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">15 Notes</div>
-            <p className="text-sm text-muted-foreground">Last updated today</p>
+            <div className="text-2xl font-bold">{notes.length} Notes</div>
+            <p className="text-sm text-muted-foreground">
+              Last updated: {getLastUpdateDate(notes)}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -79,15 +145,15 @@ export default function CollegePlanning() {
         </TabsList>
         
         <TabsContent value="academics">
-          <AcademicsSection />
+          <AcademicsSection onCoursesChange={setCourses} />
         </TabsContent>
         
         <TabsContent value="extracurricular">
-          <ExtracurricularSection />
+          <ExtracurricularSection onActivitiesChange={setActivities} />
         </TabsContent>
         
         <TabsContent value="notes">
-          <NotesSection />
+          <NotesSection onNotesChange={setNotes} />
         </TabsContent>
       </Tabs>
     </div>

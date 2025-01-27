@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,11 @@ interface Activity {
   timeCommitment: string;
 }
 
-export default function ExtracurricularSection() {
+interface ExtracurricularSectionProps {
+  onActivitiesChange?: (activities: Activity[]) => void;
+}
+
+export default function ExtracurricularSection({ onActivitiesChange }: ExtracurricularSectionProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [newActivity, setNewActivity] = useState({
@@ -24,6 +28,10 @@ export default function ExtracurricularSection() {
     description: "",
     timeCommitment: "",
   });
+
+  useEffect(() => {
+    onActivitiesChange?.(activities);
+  }, [activities, onActivitiesChange]);
 
   const handleAddActivity = () => {
     if (newActivity.name && newActivity.role) {

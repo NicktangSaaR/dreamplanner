@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +14,21 @@ interface Note {
   date: string;
 }
 
-export default function NotesSection() {
+interface NotesSectionProps {
+  onNotesChange?: (notes: Note[]) => void;
+}
+
+export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [newNote, setNewNote] = useState({
     title: "",
     content: "",
   });
+
+  useEffect(() => {
+    onNotesChange?.(notes);
+  }, [notes, onNotesChange]);
 
   const handleAddNote = () => {
     if (newNote.title && newNote.content) {

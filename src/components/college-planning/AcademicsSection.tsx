@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,11 @@ interface Course {
   semester: string;
 }
 
-export default function AcademicsSection() {
+interface AcademicsSectionProps {
+  onCoursesChange?: (courses: Course[]) => void;
+}
+
+export default function AcademicsSection({ onCoursesChange }: AcademicsSectionProps) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [newCourse, setNewCourse] = useState({
@@ -22,15 +26,20 @@ export default function AcademicsSection() {
     semester: "",
   });
 
+  useEffect(() => {
+    onCoursesChange?.(courses);
+  }, [courses, onCoursesChange]);
+
   const handleAddCourse = () => {
     if (newCourse.name && newCourse.grade && newCourse.semester) {
-      setCourses([
+      const updatedCourses = [
         ...courses,
         {
           id: Date.now().toString(),
           ...newCourse,
         },
-      ]);
+      ];
+      setCourses(updatedCourses);
       setNewCourse({ name: "", grade: "", semester: "" });
     }
   };
