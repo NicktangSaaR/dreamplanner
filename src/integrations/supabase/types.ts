@@ -119,6 +119,7 @@ export type Database = {
           graduation_school: string | null
           id: string
           interested_majors: string[] | null
+          is_admin: boolean | null
           personal_website: string | null
           school: string | null
           social_media: Json | null
@@ -133,6 +134,7 @@ export type Database = {
           graduation_school?: string | null
           id: string
           interested_majors?: string[] | null
+          is_admin?: boolean | null
           personal_website?: string | null
           school?: string | null
           social_media?: Json | null
@@ -147,6 +149,7 @@ export type Database = {
           graduation_school?: string | null
           id?: string
           interested_majors?: string[] | null
+          is_admin?: boolean | null
           personal_website?: string | null
           school?: string | null
           social_media?: Json | null

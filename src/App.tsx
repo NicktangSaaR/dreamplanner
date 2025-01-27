@@ -8,6 +8,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import Profile from "./pages/Profile";
 import Academics from "./pages/Academics";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/AdminDashboard";
 import { Toaster } from "sonner";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/student/:studentId/college-planning" element={<StudentDashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/academics" element={<Academics />} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
