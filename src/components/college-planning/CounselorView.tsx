@@ -28,7 +28,11 @@ export default function CounselorView() {
   const { data: students, isLoading } = useCounselorStudents();
   const navigate = useNavigate();
 
+  console.log("Counselor profile:", profile);
+  console.log("Students data:", students);
+
   if (!profile || profile.user_type !== 'counselor') {
+    console.log("Not a counselor or no profile found");
     return null;
   }
 
