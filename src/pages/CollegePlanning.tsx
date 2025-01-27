@@ -49,6 +49,7 @@ export default function CollegePlanning() {
         todoStats={getTodoStats()}
       />
       <DashboardTabs
+        courses={courses}
         onCoursesChange={setCourses}
         onActivitiesChange={setActivities}
         onNotesChange={setNotes}
