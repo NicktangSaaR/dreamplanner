@@ -6,7 +6,8 @@ import AcademicsSection from "@/components/college-planning/AcademicsSection";
 import NotesSection from "@/components/college-planning/NotesSection";
 import TodoSection from "@/components/college-planning/TodoSection";
 import ProfileSection from "@/components/college-planning/ProfileSection";
-import { BookOpen, Activity, StickyNote, GraduationCap, ListTodo, User } from "lucide-react";
+import { BookOpen, Activity, StickyNote, GraduationCap, ListTodo, User, CheckCircle2, Star } from "lucide-react";
+import { useTodos } from "@/hooks/useTodos";
 
 interface Course {
   id: string;
@@ -34,6 +35,7 @@ export default function CollegePlanning() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [activities, setActivities] = useState<ActivityType[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
+  const { todos } = useTodos();
 
   // Calculate GPA from courses
   const calculateGPA = (courses: Course[]) => {
@@ -68,6 +70,16 @@ export default function CollegePlanning() {
     return latestDate.toLocaleDateString();
   };
 
+  // Calculate todo statistics
+  const getTodoStats = () => {
+    const completed = todos.filter(todo => todo.completed).length;
+    const starred = todos.filter(todo => todo.starred).length;
+    const total = todos.length;
+    return { completed, starred, total };
+  };
+
+  const todoStats = getTodoStats();
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex items-center gap-2">
@@ -76,7 +88,7 @@ export default function CollegePlanning() {
       </div>
 
       {/* Dashboard Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-950">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-medium">
@@ -125,6 +137,30 @@ export default function CollegePlanning() {
             <p className="text-sm text-muted-foreground">
               Last updated: {getLastUpdateDate(notes)}
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900 dark:to-yellow-950">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-lg font-medium">
+              <div className="flex items-center gap-2">
+                <ListTodo className="h-5 w-5" />
+                To-Dos
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{todoStats.total} Tasks</div>
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                {todoStats.completed} Done
+              </span>
+              <span className="flex items-center gap-1">
+                <Star className="h-4 w-4 text-yellow-400" />
+                {todoStats.starred} Starred
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>
