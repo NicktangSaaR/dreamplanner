@@ -6,6 +6,7 @@ interface StudentProfile {
   full_name: string | null;
   grade: string | null;
   school: string | null;
+  interested_majors: string[] | null;
 }
 
 interface CounselorStudentRelationship {
@@ -27,7 +28,8 @@ export function useCounselorStudents() {
             id,
             full_name,
             grade,
-            school
+            school,
+            interested_majors
           )
         `)
         .eq('counselor_id', (await supabase.auth.getUser()).data.user?.id);

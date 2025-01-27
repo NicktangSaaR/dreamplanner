@@ -50,14 +50,14 @@ export default function CounselorView() {
       setIsAdding(true);
       console.log("Adding student with email:", email);
 
-      // First, get the user profile by email
-      const { data: profiles, error: profileError } = await supabase
+      // First, get the user ID from auth.users via profiles table
+      const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', (await supabase.from('auth').select('id').eq('email', email).single()).data?.id)
+        .select('id')
+        .eq('id', (await supabase.auth.signInWithOtp({ email })).data?.user?.id)
         .single();
 
-      if (profileError || !profiles) {
+      if (profileError || !userProfile) {
         console.error("Error finding student profile:", profileError);
         toast({
           title: "Error",
@@ -72,7 +72,7 @@ export default function CounselorView() {
         .from('counselor_student_relationships')
         .insert({
           counselor_id: profile.id,
-          student_id: profiles.id,
+          student_id: userProfile.id,
         });
 
       if (relationshipError) {

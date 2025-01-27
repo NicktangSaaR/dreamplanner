@@ -15,7 +15,9 @@ interface Profile {
     twitter?: string;
   } | null;
   personal_website: string | null;
-  user_type: string;  // Added this field
+  user_type: string;
+  graduation_school: string | null;  // Added this field
+  background_intro: string | null;   // Added this field
 }
 
 export function useProfile() {
