@@ -67,9 +67,40 @@ export default function DashboardTabs({
             <CardTitle>Academic Records</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <p className="text-muted-foreground">
-              Track your academic progress, grades, and course history.
-            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Total Courses</p>
+                <p className="text-2xl font-bold">{courses?.length || 0}</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Average Grade</p>
+                <p className="text-2xl font-bold">
+                  {courses?.length ? 
+                    (courses.reduce((acc, course) => 
+                      acc + (parseFloat(course.grade) || 0), 0) / courses.length).toFixed(1)
+                    : 'N/A'
+                  }
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Current Semester</p>
+                <p className="text-2xl font-bold">
+                  {courses?.length ? 
+                    courses[courses.length - 1].semester 
+                    : 'N/A'
+                  }
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Latest Course</p>
+                <p className="text-2xl font-bold truncate">
+                  {courses?.length ? 
+                    courses[courses.length - 1].name
+                    : 'N/A'
+                  }
+                </p>
+              </div>
+            </div>
             <Button 
               className="w-full"
               onClick={() => navigate('/academics')}
