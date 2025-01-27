@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      courses: {
+        Row: {
+          created_at: string | null
+          grade: string
+          id: string
+          name: string
+          semester: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          grade: string
+          id?: string
+          name: string
+          semester: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          grade?: string
+          id?: string
+          name?: string
+          semester?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           author_id: string | null
