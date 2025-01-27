@@ -188,6 +188,33 @@ export type Database = {
         }
         Relationships: []
       }
+      student_invitations: {
+        Row: {
+          accepted: boolean | null
+          counselor_id: string
+          created_at: string | null
+          email: string
+          id: string
+          token: string
+        }
+        Insert: {
+          accepted?: boolean | null
+          counselor_id: string
+          created_at?: string | null
+          email: string
+          id?: string
+          token: string
+        }
+        Update: {
+          accepted?: boolean | null
+          counselor_id?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          token?: string
+        }
+        Relationships: []
+      }
       todos: {
         Row: {
           author_id: string
