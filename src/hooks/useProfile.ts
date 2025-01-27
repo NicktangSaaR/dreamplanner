@@ -27,17 +27,22 @@ export function useProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
+      console.log("Fetching profile for user:", user.id);
+      
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle(); // Changed from .single() to .maybeSingle()
 
       if (error) {
+        console.error("Error fetching profile:", error);
         setError(error.message);
         return null;
       }
-      return data as Profile;
+
+      console.log("Profile data:", data);
+      return data as Profile | null;
     },
   });
 
@@ -46,14 +51,23 @@ export function useProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
+      console.log("Updating profile for user:", user.id, "with data:", updatedProfile);
+
       const { data, error } = await supabase
         .from("profiles")
-        .update(updatedProfile)
-        .eq("id", user.id)
+        .upsert({ // Changed from update to upsert
+          id: user.id,
+          ...updatedProfile
+        })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating profile:", error);
+        throw error;
+      }
+      
+      console.log("Profile updated successfully:", data);
       return data;
     },
     onSuccess: () => {
@@ -61,6 +75,7 @@ export function useProfile() {
       toast.success("Profile updated successfully");
     },
     onError: (error) => {
+      console.error("Mutation error:", error);
       toast.error("Failed to update profile");
       setError(error.message);
     },
