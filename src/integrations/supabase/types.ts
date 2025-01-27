@@ -87,6 +87,36 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_folders: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          folder_url: string
+          id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          folder_url: string
+          id?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          folder_url?: string
+          id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       todos: {
         Row: {
           author_id: string

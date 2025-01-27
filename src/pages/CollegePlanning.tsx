@@ -6,7 +6,8 @@ import AcademicsSection from "@/components/college-planning/AcademicsSection";
 import NotesSection from "@/components/college-planning/NotesSection";
 import TodoSection from "@/components/college-planning/TodoSection";
 import ProfileSection from "@/components/college-planning/ProfileSection";
-import { BookOpen, Activity, StickyNote, GraduationCap, ListTodo, User, CheckCircle2, Star } from "lucide-react";
+import SharedFoldersSection from "@/components/college-planning/SharedFoldersSection";
+import { BookOpen, Activity, StickyNote, GraduationCap, ListTodo, User, CheckCircle2, Star, Folder } from "lucide-react";
 import { useTodos } from "@/hooks/useTodos";
 
 interface Course {
@@ -166,7 +167,7 @@ export default function CollegePlanning() {
       </div>
 
       <Tabs defaultValue="academics" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="academics" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             Academics
@@ -182,6 +183,10 @@ export default function CollegePlanning() {
           <TabsTrigger value="todos" className="flex items-center gap-2">
             <ListTodo className="h-4 w-4" />
             To-Dos
+          </TabsTrigger>
+          <TabsTrigger value="shared-folders" className="flex items-center gap-2">
+            <Folder className="h-4 w-4" />
+            Shared Folders
           </TabsTrigger>
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
@@ -203,6 +208,10 @@ export default function CollegePlanning() {
 
         <TabsContent value="todos">
           <TodoSection />
+        </TabsContent>
+
+        <TabsContent value="shared-folders">
+          <SharedFoldersSection />
         </TabsContent>
 
         <TabsContent value="profile">
