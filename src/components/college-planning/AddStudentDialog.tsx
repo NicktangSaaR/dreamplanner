@@ -23,32 +23,14 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
       setIsAdding(true);
       console.log("Looking for student with email:", email);
 
-      // First find the student's profile using their email
-      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
-      
-      if (usersError) {
-        console.error("Error fetching users:", usersError);
-        throw usersError;
-      }
-
-      const studentUser = users.find(user => user.email === email);
-      
-      if (!studentUser) {
-        toast({
-          title: "Error",
-          description: "Student not found. Make sure they have registered first.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data: userProfiles, error: profileError } = await supabase
+      // Find the student's profile using their email from auth.users
+      const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select('id, user_type')
-        .eq('id', studentUser.id)
+        .eq('user_type', 'student')
         .single();
 
-      if (profileError || !userProfiles) {
+      if (profileError) {
         console.error("Error finding student profile:", profileError);
         toast({
           title: "Error",
@@ -58,7 +40,16 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         return;
       }
 
-      if (userProfiles.user_type !== 'student') {
+      if (!profiles) {
+        toast({
+          title: "Error",
+          description: "Student not found. Make sure they have registered first.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (profiles.user_type !== 'student') {
         toast({
           title: "Error",
           description: "The provided email does not belong to a student account.",
@@ -72,7 +63,7 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         .from('counselor_student_relationships')
         .select('id')
         .eq('counselor_id', counselorId)
-        .eq('student_id', userProfiles.id)
+        .eq('student_id', profiles.id)
         .single();
 
       if (existingRelationship) {
@@ -89,7 +80,7 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         .from('counselor_student_relationships')
         .insert({
           counselor_id: counselorId,
-          student_id: userProfiles.id,
+          student_id: profiles.id,
         });
 
       if (relationshipError) {
