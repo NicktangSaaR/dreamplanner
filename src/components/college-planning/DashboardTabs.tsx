@@ -8,13 +8,22 @@ import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
 import SharedFoldersSection from "./SharedFoldersSection";
 
+interface Course {
+  id: string;
+  name: string;
+  grade: string;
+  semester: string;
+}
+
 interface DashboardTabsProps {
-  onCoursesChange: (courses: any[]) => void;
+  courses: Course[];
+  onCoursesChange: (courses: Course[]) => void;
   onActivitiesChange: (activities: any[]) => void;
   onNotesChange: (notes: any[]) => void;
 }
 
 export default function DashboardTabs({ 
+  courses,
   onCoursesChange, 
   onActivitiesChange, 
   onNotesChange 
