@@ -24,10 +24,28 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
       console.log("Looking for student with email:", email);
 
       // First find the student's profile using their email
+      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+      
+      if (usersError) {
+        console.error("Error fetching users:", usersError);
+        throw usersError;
+      }
+
+      const studentUser = users.find(user => user.email === email);
+      
+      if (!studentUser) {
+        toast({
+          title: "Error",
+          description: "Student not found. Make sure they have registered first.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: userProfiles, error: profileError } = await supabase
         .from('profiles')
         .select('id, user_type')
-        .eq('id', (await supabase.auth.admin.listUsers()).data.users.find(u => u.email === email)?.id)
+        .eq('id', studentUser.id)
         .single();
 
       if (profileError || !userProfiles) {
