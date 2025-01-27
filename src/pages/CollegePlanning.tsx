@@ -168,27 +168,45 @@ export default function CollegePlanning() {
 
       <Tabs defaultValue="academics" className="w-full">
         <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="academics" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="academics" 
+            className="flex items-center gap-2 data-[state=active]:bg-[#F2FCE2]"
+          >
             <BookOpen className="h-4 w-4" />
             Academics
           </TabsTrigger>
-          <TabsTrigger value="extracurricular" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="extracurricular" 
+            className="flex items-center gap-2 data-[state=active]:bg-[#FEC6A1]"
+          >
             <Activity className="h-4 w-4" />
             Extracurricular
           </TabsTrigger>
-          <TabsTrigger value="notes" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="notes" 
+            className="flex items-center gap-2 data-[state=active]:bg-[#E5DEFF]"
+          >
             <StickyNote className="h-4 w-4" />
             Notes
           </TabsTrigger>
-          <TabsTrigger value="todos" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="todos" 
+            className="flex items-center gap-2 data-[state=active]:bg-[#FFDEE2]"
+          >
             <ListTodo className="h-4 w-4" />
             To-Dos
           </TabsTrigger>
-          <TabsTrigger value="shared-folders" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="shared-folders" 
+            className="flex items-center gap-2 data-[state=active]:bg-[#D3E4FD]"
+          >
             <Folder className="h-4 w-4" />
             Shared Folders
           </TabsTrigger>
-          <TabsTrigger value="profile" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="profile" 
+            className="flex items-center gap-2 data-[state=active]:bg-[#F1F0FB]"
+          >
             <User className="h-4 w-4" />
             Profile
           </TabsTrigger>
