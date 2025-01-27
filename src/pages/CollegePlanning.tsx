@@ -4,9 +4,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExtracurricularSection from "@/components/college-planning/ExtracurricularSection";
 import AcademicsSection from "@/components/college-planning/AcademicsSection";
 import NotesSection from "@/components/college-planning/NotesSection";
-import { BookOpen, Activity, StickyNote, GraduationCap } from "lucide-react";
+import TodoSection from "@/components/college-planning/TodoSection";
+import ProfileSection from "@/components/college-planning/ProfileSection";
+import { BookOpen, Activity, StickyNote, GraduationCap, ListTodo, User } from "lucide-react";
 
-// Create interfaces for our data types
 interface Course {
   id: string;
   name: string;
@@ -129,7 +130,7 @@ export default function CollegePlanning() {
       </div>
 
       <Tabs defaultValue="academics" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="academics" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             Academics
@@ -141,6 +142,14 @@ export default function CollegePlanning() {
           <TabsTrigger value="notes" className="flex items-center gap-2">
             <StickyNote className="h-4 w-4" />
             Notes
+          </TabsTrigger>
+          <TabsTrigger value="todos" className="flex items-center gap-2">
+            <ListTodo className="h-4 w-4" />
+            To-Dos
+          </TabsTrigger>
+          <TabsTrigger value="profile" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Profile
           </TabsTrigger>
         </TabsList>
         
@@ -154,6 +163,14 @@ export default function CollegePlanning() {
         
         <TabsContent value="notes">
           <NotesSection onNotesChange={setNotes} />
+        </TabsContent>
+
+        <TabsContent value="todos">
+          <TodoSection />
+        </TabsContent>
+
+        <TabsContent value="profile">
+          <ProfileSection />
         </TabsContent>
       </Tabs>
     </div>

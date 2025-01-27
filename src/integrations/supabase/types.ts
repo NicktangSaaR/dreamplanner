@@ -52,23 +52,71 @@ export type Database = {
         Row: {
           created_at: string
           full_name: string | null
+          grade: string | null
           id: string
+          interested_majors: string[] | null
+          personal_website: string | null
+          school: string | null
+          social_media: Json | null
           updated_at: string
           user_type: string
         }
         Insert: {
           created_at?: string
           full_name?: string | null
+          grade?: string | null
           id: string
+          interested_majors?: string[] | null
+          personal_website?: string | null
+          school?: string | null
+          social_media?: Json | null
           updated_at?: string
           user_type: string
         }
         Update: {
           created_at?: string
           full_name?: string | null
+          grade?: string | null
           id?: string
+          interested_majors?: string[] | null
+          personal_website?: string | null
+          school?: string | null
+          social_media?: Json | null
           updated_at?: string
           user_type?: string
+        }
+        Relationships: []
+      }
+      todos: {
+        Row: {
+          author_id: string
+          completed: boolean | null
+          created_at: string | null
+          due_date: string | null
+          id: string
+          starred: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id: string
+          completed?: boolean | null
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          starred?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string
+          completed?: boolean | null
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          starred?: boolean | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
