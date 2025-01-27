@@ -5,6 +5,12 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Loader2, UserPlus, GraduationCap, School, BookOpen } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface StudentProfile {
   id: string;
@@ -25,8 +31,11 @@ interface StudentProfile {
 
 export default function CounselorView() {
   const { profile } = useProfile();
-  const { data: students, isLoading } = useCounselorStudents();
+  const { data: students, isLoading, refetch } = useCounselorStudents();
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const { toast } = useToast();
 
   console.log("Counselor profile:", profile);
   console.log("Students data:", students);
@@ -36,14 +45,108 @@ export default function CounselorView() {
     return null;
   }
 
+  const handleAddStudent = async () => {
+    try {
+      setIsAdding(true);
+      console.log("Adding student with email:", email);
+
+      // First, get the user profile by email
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', (await supabase.from('auth').select('id').eq('email', email).single()).data?.id)
+        .single();
+
+      if (profileError || !profiles) {
+        console.error("Error finding student profile:", profileError);
+        toast({
+          title: "Error",
+          description: "Student not found. Make sure they have registered first.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Add the counselor-student relationship
+      const { error: relationshipError } = await supabase
+        .from('counselor_student_relationships')
+        .insert({
+          counselor_id: profile.id,
+          student_id: profiles.id,
+        });
+
+      if (relationshipError) {
+        console.error("Error creating relationship:", relationshipError);
+        toast({
+          title: "Error",
+          description: "Failed to add student. They might already be assigned to you.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Student added successfully!",
+      });
+      
+      refetch();
+      setEmail("");
+    } catch (error) {
+      console.error("Error adding student:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">My Students</h2>
-        <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Student
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Student
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Student</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Student Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="student@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <Button 
+                onClick={handleAddStudent} 
+                disabled={isAdding || !email}
+                className="w-full"
+              >
+                {isAdding ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Student"
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {isLoading ? (
