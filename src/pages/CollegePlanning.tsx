@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import DashboardTabs from "@/components/college-planning/DashboardTabs";
-import CounselorView from "@/components/college-planning/CounselorView";
 import { useTodos } from "@/hooks/useTodos";
 import { useProfile } from "@/hooks/useProfile";
 
@@ -29,11 +29,18 @@ interface Note {
 }
 
 export default function CollegePlanning() {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
   const [activities, setActivities] = useState<ActivityType[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const { todos } = useTodos();
   const { profile } = useProfile();
+
+  useEffect(() => {
+    if (profile?.user_type === 'counselor') {
+      navigate('/counselor-dashboard');
+    }
+  }, [profile, navigate]);
 
   const getTodoStats = () => {
     const completed = todos.filter(todo => todo.completed).length;
@@ -41,15 +48,6 @@ export default function CollegePlanning() {
     const total = todos.length;
     return { completed, starred, total };
   };
-
-  if (profile?.user_type === 'counselor') {
-    return (
-      <div className="container mx-auto p-4 space-y-6">
-        <DashboardHeader />
-        <CounselorView />
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto p-4 space-y-6">
