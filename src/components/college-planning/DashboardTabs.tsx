@@ -6,12 +6,15 @@ import { useNavigate } from "react-router-dom";
 import ExtracurricularSection from "./ExtracurricularSection";
 import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
+import { calculateGPA } from "./academics/GradeCalculator";
 
 interface Course {
   id: string;
   name: string;
   grade: string;
   semester: string;
+  course_type: string;
+  grade_type?: string;
 }
 
 interface DashboardTabsProps {
@@ -28,6 +31,34 @@ export default function DashboardTabs({
   onNotesChange 
 }: DashboardTabsProps) {
   const navigate = useNavigate();
+
+  const getCurrentSemester = () => {
+    if (!courses.length) return 'N/A';
+    const semesters = courses.map(course => course.semester);
+    return semesters[semesters.length - 1];
+  };
+
+  const getLatestCourse = () => {
+    if (!courses.length) return 'N/A';
+    return courses[courses.length - 1].name;
+  };
+
+  const calculateAverageGrade = () => {
+    if (!courses.length) return 'N/A';
+    
+    const validCourses = courses.filter(course => {
+      const specialGrades = ['In Progress', 'Pass/Fail', 'Drop'];
+      return !specialGrades.includes(course.grade);
+    });
+
+    if (!validCourses.length) return 'N/A';
+
+    const totalGPA = validCourses.reduce((sum, course) => {
+      return sum + calculateGPA(course.grade, course.course_type, course.grade_type);
+    }, 0);
+
+    return (totalGPA / validCourses.length).toFixed(2);
+  };
 
   return (
     <Tabs defaultValue="academics" className="w-full">
@@ -73,35 +104,19 @@ export default function DashboardTabs({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <p className="text-sm font-medium">Total Courses</p>
-                <p className="text-2xl font-bold">{courses?.length || 0}</p>
+                <p className="text-2xl font-bold">{courses.length}</p>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Average Grade</p>
-                <p className="text-2xl font-bold">
-                  {courses?.length ? 
-                    (courses.reduce((acc, course) => 
-                      acc + (parseFloat(course.grade) || 0), 0) / courses.length).toFixed(1)
-                    : 'N/A'
-                  }
-                </p>
+                <p className="text-sm font-medium">Average GPA</p>
+                <p className="text-2xl font-bold">{calculateAverageGrade()}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium">Current Semester</p>
-                <p className="text-2xl font-bold">
-                  {courses?.length ? 
-                    courses[courses.length - 1].semester 
-                    : 'N/A'
-                  }
-                </p>
+                <p className="text-2xl font-bold">{getCurrentSemester()}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium">Latest Course</p>
-                <p className="text-2xl font-bold truncate">
-                  {courses?.length ? 
-                    courses[courses.length - 1].name
-                    : 'N/A'
-                  }
-                </p>
+                <p className="text-2xl font-bold truncate">{getLatestCourse()}</p>
               </div>
             </div>
             <Button 
