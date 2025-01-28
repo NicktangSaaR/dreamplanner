@@ -14,8 +14,9 @@ const About = () => {
     <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link to="/">
+          <Link to="/" className="flex flex-col items-start">
             <h1 className="text-2xl font-semibold text-primary">EduPath</h1>
+            <p className="text-sm text-gray-600">Nexus Student Profile Management System</p>
           </Link>
           <div className="space-x-4">
             <Link to="/login">
