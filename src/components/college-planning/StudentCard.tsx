@@ -20,9 +20,11 @@ export default function StudentCard({ student }: StudentCardProps) {
     e.preventDefault();
     e.stopPropagation();
     console.log("Attempting to navigate to student dashboard:", student.id);
-    navigate(`/college-planning/student/${student.id}`);<Card 
-      className="hover:bg-accent/50 transition-colors cursor-pointer"
-    >
+    navigate(`/college-planning/student/${student.id}`);
+  };
+
+  return (
+    <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>{student.full_name}</span>
