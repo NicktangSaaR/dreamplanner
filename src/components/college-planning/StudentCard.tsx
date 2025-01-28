@@ -19,7 +19,7 @@ export default function StudentCard({ student }: StudentCardProps) {
   const handleViewDashboard = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click event from firing
     console.log("Navigating to student dashboard:", student.id);
-    navigate(`/student/${student.id}/college-planning`);
+    navigate(`/college-planning/student/${student.id}`);
   };
 
   return (
