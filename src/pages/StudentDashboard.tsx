@@ -7,6 +7,9 @@ import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useTodos } from "@/hooks/useTodos";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import SelectCounselorDialog from "@/components/college-planning/SelectCounselorDialog";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Course {
   id: string;
@@ -39,8 +42,31 @@ export default function StudentDashboard() {
   const [notes, setNotes] = useState<Note[]>([]);
   const { todos } = useTodos();
 
+  const { data: hasCounselor, refetch: refetchCounselorStatus } = useQuery({
+    queryKey: ["has-counselor", profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return false;
+      
+      console.log("Checking if student has counselor");
+      const { data, error } = await supabase
+        .from("counselor_student_relationships")
+        .select("counselor_id")
+        .eq("student_id", profile.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error checking counselor relationship:", error);
+        return false;
+      }
+
+      console.log("Counselor relationship data:", data);
+      return !!data;
+    },
+    enabled: !!profile?.id,
+  });
+
   useEffect(() => {
-    if (profile?.user_type !== 'counselor') {
+    if (profile?.user_type !== 'student') {
       navigate('/college-planning');
     }
   }, [profile, navigate]);
@@ -54,15 +80,23 @@ export default function StudentDashboard() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => navigate('/counselor-dashboard')}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <DashboardHeader />
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => navigate('/college-planning')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <DashboardHeader />
+        </div>
+        {profile?.id && !hasCounselor && (
+          <SelectCounselorDialog 
+            studentId={profile.id}
+            onCounselorSelected={refetchCounselorStatus}
+          />
+        )}
       </div>
 
       <StatisticsCards
