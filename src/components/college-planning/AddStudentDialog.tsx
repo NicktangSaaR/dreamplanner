@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { UserPlus } from "lucide-react";
+import { User } from "@supabase/supabase-js";
 
 interface AddStudentDialogProps {
   counselorId: string;
@@ -37,7 +38,7 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         return;
       }
 
-      const matchingUser = users.find(user => user.email === email);
+      const matchingUser = users.find((user: User) => user.email === email);
       if (!matchingUser) {
         toast.error("No user found with this email");
         return;
