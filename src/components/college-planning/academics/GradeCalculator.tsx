@@ -1,13 +1,13 @@
 import { Calculator } from "lucide-react";
 
-const GRADE_TO_GPA: { [key: string]: number } = {
+export const GRADE_TO_GPA: { [key: string]: number } = {
   'A+': 4.0, 'A': 4.0, 'A-': 3.7,
   'B+': 3.3, 'B': 3.0, 'B-': 2.7,
   'C+': 2.3, 'C': 2.0, 'C-': 1.7,
   'D+': 1.3, 'D': 1.0, 'F': 0.0
 };
 
-const COURSE_TYPE_BONUS: { [key: string]: number } = {
+export const COURSE_TYPE_BONUS: { [key: string]: number } = {
   'Regular': 0,
   'Honors': 0.5,
   'AP/IB': 1.0
@@ -17,6 +17,7 @@ interface Course {
   grade: string;
   course_type: string;
   gpa_value?: number;
+  academic_year?: string;
 }
 
 interface GradeCalculatorProps {
@@ -29,6 +30,17 @@ export function calculateGPA(grade: string, courseType: string): number {
   return baseGPA + bonus;
 }
 
+function calculateYearGPA(courses: Course[], academicYear: string): number {
+  const yearCourses = courses.filter(course => course.academic_year === academicYear);
+  if (yearCourses.length === 0) return 0;
+
+  const totalGPA = yearCourses.reduce((sum, course) => {
+    return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type));
+  }, 0);
+
+  return Number((totalGPA / yearCourses.length).toFixed(2));
+}
+
 export default function GradeCalculator({ courses }: GradeCalculatorProps) {
   const calculateOverallGPA = (): number => {
     if (courses.length === 0) return 0;
@@ -38,12 +50,34 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
     return Number((totalGPA / courses.length).toFixed(2));
   };
 
+  // Get unique academic years from courses
+  const academicYears = Array.from(new Set(courses.map(course => course.academic_year)))
+    .filter(year => year) // Remove undefined/null values
+    .sort()
+    .reverse(); // Show most recent year first
+
   return (
-    <div className="flex items-center gap-2 bg-green-50 p-3 rounded-lg">
-      <Calculator className="h-5 w-5 text-green-600" />
-      <div>
-        <p className="text-sm font-medium text-green-600">Overall GPA</p>
-        <p className="text-2xl font-bold text-green-700">{calculateOverallGPA()}</p>
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 bg-green-50 p-3 rounded-lg">
+        <Calculator className="h-5 w-5 text-green-600" />
+        <div>
+          <p className="text-sm font-medium text-green-600">Overall GPA</p>
+          <p className="text-2xl font-bold text-green-700">{calculateOverallGPA()}</p>
+        </div>
+      </div>
+      
+      {/* Academic Year GPAs */}
+      <div className="grid gap-2">
+        {academicYears.map(year => (
+          <div key={year} className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg">
+            <div>
+              <p className="text-sm font-medium text-blue-600">{year} GPA</p>
+              <p className="text-xl font-bold text-blue-700">
+                {calculateYearGPA(courses, year)}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
