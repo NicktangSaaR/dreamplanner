@@ -7,16 +7,7 @@ import ExtracurricularSection from "./ExtracurricularSection";
 import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
 import { calculateGPA } from "./academics/GradeCalculator";
-
-interface Course {
-  id: string;
-  name: string;
-  grade: string;
-  semester: string;
-  course_type: string;
-  grade_type?: string;
-  academic_year?: string;
-}
+import { Course } from "./types/course";
 
 interface DashboardTabsProps {
   courses: Course[];

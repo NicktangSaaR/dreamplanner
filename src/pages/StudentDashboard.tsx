@@ -36,20 +36,17 @@ export default function StudentDashboard() {
   const [notes, setNotes] = useState<Note[]>([]);
   const { todos } = useTodos();
 
-  // 检查访问权限
   const { data: hasAccess } = useQuery({
     queryKey: ["check-student-access", studentId, profile?.id],
     queryFn: async () => {
       if (!profile?.id || !studentId) return false;
       
       console.log("Checking access rights for student dashboard");
-      // 如果是学生本人访问
       if (profile.id === studentId) {
         console.log("Student accessing own dashboard");
         return true;
       }
       
-      // 如果是辅导员访问
       if (profile.user_type === 'counselor') {
         const { data, error } = await supabase
           .from("counselor_student_relationships")
@@ -72,7 +69,6 @@ export default function StudentDashboard() {
     enabled: !!profile?.id && !!studentId,
   });
 
-  // Fetch student profile data
   const { data: studentProfile } = useQuery({
     queryKey: ["student-profile", studentId],
     queryFn: async () => {
@@ -97,7 +93,6 @@ export default function StudentDashboard() {
   useEffect(() => {
     if (!profile) return;
     
-    // 如果没有访问权限，重定向到适当的页面
     if (hasAccess === false) {
       console.log("Access denied to student dashboard");
       navigate('/college-planning');
@@ -111,7 +106,10 @@ export default function StudentDashboard() {
     return { completed, starred, total };
   };
 
-  // 如果正在检查权限，显示加载状态
+  const handleCoursesChange = (newCourses: Course[]) => {
+    setCourses(newCourses);
+  };
+
   if (hasAccess === undefined) {
     return null;
   }
@@ -153,7 +151,7 @@ export default function StudentDashboard() {
 
       <DashboardTabs
         courses={courses}
-        onCoursesChange={setCourses}
+        onCoursesChange={handleCoursesChange}
         onActivitiesChange={setActivities}
         onNotesChange={setNotes}
       />

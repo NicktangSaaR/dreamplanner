@@ -43,6 +43,10 @@ export default function CollegePlanning() {
     return { completed, starred, total };
   };
 
+  const handleCoursesChange = (newCourses: Course[]) => {
+    setCourses(newCourses);
+  };
+
   return (
     <div className="container mx-auto px-4 py-6 space-y-8">
       <div className="max-w-7xl mx-auto">
@@ -58,7 +62,7 @@ export default function CollegePlanning() {
         <div className="mt-8">
           <DashboardTabs
             courses={courses}
-            onCoursesChange={setCourses}
+            onCoursesChange={handleCoursesChange}
             onActivitiesChange={setActivities}
             onNotesChange={setNotes}
           />
