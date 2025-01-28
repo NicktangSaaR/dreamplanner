@@ -29,9 +29,7 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         .admin.listUsers({
           page: 1,
           perPage: 1,
-          filters: {
-            email: email
-          }
+          search: email
         });
 
       if (authError) {
