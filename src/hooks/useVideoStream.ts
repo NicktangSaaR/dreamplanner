@@ -24,6 +24,7 @@ export const useVideoStream = () => {
           width: { ideal: 1280 },
           height: { ideal: 720 },
           facingMode: "user",
+          frameRate: { ideal: 30 }
         },
         audio: true,
       });
@@ -33,14 +34,26 @@ export const useVideoStream = () => {
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        console.log("Video stream assigned to video element");
+        
         try {
           await videoRef.current.play();
           console.log("Video preview started successfully");
         } catch (playError) {
           console.error("Error playing video:", playError);
+          toast({
+            title: "视频播放错误",
+            description: "无法播放视频预览，请刷新页面重试。",
+            variant: "destructive",
+          });
         }
       } else {
         console.warn("Video element reference not found");
+        toast({
+          title: "视频初始化错误",
+          description: "无法初始化视频预览，请刷新页面重试。",
+          variant: "destructive",
+        });
       }
 
       return true;

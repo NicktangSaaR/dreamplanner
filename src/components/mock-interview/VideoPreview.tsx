@@ -19,22 +19,26 @@ const VideoPreview = ({
   onStartNew
 }: VideoPreviewProps) => {
   useEffect(() => {
-    const videoElement = videoRef.current;
-    if (videoElement && videoElement.srcObject) {
+    if (!videoRef.current) {
+      console.warn("Video element reference is null");
+      return;
+    }
+
+    if (videoRef.current.srcObject) {
       console.log("Setting up video preview");
-      
       const playVideo = async () => {
         try {
-          await videoElement.play();
+          await videoRef.current?.play();
           console.log("Video preview playing successfully");
         } catch (error) {
           console.error("Error playing video preview:", error);
         }
       };
-
       playVideo();
+    } else {
+      console.warn("No video stream available");
     }
-  }, [videoRef]);
+  }, [videoRef, videoRef.current?.srcObject]);
 
   return (
     <Card className="p-6">
