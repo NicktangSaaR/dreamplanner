@@ -29,7 +29,9 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         .admin.listUsers({
           page: 1,
           perPage: 1,
-          query: email
+          filters: {
+            email: email
+          }
         });
 
       if (authError) {
@@ -51,7 +53,7 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         .select('id, user_type')
         .eq('id', userId)
         .eq('user_type', 'student')
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error("Error finding student profile:", profileError);
