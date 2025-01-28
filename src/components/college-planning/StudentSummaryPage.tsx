@@ -116,10 +116,17 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-3xl font-bold">Student Summary</h1>
+          <div>
+            <h1 className="text-3xl font-bold">Student Summary</h1>
+            {profile && (
+              <p className="text-lg text-muted-foreground mt-1">
+                {profile.full_name}
+              </p>
+            )}
+          </div>
         </div>
         <Button 
-          onClick={() => navigate(`/counselor-dashboard/student/${studentId}`)}
+          onClick={() => navigate(`/student-dashboard/${studentId}`)}
           className="flex items-center gap-2"
         >
           View Dashboard
@@ -190,5 +197,4 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
       </div>
     </div>
   );
-
 }

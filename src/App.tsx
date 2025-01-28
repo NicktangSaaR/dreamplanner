@@ -25,11 +25,14 @@ export default function App() {
             <Route path="/college-planning" element={<CollegePlanning />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/counselor-dashboard" element={<CounselorDashboard />} />
-            <Route path="/counselor-dashboard/student/summary/:studentId" element={
-              <div className="min-h-screen bg-background">
-                <StudentSummaryPage studentId={useParams<{ studentId: string }>().studentId || ""} />
-              </div>
-            } />
+            <Route 
+              path="/counselor-dashboard/student/summary/:studentId" 
+              element={
+                <div className="min-h-screen bg-background">
+                  <StudentSummaryPage studentId={useParams<{ studentId: string }>().studentId || ""} />
+                </div>
+              } 
+            />
             <Route path="/counselor-dashboard/student/:studentId" element={<StudentView />} />
             <Route path="/student-dashboard/:studentId" element={<StudentDashboard />} />
           </Route>
