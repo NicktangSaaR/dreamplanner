@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Save, X } from "lucide-react";
-import { calculateGPA } from "./GradeCalculator";
+import { calculateGPA, GRADE_TO_GPA, COURSE_TYPE_BONUS } from "./GradeCalculator";
 
 interface Course {
   id: string;
@@ -14,6 +14,7 @@ interface Course {
   gpa_value?: number;
   academic_year?: string;
   grade_level?: string;
+  grade_type?: string;
 }
 
 interface CourseTableProps {
@@ -25,19 +26,6 @@ interface CourseTableProps {
   onEditingCourseChange: (field: string, value: string) => void;
   academicYears: string[];
 }
-
-const GRADE_TO_GPA: { [key: string]: number } = {
-  'A+': 4.0, 'A': 4.0, 'A-': 3.7,
-  'B+': 3.3, 'B': 3.0, 'B-': 2.7,
-  'C+': 2.3, 'C': 2.0, 'C-': 1.7,
-  'D+': 1.3, 'D': 1.0, 'F': 0.0
-};
-
-const COURSE_TYPE_BONUS: { [key: string]: number } = {
-  'Regular': 0,
-  'Honors': 0.5,
-  'AP/IB': 1.0
-};
 
 const GRADE_LEVELS = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
 
@@ -55,6 +43,7 @@ export default function CourseTable({
       <TableHeader>
         <TableRow>
           <TableHead>Course Name</TableHead>
+          <TableHead>Grade Type</TableHead>
           <TableHead>Grade</TableHead>
           <TableHead>Course Type</TableHead>
           <TableHead>Grade Level</TableHead>
@@ -76,20 +65,44 @@ export default function CourseTable({
               </TableCell>
               <TableCell>
                 <Select
-                  value={editingCourse.grade}
-                  onValueChange={(value) => onEditingCourseChange('grade', value)}
+                  value={editingCourse.grade_type || 'letter'}
+                  onValueChange={(value) => onEditingCourseChange('grade_type', value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.keys(GRADE_TO_GPA).map((grade) => (
-                      <SelectItem key={grade} value={grade}>
-                        {grade}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="letter">Letter Grade</SelectItem>
+                    <SelectItem value="100-point">100-Point Scale</SelectItem>
                   </SelectContent>
                 </Select>
+              </TableCell>
+              <TableCell>
+                {editingCourse.grade_type === '100-point' ? (
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={editingCourse.grade}
+                    onChange={(e) => onEditingCourseChange('grade', e.target.value)}
+                  />
+                ) : (
+                  <Select
+                    value={editingCourse.grade}
+                    onValueChange={(value) => onEditingCourseChange('grade', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(GRADE_TO_GPA).map((grade) => (
+                        <SelectItem key={grade} value={grade}>
+                          {grade}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </TableCell>
               <TableCell>
                 <Select
@@ -149,7 +162,7 @@ export default function CourseTable({
                 />
               </TableCell>
               <TableCell>
-                {calculateGPA(editingCourse.grade, editingCourse.course_type).toFixed(2)}
+                {calculateGPA(editingCourse.grade, editingCourse.course_type, editingCourse.grade_type).toFixed(2)}
               </TableCell>
               <TableCell>
                 <Button
@@ -171,6 +184,7 @@ export default function CourseTable({
           ) : (
             <TableRow key={course.id}>
               <TableCell>{course.name}</TableCell>
+              <TableCell>{course.grade_type === '100-point' ? '100-Point Scale' : 'Letter Grade'}</TableCell>
               <TableCell>{course.grade}</TableCell>
               <TableCell>{course.course_type}</TableCell>
               <TableCell>{course.grade_level}</TableCell>

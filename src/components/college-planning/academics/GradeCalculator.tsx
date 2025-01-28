@@ -18,19 +18,53 @@ interface Course {
   course_type: string;
   gpa_value?: number;
   academic_year?: string;
+  grade_type?: string;
 }
 
 interface GradeCalculatorProps {
   courses: Course[];
 }
 
-export function calculateGPA(grade: string, courseType: string): number {
+export function calculateGPA(grade: string, courseType: string, gradeType: string = 'letter'): number {
+  if (gradeType === '100-point') {
+    const numericGrade = parseFloat(grade);
+    let baseGPA = 0;
+    if (numericGrade >= 93) baseGPA = 4.0;
+    else if (numericGrade >= 90) baseGPA = 3.7;
+    else if (numericGrade >= 87) baseGPA = 3.3;
+    else if (numericGrade >= 83) baseGPA = 3.0;
+    else if (numericGrade >= 80) baseGPA = 2.7;
+    else if (numericGrade >= 77) baseGPA = 2.3;
+    else if (numericGrade >= 73) baseGPA = 2.0;
+    else if (numericGrade >= 70) baseGPA = 1.7;
+    else if (numericGrade >= 67) baseGPA = 1.3;
+    else if (numericGrade >= 63) baseGPA = 1.0;
+    else baseGPA = 0.0;
+
+    const bonus = COURSE_TYPE_BONUS[courseType] || 0;
+    return baseGPA + bonus;
+  }
+  
   const baseGPA = GRADE_TO_GPA[grade.toUpperCase()] || 0;
   const bonus = COURSE_TYPE_BONUS[courseType] || 0;
   return baseGPA + bonus;
 }
 
-function calculateUnweightedGPA(grade: string): number {
+function calculateUnweightedGPA(grade: string, gradeType: string = 'letter'): number {
+  if (gradeType === '100-point') {
+    const numericGrade = parseFloat(grade);
+    if (numericGrade >= 93) return 4.0;
+    else if (numericGrade >= 90) return 3.7;
+    else if (numericGrade >= 87) return 3.3;
+    else if (numericGrade >= 83) return 3.0;
+    else if (numericGrade >= 80) return 2.7;
+    else if (numericGrade >= 77) return 2.3;
+    else if (numericGrade >= 73) return 2.0;
+    else if (numericGrade >= 70) return 1.7;
+    else if (numericGrade >= 67) return 1.3;
+    else if (numericGrade >= 63) return 1.0;
+    return 0.0;
+  }
   return GRADE_TO_GPA[grade.toUpperCase()] || 0;
 }
 
@@ -40,9 +74,9 @@ function calculateYearGPA(courses: Course[], academicYear: string, weighted: boo
 
   const totalGPA = yearCourses.reduce((sum, course) => {
     if (weighted) {
-      return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type));
+      return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type, course.grade_type));
     } else {
-      return sum + calculateUnweightedGPA(course.grade);
+      return sum + calculateUnweightedGPA(course.grade, course.grade_type);
     }
   }, 0);
   
@@ -54,9 +88,9 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
     if (courses.length === 0) return 0;
     const totalGPA = courses.reduce((sum, course) => {
       if (weighted) {
-        return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type));
+        return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type, course.grade_type));
       } else {
-        return sum + calculateUnweightedGPA(course.grade);
+        return sum + calculateUnweightedGPA(course.grade, course.grade_type);
       }
     }, 0);
     return Number((totalGPA / courses.length).toFixed(2));
@@ -87,7 +121,6 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
         </div>
       </div>
       
-      {/* Academic Year GPAs */}
       <div className="grid gap-2">
         {academicYears.map(year => (
           <div key={year} className="grid grid-cols-2 gap-2">

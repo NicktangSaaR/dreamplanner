@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle } from "lucide-react";
+import { GRADE_TO_GPA, COURSE_TYPE_BONUS } from "./GradeCalculator";
 
 interface CourseFormProps {
   newCourse: {
@@ -12,24 +13,12 @@ interface CourseFormProps {
     course_type: string;
     grade_level: string;
     academic_year: string;
+    grade_type?: string;
   };
   onCourseChange: (field: string, value: string) => void;
   onAddCourse: () => void;
   academicYears: string[];
 }
-
-const GRADE_TO_GPA: { [key: string]: number } = {
-  'A+': 4.0, 'A': 4.0, 'A-': 3.7,
-  'B+': 3.3, 'B': 3.0, 'B-': 2.7,
-  'C+': 2.3, 'C': 2.0, 'C-': 1.7,
-  'D+': 1.3, 'D': 1.0, 'F': 0.0
-};
-
-const COURSE_TYPE_BONUS: { [key: string]: number } = {
-  'Regular': 0,
-  'Honors': 0.5,
-  'AP/IB': 1.0
-};
 
 const GRADE_LEVELS = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
 
@@ -46,22 +35,49 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
           />
         </div>
         <div>
-          <Label htmlFor="grade">Grade</Label>
+          <Label htmlFor="gradeType">Grade Type</Label>
           <Select
-            value={newCourse.grade}
-            onValueChange={(value) => onCourseChange('grade', value)}
+            value={newCourse.grade_type || 'letter'}
+            onValueChange={(value) => onCourseChange('grade_type', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select grade" />
+              <SelectValue placeholder="Select grade type" />
             </SelectTrigger>
             <SelectContent>
-              {Object.keys(GRADE_TO_GPA).map((grade) => (
-                <SelectItem key={grade} value={grade}>
-                  {grade}
-                </SelectItem>
-              ))}
+              <SelectItem value="letter">Letter Grade</SelectItem>
+              <SelectItem value="100-point">100-Point Scale</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div>
+          <Label htmlFor="grade">Grade</Label>
+          {newCourse.grade_type === '100-point' ? (
+            <Input
+              id="grade"
+              type="number"
+              min="0"
+              max="100"
+              value={newCourse.grade}
+              onChange={(e) => onCourseChange('grade', e.target.value)}
+              placeholder="Enter score (0-100)"
+            />
+          ) : (
+            <Select
+              value={newCourse.grade}
+              onValueChange={(value) => onCourseChange('grade', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select grade" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(GRADE_TO_GPA).map((grade) => (
+                  <SelectItem key={grade} value={grade}>
+                    {grade}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div>
           <Label htmlFor="courseType">Course Type</Label>
@@ -116,14 +132,6 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div>
-          <Label htmlFor="semester">Semester</Label>
-          <Input
-            id="semester"
-            value={newCourse.semester}
-            onChange={(e) => onCourseChange('semester', e.target.value)}
-          />
         </div>
       </div>
       <Button onClick={onAddCourse} className="w-full">
