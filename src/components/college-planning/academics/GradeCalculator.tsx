@@ -75,14 +75,14 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
           <Calculator className="h-5 w-5 text-green-600" />
           <div>
             <p className="text-xs font-medium text-green-600">Weighted</p>
-            <p className="text-xl font-bold text-green-700">{calculateOverallGPA(true)}</p>
+            <p className="text-lg font-bold text-green-700">{calculateOverallGPA(true)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 bg-blue-50 p-3 rounded-lg">
           <Calculator className="h-5 w-5 text-blue-600" />
           <div>
             <p className="text-xs font-medium text-blue-600">Unweighted</p>
-            <p className="text-xl font-bold text-blue-700">{calculateOverallGPA(false)}</p>
+            <p className="text-lg font-bold text-blue-700">{calculateOverallGPA(false)}</p>
           </div>
         </div>
       </div>
@@ -94,7 +94,7 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
             <div className="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
               <div>
                 <p className="text-xs font-medium text-green-600">{year} Weighted</p>
-                <p className="text-lg font-bold text-green-700">
+                <p className="text-base font-bold text-green-700">
                   {calculateYearGPA(courses, year, true)}
                 </p>
               </div>
@@ -102,7 +102,7 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
             <div className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg">
               <div>
                 <p className="text-xs font-medium text-blue-600">{year} Unweighted</p>
-                <p className="text-lg font-bold text-blue-700">
+                <p className="text-base font-bold text-blue-700">
                   {calculateYearGPA(courses, year, false)}
                 </p>
               </div>
