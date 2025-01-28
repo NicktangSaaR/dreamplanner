@@ -48,10 +48,18 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
     queryKey: ['courses'],
     queryFn: async () => {
       console.log('Fetching courses from database');
+      const user = await supabase.auth.getUser();
+      const student_id = user.data.user?.id;
+
+      if (!student_id) {
+        console.error('No authenticated user found');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('student_id', supabase.auth.getUser().then(response => response.data.user?.id))
+        .eq('student_id', student_id)
         .order('created_at', { ascending: false });
 
       if (error) {
