@@ -31,7 +31,7 @@ export default function DashboardTabs({
 
   return (
     <Tabs defaultValue="academics" className="w-full">
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-2 mb-8">
         <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full gap-2">
           <TabsTrigger 
             value="academics" 
@@ -64,7 +64,7 @@ export default function DashboardTabs({
         </TabsList>
       </div>
       
-      <TabsContent value="academics" className="mt-4">
+      <TabsContent value="academics" className="mt-8">
         <Card>
           <CardHeader>
             <CardTitle>Academic Records</CardTitle>
@@ -114,15 +114,15 @@ export default function DashboardTabs({
         </Card>
       </TabsContent>
       
-      <TabsContent value="extracurricular" className="mt-4">
+      <TabsContent value="extracurricular" className="mt-8">
         <ExtracurricularSection onActivitiesChange={onActivitiesChange} />
       </TabsContent>
       
-      <TabsContent value="notes" className="mt-4">
+      <TabsContent value="notes" className="mt-8">
         <NotesSection onNotesChange={onNotesChange} />
       </TabsContent>
 
-      <TabsContent value="todos" className="mt-4">
+      <TabsContent value="todos" className="mt-8">
         <TodoSection />
       </TabsContent>
     </Tabs>
