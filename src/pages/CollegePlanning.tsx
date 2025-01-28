@@ -5,13 +5,7 @@ import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useTodos } from "@/hooks/useTodos";
 import { useProfile } from "@/hooks/useProfile";
-
-interface Course {
-  id: string;
-  name: string;
-  grade: string;
-  semester: string;
-}
+import { Course } from "@/components/college-planning/types/course";
 
 interface ActivityType {
   id: string;

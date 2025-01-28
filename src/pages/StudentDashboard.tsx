@@ -10,13 +10,7 @@ import { ArrowLeft } from "lucide-react";
 import SelectCounselorDialog from "@/components/college-planning/SelectCounselorDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Course {
-  id: string;
-  name: string;
-  grade: string;
-  semester: string;
-}
+import { Course } from "@/components/college-planning/types/course";
 
 interface ActivityType {
   id: string;
@@ -142,7 +136,6 @@ export default function StudentDashboard() {
             )}
           </div>
         </div>
-        {/* Only show Select Counselor button if viewing as the student */}
         {profile?.id === studentId && (
           <SelectCounselorDialog 
             studentId={studentId}
