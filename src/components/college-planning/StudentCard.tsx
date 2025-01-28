@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { StudentProfile } from "./types/student-management";
@@ -20,7 +20,15 @@ interface StudentCardProps {
 
 export default function StudentCard({ student }: StudentCardProps) {
   const navigate = useNavigate();
+  // Initialize state with student's application_year
   const [applicationYear, setApplicationYear] = useState<string>(student.application_year || '');
+
+  // Update local state when student prop changes
+  useEffect(() => {
+    if (student.application_year) {
+      setApplicationYear(student.application_year);
+    }
+  }, [student.application_year]);
 
   const handleViewDashboard = () => {
     console.log("Navigating to student dashboard:", student.id);
