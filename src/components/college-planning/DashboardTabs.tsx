@@ -1,4 +1,4 @@
-import { Activity, BookOpen, ListTodo, StickyNote } from "lucide-react";
+import { Activity, BookOpen, ListTodo, StickyNote, GraduationCap } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import ExtracurricularSection from "./ExtracurricularSection";
 import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
+import CollegeListSection from "./CollegeListSection";
 import { calculateGPA } from "./academics/GradeCalculator";
 import { Course } from "./types/course";
 
@@ -85,7 +86,7 @@ export default function DashboardTabs({
   return (
     <Tabs defaultValue="academics" className="w-full">
       <div className="grid grid-cols-1 gap-2 mb-8">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full gap-2">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full gap-2">
           <TabsTrigger 
             value="academics" 
             className="flex items-center gap-2 data-[state=active]:bg-[#F2FCE2]"
@@ -113,6 +114,13 @@ export default function DashboardTabs({
           >
             <ListTodo className="h-4 w-4" />
             To-Dos
+          </TabsTrigger>
+          <TabsTrigger 
+            value="colleges" 
+            className="flex items-center gap-2 data-[state=active]:bg-[#FFE5D9]"
+          >
+            <GraduationCap className="h-4 w-4" />
+            College List
           </TabsTrigger>
         </TabsList>
       </div>
@@ -176,6 +184,10 @@ export default function DashboardTabs({
 
       <TabsContent value="todos" className="mt-8">
         <TodoSection />
+      </TabsContent>
+
+      <TabsContent value="colleges" className="mt-8">
+        <CollegeListSection />
       </TabsContent>
     </Tabs>
   );

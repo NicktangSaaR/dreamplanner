@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      college_applications: {
+        Row: {
+          college_name: string
+          college_url: string
+          created_at: string | null
+          degree: string
+          id: string
+          major: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          college_name: string
+          college_url: string
+          created_at?: string | null
+          degree: string
+          id?: string
+          major: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          college_name?: string
+          college_url?: string
+          created_at?: string | null
+          degree?: string
+          id?: string
+          major?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       counselor_student_relationships: {
         Row: {
           counselor_id: string
