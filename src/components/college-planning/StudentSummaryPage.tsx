@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 
 export default function StudentSummaryPage() {
   const navigate = useNavigate();
@@ -86,6 +87,10 @@ export default function StudentSummaryPage() {
     navigate(`/student-dashboard/${studentId}`);
   };
 
+  const handleBack = () => {
+    navigate(-1); // This will take the user back to the previous page
+  };
+
   if (!profile) {
     return <div>Loading...</div>;
   }
@@ -93,7 +98,17 @@ export default function StudentSummaryPage() {
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Student Summary</h1>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={handleBack}
+            className="hover:bg-gray-100"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">Student Summary</h1>
+        </div>
         <Button onClick={handleViewDashboard}>View Dashboard</Button>
       </div>
 
