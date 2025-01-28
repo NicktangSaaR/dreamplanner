@@ -6,6 +6,7 @@ import About from "./pages/About";
 import CollegePlanning from "./pages/CollegePlanning";
 import CounselorDashboard from "./pages/CounselorDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
+import StudentView from "./pages/StudentView";
 import Profile from "./pages/Profile";
 import Academics from "./pages/Academics";
 import NotFound from "./pages/NotFound";
@@ -22,6 +23,8 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/college-planning" element={<CollegePlanning />} />
         <Route path="/counselor-dashboard" element={<CounselorDashboard />} />
+        <Route path="/counselor/student/:studentId" element={<StudentView />} />
+        <Route path="/student/:studentId" element={<StudentView />} />
         <Route path="/college-planning/student/:studentId" element={<StudentDashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/academics" element={<Academics />} />
