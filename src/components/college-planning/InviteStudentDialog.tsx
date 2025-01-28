@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Loader2, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface InviteStudentDialogProps {
   counselorId: string;
@@ -15,7 +15,6 @@ export default function InviteStudentDialog({ counselorId }: InviteStudentDialog
   const [email, setEmail] = useState("");
   const [isInviting, setIsInviting] = useState(false);
   const [open, setOpen] = useState(false);
-  const { toast } = useToast();
 
   const handleInviteStudent = async () => {
     try {
@@ -37,35 +36,31 @@ export default function InviteStudentDialog({ counselorId }: InviteStudentDialog
       if (invitationError) {
         console.error("Error creating invitation:", invitationError);
         if (invitationError.code === '23505') {
-          toast({
-            title: "Error",
-            description: "An invitation has already been sent to this email.",
-            variant: "destructive",
-          });
+          toast.error("An invitation has already been sent to this email.");
+          return;
         } else {
-          toast({
-            title: "Error",
-            description: "Failed to send invitation. Please try again.",
-            variant: "destructive",
-          });
+          toast.error("Failed to send invitation. Please try again.");
+          return;
         }
+      }
+
+      // Send the invitation email
+      const { error: emailError } = await supabase.functions.invoke('send-invitation', {
+        body: { email, token }
+      });
+
+      if (emailError) {
+        console.error("Error sending invitation email:", emailError);
+        toast.error("Failed to send invitation email. Please try again.");
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "Invitation sent successfully!",
-      });
-      
+      toast.success("Invitation sent successfully!");
       setEmail("");
       setOpen(false);
     } catch (error) {
       console.error("Error inviting student:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsInviting(false);
     }
