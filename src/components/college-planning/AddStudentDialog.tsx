@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Loader2, UserPlus } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { UserPlus } from "lucide-react";
 
 interface AddStudentDialogProps {
   counselorId: string;
@@ -14,110 +14,66 @@ interface AddStudentDialogProps {
 
 export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStudentDialogProps) {
   const [email, setEmail] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
-  const [open, setOpen] = useState(false);
-  const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAddStudent = async () => {
+  const handleAddStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
     try {
-      setIsAdding(true);
       console.log("Looking for student with email:", email);
-
-      // Find the student's profile using their email from auth.users
+      
+      // Get all student profiles that match the email
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select('id, user_type')
-        .eq('user_type', 'student')
-        .single();
+        .eq('user_type', 'student');
 
       if (profileError) {
         console.error("Error finding student profile:", profileError);
-        toast({
-          title: "Error",
-          description: "Student not found. Make sure they have registered first.",
-          variant: "destructive",
-        });
+        toast.error("Failed to find student profile");
         return;
       }
 
-      if (!profiles) {
-        toast({
-          title: "Error",
-          description: "Student not found. Make sure they have registered first.",
-          variant: "destructive",
-        });
+      if (!profiles || profiles.length === 0) {
+        toast.error("No student profile found with this email");
         return;
       }
 
-      if (profiles.user_type !== 'student') {
-        toast({
-          title: "Error",
-          description: "The provided email does not belong to a student account.",
-          variant: "destructive",
-        });
-        return;
+      // Create relationship for each student profile found
+      for (const profile of profiles) {
+        const { error: relationshipError } = await supabase
+          .from('counselor_student_relationships')
+          .insert({
+            counselor_id: counselorId,
+            student_id: profile.id
+          });
+
+        if (relationshipError) {
+          console.error("Error creating relationship:", relationshipError);
+          toast.error("Failed to add student");
+          return;
+        }
       }
 
-      // Check if relationship already exists
-      const { data: existingRelationship } = await supabase
-        .from('counselor_student_relationships')
-        .select('id')
-        .eq('counselor_id', counselorId)
-        .eq('student_id', profiles.id)
-        .single();
-
-      if (existingRelationship) {
-        toast({
-          title: "Error",
-          description: "This student is already assigned to you.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Create the relationship
-      const { error: relationshipError } = await supabase
-        .from('counselor_student_relationships')
-        .insert({
-          counselor_id: counselorId,
-          student_id: profiles.id,
-        });
-
-      if (relationshipError) {
-        console.error("Error creating relationship:", relationshipError);
-        toast({
-          title: "Error",
-          description: "Failed to add student. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Success",
-        description: "Student added successfully!",
-      });
-      
+      toast.success("Student added successfully");
       onStudentAdded();
+      setIsOpen(false);
       setEmail("");
-      setOpen(false);
     } catch (error) {
-      console.error("Error adding student:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Error in handleAddStudent:", error);
+      toast.error("An unexpected error occurred");
     } finally {
-      setIsAdding(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
+          <UserPlus className="h-4 w-4 mr-2" />
           Add Student
         </Button>
       </DialogTrigger>
@@ -125,32 +81,22 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         <DialogHeader>
           <DialogTitle>Add Student</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <form onSubmit={handleAddStudent} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Student Email</Label>
             <Input
               id="email"
               type="email"
-              placeholder="student@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter student email"
+              required
             />
           </div>
-          <Button 
-            onClick={handleAddStudent} 
-            disabled={isAdding || !email}
-            className="w-full"
-          >
-            {isAdding ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Adding...
-              </>
-            ) : (
-              "Add Student"
-            )}
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Adding..." : "Add Student"}
           </Button>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
