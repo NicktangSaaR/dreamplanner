@@ -24,12 +24,11 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
     try {
       console.log("Looking for student with email:", email);
       
-      // First get the user from auth.users table using query parameter
-      const { data: users, error: authError } = await supabase.auth
+      // Get all users and filter by email
+      const { data: { users }, error: authError } = await supabase.auth
         .admin.listUsers({
           page: 1,
-          perPage: 1,
-          query: email // Use query parameter to search by email
+          perPage: 100
         });
 
       if (authError) {
@@ -38,12 +37,13 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         return;
       }
 
-      if (!users || users.users.length === 0) {
+      const matchingUser = users.find(user => user.email === email);
+      if (!matchingUser) {
         toast.error("No user found with this email");
         return;
       }
 
-      const userId = users.users[0].id;
+      const userId = matchingUser.id;
 
       // Then query the corresponding student profile
       const { data: profile, error: profileError } = await supabase
