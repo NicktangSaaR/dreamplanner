@@ -55,9 +55,13 @@ export default function CollegeListSection() {
     queryKey: ["college-applications"],
     queryFn: async () => {
       console.log("Fetching college applications");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
       const { data, error } = await supabase
         .from("college_applications")
         .select("*")
+        .eq("student_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -73,11 +77,15 @@ export default function CollegeListSection() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       console.log("Submitting application:", values);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
       const collegeUrl = `https://www.${values.college_name.toLowerCase().replace(/ /g, '')}.edu`;
       
       const { error } = await supabase.from("college_applications").insert({
         ...values,
         college_url: collegeUrl,
+        student_id: user.id
       });
 
       if (error) throw error;
