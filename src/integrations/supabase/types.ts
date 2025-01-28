@@ -162,6 +162,42 @@ export type Database = {
         }
         Relationships: []
       }
+      mock_interview_questions: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_system: boolean | null
+          preparation_time: number
+          response_time: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          preparation_time?: number
+          response_time?: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          preparation_time?: number
+          response_time?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           author_id: string | null
