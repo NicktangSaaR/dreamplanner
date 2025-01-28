@@ -18,16 +18,21 @@ const VideoPreview = ({
   onStopRecording,
   onStartNew
 }: VideoPreviewProps) => {
-  // Add useEffect to handle stream changes
+  // Add useEffect to handle stream changes and ensure video is playing
   useEffect(() => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      console.log("Video stream updated:", videoRef.current.srcObject);
+    const videoElement = videoRef.current;
+    if (videoElement && videoElement.srcObject) {
+      console.log("Video stream updated:", videoElement.srcObject);
+      // Ensure video starts playing
+      videoElement.play().catch(error => {
+        console.error("Error playing video:", error);
+      });
     }
   }, [videoRef]);
 
   return (
     <Card className="p-6">
-      <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+      <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
         {isReviewStage && recordedVideoUrl ? (
           <video
             src={recordedVideoUrl}
@@ -40,7 +45,7 @@ const VideoPreview = ({
             autoPlay
             playsInline
             muted
-            className="w-full h-full rounded-lg"
+            className="w-full h-full rounded-lg object-cover"
             style={{ transform: 'scaleX(-1)' }}
           />
         )}
