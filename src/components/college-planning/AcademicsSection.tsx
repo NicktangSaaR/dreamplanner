@@ -17,6 +17,7 @@ interface Course {
   academic_year?: string;
   grade_level?: string;
   student_id: string;
+  grade_type?: string;
 }
 
 interface AcademicsSectionProps {
@@ -34,6 +35,7 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
     course_type: "Regular",
     grade_level: "",
     academic_year: "",
+    grade_type: "letter",
   });
 
   // Generate academic years - now includes 4 years in the past
@@ -81,9 +83,14 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
         throw new Error('No authenticated user found');
       }
 
+      const gpaValue = calculateGPA(courseData.grade, courseData.course_type, courseData.grade_type);
       const { data, error } = await supabase
         .from('courses')
-        .insert([{ ...courseData, student_id: user.id }])
+        .insert([{ 
+          ...courseData, 
+          student_id: user.id,
+          gpa_value: gpaValue
+        }])
         .select()
         .single();
 
@@ -114,9 +121,10 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
   const updateCourseMutation = useMutation({
     mutationFn: async (course: Course) => {
       console.log('Updating course:', course);
+      const gpaValue = calculateGPA(course.grade, course.course_type, course.grade_type);
       const { data, error } = await supabase
         .from('courses')
-        .update(course)
+        .update({ ...course, gpa_value: gpaValue })
         .eq('id', course.id)
         .select()
         .single();
@@ -151,13 +159,7 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
 
   const handleAddCourse = () => {
     if (newCourse.name && newCourse.grade && newCourse.semester && newCourse.grade_level && newCourse.academic_year) {
-      const gpaValue = calculateGPA(newCourse.grade, newCourse.course_type);
-      const courseData = {
-        ...newCourse,
-        gpa_value: gpaValue,
-      };
-
-      addCourseMutation.mutate(courseData as Omit<Course, 'id'>);
+      addCourseMutation.mutate(newCourse as Omit<Course, 'id'>);
 
       setNewCourse({
         name: "",
@@ -166,6 +168,7 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
         course_type: "Regular",
         grade_level: "",
         academic_year: "",
+        grade_type: "letter",
       });
     }
   };
@@ -176,7 +179,7 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
 
   const handleSaveEdit = () => {
     if (editingCourse) {
-      const gpaValue = calculateGPA(editingCourse.grade, editingCourse.course_type);
+      const gpaValue = calculateGPA(editingCourse.grade, editingCourse.course_type, editingCourse.grade_type);
       const updatedCourse = {
         ...editingCourse,
         gpa_value: gpaValue,

@@ -56,6 +56,7 @@ export type Database = {
           gpa_value: number | null
           grade: string
           grade_level: string | null
+          grade_type: string | null
           id: string
           name: string
           semester: string
@@ -69,6 +70,7 @@ export type Database = {
           gpa_value?: number | null
           grade: string
           grade_level?: string | null
+          grade_type?: string | null
           id?: string
           name: string
           semester: string
@@ -82,6 +84,7 @@ export type Database = {
           gpa_value?: number | null
           grade?: string
           grade_level?: string | null
+          grade_type?: string | null
           id?: string
           name?: string
           semester?: string
