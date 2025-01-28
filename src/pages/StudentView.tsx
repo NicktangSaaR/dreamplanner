@@ -26,7 +26,7 @@ interface Note {
 }
 
 export default function StudentView() {
-  const { studentId } = useParams();
+  const { studentId } = useParams<{ studentId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const { profile } = useProfile();
@@ -35,8 +35,38 @@ export default function StudentView() {
   const [notes, setNotes] = useState<Note[]>([]);
   const isCounselorView = location.pathname.startsWith('/counselor');
 
+  // Check if studentId is valid
+  if (!studentId) {
+    console.error("No student ID provided");
+    toast.error("Invalid student ID");
+    navigate(isCounselorView ? '/counselor-dashboard' : '/college-planning');
+    return null;
+  }
+
+  // Fetch student profile
+  const { data: studentProfile, isError: profileError } = useQuery({
+    queryKey: ["student-profile", studentId],
+    queryFn: async () => {
+      console.log("Fetching student profile data for ID:", studentId);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", studentId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching student profile:", error);
+        throw error;
+      }
+
+      console.log("Student profile data:", data);
+      return data;
+    },
+    enabled: !!studentId,
+  });
+
   // Check access rights
-  const { data: hasAccess } = useQuery({
+  const { data: hasAccess, isError: accessError } = useQuery({
     queryKey: ["check-student-access", studentId, profile?.id],
     queryFn: async () => {
       if (!profile?.id || !studentId) return false;
@@ -72,32 +102,16 @@ export default function StudentView() {
     enabled: !!profile?.id && !!studentId,
   });
 
-  // Fetch student profile
-  const { data: studentProfile } = useQuery({
-    queryKey: ["student-profile", studentId],
-    queryFn: async () => {
-      console.log("Fetching student profile data");
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", studentId)
-        .single();
+  // Handle errors and access control
+  if (profileError || accessError) {
+    toast.error("Error loading student data");
+    navigate(isCounselorView ? '/counselor-dashboard' : '/college-planning');
+    return null;
+  }
 
-      if (error) {
-        console.error("Error fetching student profile:", error);
-        throw error;
-      }
-
-      console.log("Student profile data:", data);
-      return data;
-    },
-    enabled: !!studentId,
-  });
-
-  // Handle unauthorized access
   if (hasAccess === false) {
     toast.error("You don't have permission to view this page");
-    navigate(profile?.user_type === 'counselor' ? '/counselor-dashboard' : '/college-planning');
+    navigate(isCounselorView ? '/counselor-dashboard' : '/college-planning');
     return null;
   }
 
