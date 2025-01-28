@@ -67,7 +67,7 @@ export default function Profile() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-3xl font-bold">Student Profile</h1>
+        <h1 className="text-3xl font-bold">My Profile</h1>
       </div>
 
       <div className="bg-[#D3E4FD] p-4 rounded-lg">
