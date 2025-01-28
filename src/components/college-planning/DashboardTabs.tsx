@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import ExtracurricularSection from "./ExtracurricularSection";
 import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
-import SharedFoldersSection from "./SharedFoldersSection";
 
 interface Course {
   id: string;
@@ -32,7 +31,7 @@ export default function DashboardTabs({
 
   return (
     <Tabs defaultValue="academics" className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger 
           value="academics" 
           className="flex items-center gap-2 data-[state=active]:bg-[#F2FCE2]"
@@ -52,7 +51,7 @@ export default function DashboardTabs({
           className="flex items-center gap-2 data-[state=active]:bg-[#E5DEFF]"
         >
           <StickyNote className="h-4 w-4" />
-          Notes
+          Notes & Folders
         </TabsTrigger>
         <TabsTrigger 
           value="todos" 
@@ -60,13 +59,6 @@ export default function DashboardTabs({
         >
           <ListTodo className="h-4 w-4" />
           To-Dos
-        </TabsTrigger>
-        <TabsTrigger 
-          value="shared-folders" 
-          className="flex items-center gap-2 data-[state=active]:bg-[#D3E4FD]"
-        >
-          <Folder className="h-4 w-4" />
-          Shared Folders
         </TabsTrigger>
       </TabsList>
       
@@ -130,10 +122,6 @@ export default function DashboardTabs({
 
       <TabsContent value="todos" className="bg-[#D3E4FD] p-4 rounded-lg">
         <TodoSection />
-      </TabsContent>
-
-      <TabsContent value="shared-folders" className="bg-[#D3E4FD] p-4 rounded-lg">
-        <SharedFoldersSection />
       </TabsContent>
     </Tabs>
   );
