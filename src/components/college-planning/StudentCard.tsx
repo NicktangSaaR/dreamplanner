@@ -16,15 +16,13 @@ interface StudentCardProps {
 export default function StudentCard({ student }: StudentCardProps) {
   const navigate = useNavigate();
 
-  const handleViewDashboard = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("Attempting to navigate to student dashboard:", student.id);
+  const handleViewDashboard = () => {
+    console.log("Navigating to student dashboard:", student.id);
     navigate(`/college-planning/student/${student.id}`);
   };
 
   return (
-    <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+    <Card className="hover:bg-accent/50 transition-colors">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>{student.full_name}</span>
