@@ -24,11 +24,34 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
     try {
       console.log("Looking for student with email:", email);
       
-      // Get all student profiles that match the email
-      const { data: profiles, error: profileError } = await supabase
+      // 首先获取auth.users中对应的用户ID
+      const { data: authUser, error: authError } = await supabase.auth
+        .admin.listUsers({
+          filters: {
+            email: email
+          }
+        });
+
+      if (authError) {
+        console.error("Error finding auth user:", authError);
+        toast.error("Failed to find user");
+        return;
+      }
+
+      if (!authUser || authUser.users.length === 0) {
+        toast.error("No user found with this email");
+        return;
+      }
+
+      const userId = authUser.users[0].id;
+
+      // 然后查询对应的student profile
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id, user_type')
-        .eq('user_type', 'student');
+        .eq('id', userId)
+        .eq('user_type', 'student')
+        .single();
 
       if (profileError) {
         console.error("Error finding student profile:", profileError);
@@ -36,25 +59,23 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         return;
       }
 
-      if (!profiles || profiles.length === 0) {
+      if (!profile) {
         toast.error("No student profile found with this email");
         return;
       }
 
-      // Create relationship for each student profile found
-      for (const profile of profiles) {
-        const { error: relationshipError } = await supabase
-          .from('counselor_student_relationships')
-          .insert({
-            counselor_id: counselorId,
-            student_id: profile.id
-          });
+      // 创建counselor-student关系
+      const { error: relationshipError } = await supabase
+        .from('counselor_student_relationships')
+        .insert({
+          counselor_id: counselorId,
+          student_id: profile.id
+        });
 
-        if (relationshipError) {
-          console.error("Error creating relationship:", relationshipError);
-          toast.error("Failed to add student");
-          return;
-        }
+      if (relationshipError) {
+        console.error("Error creating relationship:", relationshipError);
+        toast.error("Failed to add student");
+        return;
       }
 
       toast.success("Student added successfully");
