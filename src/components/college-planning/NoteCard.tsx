@@ -21,11 +21,11 @@ interface NoteCardProps {
 
 export default function NoteCard({ note, onTogglePin, onToggleStar, onEdit }: NoteCardProps) {
   return (
-    <Card className={note.is_pinned ? "border-primary" : ""}>
-      <CardContent className="pt-6">
+    <Card className={`${note.is_pinned ? "border-primary" : "border-0"} bg-white/50 hover:bg-white/80 transition-colors`}>
+      <CardContent className="pt-4 px-4">
         <div className="flex justify-between items-start mb-2">
           <div>
-            <h3 className="font-semibold">{note.title}</h3>
+            <h3 className="font-semibold text-base">{note.title}</h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>{note.date}</span>
               {note.author_name && (
@@ -39,11 +39,12 @@ export default function NoteCard({ note, onTogglePin, onToggleStar, onEdit }: No
               )}
             </div>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-1">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onEdit(note)}
+              className="h-8 w-8"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -51,7 +52,7 @@ export default function NoteCard({ note, onTogglePin, onToggleStar, onEdit }: No
               variant="ghost"
               size="icon"
               onClick={() => onTogglePin(note)}
-              className={note.is_pinned ? "text-primary" : ""}
+              className={`h-8 w-8 ${note.is_pinned ? "text-primary" : ""}`}
             >
               <Pin className="h-4 w-4" />
             </Button>
@@ -59,12 +60,13 @@ export default function NoteCard({ note, onTogglePin, onToggleStar, onEdit }: No
               variant="ghost"
               size="icon"
               onClick={() => onToggleStar(note)}
+              className="h-8 w-8"
             >
               <Star className="h-4 w-4" />
             </Button>
           </div>
         </div>
-        <p className="whitespace-pre-wrap">{note.content}</p>
+        <p className="whitespace-pre-wrap text-sm">{note.content}</p>
       </CardContent>
     </Card>
   );
