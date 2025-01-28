@@ -25,12 +25,35 @@ export default function SignUp() {
     console.log("Attempting signup with:", { ...formData, password: "REDACTED" });
 
     try {
+      // First, check if a profile already exists for this email
+      const { data: existingUser, error: existingUserError } = await supabase
+        .from('profiles')
+        .select('id, user_type')
+        .eq('id', formData.email)
+        .maybeSingle();
+
+      if (existingUserError) {
+        console.error("Error checking existing user:", existingUserError);
+      }
+
+      if (existingUser) {
+        console.log("User already exists:", existingUser);
+        toast({
+          variant: "destructive",
+          title: "Account Already Exists",
+          description: "This email is already registered. Please log in instead.",
+        });
+        setTimeout(() => navigate("/login"), 2000);
+        return;
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: formData.email.trim(),
         password: formData.password,
         options: {
           data: {
             full_name: formData.fullName,
+            user_type: formData.userType,
           },
         },
       });

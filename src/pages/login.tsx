@@ -54,7 +54,7 @@ export default function Login() {
         // Fetch user profile to determine role
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('user_type')
+          .select('user_type, full_name')
           .eq('id', session.user.id)
           .maybeSingle();
 
@@ -94,6 +94,7 @@ export default function Login() {
           navigate('/college-planning');
         } else {
           // Redirect based on user type
+          console.log("Redirecting based on user type:", profile.user_type);
           if (profile.user_type === 'counselor') {
             navigate('/counselor-dashboard');
           } else {
