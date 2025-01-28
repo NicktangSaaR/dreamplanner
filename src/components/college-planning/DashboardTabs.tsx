@@ -2,7 +2,7 @@ import { Activity, BookOpen, ListTodo, StickyNote, GraduationCap } from "lucide-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import ExtracurricularSection from "./ExtracurricularSection";
 import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
@@ -24,6 +24,9 @@ export default function DashboardTabs({
   onNotesChange 
 }: DashboardTabsProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { studentId } = useParams();
+  const isCounselorView = location.pathname.includes('/counselor-dashboard');
 
   const calculateOverallMetrics = () => {
     if (!courses.length) return { gpa: 'N/A', average: 'N/A' };
@@ -82,6 +85,11 @@ export default function DashboardTabs({
 
   const { gpa, average } = calculateOverallMetrics();
   const yearlyMetrics = calculateYearlyMetrics();
+
+  const navigateToAcademics = () => {
+    const basePath = isCounselorView ? '/counselor-dashboard/student' : '/student-dashboard';
+    navigate(`${basePath}/${studentId}/academics`);
+  };
 
   return (
     <Tabs defaultValue="academics" className="w-full">
@@ -166,7 +174,7 @@ export default function DashboardTabs({
 
             <Button 
               className="w-full"
-              onClick={() => navigate('/academics')}
+              onClick={navigateToAcademics}
             >
               View Full Academic Records
             </Button>

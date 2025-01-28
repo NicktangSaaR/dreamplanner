@@ -11,6 +11,7 @@ import CounselorDashboard from "@/pages/CounselorDashboard";
 import StudentDashboard from "@/pages/StudentDashboard";
 import StudentView from "@/pages/StudentView";
 import StudentSummaryPage from "@/components/college-planning/StudentSummaryPage";
+import Academics from "@/pages/Academics";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,8 @@ export default function App() {
             />
             <Route path="/counselor-dashboard/student/:studentId" element={<StudentView />} />
             <Route path="/student-dashboard/:studentId" element={<StudentDashboard />} />
+            <Route path="/student-dashboard/:studentId/academics" element={<Academics />} />
+            <Route path="/counselor-dashboard/student/:studentId/academics" element={<Academics />} />
           </Route>
         </Routes>
         <Toaster />

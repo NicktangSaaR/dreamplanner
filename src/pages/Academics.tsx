@@ -1,12 +1,24 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import AcademicsSection from "@/components/college-planning/AcademicsSection";
+import { Course } from "@/components/college-planning/types/course";
 
 export default function Academics() {
   const navigate = useNavigate();
-  const [courses, setCourses] = useState([]);
+  const { studentId } = useParams();
+  const location = useLocation();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const isCounselorView = location.pathname.includes('/counselor-dashboard');
+
+  const handleBack = () => {
+    if (isCounselorView) {
+      navigate(`/counselor-dashboard/student/${studentId}`);
+    } else {
+      navigate(`/student-dashboard/${studentId}`);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -15,7 +27,7 @@ export default function Academics() {
           <Button 
             variant="ghost" 
             size="icon"
-            onClick={() => navigate('/college-planning')}
+            onClick={handleBack}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
