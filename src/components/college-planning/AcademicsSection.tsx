@@ -14,6 +14,8 @@ interface Course {
   semester: string;
   course_type: string;
   gpa_value?: number;
+  academic_year?: string;
+  grade_level?: string;
 }
 
 interface AcademicsSectionProps {
@@ -33,6 +35,8 @@ const COURSE_TYPE_BONUS: { [key: string]: number } = {
   'AP/IB': 1.0
 };
 
+const GRADE_LEVELS = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
+
 export default function AcademicsSection({ onCoursesChange }: AcademicsSectionProps) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -41,6 +45,15 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
     grade: "",
     semester: "",
     course_type: "Regular",
+    grade_level: "",
+    academic_year: "",
+  });
+
+  // 生成学年选项
+  const currentYear = new Date().getFullYear();
+  const academicYears = Array.from({ length: 4 }, (_, i) => {
+    const year = currentYear - 2 + i;
+    return `${year}-${year + 1}`;
   });
 
   useEffect(() => {
@@ -62,7 +75,7 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
   };
 
   const handleAddCourse = () => {
-    if (newCourse.name && newCourse.grade && newCourse.semester) {
+    if (newCourse.name && newCourse.grade && newCourse.semester && newCourse.grade_level && newCourse.academic_year) {
       const gpaValue = calculateGPA(newCourse.grade, newCourse.course_type);
       const updatedCourses = [
         ...courses,
@@ -73,7 +86,14 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
         },
       ];
       setCourses(updatedCourses);
-      setNewCourse({ name: "", grade: "", semester: "", course_type: "Regular" });
+      setNewCourse({
+        name: "",
+        grade: "",
+        semester: "",
+        course_type: "Regular",
+        grade_level: "",
+        academic_year: "",
+      });
     }
   };
 
@@ -110,7 +130,7 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-6 gap-4">
           <div>
             <Label htmlFor="courseName">Course Name</Label>
             <Input
@@ -162,6 +182,46 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
             </Select>
           </div>
           <div>
+            <Label htmlFor="gradeLevel">Grade Level</Label>
+            <Select
+              value={newCourse.grade_level}
+              onValueChange={(value) =>
+                setNewCourse({ ...newCourse, grade_level: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select grade level" />
+              </SelectTrigger>
+              <SelectContent>
+                {GRADE_LEVELS.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {level}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="academicYear">Academic Year</Label>
+            <Select
+              value={newCourse.academic_year}
+              onValueChange={(value) =>
+                setNewCourse({ ...newCourse, academic_year: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select year" />
+              </SelectTrigger>
+              <SelectContent>
+                {academicYears.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label htmlFor="semester">Semester</Label>
             <Input
               id="semester"
@@ -183,6 +243,8 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
               <TableHead>Course Name</TableHead>
               <TableHead>Grade</TableHead>
               <TableHead>Course Type</TableHead>
+              <TableHead>Grade Level</TableHead>
+              <TableHead>Academic Year</TableHead>
               <TableHead>Semester</TableHead>
               <TableHead>GPA</TableHead>
               <TableHead>Actions</TableHead>
@@ -248,6 +310,50 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
                     </Select>
                   </TableCell>
                   <TableCell>
+                    <Select
+                      value={editingCourse.grade_level}
+                      onValueChange={(value) =>
+                        setEditingCourse({
+                          ...editingCourse,
+                          grade_level: value,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GRADE_LEVELS.map((level) => (
+                          <SelectItem key={level} value={level}>
+                            {level}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={editingCourse.academic_year}
+                      onValueChange={(value) =>
+                        setEditingCourse({
+                          ...editingCourse,
+                          academic_year: value,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {academicYears.map((year) => (
+                          <SelectItem key={year} value={year}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
                     <Input
                       value={editingCourse.semester}
                       onChange={(e) =>
@@ -283,6 +389,8 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
                   <TableCell>{course.name}</TableCell>
                   <TableCell>{course.grade}</TableCell>
                   <TableCell>{course.course_type}</TableCell>
+                  <TableCell>{course.grade_level}</TableCell>
+                  <TableCell>{course.academic_year}</TableCell>
                   <TableCell>{course.semester}</TableCell>
                   <TableCell>{course.gpa_value?.toFixed(2)}</TableCell>
                   <TableCell>
