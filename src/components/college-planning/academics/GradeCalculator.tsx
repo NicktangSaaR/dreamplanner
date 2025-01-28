@@ -44,7 +44,9 @@ function calculateYearGPA(courses: Course[], academicYear: string, weighted: boo
     } else {
       return sum + calculateUnweightedGPA(course.grade);
     }
-  }, 0); yearCourses.length).toFixed(2));
+  }, 0);
+  
+  return Number((totalGPA / yearCourses.length).toFixed(2));
 }
 
 export default function GradeCalculator({ courses }: GradeCalculatorProps) {
