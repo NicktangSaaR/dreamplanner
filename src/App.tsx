@@ -2,9 +2,8 @@ import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import AuthLayout from "@/components/auth/AuthLayout";
-import Login from "@/pages/Login";
+import Login from "@/pages/login";
 import Register from "@/pages/Register";
 import CollegePlanning from "@/pages/CollegePlanning";
 import Profile from "@/pages/Profile";
@@ -38,7 +37,6 @@ export default function App() {
         <Toaster />
         <SonnerToaster position="top-center" />
       </Router>
-      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }
