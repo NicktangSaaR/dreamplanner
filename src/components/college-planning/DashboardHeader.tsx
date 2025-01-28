@@ -10,9 +10,9 @@ export default function DashboardHeader() {
         <h1 className="text-3xl font-bold">College Planning Dashboard</h1>
       </div>
       <Link to="/profile">
-        <Button variant="outline" className="flex items-center gap-2">
+        <Button variant="default" className="flex items-center gap-2">
           <User className="h-4 w-4" />
-          View Profile
+          My Profile
         </Button>
       </Link>
     </div>
