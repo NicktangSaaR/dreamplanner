@@ -69,7 +69,10 @@ export default function InviteStudentDialog({ counselorId }: InviteStudentDialog
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button 
+          variant="outline" 
+          className="bg-green-500 text-white hover:bg-green-600"
+        >
           <UserPlus className="mr-2 h-4 w-4" />
           Invite Student
         </Button>
