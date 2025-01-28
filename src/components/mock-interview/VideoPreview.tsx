@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StopCircle } from "lucide-react";
+import { useEffect } from "react";
 
 interface VideoPreviewProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -17,6 +18,13 @@ const VideoPreview = ({
   onStopRecording,
   onStartNew
 }: VideoPreviewProps) => {
+  // Add useEffect to handle stream changes
+  useEffect(() => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      console.log("Video stream updated:", videoRef.current.srcObject);
+    }
+  }, [videoRef]);
+
   return (
     <Card className="p-6">
       <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
@@ -30,8 +38,8 @@ const VideoPreview = ({
           <video
             ref={videoRef}
             autoPlay
-            muted
             playsInline
+            muted
             className="w-full h-full rounded-lg"
             style={{ transform: 'scaleX(-1)' }}
           />
