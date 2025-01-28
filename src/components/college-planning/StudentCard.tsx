@@ -17,13 +17,10 @@ export default function StudentCard({ student }: StudentCardProps) {
   const navigate = useNavigate();
 
   const handleViewDashboard = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click event from firing
-    console.log("Navigating to student dashboard:", student.id);
-    navigate(`/college-planning/student/${student.id}`);
-  };
-
-  return (
-    <Card 
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Attempting to navigate to student dashboard:", student.id);
+    navigate(`/college-planning/student/${student.id}`);<Card 
       className="hover:bg-accent/50 transition-colors cursor-pointer"
     >
       <CardHeader>
