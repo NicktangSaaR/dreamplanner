@@ -41,6 +41,25 @@ export default function SelectCounselorDialog({ studentId, onCounselorSelected }
     try {
       console.log("Creating relationship with counselor:", counselorId);
       
+      // First check if relationship already exists
+      const { data: existingRelationship, error: checkError } = await supabase
+        .from("counselor_student_relationships")
+        .select()
+        .eq("counselor_id", counselorId)
+        .eq("student_id", studentId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking existing relationship:", checkError);
+        toast.error("Failed to check existing relationship");
+        return;
+      }
+
+      if (existingRelationship) {
+        toast.error("You already have a relationship with this counselor");
+        return;
+      }
+
       const { error: relationshipError } = await supabase
         .from("counselor_student_relationships")
         .insert({
