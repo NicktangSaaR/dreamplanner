@@ -19,17 +19,54 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success("Successfully logged in!");
-        navigate("/");
+      if (signInError) {
+        toast.error(signInError.message);
+        return;
       }
+
+      // Get user profile to check user type
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Failed to get user information");
+        return;
+      }
+
+      console.log("Fetching user profile for:", user.id);
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_type, is_admin")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        toast.error("Failed to get user profile");
+        return;
+      }
+
+      console.log("User profile:", profile);
+
+      // Redirect based on user type
+      if (profile.is_admin) {
+        console.log("Redirecting to admin dashboard");
+        navigate("/admin-dashboard");
+      } else if (profile.user_type === "counselor") {
+        console.log("Redirecting to counselor dashboard");
+        navigate("/counselor-dashboard");
+      } else if (profile.user_type === "student") {
+        console.log("Redirecting to student dashboard");
+        navigate(`/student-dashboard/${user.id}`);
+      } else {
+        console.log("Redirecting to college planning");
+        navigate("/college-planning");
+      }
+
+      toast.success("Successfully logged in!");
     } catch (error) {
       console.error("Login error:", error);
       toast.error("An error occurred during login");
