@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Video, Mic, Play, StopCircle, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -41,10 +42,24 @@ interface Question {
   is_system: boolean;
 }
 
+enum InterviewStage {
+  SETTINGS,
+  PREPARATION,
+  COUNTDOWN,
+  RESPONSE,
+  REVIEW
+}
+
 const MockInterview = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [showSettings, setShowSettings] = useState(true);
+  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
+  const [stage, setStage] = useState<InterviewStage>(InterviewStage.SETTINGS);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [countdownTime, setCountdownTime] = useState(3);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [settings, setSettings] = useState<InterviewSettings>({
     prepTime: 120,
     responseTime: 180,
@@ -52,7 +67,6 @@ const MockInterview = () => {
   });
   const { toast } = useToast();
 
-  // Fetch questions from Supabase
   const { data: questions = [], isLoading } = useQuery({
     queryKey: ['interview-questions'],
     queryFn: async () => {
@@ -75,6 +89,56 @@ const MockInterview = () => {
     },
   });
 
+  useEffect(() => {
+    if (stage === InterviewStage.PREPARATION) {
+      setTimeLeft(settings.prepTime);
+    } else if (stage === InterviewStage.COUNTDOWN) {
+      setCountdownTime(3);
+    } else if (stage === InterviewStage.RESPONSE) {
+      setTimeLeft(settings.responseTime);
+    }
+  }, [stage, settings]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (stage === InterviewStage.PREPARATION && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            setStage(InterviewStage.COUNTDOWN);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (stage === InterviewStage.COUNTDOWN && countdownTime > 0) {
+      timer = setInterval(() => {
+        setCountdownTime(prev => {
+          if (prev <= 1) {
+            setStage(InterviewStage.RESPONSE);
+            startRecording();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (stage === InterviewStage.RESPONSE && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            stopRecording();
+            setStage(InterviewStage.REVIEW);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(timer);
+  }, [timeLeft, countdownTime, stage]);
+
   const startInterview = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -82,11 +146,13 @@ const MockInterview = () => {
         audio: true,
       });
       setStream(mediaStream);
-      setIsRecording(true);
-      setShowSettings(false);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+      setStage(InterviewStage.PREPARATION);
       toast({
         title: "Interview Started",
-        description: "Your camera and microphone are now active.",
+        description: "Preparation time has begun.",
       });
     } catch (error) {
       console.error("Error accessing media devices:", error);
@@ -98,16 +164,37 @@ const MockInterview = () => {
     }
   };
 
-  const stopInterview = () => {
+  const startRecording = () => {
+    if (stream) {
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      const chunks: Blob[] = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        setRecordedChunks(chunks);
+        setRecordedVideoUrl(URL.createObjectURL(blob));
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
-      setIsRecording(false);
-      setShowSettings(true);
-      toast({
-        title: "Interview Ended",
-        description: "Your recording has been stopped.",
-      });
     }
   };
 
@@ -140,11 +227,9 @@ const MockInterview = () => {
 
   const selectedQuestion = questions.find(q => q.id === settings.selectedQuestionId);
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Mock Interview Practice</h1>
-
-      {showSettings ? (
+  const renderContent = () => {
+    if (stage === InterviewStage.SETTINGS) {
+      return (
         <div className="grid md:grid-cols-2 gap-8">
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Interview Settings</h2>
@@ -278,90 +363,85 @@ const MockInterview = () => {
               </Button>
             </div>
           </Card>
-
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Selected Question</h2>
-            {selectedQuestion ? (
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">{selectedQuestion.title}</h3>
-                {selectedQuestion.description && (
-                  <p className="text-gray-600">{selectedQuestion.description}</p>
-                )}
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Mic className="w-4 h-4" />
-                  <span>{settings.prepTime} seconds to prepare</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Video className="w-4 h-4" />
-                  <span>{settings.responseTime} seconds to respond</span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-gray-500">Please select a question to begin the interview.</p>
-            )}
-          </Card>
         </div>
-      ) : (
-        <div className="grid md:grid-cols-2 gap-8">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Current Question</h2>
-            {selectedQuestion && (
-              <>
-                <p className="text-gray-600 mb-6">{selectedQuestion.title}</p>
+      );
+    }
+
+    return (
+      <div className="grid md:grid-cols-2 gap-8">
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Current Question</h2>
+          {selectedQuestion && (
+            <>
+              <p className="text-gray-600 mb-6">{selectedQuestion.title}</p>
+              {stage === InterviewStage.PREPARATION && (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Mic className="w-4 h-4" />
-                    <span>{settings.prepTime} seconds to prepare</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Video className="w-4 h-4" />
-                    <span>{settings.responseTime} seconds to respond</span>
-                  </div>
+                  <p className="text-lg font-medium">Preparation Time</p>
+                  <Progress value={(timeLeft / settings.prepTime) * 100} />
+                  <p className="text-center">{timeLeft} seconds remaining</p>
                 </div>
-              </>
-            )}
-          </Card>
+              )}
+              {stage === InterviewStage.COUNTDOWN && (
+                <div className="text-center">
+                  <p className="text-4xl font-bold mb-4">Starting in...</p>
+                  <p className="text-6xl font-bold text-primary">{countdownTime}</p>
+                </div>
+              )}
+              {stage === InterviewStage.RESPONSE && (
+                <div className="space-y-4">
+                  <p className="text-lg font-medium">Response Time</p>
+                  <Progress value={(timeLeft / settings.responseTime) * 100} />
+                  <p className="text-center">{timeLeft} seconds remaining</p>
+                </div>
+              )}
+            </>
+          )}
+        </Card>
 
-          <Card className="p-6">
-            <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-              {stream ? (
-                <video
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-full rounded-lg"
-                  style={{ transform: 'scaleX(-1)' }}
-                />
-              ) : (
-                <div className="text-gray-400 flex flex-col items-center">
-                  <Video className="w-12 h-12 mb-2" />
-                  <span>Camera preview will appear here</span>
-                </div>
-              )}
-            </div>
-            <div className="flex justify-center gap-4">
-              {!isRecording ? (
-                <Button
-                  onClick={startInterview}
-                  className="flex items-center gap-2"
-                >
-                  <Play className="w-4 h-4" />
-                  Start Recording
-                </Button>
-              ) : (
-                <Button
-                  onClick={stopInterview}
-                  variant="destructive"
-                  className="flex items-center gap-2"
-                >
-                  <StopCircle className="w-4 h-4" />
-                  Stop Recording
-                </Button>
-              )}
-            </div>
-          </Card>
-        </div>
-      )}
+        <Card className="p-6">
+          <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+            {stage === InterviewStage.REVIEW && recordedVideoUrl ? (
+              <video
+                src={recordedVideoUrl}
+                controls
+                className="w-full h-full rounded-lg"
+              />
+            ) : (
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                className="w-full h-full rounded-lg"
+                style={{ transform: 'scaleX(-1)' }}
+              />
+            )}
+          </div>
+          <div className="flex justify-center gap-4">
+            {stage === InterviewStage.REVIEW ? (
+              <Button onClick={() => setStage(InterviewStage.SETTINGS)}>
+                Start New Interview
+              </Button>
+            ) : (
+              <Button
+                onClick={stopRecording}
+                variant="destructive"
+                className="flex items-center gap-2"
+              >
+                <StopCircle className="w-4 h-4" />
+                End Interview
+              </Button>
+            )}
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Mock Interview Practice</h1>
+      {renderContent()}
     </div>
   );
 };
