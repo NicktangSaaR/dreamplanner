@@ -21,7 +21,7 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>{student.full_name}</span>
-          <Button variant="ghost">View Dashboard</Button>
+          <Button variant="default">View Dashboard</Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
