@@ -13,6 +13,7 @@ interface StudentSummaryPageProps {
 
 export default function StudentSummaryPage({ studentId }: StudentSummaryPageProps) {
   const navigate = useNavigate();
+  console.log("StudentSummaryPage - Received studentId:", studentId);
 
   // Fetch student profile
   const { data: profile } = useQuery({
@@ -107,13 +108,15 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
   };
 
   const handleViewDashboard = () => {
+    console.log("View Dashboard clicked - studentId:", studentId);
     if (!studentId) {
       toast.error("Student ID is missing");
       return;
     }
-    console.log("Navigating to student dashboard with ID:", studentId);
     navigate(`/student-dashboard/${studentId}`);
   };
+
+  // ... keep existing code (JSX structure)
 
   return (
     <div className="container mx-auto p-4 space-y-6">
