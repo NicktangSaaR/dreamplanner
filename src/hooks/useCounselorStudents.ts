@@ -11,7 +11,7 @@ interface StudentProfile {
 
 interface CounselorStudentRelationship {
   student_id: string;
-  students: StudentProfile | null;
+  students: StudentProfile;
 }
 
 export function useCounselorStudents() {
@@ -27,7 +27,7 @@ export function useCounselorStudents() {
         .from("counselor_student_relationships")
         .select(`
           student_id,
-          students:profiles(
+          students:profiles!counselor_student_relationships_student_profiles_fkey(
             id,
             full_name,
             grade,

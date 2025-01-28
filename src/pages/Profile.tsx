@@ -8,11 +8,13 @@ import SelectCounselorDialog from "@/components/college-planning/SelectCounselor
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface CounselorProfile {
+  full_name: string | null;
+}
+
 interface CounselorRelationship {
   counselor_id: string;
-  counselor: {
-    full_name: string | null;
-  } | null;
+  counselor: CounselorProfile;
 }
 
 export default function Profile() {
@@ -30,7 +32,9 @@ export default function Profile() {
         .from("counselor_student_relationships")
         .select(`
           counselor_id,
-          counselor:profiles(full_name)
+          counselor:profiles!counselor_student_relationships_counselor_profiles_fkey(
+            full_name
+          )
         `)
         .eq("student_id", profile?.id)
         .maybeSingle();
