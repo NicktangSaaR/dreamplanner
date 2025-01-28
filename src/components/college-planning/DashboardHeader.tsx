@@ -1,5 +1,5 @@
 import { GraduationCap, User, LogOut } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,8 @@ import { toast } from "sonner";
 export default function DashboardHeader() {
   const { profile } = useProfile();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isCounselorDashboard = location.pathname.includes('counselor-dashboard');
 
   const handleLogout = async () => {
     try {
@@ -26,7 +28,9 @@ export default function DashboardHeader() {
         <div className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-4">
           <div className="flex items-center gap-2">
             <GraduationCap className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Student Dashboard</h1>
+            <h1 className="text-3xl font-bold">
+              {isCounselorDashboard ? "Counselor Dashboard" : "Student Dashboard"}
+            </h1>
           </div>
           <p className="text-lg text-gray-600">
             Hi, {profile?.full_name || "there"}
