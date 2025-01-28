@@ -17,9 +17,16 @@ interface NoteCardProps {
   onTogglePin: (note: Note) => void;
   onToggleStar: (note: Note) => void;
   onEdit: (note: Note) => void;
+  canEdit: boolean;
 }
 
-export default function NoteCard({ note, onTogglePin, onToggleStar, onEdit }: NoteCardProps) {
+export default function NoteCard({ 
+  note, 
+  onTogglePin, 
+  onToggleStar, 
+  onEdit,
+  canEdit 
+}: NoteCardProps) {
   return (
     <Card className={`${note.is_pinned ? "border-primary" : "border-0"} bg-white/50 hover:bg-white/80 transition-colors`}>
       <CardContent className="p-3 sm:p-4">
@@ -46,22 +53,26 @@ export default function NoteCard({ note, onTogglePin, onToggleStar, onEdit }: No
             </div>
           </div>
           <div className="flex sm:space-x-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(note)}
-              className="h-8 w-8"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onTogglePin(note)}
-              className={`h-8 w-8 ${note.is_pinned ? "text-primary" : ""}`}
-            >
-              <Pin className="h-4 w-4" />
-            </Button>
+            {canEdit && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEdit(note)}
+                  className="h-8 w-8"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onTogglePin(note)}
+                  className={`h-8 w-8 ${note.is_pinned ? "text-primary" : ""}`}
+                >
+                  <Pin className="h-4 w-4" />
+                </Button>
+              </>
+            )}
             <Button
               variant="ghost"
               size="icon"

@@ -8,6 +8,7 @@ import NotesList from "./NotesList";
 import NoteDialog from "./NoteDialog";
 import SharedFolderCard from "./SharedFolderCard";
 import SharedFolderDialog from "./SharedFolderDialog";
+import { useProfile } from "@/hooks/useProfile";
 
 interface Note {
   id: string;
@@ -15,6 +16,7 @@ interface Note {
   content: string;
   date: string;
   author_name?: string;
+  author_id?: string;
   is_pinned?: boolean;
   stars?: number;
 }
@@ -29,6 +31,7 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const { toast } = useToast();
+  const { profile } = useProfile();
 
   const { data: folder } = useQuery({
     queryKey: ['shared-folder'],
@@ -50,7 +53,20 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
     },
   });
 
+  const canEditNote = (note: Note) => {
+    if (!profile) return false;
+    return profile.is_admin || note.author_id === profile.id;
+  };
+
   const handleEdit = (note: Note) => {
+    if (!canEditNote(note)) {
+      toast({
+        title: "Permission Denied",
+        description: "You can only edit your own notes",
+        variant: "destructive",
+      });
+      return;
+    }
     setEditingNote(note);
     setIsNoteDialogOpen(true);
   };
@@ -61,12 +77,30 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   };
 
   const onNoteSubmit = async (data: { title: string; content: string }) => {
-    if (editingNote) {
-      await updateNote({ ...editingNote, ...data });
-    } else {
-      await createNote(data);
+    if (editingNote && !canEditNote(editingNote)) {
+      toast({
+        title: "Permission Denied",
+        description: "You can only edit your own notes",
+        variant: "destructive",
+      });
+      return;
     }
-    setIsNoteDialogOpen(false);
+
+    try {
+      if (editingNote) {
+        await updateNote({ ...editingNote, ...data });
+      } else {
+        await createNote(data);
+      }
+      setIsNoteDialogOpen(false);
+    } catch (error) {
+      console.error('Error submitting note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save note",
+        variant: "destructive",
+      });
+    }
   };
 
   const onFolderSubmit = async (data: { title: string; folder_url: string; description?: string }) => {
@@ -102,6 +136,7 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
           onTogglePin={handleTogglePin}
           onToggleStar={handleToggleStar}
           onEdit={handleEdit}
+          canEditNote={canEditNote}
         />
       </div>
 

@@ -10,6 +10,7 @@ interface Note {
   content: string;
   date: string;
   author_name?: string;
+  author_id?: string;
   is_pinned?: boolean;
   stars?: number;
 }
@@ -20,6 +21,7 @@ interface NotesListProps {
   onTogglePin: (note: Note) => void;
   onToggleStar: (note: Note) => void;
   onEdit: (note: Note) => void;
+  canEditNote: (note: Note) => boolean;
 }
 
 export default function NotesList({
@@ -28,6 +30,7 @@ export default function NotesList({
   onTogglePin,
   onToggleStar,
   onEdit,
+  canEditNote,
 }: NotesListProps) {
   return (
     <Card className="shadow-sm">
@@ -48,6 +51,7 @@ export default function NotesList({
                 onTogglePin={onTogglePin}
                 onToggleStar={onToggleStar}
                 onEdit={onEdit}
+                canEdit={canEditNote(note)}
               />
             ))}
             {notes.length === 0 && (
