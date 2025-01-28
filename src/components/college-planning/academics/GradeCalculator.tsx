@@ -4,7 +4,8 @@ export const GRADE_TO_GPA: { [key: string]: number } = {
   'A+': 4.0, 'A': 4.0, 'A-': 3.7,
   'B+': 3.3, 'B': 3.0, 'B-': 2.7,
   'C+': 2.3, 'C': 2.0, 'C-': 1.7,
-  'D+': 1.3, 'D': 1.0, 'F': 0.0
+  'D+': 1.3, 'D': 1.0, 'D-': 0.7,
+  'F': 0.0
 };
 
 export const COURSE_TYPE_BONUS: { [key: string]: number } = {
@@ -12,6 +13,28 @@ export const COURSE_TYPE_BONUS: { [key: string]: number } = {
   'Honors': 0.5,
   'AP/IB': 1.0
 };
+
+function getGPAFromPercentage(percentage: number, courseType: string = 'Regular'): number {
+  let baseGPA = 0;
+  
+  if (percentage >= 97) baseGPA = 4.0;      // A+
+  else if (percentage >= 93) baseGPA = 4.0;  // A
+  else if (percentage >= 90) baseGPA = 3.7;  // A-
+  else if (percentage >= 87) baseGPA = 3.3;  // B+
+  else if (percentage >= 83) baseGPA = 3.0;  // B
+  else if (percentage >= 80) baseGPA = 2.7;  // B-
+  else if (percentage >= 77) baseGPA = 2.3;  // C+
+  else if (percentage >= 73) baseGPA = 2.0;  // C
+  else if (percentage >= 70) baseGPA = 1.7;  // C-
+  else if (percentage >= 67) baseGPA = 1.3;  // D+
+  else if (percentage >= 63) baseGPA = 1.0;  // D
+  else if (percentage >= 60) baseGPA = 0.7;  // D-
+  else baseGPA = 0.0;                        // F
+
+  // Apply course type bonus
+  const bonus = COURSE_TYPE_BONUS[courseType] || 0;
+  return baseGPA + bonus;
+}
 
 interface Course {
   grade: string;
@@ -28,21 +51,8 @@ interface GradeCalculatorProps {
 export function calculateGPA(grade: string, courseType: string, gradeType: string = 'letter'): number {
   if (gradeType === '100-point') {
     const numericGrade = parseFloat(grade);
-    let baseGPA = 0;
-    if (numericGrade >= 93) baseGPA = 4.0;
-    else if (numericGrade >= 90) baseGPA = 3.7;
-    else if (numericGrade >= 87) baseGPA = 3.3;
-    else if (numericGrade >= 83) baseGPA = 3.0;
-    else if (numericGrade >= 80) baseGPA = 2.7;
-    else if (numericGrade >= 77) baseGPA = 2.3;
-    else if (numericGrade >= 73) baseGPA = 2.0;
-    else if (numericGrade >= 70) baseGPA = 1.7;
-    else if (numericGrade >= 67) baseGPA = 1.3;
-    else if (numericGrade >= 63) baseGPA = 1.0;
-    else baseGPA = 0.0;
-
-    const bonus = COURSE_TYPE_BONUS[courseType] || 0;
-    return baseGPA + bonus;
+    if (isNaN(numericGrade)) return 0;
+    return getGPAFromPercentage(numericGrade, courseType);
   }
   
   const baseGPA = GRADE_TO_GPA[grade.toUpperCase()] || 0;
@@ -53,17 +63,8 @@ export function calculateGPA(grade: string, courseType: string, gradeType: strin
 function calculateUnweightedGPA(grade: string, gradeType: string = 'letter'): number {
   if (gradeType === '100-point') {
     const numericGrade = parseFloat(grade);
-    if (numericGrade >= 93) return 4.0;
-    else if (numericGrade >= 90) return 3.7;
-    else if (numericGrade >= 87) return 3.3;
-    else if (numericGrade >= 83) return 3.0;
-    else if (numericGrade >= 80) return 2.7;
-    else if (numericGrade >= 77) return 2.3;
-    else if (numericGrade >= 73) return 2.0;
-    else if (numericGrade >= 70) return 1.7;
-    else if (numericGrade >= 67) return 1.3;
-    else if (numericGrade >= 63) return 1.0;
-    return 0.0;
+    if (isNaN(numericGrade)) return 0;
+    return getGPAFromPercentage(numericGrade, 'Regular');
   }
   return GRADE_TO_GPA[grade.toUpperCase()] || 0;
 }
