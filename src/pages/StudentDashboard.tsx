@@ -78,27 +78,26 @@ export default function StudentDashboard() {
     enabled: !!profile?.id && !!studentId,
   });
 
-  const { data: hasCounselor, refetch: refetchCounselorStatus } = useQuery({
-    queryKey: ["has-counselor", profile?.id],
+  // Fetch student profile data
+  const { data: studentProfile } = useQuery({
+    queryKey: ["student-profile", studentId],
     queryFn: async () => {
-      if (!profile?.id) return false;
-      
-      console.log("Checking if student has counselor");
+      console.log("Fetching student profile data");
       const { data, error } = await supabase
-        .from("counselor_student_relationships")
-        .select("counselor_id")
-        .eq("student_id", profile.id)
-        .maybeSingle();
+        .from("profiles")
+        .select("*")
+        .eq("id", studentId)
+        .single();
 
       if (error) {
-        console.error("Error checking counselor relationship:", error);
-        return false;
+        console.error("Error fetching student profile:", error);
+        throw error;
       }
 
-      console.log("Counselor relationship data:", data);
-      return !!data;
+      console.log("Student profile data:", data);
+      return data;
     },
-    enabled: !!profile?.id,
+    enabled: !!studentId,
   });
 
   useEffect(() => {
@@ -134,12 +133,20 @@ export default function StudentDashboard() {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <DashboardHeader />
+          <div>
+            <h1 className="text-3xl font-bold">Student Dashboard</h1>
+            {studentProfile && (
+              <p className="text-lg text-muted-foreground mt-1">
+                {studentProfile.full_name}
+              </p>
+            )}
+          </div>
         </div>
-        {profile?.id && !hasCounselor && (
+        {/* Only show Select Counselor button if viewing as the student */}
+        {profile?.id === studentId && (
           <SelectCounselorDialog 
-            studentId={profile.id}
-            onCounselorSelected={refetchCounselorStatus}
+            studentId={studentId}
+            onCounselorSelected={() => {}}
           />
         )}
       </div>
