@@ -52,15 +52,26 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
         <div>
           <Label htmlFor="grade">Grade</Label>
           {newCourse.grade_type === '100-point' ? (
-            <Input
-              id="grade"
-              type="number"
-              min="0"
-              max="100"
+            <Select
               value={newCourse.grade}
-              onChange={(e) => onCourseChange('grade', e.target.value)}
-              placeholder="Enter score (0-100)"
-            />
+              onValueChange={(value) => onCourseChange('grade', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select grade" />
+              </SelectTrigger>
+              <SelectContent>
+                {[...Array(101)].map((_, i) => (
+                  <SelectItem key={i} value={i.toString()}>
+                    {i}
+                  </SelectItem>
+                ))}
+                {SPECIAL_GRADES.map((grade) => (
+                  <SelectItem key={grade} value={grade}>
+                    {grade}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           ) : (
             <Select
               value={newCourse.grade}
