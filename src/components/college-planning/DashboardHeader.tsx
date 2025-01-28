@@ -26,7 +26,7 @@ export default function DashboardHeader() {
         <div className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-4">
           <div className="flex items-center gap-2">
             <GraduationCap className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">College Planning Dashboard</h1>
+            <h1 className="text-3xl font-bold">Counsellor Dashboard</h1>
           </div>
           <p className="text-lg text-gray-600">
             Hi, {profile?.full_name || "there"}
