@@ -12,30 +12,43 @@ export const useVideoStream = () => {
 
   const startStream = async () => {
     try {
+      // First check if we already have a stream
+      if (stream) {
+        console.log("Existing stream found, stopping it first");
+        stream.getTracks().forEach(track => track.stop());
+      }
+
+      console.log("Requesting camera access...");
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: "user"
+          facingMode: "user",
         },
         audio: true,
       });
       
+      console.log("Camera access granted successfully");
       setStream(mediaStream);
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        console.log("Video stream obtained:", mediaStream.id);
-        console.log("Video tracks:", mediaStream.getVideoTracks().length);
-        console.log("Audio tracks:", mediaStream.getAudioTracks().length);
+        try {
+          await videoRef.current.play();
+          console.log("Video preview started successfully");
+        } catch (playError) {
+          console.error("Error playing video:", playError);
+        }
+      } else {
+        console.warn("Video element reference not found");
       }
 
       return true;
     } catch (error) {
       console.error("Error accessing media devices:", error);
       toast({
-        title: "Camera Access Error",
-        description: "Unable to access camera or microphone. Please check your permissions and make sure no other app is using your camera.",
+        title: "摄像头访问错误",
+        description: "无法访问摄像头或麦克风。请检查浏览器权限设置，并确保没有其他应用正在使用摄像头。",
         variant: "destructive",
       });
       return false;
@@ -44,27 +57,36 @@ export const useVideoStream = () => {
 
   const startRecording = () => {
     if (stream) {
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'video/webm;codecs=vp8,opus'
-      });
-      mediaRecorderRef.current = mediaRecorder;
-      const chunks: Blob[] = [];
+      try {
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: 'video/webm;codecs=vp8,opus'
+        });
+        mediaRecorderRef.current = mediaRecorder;
+        const chunks: Blob[] = [];
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            chunks.push(event.data);
+          }
+        };
 
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        setRecordedChunks(chunks);
-        setRecordedVideoUrl(URL.createObjectURL(blob));
-      };
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          setRecordedChunks(chunks);
+          setRecordedVideoUrl(URL.createObjectURL(blob));
+        };
 
-      mediaRecorder.start();
-      setIsRecording(true);
-      console.log("Recording started");
+        mediaRecorder.start();
+        setIsRecording(true);
+        console.log("Recording started successfully");
+      } catch (error) {
+        console.error("Error starting recording:", error);
+        toast({
+          title: "录制错误",
+          description: "开始录制时发生错误，请刷新页面重试。",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -77,16 +99,20 @@ export const useVideoStream = () => {
     if (stream) {
       stream.getTracks().forEach(track => {
         track.stop();
-        console.log(`Stopped track: ${track.kind}`);
+        console.log(`Stopped ${track.kind} track`);
       });
       setStream(null);
     }
   };
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => {
+          track.stop();
+          console.log(`Cleaned up ${track.kind} track`);
+        });
       }
     };
   }, [stream]);

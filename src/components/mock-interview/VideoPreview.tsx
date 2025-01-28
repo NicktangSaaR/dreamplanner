@@ -21,20 +21,20 @@ const VideoPreview = ({
   useEffect(() => {
     const videoElement = videoRef.current;
     if (videoElement && videoElement.srcObject) {
-      console.log("Setting up video stream");
+      console.log("Setting up video preview");
       
       const playVideo = async () => {
         try {
           await videoElement.play();
-          console.log("Video playback started successfully");
+          console.log("Video preview playing successfully");
         } catch (error) {
-          console.error("Error playing video:", error);
+          console.error("Error playing video preview:", error);
         }
       };
 
       playVideo();
     }
-  }, [videoRef, videoRef.current?.srcObject]); // Add srcObject as dependency
+  }, [videoRef]);
 
   return (
     <Card className="p-6">
@@ -59,7 +59,7 @@ const VideoPreview = ({
       <div className="flex justify-center gap-4">
         {isReviewStage ? (
           <Button onClick={onStartNew}>
-            Start New Interview
+            开始新的面试
           </Button>
         ) : (
           <Button
@@ -68,7 +68,7 @@ const VideoPreview = ({
             className="flex items-center gap-2"
           >
             <StopCircle className="w-4 h-4" />
-            End Interview
+            结束面试
           </Button>
         )}
       </div>
