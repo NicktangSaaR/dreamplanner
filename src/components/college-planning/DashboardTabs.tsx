@@ -31,7 +31,7 @@ export default function DashboardTabs({
 
   return (
     <Tabs defaultValue="academics" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid md:grid-cols-4 grid-cols-1 md:w-full w-fit">
         <TabsTrigger 
           value="academics" 
           className="flex items-center gap-2 data-[state=active]:bg-[#F2FCE2]"
