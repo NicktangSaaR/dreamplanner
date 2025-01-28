@@ -50,10 +50,12 @@ export type Database = {
       }
       courses: {
         Row: {
+          academic_year: string | null
           course_type: string | null
           created_at: string | null
           gpa_value: number | null
           grade: string
+          grade_level: string | null
           id: string
           name: string
           semester: string
@@ -61,10 +63,12 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          academic_year?: string | null
           course_type?: string | null
           created_at?: string | null
           gpa_value?: number | null
           grade: string
+          grade_level?: string | null
           id?: string
           name: string
           semester: string
@@ -72,10 +76,12 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          academic_year?: string | null
           course_type?: string | null
           created_at?: string | null
           gpa_value?: number | null
           grade?: string
+          grade_level?: string | null
           id?: string
           name?: string
           semester?: string

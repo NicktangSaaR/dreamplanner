@@ -48,10 +48,9 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
     queryKey: ['courses'],
     queryFn: async () => {
       console.log('Fetching courses from database');
-      const user = await supabase.auth.getUser();
-      const student_id = user.data.user?.id;
-
-      if (!student_id) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
         console.error('No authenticated user found');
         return [];
       }
@@ -59,7 +58,7 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('student_id', student_id)
+        .eq('student_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -76,16 +75,15 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
   const addCourseMutation = useMutation({
     mutationFn: async (courseData: Omit<Course, 'id'>) => {
       console.log('Adding new course:', courseData);
-      const user = await supabase.auth.getUser();
-      const student_id = user.data.user?.id;
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      if (!student_id) {
+      if (userError || !user) {
         throw new Error('No authenticated user found');
       }
 
       const { data, error } = await supabase
         .from('courses')
-        .insert([{ ...courseData, student_id }])
+        .insert([{ ...courseData, student_id: user.id }])
         .select()
         .single();
 
@@ -113,7 +111,6 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
     },
   });
 
-  // Update course mutation
   const updateCourseMutation = useMutation({
     mutationFn: async (course: Course) => {
       console.log('Updating course:', course);
