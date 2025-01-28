@@ -31,10 +31,10 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
     academic_year: "",
   });
 
-  // Generate academic years
+  // Generate academic years - now includes 4 years in the past
   const currentYear = new Date().getFullYear();
-  const academicYears = Array.from({ length: 4 }, (_, i) => {
-    const year = currentYear - 2 + i;
+  const academicYears = Array.from({ length: 8 }, (_, i) => {
+    const year = currentYear - 4 + i;
     return `${year}-${year + 1}`;
   });
 
