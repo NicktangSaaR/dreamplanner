@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StopCircle } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface VideoPreviewProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -30,7 +30,7 @@ const VideoPreview = ({
         });
       }
     }
-  }, [videoRef, videoRef.current?.srcObject]);
+  }, [videoRef.current?.srcObject]);
 
   return (
     <Card className="p-6">
