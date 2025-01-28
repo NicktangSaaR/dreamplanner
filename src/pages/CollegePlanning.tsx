@@ -50,20 +50,26 @@ export default function CollegePlanning() {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <DashboardHeader />
-      <StatisticsCards 
-        courses={courses}
-        activities={activities}
-        notes={notes}
-        todoStats={getTodoStats()}
-      />
-      <DashboardTabs
-        courses={courses}
-        onCoursesChange={setCourses}
-        onActivitiesChange={setActivities}
-        onNotesChange={setNotes}
-      />
+    <div className="container mx-auto px-4 py-6 space-y-8">
+      <div className="max-w-7xl mx-auto">
+        <DashboardHeader />
+        <div className="mt-8">
+          <StatisticsCards 
+            courses={courses}
+            activities={activities}
+            notes={notes}
+            todoStats={getTodoStats()}
+          />
+        </div>
+        <div className="mt-8">
+          <DashboardTabs
+            courses={courses}
+            onCoursesChange={setCourses}
+            onActivitiesChange={setActivities}
+            onNotesChange={setNotes}
+          />
+        </div>
+      </div>
     </div>
   );
 }

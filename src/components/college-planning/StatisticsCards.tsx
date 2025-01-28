@@ -50,7 +50,7 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-950">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-lg font-medium">
@@ -113,7 +113,7 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{todoStats.total} Tasks</div>
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground gap-2">
             <span className="flex items-center gap-1">
               <CheckCircle2 className="h-4 w-4 text-green-500" />
               {todoStats.completed} Done

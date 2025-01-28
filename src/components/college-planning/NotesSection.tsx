@@ -94,8 +94,8 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 relative">
-      <div className="flex-1 bg-[#E5DEFF] p-6 rounded-lg">
+    <div className="flex flex-col lg:flex-row gap-6 relative">
+      <div className="flex-1 bg-[#E5DEFF] p-4 sm:p-6 rounded-lg">
         <NotesList
           notes={notes}
           onCreateNote={handleCreateNote}
@@ -107,10 +107,10 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
 
       <Separator 
         orientation="vertical" 
-        className="hidden md:block h-auto bg-white my-4" 
+        className="hidden lg:block h-auto bg-white my-4" 
       />
 
-      <div className="flex-1 bg-[#FEC6A1] p-6 rounded-lg">
+      <div className="flex-1 bg-[#FEC6A1] p-4 sm:p-6 rounded-lg">
         <SharedFolderCard
           folder={folder}
           onEditClick={() => setIsFolderDialogOpen(true)}
