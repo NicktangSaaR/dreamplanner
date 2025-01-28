@@ -1,7 +1,6 @@
 import { useProfile } from "@/hooks/useProfile";
 import { useCounselorStudents } from "@/hooks/useCounselorStudents";
 import { Card, CardContent } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AddStudentDialog from "./AddStudentDialog";
@@ -11,7 +10,6 @@ import StudentCard from "./StudentCard";
 export default function CounselorView() {
   const { profile } = useProfile();
   const { data: students, isLoading, refetch } = useCounselorStudents();
-  const navigate = useNavigate();
 
   console.log("Counselor profile:", profile);
   console.log("Students data:", students);
@@ -41,8 +39,10 @@ export default function CounselorView() {
             {students?.map((relationship) => (
               <StudentCard
                 key={relationship.student_id}
-                student={relationship.students!}
-                onClick={() => navigate(`/student/${relationship.student_id}/college-planning`)}
+                student={{
+                  id: relationship.student_id,
+                  ...relationship.students!
+                }}
               />
             ))}
             {students?.length === 0 && (

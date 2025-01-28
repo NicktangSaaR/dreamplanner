@@ -1,27 +1,37 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, School, BookOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface StudentCardProps {
   student: {
+    id: string;
     full_name: string | null;
     grade: string | null;
     school: string | null;
     interested_majors: string[] | null;
   };
-  onClick: () => void;
 }
 
-export default function StudentCard({ student, onClick }: StudentCardProps) {
+export default function StudentCard({ student }: StudentCardProps) {
+  const navigate = useNavigate();
+
+  const handleViewDashboard = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event from firing
+    console.log("Navigating to student dashboard:", student.id);
+    navigate(`/student/${student.id}/college-planning`);
+  };
+
   return (
     <Card 
       className="hover:bg-accent/50 transition-colors cursor-pointer"
-      onClick={onClick}
     >
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>{student.full_name}</span>
-          <Button variant="default">View Dashboard</Button>
+          <Button variant="default" onClick={handleViewDashboard}>
+            View Dashboard
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
