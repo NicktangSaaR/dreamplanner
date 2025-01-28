@@ -24,12 +24,12 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
     try {
       console.log("Looking for student with email:", email);
       
-      // First get the user from auth.users table
+      // First get the user from auth.users table using query parameter
       const { data: users, error: authError } = await supabase.auth
         .admin.listUsers({
           page: 1,
           perPage: 1,
-          email: email // Use email directly as a parameter
+          query: email // Use query parameter to search by email
         });
 
       if (authError) {
