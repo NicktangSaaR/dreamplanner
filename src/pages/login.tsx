@@ -45,7 +45,7 @@ export default function Login() {
           .from('profiles')
           .select('user_type')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error("Error fetching profile:", profileError);
@@ -59,11 +59,35 @@ export default function Login() {
 
         console.log("User profile:", profile);
 
-        // Redirect based on user type
-        if (profile.user_type === 'counselor') {
-          navigate('/counselor-dashboard');
-        } else {
+        // If no profile exists, create one with default student type
+        if (!profile) {
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: session.user.id,
+                user_type: 'student',
+              }
+            ]);
+
+          if (insertError) {
+            console.error("Error creating profile:", insertError);
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Failed to create user profile",
+            });
+            return;
+          }
+
           navigate('/college-planning');
+        } else {
+          // Redirect based on user type
+          if (profile.user_type === 'counselor') {
+            navigate('/counselor-dashboard');
+          } else {
+            navigate('/college-planning');
+          }
         }
 
         toast({
