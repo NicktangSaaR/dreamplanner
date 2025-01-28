@@ -13,6 +13,7 @@ import StudentView from "@/pages/StudentView";
 import StudentSummaryPage from "@/components/college-planning/StudentSummaryPage";
 import Academics from "@/pages/Academics";
 import Index from "@/pages/Index";
+import MockInterview from "@/pages/MockInterview";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route element={<AuthLayout />}>
+            <Route path="/mock-interview" element={<MockInterview />} />
             <Route path="/college-planning" element={<CollegePlanning />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/counselor-dashboard" element={<CounselorDashboard />} />

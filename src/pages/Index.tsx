@@ -85,6 +85,11 @@ const Index = () => {
                     Dashboard
                   </Button>
                 </Link>
+                <Link to="/mock-interview">
+                  <Button variant="ghost" className="hover:text-primary transition-colors">
+                    Mock Interview
+                  </Button>
+                </Link>
                 <Button 
                   onClick={handleLogout}
                   className="bg-primary hover:bg-primary/90 text-white transition-colors"
