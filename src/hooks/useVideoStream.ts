@@ -13,7 +13,11 @@ export const useVideoStream = () => {
   const startStream = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user"
+        },
         audio: true,
       });
       
@@ -40,7 +44,9 @@ export const useVideoStream = () => {
 
   const startRecording = () => {
     if (stream) {
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp8,opus'
+      });
       mediaRecorderRef.current = mediaRecorder;
       const chunks: Blob[] = [];
 
@@ -58,12 +64,14 @@ export const useVideoStream = () => {
 
       mediaRecorder.start();
       setIsRecording(true);
+      console.log("Recording started");
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
+      console.log("Recording stopped");
       setIsRecording(false);
     }
     if (stream) {

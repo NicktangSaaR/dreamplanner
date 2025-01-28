@@ -34,7 +34,7 @@ const VideoPreview = ({
 
       playVideo();
     }
-  }, [videoRef]);
+  }, [videoRef, videoRef.current?.srcObject]); // Add srcObject as dependency
 
   return (
     <Card className="p-6">
@@ -51,7 +51,7 @@ const VideoPreview = ({
             autoPlay
             playsInline
             muted
-            className="w-full h-full rounded-lg object-cover"
+            className="w-full h-full rounded-lg object-cover mirror"
             style={{ transform: 'scaleX(-1)' }}
           />
         )}
