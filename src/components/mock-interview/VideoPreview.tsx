@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StopCircle } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 interface VideoPreviewProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -20,15 +20,13 @@ const VideoPreview = ({
 }: VideoPreviewProps) => {
   useEffect(() => {
     const videoElement = videoRef.current;
-    if (videoElement) {
+    if (videoElement && videoElement.srcObject) {
       console.log("Video element exists:", videoElement);
       console.log("Video srcObject:", videoElement.srcObject);
       
-      if (videoElement.srcObject) {
-        videoElement.play().catch(error => {
-          console.error("Error playing video:", error);
-        });
-      }
+      videoElement.play().catch(error => {
+        console.error("Error playing video:", error);
+      });
     }
   }, [videoRef.current?.srcObject]);
 
