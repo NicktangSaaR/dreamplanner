@@ -64,24 +64,24 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
 
   // Get unique academic years from courses
   const academicYears = Array.from(new Set(courses.map(course => course.academic_year)))
-    .filter(year => year) // Remove undefined/null values
+    .filter(year => year)
     .sort()
-    .reverse(); // Show most recent year first
+    .reverse();
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <div className="flex items-center gap-2 bg-green-50 p-3 rounded-lg">
           <Calculator className="h-5 w-5 text-green-600" />
           <div>
-            <p className="text-sm font-medium text-green-600">Weighted GPA</p>
+            <p className="text-sm font-medium text-green-600">Weighted</p>
             <p className="text-2xl font-bold text-green-700">{calculateOverallGPA(true)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 bg-blue-50 p-3 rounded-lg">
           <Calculator className="h-5 w-5 text-blue-600" />
           <div>
-            <p className="text-sm font-medium text-blue-600">Unweighted GPA</p>
+            <p className="text-sm font-medium text-blue-600">Unweighted</p>
             <p className="text-2xl font-bold text-blue-700">{calculateOverallGPA(false)}</p>
           </div>
         </div>
