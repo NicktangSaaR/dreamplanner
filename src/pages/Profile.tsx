@@ -30,9 +30,7 @@ export default function Profile() {
         .from("counselor_student_relationships")
         .select(`
           counselor_id,
-          counselor:profiles!counselor_student_relationships_counselor_profiles_fkey(
-            full_name
-          )
+          counselor:profiles(full_name)
         `)
         .eq("student_id", profile?.id)
         .maybeSingle();

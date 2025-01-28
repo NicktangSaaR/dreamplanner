@@ -27,7 +27,7 @@ export function useCounselorStudents() {
         .from("counselor_student_relationships")
         .select(`
           student_id,
-          students:profiles!inner(
+          students:profiles(
             id,
             full_name,
             grade,
