@@ -21,15 +21,17 @@ export const useVideoStream = () => {
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        console.log("Setting video stream:", mediaStream);
+        console.log("Video stream obtained:", mediaStream.id);
+        console.log("Video tracks:", mediaStream.getVideoTracks().length);
+        console.log("Audio tracks:", mediaStream.getAudioTracks().length);
       }
 
       return true;
     } catch (error) {
       console.error("Error accessing media devices:", error);
       toast({
-        title: "Error",
-        description: "Unable to access camera or microphone. Please check permissions.",
+        title: "Camera Access Error",
+        description: "Unable to access camera or microphone. Please check your permissions and make sure no other app is using your camera.",
         variant: "destructive",
       });
       return false;
@@ -65,7 +67,10 @@ export const useVideoStream = () => {
       setIsRecording(false);
     }
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach(track => {
+        track.stop();
+        console.log(`Stopped track: ${track.kind}`);
+      });
       setStream(null);
     }
   };
