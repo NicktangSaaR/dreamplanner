@@ -16,6 +16,7 @@ interface Course {
   gpa_value?: number;
   academic_year?: string;
   grade_level?: string;
+  student_id: string;
 }
 
 interface AcademicsSectionProps {
@@ -50,6 +51,7 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
       const { data, error } = await supabase
         .from('courses')
         .select('*')
+        .eq('student_id', supabase.auth.getUser().then(response => response.data.user?.id))
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -66,9 +68,16 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
   const addCourseMutation = useMutation({
     mutationFn: async (courseData: Omit<Course, 'id'>) => {
       console.log('Adding new course:', courseData);
+      const user = await supabase.auth.getUser();
+      const student_id = user.data.user?.id;
+      
+      if (!student_id) {
+        throw new Error('No authenticated user found');
+      }
+
       const { data, error } = await supabase
         .from('courses')
-        .insert([courseData])
+        .insert([{ ...courseData, student_id }])
         .select()
         .single();
 
@@ -143,7 +152,7 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
         gpa_value: gpaValue,
       };
 
-      addCourseMutation.mutate(courseData);
+      addCourseMutation.mutate(courseData as Omit<Course, 'id'>);
 
       setNewCourse({
         name: "",
