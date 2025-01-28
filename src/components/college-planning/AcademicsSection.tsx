@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 import GradeCalculator, { calculateGPA, GRADE_TO_GPA, COURSE_TYPE_BONUS } from "./academics/GradeCalculator";
 import CourseForm from "./academics/CourseForm";
 import CourseTable from "./academics/CourseTable";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Course {
   id: string;
@@ -20,7 +23,8 @@ interface AcademicsSectionProps {
 }
 
 export default function AcademicsSection({ onCoursesChange }: AcademicsSectionProps) {
-  const [courses, setCourses] = useState<Course[]>([]);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [newCourse, setNewCourse] = useState({
     name: "",
@@ -38,6 +42,95 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
     return `${year}-${year + 1}`;
   });
 
+  // Fetch courses from Supabase
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses'],
+    queryFn: async () => {
+      console.log('Fetching courses from database');
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching courses:', error);
+        throw error;
+      }
+
+      console.log('Fetched courses:', data);
+      return data as Course[];
+    },
+  });
+
+  // Add course mutation
+  const addCourseMutation = useMutation({
+    mutationFn: async (courseData: Omit<Course, 'id'>) => {
+      console.log('Adding new course:', courseData);
+      const { data, error } = await supabase
+        .from('courses')
+        .insert([courseData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding course:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      toast({
+        title: "Success",
+        description: "Course added successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error in addCourseMutation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add course",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update course mutation
+  const updateCourseMutation = useMutation({
+    mutationFn: async (course: Course) => {
+      console.log('Updating course:', course);
+      const { data, error } = await supabase
+        .from('courses')
+        .update(course)
+        .eq('id', course.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating course:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      toast({
+        title: "Success",
+        description: "Course updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error in updateCourseMutation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update course",
+        variant: "destructive",
+      });
+    },
+  });
+
   useEffect(() => {
     onCoursesChange?.(courses);
   }, [courses, onCoursesChange]);
@@ -45,15 +138,13 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
   const handleAddCourse = () => {
     if (newCourse.name && newCourse.grade && newCourse.semester && newCourse.grade_level && newCourse.academic_year) {
       const gpaValue = calculateGPA(newCourse.grade, newCourse.course_type);
-      const updatedCourses = [
-        ...courses,
-        {
-          id: Date.now().toString(),
-          ...newCourse,
-          gpa_value: gpaValue,
-        },
-      ];
-      setCourses(updatedCourses);
+      const courseData = {
+        ...newCourse,
+        gpa_value: gpaValue,
+      };
+
+      addCourseMutation.mutate(courseData);
+
       setNewCourse({
         name: "",
         grade: "",
@@ -72,13 +163,12 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
   const handleSaveEdit = () => {
     if (editingCourse) {
       const gpaValue = calculateGPA(editingCourse.grade, editingCourse.course_type);
-      setCourses(
-        courses.map((course) =>
-          course.id === editingCourse.id 
-            ? { ...editingCourse, gpa_value: gpaValue }
-            : course
-        )
-      );
+      const updatedCourse = {
+        ...editingCourse,
+        gpa_value: gpaValue,
+      };
+
+      updateCourseMutation.mutate(updatedCourse);
       setEditingCourse(null);
     }
   };
