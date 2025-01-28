@@ -1,24 +1,12 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import GradeCalculator, { calculateGPA, GRADE_TO_GPA, COURSE_TYPE_BONUS } from "./academics/GradeCalculator";
+import GradeCalculator, { calculateGPA } from "./academics/GradeCalculator";
 import CourseForm from "./academics/CourseForm";
 import CourseTable from "./academics/CourseTable";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-interface Course {
-  id: string;
-  name: string;
-  grade: string;
-  semester: string;
-  course_type: string;
-  gpa_value?: number;
-  academic_year?: string;
-  grade_level?: string;
-  student_id: string;
-  grade_type?: string;
-}
+import { Course } from "./types/course";
 
 interface AcademicsSectionProps {
   onCoursesChange?: (courses: Course[]) => void;
@@ -153,8 +141,11 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
     },
   });
 
+  // Update parent components when courses change
   useEffect(() => {
-    onCoursesChange?.(courses);
+    if (onCoursesChange && courses) {
+      onCoursesChange(courses);
+    }
   }, [courses, onCoursesChange]);
 
   const handleAddCourse = () => {
@@ -179,13 +170,7 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
 
   const handleSaveEdit = () => {
     if (editingCourse) {
-      const gpaValue = calculateGPA(editingCourse.grade, editingCourse.course_type, editingCourse.grade_type);
-      const updatedCourse = {
-        ...editingCourse,
-        gpa_value: gpaValue,
-      };
-
-      updateCourseMutation.mutate(updatedCourse);
+      updateCourseMutation.mutate(editingCourse);
       setEditingCourse(null);
     }
   };
