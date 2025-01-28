@@ -15,6 +15,7 @@ interface Course {
   semester: string;
   course_type: string;
   grade_type?: string;
+  academic_year?: string;
 }
 
 interface DashboardTabsProps {
@@ -32,33 +33,63 @@ export default function DashboardTabs({
 }: DashboardTabsProps) {
   const navigate = useNavigate();
 
-  const getCurrentSemester = () => {
-    if (!courses.length) return 'N/A';
-    const semesters = courses.map(course => course.semester);
-    return semesters[semesters.length - 1];
-  };
-
-  const getLatestCourse = () => {
-    if (!courses.length) return 'N/A';
-    return courses[courses.length - 1].name;
-  };
-
-  const calculateAverageGrade = () => {
-    if (!courses.length) return 'N/A';
+  const calculateOverallMetrics = () => {
+    if (!courses.length) return { gpa: 'N/A', average: 'N/A' };
     
     const validCourses = courses.filter(course => {
       const specialGrades = ['In Progress', 'Pass/Fail', 'Drop'];
       return !specialGrades.includes(course.grade);
     });
 
-    if (!validCourses.length) return 'N/A';
+    if (!validCourses.length) return { gpa: 'N/A', average: 'N/A' };
 
-    const totalGPA = validCourses.reduce((sum, course) => {
-      return sum + calculateGPA(course.grade, course.course_type, course.grade_type);
-    }, 0);
+    const letterGradeCourses = validCourses.filter(course => course.grade_type !== '100-point');
+    const pointScaleCourses = validCourses.filter(course => course.grade_type === '100-point');
 
-    return (totalGPA / validCourses.length).toFixed(2);
+    const gpa = letterGradeCourses.length ? 
+      (letterGradeCourses.reduce((sum, course) => 
+        sum + calculateGPA(course.grade, course.course_type, course.grade_type), 0) / letterGradeCourses.length).toFixed(2)
+      : 'N/A';
+
+    const average = pointScaleCourses.length ?
+      (pointScaleCourses.reduce((sum, course) => 
+        sum + parseFloat(course.grade), 0) / pointScaleCourses.length).toFixed(2)
+      : 'N/A';
+
+    return { gpa, average };
   };
+
+  const calculateYearlyMetrics = () => {
+    const years = Array.from(new Set(courses.map(course => course.academic_year)))
+      .filter(Boolean)
+      .sort()
+      .reverse();
+
+    return years.map(year => {
+      const yearCourses = courses.filter(course => 
+        course.academic_year === year && 
+        !['In Progress', 'Pass/Fail', 'Drop'].includes(course.grade)
+      );
+
+      const letterGradeCourses = yearCourses.filter(course => course.grade_type !== '100-point');
+      const pointScaleCourses = yearCourses.filter(course => course.grade_type === '100-point');
+
+      const yearGPA = letterGradeCourses.length ?
+        (letterGradeCourses.reduce((sum, course) => 
+          sum + calculateGPA(course.grade, course.course_type, course.grade_type), 0) / letterGradeCourses.length).toFixed(2)
+        : 'N/A';
+
+      const yearAverage = pointScaleCourses.length ?
+        (pointScaleCourses.reduce((sum, course) => 
+          sum + parseFloat(course.grade), 0) / pointScaleCourses.length).toFixed(2)
+        : 'N/A';
+
+      return { year, gpa: yearGPA, average: yearAverage };
+    });
+  };
+
+  const { gpa, average } = calculateOverallMetrics();
+  const yearlyMetrics = calculateYearlyMetrics();
 
   return (
     <Tabs defaultValue="academics" className="w-full">
@@ -107,18 +138,37 @@ export default function DashboardTabs({
                 <p className="text-2xl font-bold">{courses.length}</p>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Average GPA</p>
-                <p className="text-2xl font-bold">{calculateAverageGrade()}</p>
+                <p className="text-sm font-medium">Overall GPA</p>
+                <p className="text-2xl font-bold">{gpa}</p>
               </div>
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Current Semester</p>
-                <p className="text-2xl font-bold">{getCurrentSemester()}</p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Latest Course</p>
-                <p className="text-2xl font-bold truncate">{getLatestCourse()}</p>
+              {average !== 'N/A' && (
+                <div className="col-span-2 space-y-2">
+                  <p className="text-sm font-medium">Overall Average (100-point)</p>
+                  <p className="text-2xl font-bold">{average}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <p className="font-medium text-gray-500">Academic Year Breakdown</p>
+              <div className="grid gap-3">
+                {yearlyMetrics.map(({ year, gpa: yearGPA, average: yearAverage }) => (
+                  <div key={year} className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-gray-600">{year} GPA</p>
+                      <p className="text-xl font-bold">{yearGPA}</p>
+                    </div>
+                    {yearAverage !== 'N/A' && (
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-gray-600">{year} Average</p>
+                        <p className="text-xl font-bold">{yearAverage}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
+
             <Button 
               className="w-full"
               onClick={() => navigate('/academics')}
