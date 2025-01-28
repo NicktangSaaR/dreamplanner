@@ -35,15 +35,40 @@ export function useStudentManagement(counselorId: string) {
 
   const addStudent = async (studentId: string) => {
     try {
+      setIsLoading(true);
       console.log("Adding student relationship:", { counselorId, studentId });
-      
+
+      // First verify that the current user is a counselor
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", counselorId)
+        .single();
+
+      if (profileError || !profile) {
+        console.error("Error fetching counselor profile:", profileError);
+        toast.error("Failed to verify counselor status");
+        return false;
+      }
+
+      if (profile.user_type !== 'counselor') {
+        console.error("User is not a counselor");
+        toast.error("Only counselors can add students");
+        return false;
+      }
+
+      // Then create the relationship
       const { error } = await supabase
         .from("counselor_student_relationships")
-        .insert([{ counselor_id: counselorId, student_id: studentId }]);
+        .insert([{ 
+          counselor_id: counselorId, 
+          student_id: studentId 
+        }]);
 
       if (error) {
         console.error("Error adding student:", error);
-        throw error;
+        toast.error("Failed to add student");
+        return false;
       }
 
       toast.success("Student added successfully");
@@ -52,6 +77,8 @@ export function useStudentManagement(counselorId: string) {
       console.error("Error in addStudent:", error);
       toast.error("Failed to add student");
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
