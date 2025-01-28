@@ -30,6 +30,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
   college_name: z.string().min(1, "College name is required"),
@@ -37,7 +38,18 @@ const formSchema = z.object({
   degree: z.enum(["Bachelor", "Master"], {
     required_error: "Please select a degree type",
   }),
+  category: z.enum(["Hard Reach", "Reach", "Hard Target", "Target", "Safety"], {
+    required_error: "Please select a category",
+  }),
 });
+
+const categoryColors: Record<string, string> = {
+  "Hard Reach": "bg-red-500",
+  "Reach": "bg-orange-500",
+  "Hard Target": "bg-yellow-500",
+  "Target": "bg-green-500",
+  "Safety": "bg-blue-500",
+};
 
 export default function CollegeListSection() {
   const [open, setOpen] = useState(false);
@@ -48,6 +60,7 @@ export default function CollegeListSection() {
       college_name: "",
       major: "",
       degree: undefined,
+      category: undefined,
     },
   });
 
@@ -82,11 +95,11 @@ export default function CollegeListSection() {
 
       const collegeUrl = `https://www.${values.college_name.toLowerCase().replace(/ /g, '')}.edu`;
       
-      // Create a properly typed object for insertion
       const applicationData = {
         college_name: values.college_name,
         major: values.major,
         degree: values.degree,
+        category: values.category,
         college_url: collegeUrl,
         student_id: user.id
       };
@@ -208,6 +221,33 @@ export default function CollegeListSection() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Hard Reach">Hard Reach</SelectItem>
+                          <SelectItem value="Reach">Reach</SelectItem>
+                          <SelectItem value="Hard Target">Hard Target</SelectItem>
+                          <SelectItem value="Target">Target</SelectItem>
+                          <SelectItem value="Safety">Safety</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <Button type="submit" className="w-full">
                   Add College
                 </Button>
@@ -230,14 +270,19 @@ export default function CollegeListSection() {
                 <p className="text-sm text-muted-foreground">
                   {app.major} • {app.degree}
                 </p>
-                <a
-                  href={app.college_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-500 hover:underline"
-                >
-                  {app.college_url}
-                </a>
+                <div className="flex gap-2 items-center mt-1">
+                  <Badge className={`${categoryColors[app.category]} text-white`}>
+                    {app.category}
+                  </Badge>
+                  <a
+                    href={app.college_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-500 hover:underline"
+                  >
+                    {app.college_url}
+                  </a>
+                </div>
               </div>
             </div>
             <Button
