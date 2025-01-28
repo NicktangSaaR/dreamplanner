@@ -9,10 +9,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Course } from "./types/course";
 
 interface AcademicsSectionProps {
+  courses?: Course[];
   onCoursesChange?: (courses: Course[]) => void;
 }
 
-export default function AcademicsSection({ onCoursesChange }: AcademicsSectionProps) {
+export default function AcademicsSection({ courses: externalCourses, onCoursesChange }: AcademicsSectionProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -33,10 +34,14 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
     return `${year}-${year + 1}`;
   });
 
-  // Fetch courses from Supabase
-  const { data: courses = [] } = useQuery({
+  // Fetch courses from Supabase only if external courses are not provided
+  const { data: fetchedCourses = [] } = useQuery({
     queryKey: ['courses'],
     queryFn: async () => {
+      if (externalCourses) {
+        return externalCourses;
+      }
+
       console.log('Fetching courses from database');
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
@@ -59,9 +64,11 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
       console.log('Fetched courses:', data);
       return data as Course[];
     },
+    enabled: !externalCourses, // Only run the query if external courses are not provided
   });
 
-  // Add course mutation
+  const courses = externalCourses || fetchedCourses;
+
   const addCourseMutation = useMutation({
     mutationFn: async (courseData: Omit<Course, 'id'>) => {
       console.log('Adding new course:', courseData);
