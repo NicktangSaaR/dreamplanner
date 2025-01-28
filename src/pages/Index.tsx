@@ -1,23 +1,111 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    // Check authentication status when component mounts
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+
+      if (session?.user) {
+        // Fetch user profile to determine user type
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        setUserProfile(profile);
+      }
+    };
+
+    checkAuth();
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
+      setIsAuthenticated(!!session);
+      
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        setUserProfile(profile);
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Successfully logged out");
+      navigate("/");
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error("Error logging out");
+    }
+  };
+
+  const getDashboardLink = () => {
+    if (!userProfile) return "/";
+    
+    if (userProfile.is_admin) return "/admin-dashboard";
+    if (userProfile.user_type === "counselor") return "/counselor-dashboard";
+    if (userProfile.user_type === "student") return `/student-dashboard/${userProfile.id}`;
+    return "/college-planning";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-semibold text-primary">EduPath</h1>
           <div className="space-x-4">
-            <Link to="/login">
-              <Button variant="ghost" className="hover:text-primary transition-colors">
-                Log in
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button className="bg-primary hover:bg-primary/90 text-white transition-colors">
-                Sign up
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to={getDashboardLink()}>
+                  <Button variant="ghost" className="hover:text-primary transition-colors">
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button 
+                  onClick={handleLogout}
+                  className="bg-primary hover:bg-primary/90 text-white transition-colors"
+                >
+                  Log out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" className="hover:text-primary transition-colors">
+                    Log in
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button className="bg-primary hover:bg-primary/90 text-white transition-colors">
+                    Sign up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
