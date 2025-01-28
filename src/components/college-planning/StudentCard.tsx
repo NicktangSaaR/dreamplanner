@@ -16,6 +16,11 @@ interface StudentCardProps {
 export default function StudentCard({ student }: StudentCardProps) {
   const navigate = useNavigate();
 
+  const handleViewSummary = () => {
+    console.log("Navigating to student summary with ID:", student.id);
+    navigate(`/counselor-dashboard/student/summary/${student.id}`);
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -37,7 +42,7 @@ export default function StudentCard({ student }: StudentCardProps) {
             </div>
           </div>
           <Button 
-            onClick={() => navigate(`/counselor-dashboard/student/summary/${student.id}`)}
+            onClick={handleViewSummary}
           >
             View Summary
           </Button>

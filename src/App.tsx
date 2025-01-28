@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -27,11 +27,7 @@ export default function App() {
             <Route path="/counselor-dashboard" element={<CounselorDashboard />} />
             <Route 
               path="/counselor-dashboard/student/summary/:studentId" 
-              element={
-                <div className="min-h-screen bg-background">
-                  <StudentSummaryPage studentId={useParams<{ studentId: string }>().studentId || ""} />
-                </div>
-              } 
+              element={<StudentSummaryPage />} 
             />
             <Route path="/counselor-dashboard/student/:studentId" element={<StudentView />} />
             <Route path="/student-dashboard/:studentId" element={<StudentDashboard />} />
