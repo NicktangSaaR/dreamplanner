@@ -30,22 +30,32 @@ export function calculateGPA(grade: string, courseType: string): number {
   return baseGPA + bonus;
 }
 
-function calculateYearGPA(courses: Course[], academicYear: string): number {
+function calculateUnweightedGPA(grade: string): number {
+  return GRADE_TO_GPA[grade.toUpperCase()] || 0;
+}
+
+function calculateYearGPA(courses: Course[], academicYear: string, weighted: boolean = true): number {
   const yearCourses = courses.filter(course => course.academic_year === academicYear);
   if (yearCourses.length === 0) return 0;
 
   const totalGPA = yearCourses.reduce((sum, course) => {
-    return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type));
-  }, 0);
-
-  return Number((totalGPA / yearCourses.length).toFixed(2));
+    if (weighted) {
+      return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type));
+    } else {
+      return sum + calculateUnweightedGPA(course.grade);
+    }
+  }, 0); yearCourses.length).toFixed(2));
 }
 
 export default function GradeCalculator({ courses }: GradeCalculatorProps) {
-  const calculateOverallGPA = (): number => {
+  const calculateOverallGPA = (weighted: boolean = true): number => {
     if (courses.length === 0) return 0;
     const totalGPA = courses.reduce((sum, course) => {
-      return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type));
+      if (weighted) {
+        return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type));
+      } else {
+        return sum + calculateUnweightedGPA(course.grade);
+      }
     }, 0);
     return Number((totalGPA / courses.length).toFixed(2));
   };
@@ -58,23 +68,42 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 bg-green-50 p-3 rounded-lg">
-        <Calculator className="h-5 w-5 text-green-600" />
-        <div>
-          <p className="text-sm font-medium text-green-600">Overall GPA</p>
-          <p className="text-2xl font-bold text-green-700">{calculateOverallGPA()}</p>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2 bg-green-50 p-3 rounded-lg">
+          <Calculator className="h-5 w-5 text-green-600" />
+          <div>
+            <p className="text-sm font-medium text-green-600">Weighted GPA</p>
+            <p className="text-2xl font-bold text-green-700">{calculateOverallGPA(true)}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 bg-blue-50 p-3 rounded-lg">
+          <Calculator className="h-5 w-5 text-blue-600" />
+          <div>
+            <p className="text-sm font-medium text-blue-600">Unweighted GPA</p>
+            <p className="text-2xl font-bold text-blue-700">{calculateOverallGPA(false)}</p>
+          </div>
         </div>
       </div>
       
       {/* Academic Year GPAs */}
       <div className="grid gap-2">
         {academicYears.map(year => (
-          <div key={year} className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg">
-            <div>
-              <p className="text-sm font-medium text-blue-600">{year} GPA</p>
-              <p className="text-xl font-bold text-blue-700">
-                {calculateYearGPA(courses, year)}
-              </p>
+          <div key={year} className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
+              <div>
+                <p className="text-sm font-medium text-green-600">{year} Weighted</p>
+                <p className="text-xl font-bold text-green-700">
+                  {calculateYearGPA(courses, year, true)}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg">
+              <div>
+                <p className="text-sm font-medium text-blue-600">{year} Unweighted</p>
+                <p className="text-xl font-bold text-blue-700">
+                  {calculateYearGPA(courses, year, false)}
+                </p>
+              </div>
             </div>
           </div>
         ))}
