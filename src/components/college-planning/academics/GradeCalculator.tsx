@@ -84,6 +84,19 @@ function calculateYearGPA(courses: Course[], academicYear: string, weighted: boo
   return Number((totalGPA / yearCourses.length).toFixed(2));
 }
 
+function calculate100PointAverage(courses: Course[]): number | null {
+  // Only calculate if all courses use 100-point scale
+  const all100Point = courses.every(course => course.grade_type === '100-point');
+  if (!all100Point || courses.length === 0) return null;
+
+  const totalPoints = courses.reduce((sum, course) => {
+    const points = parseFloat(course.grade);
+    return isNaN(points) ? sum : sum + points;
+  }, 0);
+
+  return Number((totalPoints / courses.length).toFixed(2));
+}
+
 export default function GradeCalculator({ courses }: GradeCalculatorProps) {
   const calculateOverallGPA = (weighted: boolean = true): number => {
     if (courses.length === 0) return 0;
@@ -103,6 +116,8 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
     .sort()
     .reverse();
 
+  const average100Point = calculate100PointAverage(courses);
+
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
@@ -121,6 +136,16 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
           </div>
         </div>
       </div>
+      
+      {average100Point !== null && (
+        <div className="flex items-center gap-2 bg-purple-50 p-3 rounded-lg">
+          <Calculator className="h-5 w-5 text-purple-600" />
+          <div>
+            <p className="text-xs font-medium text-purple-600">100-Point Average</p>
+            <p className="text-lg font-bold text-purple-700">{average100Point}</p>
+          </div>
+        </div>
+      )}
       
       <div className="grid gap-2">
         {academicYears.map(year => (
