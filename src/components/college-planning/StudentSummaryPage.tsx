@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, GraduationCap, BookOpen, Award, Star } from "lucide-react";
+import { ArrowLeft, GraduationCap, BookOpen, Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -119,6 +119,15 @@ export default function StudentSummaryPage() {
     return <div>Loading...</div>;
   }
 
+  // Calculate GPA
+  const calculateCurrentGPA = () => {
+    if (courses.length === 0) return "0.00";
+    const validCourses = courses.filter(course => course.gpa_value !== null);
+    if (validCourses.length === 0) return "0.00";
+    const totalGPA = validCourses.reduce((sum, course) => sum + (course.gpa_value || 0), 0);
+    return (totalGPA / validCourses.length).toFixed(2);
+  };
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
@@ -163,7 +172,7 @@ export default function StudentSummaryPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-sm text-blue-600">Current GPA</p>
-              <p className="text-2xl font-bold text-blue-700">{calculateGPA()}</p>
+              <p className="text-2xl font-bold text-blue-700">{calculateCurrentGPA()}</p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
               <p className="text-sm text-green-600">Total Courses</p>
