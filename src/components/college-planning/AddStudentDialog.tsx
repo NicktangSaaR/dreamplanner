@@ -29,9 +29,7 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         .admin.listUsers({
           page: 1,
           perPage: 1,
-          filters: {
-            email: email
-          }
+          email: email // Use email directly as a parameter
         });
 
       if (authError) {
@@ -63,6 +61,19 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
 
       if (!profile) {
         toast.error("No student profile found with this email");
+        return;
+      }
+
+      // First check if the current user is a counselor
+      const { data: counselorProfile, error: counselorError } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', counselorId)
+        .single();
+
+      if (counselorError || !counselorProfile || counselorProfile.user_type !== 'counselor') {
+        console.error("Error: User is not a counselor");
+        toast.error("You must be a counselor to add students");
         return;
       }
 
