@@ -1,4 +1,4 @@
-import { Activity, BookOpen, Folder, ListTodo, StickyNote } from "lucide-react";
+import { Activity, BookOpen, ListTodo, StickyNote } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -125,15 +125,11 @@ export default function DashboardTabs({
           <CardContent className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium">Total Courses</p>
-                <p className="text-2xl font-bold">{courses.length}</p>
-              </div>
-              <div className="space-y-2">
                 <p className="text-sm font-medium">Overall GPA</p>
                 <p className="text-2xl font-bold">{gpa}</p>
               </div>
               {average !== 'N/A' && (
-                <div className="col-span-2 space-y-2">
+                <div className="space-y-2">
                   <p className="text-sm font-medium">Overall Average (100-point)</p>
                   <p className="text-2xl font-bold">{average}</p>
                 </div>
