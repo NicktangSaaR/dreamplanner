@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
-import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useTodos } from "@/hooks/useTodos";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import SelectCounselorDialog from "@/components/college-planning/SelectCounselorDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Course } from "@/components/college-planning/types/course";
+import { toast } from "sonner";
 
 interface ActivityType {
   id: string;
@@ -28,7 +27,7 @@ interface Note {
 }
 
 export default function StudentDashboard() {
-  const { studentId } = useParams();
+  const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
   const { profile } = useProfile();
   const [courses, setCourses] = useState<Course[]>([]);
@@ -36,17 +35,24 @@ export default function StudentDashboard() {
   const [notes, setNotes] = useState<Note[]>([]);
   const { todos } = useTodos();
 
-  const { data: hasAccess } = useQuery({
+  console.log("StudentDashboard - studentId:", studentId);
+  console.log("StudentDashboard - profile:", profile);
+
+  // Check access rights
+  const { data: hasAccess, isLoading: checkingAccess } = useQuery({
     queryKey: ["check-student-access", studentId, profile?.id],
     queryFn: async () => {
       if (!profile?.id || !studentId) return false;
       
       console.log("Checking access rights for student dashboard");
+      
+      // If user is viewing their own dashboard
       if (profile.id === studentId) {
         console.log("Student accessing own dashboard");
         return true;
       }
       
+      // If user is a counselor, check relationship
       if (profile.user_type === 'counselor') {
         const { data, error } = await supabase
           .from("counselor_student_relationships")
@@ -69,15 +75,18 @@ export default function StudentDashboard() {
     enabled: !!profile?.id && !!studentId,
   });
 
+  // Fetch student profile
   const { data: studentProfile } = useQuery({
     queryKey: ["student-profile", studentId],
     queryFn: async () => {
+      if (!studentId) throw new Error("No student ID provided");
+      
       console.log("Fetching student profile data");
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", studentId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching student profile:", error);
@@ -87,17 +96,15 @@ export default function StudentDashboard() {
       console.log("Student profile data:", data);
       return data;
     },
-    enabled: !!studentId,
+    enabled: !!studentId && hasAccess === true,
   });
 
   useEffect(() => {
-    if (!profile) return;
-    
-    if (hasAccess === false) {
-      console.log("Access denied to student dashboard");
+    if (!checkingAccess && hasAccess === false) {
+      toast.error("You don't have permission to view this page");
       navigate('/college-planning');
     }
-  }, [profile, hasAccess, navigate]);
+  }, [hasAccess, checkingAccess, navigate]);
 
   const getTodoStats = () => {
     const completed = todos.filter(todo => todo.completed).length;
@@ -110,7 +117,11 @@ export default function StudentDashboard() {
     setCourses(newCourses);
   };
 
-  if (hasAccess === undefined) {
+  if (checkingAccess) {
+    return <div>Loading...</div>;
+  }
+
+  if (!studentId || !hasAccess) {
     return null;
   }
 
@@ -121,7 +132,7 @@ export default function StudentDashboard() {
           <Button 
             variant="ghost" 
             size="icon"
-            onClick={() => navigate('/college-planning')}
+            onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -134,12 +145,6 @@ export default function StudentDashboard() {
             )}
           </div>
         </div>
-        {profile?.id === studentId && (
-          <SelectCounselorDialog 
-            studentId={studentId}
-            onCounselorSelected={() => {}}
-          />
-        )}
       </div>
 
       <StatisticsCards
