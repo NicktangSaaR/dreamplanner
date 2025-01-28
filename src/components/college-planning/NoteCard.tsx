@@ -22,24 +22,30 @@ interface NoteCardProps {
 export default function NoteCard({ note, onTogglePin, onToggleStar, onEdit }: NoteCardProps) {
   return (
     <Card className={`${note.is_pinned ? "border-primary" : "border-0"} bg-white/50 hover:bg-white/80 transition-colors`}>
-      <CardContent className="pt-4 px-4">
-        <div className="flex justify-between items-start mb-2">
-          <div>
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+          <div className="space-y-1">
             <h3 className="font-semibold text-base">{note.title}</h3>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
               <span>{note.date}</span>
+              {note.author_name && (
+                <span className="hidden sm:inline">•</span>
+              )}
               {note.author_name && (
                 <span>by {note.author_name}</span>
               )}
               {note.stars > 0 && (
-                <span className="flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                  {note.stars}
-                </span>
+                <>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    {note.stars}
+                  </span>
+                </>
               )}
             </div>
           </div>
-          <div className="flex space-x-1">
+          <div className="flex sm:space-x-1">
             <Button
               variant="ghost"
               size="icon"
@@ -66,7 +72,7 @@ export default function NoteCard({ note, onTogglePin, onToggleStar, onEdit }: No
             </Button>
           </div>
         </div>
-        <p className="whitespace-pre-wrap text-sm">{note.content}</p>
+        <p className="mt-2 whitespace-pre-wrap text-sm">{note.content}</p>
       </CardContent>
     </Card>
   );
