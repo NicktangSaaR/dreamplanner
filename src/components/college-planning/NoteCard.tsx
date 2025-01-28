@@ -72,7 +72,7 @@ export default function NoteCard({ note, onTogglePin, onToggleStar, onEdit }: No
             </Button>
           </div>
         </div>
-        <p className="mt-2 whitespace-pre-wrap text-sm">{note.content}</p>
+        <p className="hidden sm:block mt-2 whitespace-pre-wrap text-sm">{note.content}</p>
       </CardContent>
     </Card>
   );
