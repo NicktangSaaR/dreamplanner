@@ -2,7 +2,6 @@ import { useNotes } from "@/hooks/useNotes";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import NotesList from "./NotesList";
 import NoteDialog from "./NoteDialog";
@@ -94,21 +93,23 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <NotesList
-        notes={notes}
-        onCreateNote={handleCreateNote}
-        onTogglePin={handleTogglePin}
-        onToggleStar={handleToggleStar}
-        onEdit={handleEdit}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-4">
+        <NotesList
+          notes={notes}
+          onCreateNote={handleCreateNote}
+          onTogglePin={handleTogglePin}
+          onToggleStar={handleToggleStar}
+          onEdit={handleEdit}
+        />
+      </div>
 
-      <Separator className="my-6" />
-
-      <SharedFolderCard
-        folder={folder}
-        onEditClick={() => setIsFolderDialogOpen(true)}
-      />
+      <div className="space-y-4">
+        <SharedFolderCard
+          folder={folder}
+          onEditClick={() => setIsFolderDialogOpen(true)}
+        />
+      </div>
 
       <NoteDialog
         open={isNoteDialogOpen}
