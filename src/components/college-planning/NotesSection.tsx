@@ -128,7 +128,7 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Notes</CardTitle>
@@ -153,6 +153,8 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      <Separator className="my-6" />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
