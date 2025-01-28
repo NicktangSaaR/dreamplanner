@@ -62,7 +62,7 @@ export default function DashboardTabs({
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="academics" className="bg-[#D3E4FD] p-4 rounded-lg">
+      <TabsContent value="academics">
         <Card>
           <CardHeader>
             <CardTitle>Academic Records</CardTitle>
@@ -112,15 +112,15 @@ export default function DashboardTabs({
         </Card>
       </TabsContent>
       
-      <TabsContent value="extracurricular" className="bg-[#D3E4FD] p-4 rounded-lg">
+      <TabsContent value="extracurricular">
         <ExtracurricularSection onActivitiesChange={onActivitiesChange} />
       </TabsContent>
       
-      <TabsContent value="notes" className="bg-[#D3E4FD] p-4 rounded-lg">
+      <TabsContent value="notes">
         <NotesSection onNotesChange={onNotesChange} />
       </TabsContent>
 
-      <TabsContent value="todos" className="bg-[#D3E4FD] p-4 rounded-lg">
+      <TabsContent value="todos">
         <TodoSection />
       </TabsContent>
     </Tabs>
