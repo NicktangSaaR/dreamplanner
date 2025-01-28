@@ -29,6 +29,17 @@ export default function Login() {
 
       if (error) {
         console.error("Login error details:", error);
+        
+        // Handle email not confirmed error specifically
+        if (error.message === "Email not confirmed") {
+          toast({
+            variant: "destructive",
+            title: "Email Not Verified",
+            description: "Please check your email for a verification link or contact support if you need help.",
+          });
+          return;
+        }
+
         toast({
           variant: "destructive",
           title: "Login Failed",
