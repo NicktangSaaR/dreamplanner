@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle } from "lucide-react";
-import { GRADE_TO_GPA, COURSE_TYPE_BONUS } from "./GradeCalculator";
+import { GRADE_TO_GPA, COURSE_TYPE_BONUS, SPECIAL_GRADES } from "./GradeCalculator";
 
 interface CourseFormProps {
   newCourse: {
@@ -70,7 +70,7 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
                 <SelectValue placeholder="Select grade" />
               </SelectTrigger>
               <SelectContent>
-                {Object.keys(GRADE_TO_GPA).map((grade) => (
+                {[...Object.keys(GRADE_TO_GPA), ...SPECIAL_GRADES].map((grade) => (
                   <SelectItem key={grade} value={grade}>
                     {grade}
                   </SelectItem>

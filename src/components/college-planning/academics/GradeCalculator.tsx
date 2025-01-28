@@ -14,6 +14,8 @@ export const COURSE_TYPE_BONUS: { [key: string]: number } = {
   'AP/IB': 1.0
 };
 
+export const SPECIAL_GRADES = ['In Progress', 'Pass/Fail', 'Drop'];
+
 function getGPAFromPercentage(percentage: number, courseType: string = 'Regular'): number {
   let baseGPA = 0;
   
@@ -31,7 +33,6 @@ function getGPAFromPercentage(percentage: number, courseType: string = 'Regular'
   else if (percentage >= 60) baseGPA = 0.7;  // D-
   else baseGPA = 0.0;                        // F
 
-  // Apply course type bonus
   const bonus = COURSE_TYPE_BONUS[courseType] || 0;
   return baseGPA + bonus;
 }
@@ -49,6 +50,8 @@ interface GradeCalculatorProps {
 }
 
 export function calculateGPA(grade: string, courseType: string, gradeType: string = 'letter'): number {
+  if (SPECIAL_GRADES.includes(grade)) return 0;
+  
   if (gradeType === '100-point') {
     const numericGrade = parseFloat(grade);
     if (isNaN(numericGrade)) return 0;
@@ -61,6 +64,8 @@ export function calculateGPA(grade: string, courseType: string, gradeType: strin
 }
 
 function calculateUnweightedGPA(grade: string, gradeType: string = 'letter'): number {
+  if (SPECIAL_GRADES.includes(grade)) return 0;
+  
   if (gradeType === '100-point') {
     const numericGrade = parseFloat(grade);
     if (isNaN(numericGrade)) return 0;
@@ -70,7 +75,10 @@ function calculateUnweightedGPA(grade: string, gradeType: string = 'letter'): nu
 }
 
 function calculateYearGPA(courses: Course[], academicYear: string, weighted: boolean = true): number {
-  const yearCourses = courses.filter(course => course.academic_year === academicYear);
+  const yearCourses = courses.filter(course => 
+    course.academic_year === academicYear && !SPECIAL_GRADES.includes(course.grade)
+  );
+  
   if (yearCourses.length === 0) return 0;
 
   const totalGPA = yearCourses.reduce((sum, course) => {
@@ -85,37 +93,43 @@ function calculateYearGPA(courses: Course[], academicYear: string, weighted: boo
 }
 
 function calculate100PointAverage(courses: Course[]): number | null {
-  // Only calculate if all courses use 100-point scale
-  const all100Point = courses.every(course => course.grade_type === '100-point');
-  if (!all100Point || courses.length === 0) return null;
+  // Filter out special grade courses and check if remaining courses use 100-point scale
+  const validCourses = courses.filter(course => !SPECIAL_GRADES.includes(course.grade));
+  const all100Point = validCourses.every(course => course.grade_type === '100-point');
+  
+  if (!all100Point || validCourses.length === 0) return null;
 
-  const totalPoints = courses.reduce((sum, course) => {
+  const totalPoints = validCourses.reduce((sum, course) => {
     const points = parseFloat(course.grade);
     return isNaN(points) ? sum : sum + points;
   }, 0);
 
-  return Number((totalPoints / courses.length).toFixed(2));
+  return Number((totalPoints / validCourses.length).toFixed(2));
 }
 
 function calculateYear100PointAverage(courses: Course[], academicYear: string): number | null {
-  const yearCourses = courses.filter(course => course.academic_year === academicYear);
+  const yearCourses = courses.filter(course => 
+    course.academic_year === academicYear && !SPECIAL_GRADES.includes(course.grade)
+  );
   return calculate100PointAverage(yearCourses);
 }
 
 export default function GradeCalculator({ courses }: GradeCalculatorProps) {
   const calculateOverallGPA = (weighted: boolean = true): number => {
-    if (courses.length === 0) return 0;
-    const totalGPA = courses.reduce((sum, course) => {
+    const validCourses = courses.filter(course => !SPECIAL_GRADES.includes(course.grade));
+    if (validCourses.length === 0) return 0;
+    
+    const totalGPA = validCourses.reduce((sum, course) => {
       if (weighted) {
         return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type, course.grade_type));
       } else {
         return sum + calculateUnweightedGPA(course.grade, course.grade_type);
       }
     }, 0);
-    return Number((totalGPA / courses.length).toFixed(2));
+    
+    return Number((totalGPA / validCourses.length).toFixed(2));
   };
 
-  // Get unique academic years from courses
   const academicYears = Array.from(new Set(courses.map(course => course.academic_year)))
     .filter(year => year)
     .sort()
