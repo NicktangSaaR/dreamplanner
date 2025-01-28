@@ -129,6 +129,39 @@ export type Database = {
         }
         Relationships: []
       }
+      extracurricular_activities: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          role: string
+          student_id: string
+          time_commitment: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          role: string
+          student_id: string
+          time_commitment?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          role?: string
+          student_id?: string
+          time_commitment?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           author_id: string | null

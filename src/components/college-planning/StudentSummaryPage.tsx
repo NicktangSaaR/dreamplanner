@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, GraduationCap, BookOpen, Award } from "lucide-react";
+import { ArrowLeft, GraduationCap, BookOpen, Award, Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -80,6 +80,28 @@ export default function StudentSummaryPage() {
     enabled: !!studentId,
   });
 
+  // Fetch extracurricular activities
+  const { data: activities = [] } = useQuery({
+    queryKey: ["student-activities", studentId],
+    queryFn: async () => {
+      if (!studentId) return [];
+      
+      const { data, error } = await supabase
+        .from("extracurricular_activities")
+        .select("*")
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching activities:", error);
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!studentId,
+  });
+
   const handleViewDashboard = () => {
     console.log("View Dashboard clicked - studentId:", studentId);
     if (!studentId) {
@@ -96,15 +118,6 @@ export default function StudentSummaryPage() {
   if (!profile) {
     return <div>Loading...</div>;
   }
-
-  // Calculate GPA
-  const calculateGPA = () => {
-    if (courses.length === 0) return 0;
-    const validCourses = courses.filter(course => course.gpa_value !== null);
-    if (validCourses.length === 0) return 0;
-    const totalGPA = validCourses.reduce((sum, course) => sum + (course.gpa_value || 0), 0);
-    return (totalGPA / validCourses.length).toFixed(2);
-  };
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -167,6 +180,39 @@ export default function StudentSummaryPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Extracurricular Activities Summary */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Star className="h-5 w-5" />
+            <CardTitle>Extracurricular Activities</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            {activities.map((activity) => (
+              <div key={activity.id} className="flex flex-col p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium">{activity.name}</p>
+                    <p className="text-sm text-gray-600">{activity.role}</p>
+                  </div>
+                  {activity.time_commitment && (
+                    <Badge variant="secondary">{activity.time_commitment}</Badge>
+                  )}
+                </div>
+                {activity.description && (
+                  <p className="text-sm text-gray-600 mt-2">{activity.description}</p>
+                )}
+              </div>
+            ))}
+            {activities.length === 0 && (
+              <p className="text-gray-500 text-center">No extracurricular activities recorded</p>
+            )}
           </div>
         </CardContent>
       </Card>
