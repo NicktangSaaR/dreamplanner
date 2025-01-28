@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import GradeCalculator from "./academics/GradeCalculator";
+import GradeCalculator, { calculateGPA, GRADE_TO_GPA, COURSE_TYPE_BONUS } from "./academics/GradeCalculator";
 import CourseForm from "./academics/CourseForm";
 import CourseTable from "./academics/CourseTable";
 
@@ -91,12 +91,6 @@ export default function AcademicsSection({ onCoursesChange }: AcademicsSectionPr
     if (editingCourse) {
       setEditingCourse({ ...editingCourse, [field]: value });
     }
-  };
-
-  const calculateGPA = (grade: string, courseType: string): number => {
-    const baseGPA = GRADE_TO_GPA[grade.toUpperCase()] || 0;
-    const bonus = COURSE_TYPE_BONUS[courseType] || 0;
-    return baseGPA + bonus;
   };
 
   return (
