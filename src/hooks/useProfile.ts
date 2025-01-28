@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface Profile {
+export interface Profile {
   id: string;
   full_name: string | null;
   grade: string | null;
@@ -18,7 +18,7 @@ interface Profile {
   user_type: string;
   graduation_school: string | null;
   background_intro: string | null;
-  is_admin: boolean | null;  // Added this field
+  is_admin: boolean | null;
 }
 
 export function useProfile() {
@@ -61,7 +61,7 @@ export function useProfile() {
         .from("profiles")
         .upsert({
           id: user.id,
-          user_type: 'student', // Added this field with default value
+          user_type: 'student',
           ...updatedProfile
         })
         .select()
