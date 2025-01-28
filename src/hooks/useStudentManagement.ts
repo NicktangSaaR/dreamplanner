@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { StudentSearchResult } from "@/components/college-planning/types/student-management";
+import { User } from "@supabase/supabase-js";
 
 export function useStudentManagement(counselorId: string) {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +21,7 @@ export function useStudentManagement(counselorId: string) {
         return { user: null, error: "Failed to search for user" };
       }
 
-      const matchingUser = users.users.find(user => user.email === email);
+      const matchingUser = users.users.find((user: User) => user.email === email);
       if (!matchingUser) {
         return { user: null, error: "No user found with this email" };
       }
