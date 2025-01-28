@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, ArrowRight, GraduationCap, BookOpen, Activity, School } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface StudentSummaryPageProps {
   studentId: string;
@@ -105,6 +106,15 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
     return (totalGPA / validGrades.length).toFixed(2);
   };
 
+  const handleViewDashboard = () => {
+    if (!studentId) {
+      toast.error("Student ID is missing");
+      return;
+    }
+    console.log("Navigating to student dashboard with ID:", studentId);
+    navigate(`/student-dashboard/${studentId}`);
+  };
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex items-center justify-between">
@@ -126,7 +136,7 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
           </div>
         </div>
         <Button 
-          onClick={() => navigate(`/student-dashboard/${studentId}`)}
+          onClick={handleViewDashboard}
           className="flex items-center gap-2"
         >
           View Dashboard
