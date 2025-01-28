@@ -39,11 +39,37 @@ export default function Login() {
 
       if (session) {
         console.log("Login successful, session:", session);
+        
+        // Fetch user profile to determine role
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to fetch user profile",
+          });
+          return;
+        }
+
+        console.log("User profile:", profile);
+
+        // Redirect based on user type
+        if (profile.user_type === 'counselor') {
+          navigate('/counselor-dashboard');
+        } else {
+          navigate('/college-planning');
+        }
+
         toast({
           title: "Success!",
           description: "You have been logged in successfully.",
         });
-        navigate("/");
       }
     } catch (error) {
       console.error("Unexpected error during login:", error);
