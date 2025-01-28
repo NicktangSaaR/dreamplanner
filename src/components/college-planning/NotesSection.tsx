@@ -2,6 +2,7 @@ import { useNotes } from "@/hooks/useNotes";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import NotesList from "./NotesList";
 import NoteDialog from "./NoteDialog";
@@ -93,8 +94,8 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="space-y-4">
+    <div className="flex flex-col md:flex-row gap-6 relative">
+      <div className="flex-1 bg-[#E5DEFF] p-6 rounded-lg">
         <NotesList
           notes={notes}
           onCreateNote={handleCreateNote}
@@ -104,7 +105,12 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
         />
       </div>
 
-      <div className="space-y-4">
+      <Separator 
+        orientation="vertical" 
+        className="hidden md:block h-auto bg-white my-4" 
+      />
+
+      <div className="flex-1 bg-[#FEC6A1] p-6 rounded-lg">
         <SharedFolderCard
           folder={folder}
           onEditClick={() => setIsFolderDialogOpen(true)}
