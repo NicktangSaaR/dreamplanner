@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import InterviewSettings from "@/components/mock-interview/InterviewSettings";
+import InterviewSettingsComponent from "@/components/mock-interview/InterviewSettings";
 import { InterviewStage } from "@/components/mock-interview/InterviewStage";
 import InterviewPreparation from "@/components/mock-interview/InterviewPreparation";
 import InterviewCountdown from "@/components/mock-interview/InterviewCountdown";
@@ -169,7 +169,7 @@ const MockInterview = () => {
     if (stage === InterviewStage.SETTINGS) {
       return (
         <div className="grid md:grid-cols-2 gap-8">
-          <InterviewSettings
+          <InterviewSettingsComponent
             settings={settings}
             onSettingsChange={setSettings}
             onStartInterview={startInterview}
