@@ -26,7 +26,7 @@ export default function SignUp() {
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
+        email: formData.email.trim(),
         password: formData.password,
         options: {
           data: {
@@ -36,21 +36,23 @@ export default function SignUp() {
       });
 
       if (error) {
-        console.error("Signup error:", error.message);
+        console.error("Signup error:", error);
         
-        // Handle specific error cases
+        // Handle user already exists error specifically
         if (error.message.includes("User already registered")) {
           toast({
             variant: "destructive",
             title: "Account Already Exists",
-            description: "This email is already registered. Please try logging in instead.",
+            description: "This email is already registered. Please log in instead.",
           });
+          // Automatically redirect to login after a short delay
+          setTimeout(() => navigate("/login"), 2000);
           return;
         }
         
         toast({
           variant: "destructive",
-          title: "Error",
+          title: "Signup Failed",
           description: error.message,
         });
         return;
@@ -61,7 +63,7 @@ export default function SignUp() {
         title: "Success!",
         description: "Please check your email to verify your account.",
       });
-      navigate("/");
+      navigate("/login");
     } catch (error) {
       console.error("Unexpected error:", error);
       toast({
