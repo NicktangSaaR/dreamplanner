@@ -50,7 +50,9 @@ export type Database = {
       }
       courses: {
         Row: {
+          course_type: string | null
           created_at: string | null
+          gpa_value: number | null
           grade: string
           id: string
           name: string
@@ -59,7 +61,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          course_type?: string | null
           created_at?: string | null
+          gpa_value?: number | null
           grade: string
           id?: string
           name: string
@@ -68,7 +72,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          course_type?: string | null
           created_at?: string | null
+          gpa_value?: number | null
           grade?: string
           id?: string
           name?: string
