@@ -3,11 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, Star, StarOff, Trash, Plus } from "lucide-react";
+import { Check, Star, StarOff, Trash, Plus, Wand2 } from "lucide-react";
 import { useTodos } from "@/hooks/useTodos";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 export default function TodoSection() {
   const [newTodoTitle, setNewTodoTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   const { todos, createTodo, toggleTodoStatus, toggleStarred, deleteTodo } = useTodos();
 
   const handleCreateTodo = async (e: React.FormEvent) => {
@@ -15,6 +19,47 @@ export default function TodoSection() {
     if (!newTodoTitle.trim()) return;
     await createTodo.mutateAsync(newTodoTitle);
     setNewTodoTitle("");
+  };
+
+  const handleGenerateTodos = async () => {
+    if (!content.trim()) {
+      toast.error("Please enter some content to generate todos from");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-todos`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ content }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to generate todos");
+      }
+
+      const { todos: generatedTodos } = await response.json();
+      
+      // Create each generated todo
+      for (const todoTitle of generatedTodos) {
+        await createTodo.mutateAsync(todoTitle);
+      }
+
+      setContent("");
+      toast.success("Successfully generated todos!");
+    } catch (error) {
+      console.error("Error generating todos:", error);
+      toast.error("Failed to generate todos. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -35,6 +80,24 @@ export default function TodoSection() {
             Add
           </Button>
         </form>
+
+        <div className="mb-4">
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Enter text to generate todos from..."
+            className="mb-2"
+          />
+          <Button 
+            onClick={handleGenerateTodos} 
+            disabled={isGenerating || !content.trim()}
+            className="w-full"
+          >
+            <Wand2 className="h-4 w-4 mr-2" />
+            {isGenerating ? "Generating..." : "Generate Todos"}
+          </Button>
+        </div>
+
         <ScrollArea className="h-[300px] w-full rounded-md border p-4">
           <div className="space-y-2">
             {todos.map((todo) => (
