@@ -1,10 +1,24 @@
-import { GraduationCap, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { GraduationCap, User, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/useProfile";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function DashboardHeader() {
   const { profile } = useProfile();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+      navigate("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      toast.error("Failed to log out");
+    }
+  };
 
   return (
     <div className="space-y-4 sm:space-y-0">
@@ -18,12 +32,22 @@ export default function DashboardHeader() {
             Hi, {profile?.full_name || "there"}
           </p>
         </div>
-        <Link to="/profile" className="block mt-4 sm:mt-0">
-          <Button variant="default" className="w-full sm:w-auto flex items-center justify-center gap-2">
-            <User className="h-4 w-4" />
-            My Profile
+        <div className="flex gap-2 mt-4 sm:mt-0">
+          <Link to="/profile">
+            <Button variant="default" className="w-full sm:w-auto flex items-center justify-center gap-2">
+              <User className="h-4 w-4" />
+              My Profile
+            </Button>
+          </Link>
+          <Button 
+            variant="outline" 
+            onClick={handleLogout}
+            className="w-full sm:w-auto flex items-center justify-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Log Out
           </Button>
-        </Link>
+        </div>
       </div>
     </div>
   );
