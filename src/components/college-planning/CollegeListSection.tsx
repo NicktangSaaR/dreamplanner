@@ -82,11 +82,18 @@ export default function CollegeListSection() {
 
       const collegeUrl = `https://www.${values.college_name.toLowerCase().replace(/ /g, '')}.edu`;
       
-      const { error } = await supabase.from("college_applications").insert({
-        ...values,
+      // Create a properly typed object for insertion
+      const applicationData = {
+        college_name: values.college_name,
+        major: values.major,
+        degree: values.degree,
         college_url: collegeUrl,
         student_id: user.id
-      });
+      };
+
+      const { error } = await supabase
+        .from("college_applications")
+        .insert(applicationData);
 
       if (error) throw error;
 
