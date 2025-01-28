@@ -12,6 +12,7 @@ import StudentDashboard from "@/pages/StudentDashboard";
 import StudentView from "@/pages/StudentView";
 import StudentSummaryPage from "@/components/college-planning/StudentSummaryPage";
 import Academics from "@/pages/Academics";
+import Index from "@/pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
+          <Route path="/" element={<Index />} />
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
