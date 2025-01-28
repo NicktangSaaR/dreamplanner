@@ -18,7 +18,8 @@ export default function StudentCard({ student }: StudentCardProps) {
 
   const handleViewDashboard = () => {
     console.log("Navigating to student dashboard:", student.id);
-    navigate(`/college-planning/student/${student.id}`);
+    // Force a hard navigation to ensure the route change
+    window.location.href = `/college-planning/student/${student.id}`;
   };
 
   return (
