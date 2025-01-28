@@ -18,6 +18,12 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
     queryKey: ["student-profile", studentId],
     queryFn: async () => {
       console.log("Fetching student profile for summary:", studentId);
+      
+      if (!studentId) {
+        console.error("No student ID provided");
+        return null;
+      }
+
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -32,6 +38,7 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
       console.log("Student profile data:", data);
       return data;
     },
+    enabled: Boolean(studentId),
   });
 
   // Fetch courses
@@ -39,6 +46,12 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
     queryKey: ["student-courses", studentId],
     queryFn: async () => {
       console.log("Fetching student courses for summary");
+      
+      if (!studentId) {
+        console.error("No student ID provided");
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("courses")
         .select("*")
@@ -53,6 +66,7 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
       console.log("Student courses:", data);
       return data;
     },
+    enabled: Boolean(studentId),
   });
 
   // Fetch college applications
@@ -60,6 +74,12 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
     queryKey: ["student-applications", studentId],
     queryFn: async () => {
       console.log("Fetching student college applications");
+      
+      if (!studentId) {
+        console.error("No student ID provided");
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("college_applications")
         .select("*")
@@ -74,6 +94,7 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
       console.log("Student applications:", data);
       return data;
     },
+    enabled: Boolean(studentId),
   });
 
   const calculateGPA = () => {
@@ -169,4 +190,5 @@ export default function StudentSummaryPage({ studentId }: StudentSummaryPageProp
       </div>
     </div>
   );
+
 }
