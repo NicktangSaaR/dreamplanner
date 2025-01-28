@@ -33,6 +33,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "counselor_student_relationships_counselor_profiles_fkey"
+            columns: ["counselor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "counselor_student_relationships_student_profiles_fkey"
             columns: ["student_id"]
             isOneToOne: false

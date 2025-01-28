@@ -8,11 +8,18 @@ import SelectCounselorDialog from "@/components/college-planning/SelectCounselor
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface CounselorRelationship {
+  counselor_id: string;
+  counselor: {
+    full_name: string | null;
+  } | null;
+}
+
 export default function Profile() {
   const navigate = useNavigate();
-  const { profile, updateProfile } = useProfile();
+  const { profile } = useProfile();
 
-  // 检查学生是否已经有counselor
+  // Check if student already has a counselor
   const { data: relationship, refetch: refetchRelationship } = useQuery({
     queryKey: ["counselor-relationship", profile?.id],
     enabled: !!profile?.id && profile?.user_type === "student",
@@ -23,7 +30,7 @@ export default function Profile() {
         .from("counselor_student_relationships")
         .select(`
           counselor_id,
-          counselor:profiles!counselor_student_relationships_counselor_id_fkey(
+          counselor:profiles!counselor_student_relationships_counselor_profiles_fkey(
             full_name
           )
         `)
@@ -36,7 +43,7 @@ export default function Profile() {
       }
 
       console.log("Fetched counselor relationship:", data);
-      return data;
+      return data as CounselorRelationship;
     },
   });
 
