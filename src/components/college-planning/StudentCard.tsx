@@ -25,10 +25,27 @@ export default function StudentCard({ student }: StudentCardProps) {
 
   // Update local state when student prop changes
   useEffect(() => {
-    if (student.application_year) {
-      setApplicationYear(student.application_year);
-    }
-  }, [student.application_year]);
+    const fetchApplicationYear = async () => {
+      console.log("Fetching application year for student:", student.id);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('application_year')
+        .eq('id', student.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching application year:", error);
+        return;
+      }
+
+      if (data?.application_year) {
+        console.log("Setting application year to:", data.application_year);
+        setApplicationYear(data.application_year);
+      }
+    };
+
+    fetchApplicationYear();
+  }, [student.id]);
 
   const handleViewDashboard = () => {
     console.log("Navigating to student dashboard:", student.id);
