@@ -39,7 +39,7 @@ export default function DashboardTabs({
 
     const gpa = letterGradeCourses.length ? 
       (letterGradeCourses.reduce((sum, course) => 
-        sum + calculateGPA(course.grade, course.course_type, course.grade_type), 0) / letterGradeCourses.length).toFixed(2)
+        sum + (course.gpa_value || calculateGPA(course.grade, course.course_type, course.grade_type)), 0) / letterGradeCourses.length).toFixed(2)
       : 'N/A';
 
     const average = pointScaleCourses.length ?
@@ -67,7 +67,7 @@ export default function DashboardTabs({
 
       const yearGPA = letterGradeCourses.length ?
         (letterGradeCourses.reduce((sum, course) => 
-          sum + calculateGPA(course.grade, course.course_type, course.grade_type), 0) / letterGradeCourses.length).toFixed(2)
+          sum + (course.gpa_value || calculateGPA(course.grade, course.course_type, course.grade_type)), 0) / letterGradeCourses.length).toFixed(2)
         : 'N/A';
 
       const yearAverage = pointScaleCourses.length ?
