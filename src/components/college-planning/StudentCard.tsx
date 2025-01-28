@@ -12,16 +12,10 @@ import {
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { StudentProfile } from "./types/student-management";
 
 interface StudentCardProps {
-  student: {
-    id: string;
-    full_name: string | null;
-    grade: string | null;
-    school: string | null;
-    interested_majors: string[] | null;
-    application_year?: string | null;
-  };
+  student: StudentProfile;
 }
 
 export default function StudentCard({ student }: StudentCardProps) {

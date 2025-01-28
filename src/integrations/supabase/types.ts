@@ -119,6 +119,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          application_year: string | null
           background_intro: string | null
           created_at: string
           full_name: string | null
@@ -134,6 +135,7 @@ export type Database = {
           user_type: string
         }
         Insert: {
+          application_year?: string | null
           background_intro?: string | null
           created_at?: string
           full_name?: string | null
@@ -149,6 +151,7 @@ export type Database = {
           user_type: string
         }
         Update: {
+          application_year?: string | null
           background_intro?: string | null
           created_at?: string
           full_name?: string | null

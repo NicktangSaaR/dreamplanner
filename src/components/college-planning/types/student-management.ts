@@ -13,3 +13,12 @@ export interface StudentSearchResult {
   user: User | null;
   error?: string;
 }
+
+export interface StudentProfile {
+  id: string;
+  full_name: string | null;
+  grade: string | null;
+  school: string | null;
+  interested_majors: string[] | null;
+  application_year?: string | null;
+}
