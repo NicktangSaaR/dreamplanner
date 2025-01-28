@@ -31,38 +31,40 @@ export default function DashboardTabs({
 
   return (
     <Tabs defaultValue="academics" className="w-full">
-      <TabsList className="grid md:grid-cols-4 grid-cols-1 md:w-full w-fit">
-        <TabsTrigger 
-          value="academics" 
-          className="flex items-center gap-2 data-[state=active]:bg-[#F2FCE2]"
-        >
-          <BookOpen className="h-4 w-4" />
-          Academics
-        </TabsTrigger>
-        <TabsTrigger 
-          value="extracurricular" 
-          className="flex items-center gap-2 data-[state=active]:bg-[#FEC6A1]"
-        >
-          <Activity className="h-4 w-4" />
-          Extracurricular
-        </TabsTrigger>
-        <TabsTrigger 
-          value="notes" 
-          className="flex items-center gap-2 data-[state=active]:bg-[#E5DEFF]"
-        >
-          <StickyNote className="h-4 w-4" />
-          Notes & Folders
-        </TabsTrigger>
-        <TabsTrigger 
-          value="todos" 
-          className="flex items-center gap-2 data-[state=active]:bg-[#FFDEE2]"
-        >
-          <ListTodo className="h-4 w-4" />
-          To-Dos
-        </TabsTrigger>
-      </TabsList>
+      <div className="grid grid-cols-1 gap-2">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full gap-2">
+          <TabsTrigger 
+            value="academics" 
+            className="flex items-center gap-2 data-[state=active]:bg-[#F2FCE2]"
+          >
+            <BookOpen className="h-4 w-4" />
+            Academics
+          </TabsTrigger>
+          <TabsTrigger 
+            value="extracurricular" 
+            className="flex items-center gap-2 data-[state=active]:bg-[#FEC6A1]"
+          >
+            <Activity className="h-4 w-4" />
+            Extracurricular
+          </TabsTrigger>
+          <TabsTrigger 
+            value="notes" 
+            className="flex items-center gap-2 data-[state=active]:bg-[#E5DEFF]"
+          >
+            <StickyNote className="h-4 w-4" />
+            Notes & Folders
+          </TabsTrigger>
+          <TabsTrigger 
+            value="todos" 
+            className="flex items-center gap-2 data-[state=active]:bg-[#FFDEE2]"
+          >
+            <ListTodo className="h-4 w-4" />
+            To-Dos
+          </TabsTrigger>
+        </TabsList>
+      </div>
       
-      <TabsContent value="academics">
+      <TabsContent value="academics" className="mt-4">
         <Card>
           <CardHeader>
             <CardTitle>Academic Records</CardTitle>
@@ -112,15 +114,15 @@ export default function DashboardTabs({
         </Card>
       </TabsContent>
       
-      <TabsContent value="extracurricular">
+      <TabsContent value="extracurricular" className="mt-4">
         <ExtracurricularSection onActivitiesChange={onActivitiesChange} />
       </TabsContent>
       
-      <TabsContent value="notes">
+      <TabsContent value="notes" className="mt-4">
         <NotesSection onNotesChange={onNotesChange} />
       </TabsContent>
 
-      <TabsContent value="todos">
+      <TabsContent value="todos" className="mt-4">
         <TodoSection />
       </TabsContent>
     </Tabs>
