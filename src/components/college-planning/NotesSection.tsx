@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
 
@@ -59,17 +59,19 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   const { data: folder } = useQuery({
     queryKey: ['shared-folder'],
     queryFn: async () => {
+      console.log('Fetching shared folder...');
       const { data, error } = await supabase
         .from('shared_folders')
         .select('*')
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching shared folder:', error);
         throw error;
       }
 
+      console.log('Shared folder data:', data);
       return data;
     },
   });
