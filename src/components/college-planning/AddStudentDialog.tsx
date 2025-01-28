@@ -24,12 +24,12 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
     try {
       console.log("Looking for student with email:", email);
       
-      // 首先获取auth.users中对应的用户ID
-      const { data: authUser, error: authError } = await supabase.auth
+      // First get the user from auth.users table
+      const { data: users, error: authError } = await supabase.auth
         .admin.listUsers({
-          filters: {
-            email: email
-          }
+          page: 1,
+          perPage: 1,
+          search: email
         });
 
       if (authError) {
@@ -38,14 +38,14 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         return;
       }
 
-      if (!authUser || authUser.users.length === 0) {
+      if (!users || users.users.length === 0) {
         toast.error("No user found with this email");
         return;
       }
 
-      const userId = authUser.users[0].id;
+      const userId = users.users[0].id;
 
-      // 然后查询对应的student profile
+      // Then query the corresponding student profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id, user_type')
@@ -64,7 +64,7 @@ export default function AddStudentDialog({ counselorId, onStudentAdded }: AddStu
         return;
       }
 
-      // 创建counselor-student关系
+      // Create counselor-student relationship
       const { error: relationshipError } = await supabase
         .from('counselor_student_relationships')
         .insert({
