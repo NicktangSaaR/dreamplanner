@@ -37,6 +37,17 @@ export default function SignUp() {
 
       if (error) {
         console.error("Signup error:", error.message);
+        
+        // Handle specific error cases
+        if (error.message.includes("User already registered")) {
+          toast({
+            variant: "destructive",
+            title: "Account Already Exists",
+            description: "This email is already registered. Please try logging in instead.",
+          });
+          return;
+        }
+        
         toast({
           variant: "destructive",
           title: "Error",
