@@ -18,17 +18,19 @@ const VideoPreview = ({
   onStopRecording,
   onStartNew
 }: VideoPreviewProps) => {
-  // Add useEffect to handle stream changes and ensure video is playing
   useEffect(() => {
     const videoElement = videoRef.current;
-    if (videoElement && videoElement.srcObject) {
-      console.log("Video stream updated:", videoElement.srcObject);
-      // Ensure video starts playing
-      videoElement.play().catch(error => {
-        console.error("Error playing video:", error);
-      });
+    if (videoElement) {
+      console.log("Video element exists:", videoElement);
+      console.log("Video srcObject:", videoElement.srcObject);
+      
+      if (videoElement.srcObject) {
+        videoElement.play().catch(error => {
+          console.error("Error playing video:", error);
+        });
+      }
     }
-  }, [videoRef]);
+  }, [videoRef, videoRef.current?.srcObject]);
 
   return (
     <Card className="p-6">

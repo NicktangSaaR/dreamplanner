@@ -110,10 +110,22 @@ const MockInterview = () => {
         video: true,
         audio: true,
       });
+      
       setStream(mediaStream);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        console.log("Setting video stream:", mediaStream);
+        
+        // Ensure video starts playing
+        try {
+          await videoRef.current.play();
+          console.log("Video started playing successfully");
+        } catch (playError) {
+          console.error("Error playing video:", playError);
+        }
       }
+      
       setStage(InterviewStage.PREPARATION);
       toast({
         title: "Interview Started",
