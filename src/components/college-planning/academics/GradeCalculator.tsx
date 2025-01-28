@@ -97,6 +97,11 @@ function calculate100PointAverage(courses: Course[]): number | null {
   return Number((totalPoints / courses.length).toFixed(2));
 }
 
+function calculateYear100PointAverage(courses: Course[], academicYear: string): number | null {
+  const yearCourses = courses.filter(course => course.academic_year === academicYear);
+  return calculate100PointAverage(yearCourses);
+}
+
 export default function GradeCalculator({ courses }: GradeCalculatorProps) {
   const calculateOverallGPA = (weighted: boolean = true): number => {
     if (courses.length === 0) return 0;
@@ -148,26 +153,37 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
       )}
       
       <div className="grid gap-2">
-        {academicYears.map(year => (
-          <div key={year} className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
-              <div>
-                <p className="text-xs font-medium text-green-600">{year} Weighted</p>
-                <p className="text-base font-bold text-green-700">
-                  {calculateYearGPA(courses, year, true)}
-                </p>
+        {academicYears.map(year => {
+          const year100PointAvg = calculateYear100PointAverage(courses, year);
+          return (
+            <div key={year} className="grid grid-cols-2 gap-2">
+              <div className="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
+                <div>
+                  <p className="text-xs font-medium text-green-600">{year} Weighted</p>
+                  <p className="text-base font-bold text-green-700">
+                    {calculateYearGPA(courses, year, true)}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg">
-              <div>
-                <p className="text-xs font-medium text-blue-600">{year} Unweighted</p>
-                <p className="text-base font-bold text-blue-700">
-                  {calculateYearGPA(courses, year, false)}
-                </p>
+              <div className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg">
+                <div>
+                  <p className="text-xs font-medium text-blue-600">{year} Unweighted</p>
+                  <p className="text-base font-bold text-blue-700">
+                    {calculateYearGPA(courses, year, false)}
+                  </p>
+                </div>
               </div>
+              {year100PointAvg !== null && (
+                <div className="col-span-2 flex items-center gap-2 bg-purple-50 p-2 rounded-lg">
+                  <div>
+                    <p className="text-xs font-medium text-purple-600">{year} 100-Point Average</p>
+                    <p className="text-base font-bold text-purple-700">{year100PointAvg}</p>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
