@@ -10,6 +10,7 @@ export default function CounselorDashboard() {
 
   useEffect(() => {
     if (profile && profile.user_type !== 'counselor') {
+      console.log("Non-counselor attempting to access counselor dashboard");
       navigate('/college-planning');
     }
   }, [profile, navigate]);
