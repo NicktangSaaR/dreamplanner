@@ -4,7 +4,7 @@ import { Toaster as SonnerToaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AuthLayout from "@/components/auth/AuthLayout";
 import Login from "@/pages/login";
-import Register from "@/pages/Register";
+import Signup from "@/pages/signup";
 import CollegePlanning from "@/pages/CollegePlanning";
 import Profile from "@/pages/Profile";
 import CounselorDashboard from "@/pages/CounselorDashboard";
@@ -23,8 +23,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/signup" element={<Register />} /> {/* Added this line */}
+          <Route path="/register" element={<Signup />} />
+          <Route path="/signup" element={<Signup />} />
           <Route element={<AuthLayout />}>
             <Route path="/college-planning" element={<CollegePlanning />} />
             <Route path="/profile" element={<Profile />} />
