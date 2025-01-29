@@ -25,6 +25,7 @@ interface CourseTableProps {
   onCancelEdit: () => void;
   onEditingCourseChange: (field: string, value: string) => void;
   academicYears: string[];
+  isLoading?: boolean;
 }
 
 const GRADE_LEVELS = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
@@ -36,8 +37,17 @@ export default function CourseTable({
   onSaveEdit,
   onCancelEdit,
   onEditingCourseChange,
-  academicYears
+  academicYears,
+  isLoading
 }: CourseTableProps) {
+  if (isLoading) {
+    return <div className="text-center py-4">Loading courses...</div>;
+  }
+
+  if (!courses.length) {
+    return <div className="text-center py-4 text-muted-foreground">No courses added yet</div>;
+  }
+
   return (
     <Table>
       <TableHeader>

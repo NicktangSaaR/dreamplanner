@@ -9,7 +9,8 @@ export const useCourses = (externalCourses?: Course[]) => {
 
   const { 
     data: fetchedCourses = [], 
-    refetch 
+    refetch,
+    isLoading 
   } = useQuery({
     queryKey: ['courses'],
     queryFn: async () => {
@@ -43,6 +44,7 @@ export const useCourses = (externalCourses?: Course[]) => {
     enabled: true,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
+    staleTime: 0, // Always fetch fresh data
   });
 
   const addCourseMutation = useMutation({
@@ -103,9 +105,9 @@ export const useCourses = (externalCourses?: Course[]) => {
       console.log('Successfully updated course:', data);
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
-      refetch();
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['courses'] });
+      await refetch();
       toast.success("Course updated successfully");
     },
     onError: (error) => {
@@ -116,6 +118,7 @@ export const useCourses = (externalCourses?: Course[]) => {
 
   return {
     courses: externalCourses || fetchedCourses,
+    isLoading,
     addCourse: addCourseMutation.mutateAsync,
     updateCourse: updateCourseMutation.mutateAsync,
   };

@@ -30,7 +30,7 @@ export default function AcademicsSection({
   });
 
   const academicYears = generateAcademicYears();
-  const { courses, addCourse, updateCourse } = useCourses(externalCourses);
+  const { courses, isLoading, addCourse, updateCourse } = useCourses(externalCourses);
 
   useEffect(() => {
     if (onCoursesChange && courses) {
@@ -107,6 +107,7 @@ export default function AcademicsSection({
           onCancelEdit={() => setEditingCourse(null)}
           onEditingCourseChange={handleEditingCourseChange}
           academicYears={academicYears}
+          isLoading={isLoading}
         />
       </CardContent>
     </Card>
