@@ -32,7 +32,7 @@ const NotesList = memo(({
   onEdit,
   canEditNote,
 }: NotesListProps) => {
-  console.log("Rendering NotesList with notes:", notes);
+  console.log("NotesList - Rendering with notes:", notes);
 
   return (
     <Card className="shadow-sm">
