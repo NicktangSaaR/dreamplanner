@@ -10,13 +10,11 @@ const Index = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
-    // Check authentication status when component mounts
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
 
       if (session?.user) {
-        // Fetch user profile to determine user type
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -29,7 +27,6 @@ const Index = () => {
 
     checkAuth();
 
-    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
       setIsAuthenticated(!!session);
@@ -66,10 +63,9 @@ const Index = () => {
   const getDashboardLink = () => {
     if (!userProfile) return "/";
     
-    if (userProfile.is_admin) return "/admin-dashboard";
+    if (userProfile.is_admin) return "/college-planning";
     if (userProfile.user_type === "counselor") return "/counselor-dashboard";
-    if (userProfile.user_type === "student") return `/student-dashboard/${userProfile.id}`;
-    return "/college-planning";
+    return "/college-planning"; // Default route for students and other users
   };
 
   return (
