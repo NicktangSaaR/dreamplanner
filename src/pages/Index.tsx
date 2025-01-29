@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Check, User, Star } from "lucide-react";
 
 interface Feature {
   title: string;
@@ -15,7 +16,7 @@ export default function Index() {
     {
       title: "Track Your Progress",
       description: "Keep an eye on your college applications and deadlines.",
-      icon: <CheckCircle className="h-6 w-6 text-green-500" />,
+      icon: <Check className="h-6 w-6 text-green-500" />,
     },
     {
       title: "Collaborate with Counselors",
