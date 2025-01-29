@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import NoteCard from "./NoteCard";
+import { memo } from "react";
 
 interface Note {
   id: string;
@@ -24,14 +25,17 @@ interface NotesListProps {
   canEditNote: (note: Note) => boolean;
 }
 
-export default function NotesList({
+// Memoize the component to prevent unnecessary re-renders
+const NotesList = memo(({
   notes,
   onCreateNote,
   onTogglePin,
   onToggleStar,
   onEdit,
   canEditNote,
-}: NotesListProps) {
+}: NotesListProps) => {
+  console.log("Rendering NotesList with notes:", notes);
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -42,7 +46,7 @@ export default function NotesList({
         </Button>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[300px] sm:h-[400px] w-full">
+        <ScrollArea className="h-[300px] sm:h-[400px] w-full pr-4">
           <div className="space-y-3">
             {notes.map((note) => (
               <NoteCard
@@ -64,4 +68,9 @@ export default function NotesList({
       </CardContent>
     </Card>
   );
-}
+});
+
+// Add display name for debugging purposes
+NotesList.displayName = "NotesList";
+
+export default NotesList;
