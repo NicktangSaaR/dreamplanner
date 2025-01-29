@@ -19,8 +19,8 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
 
   const handleViewSummary = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent the card's onClick from firing
-    console.log("Navigating to student summary with ID:", student.id);
-    navigate(`/counselor-dashboard/student/summary/${student.id}`);
+    console.log("Navigating to student view with ID:", student.id);
+    navigate(`/counselor-dashboard/student/${student.id}`);
   };
 
   return (
