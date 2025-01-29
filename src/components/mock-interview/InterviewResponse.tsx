@@ -13,11 +13,15 @@ const InterviewResponse = ({ question, timeLeft, totalTime }: InterviewResponseP
   return (
     <Card className="p-8">
       <h2 className="text-2xl font-bold mb-6">Current Question</h2>
-      <p className="text-2xl text-gray-800 mb-8 font-medium leading-relaxed">{question.title}</p>
+      <p className="text-4xl text-gray-800 mb-8 font-semibold leading-relaxed animate-fade-in">
+        {question.title}
+      </p>
       <div className="space-y-6">
-        <p className="text-xl font-medium">Response Time</p>
+        <p className="text-2xl font-medium">Response Time</p>
         <Progress value={(timeLeft / totalTime) * 100} className="h-3" />
-        <p className="text-center text-2xl font-semibold">{timeLeft} seconds remaining</p>
+        <p className="text-center text-3xl font-semibold animate-pulse">
+          {timeLeft} seconds remaining
+        </p>
       </div>
     </Card>
   );
