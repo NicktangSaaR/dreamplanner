@@ -3,6 +3,7 @@ import AcademicsSection from "./AcademicsSection";
 import ExtracurricularSection from "./ExtracurricularSection";
 import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
+import CollegeListSection from "./CollegeListSection";
 import { Course } from "./types/course";
 
 interface DashboardTabsProps {
@@ -22,11 +23,12 @@ export default function DashboardTabs({
 
   return (
     <Tabs defaultValue="academics" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="academics">Academics</TabsTrigger>
         <TabsTrigger value="extracurricular">Extracurricular</TabsTrigger>
         <TabsTrigger value="notes">Notes</TabsTrigger>
         <TabsTrigger value="todos">To-Dos</TabsTrigger>
+        <TabsTrigger value="colleges">College List</TabsTrigger>
       </TabsList>
       <TabsContent value="academics" className="mt-6">
         <AcademicsSection 
@@ -42,6 +44,9 @@ export default function DashboardTabs({
       </TabsContent>
       <TabsContent value="todos">
         <TodoSection />
+      </TabsContent>
+      <TabsContent value="colleges">
+        <CollegeListSection />
       </TabsContent>
     </Tabs>
   );
