@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { useNotes } from "@/hooks/useNotes";
 import NoteDialog from "./NoteDialog";
 import NotesList from "./NotesList";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, memo } from "react";
 
 interface Note {
   id: string;
@@ -30,7 +30,7 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
     handleToggleStar,
   } = useNotes();
 
-  // Memoize the canEditNote function to prevent unnecessary re-renders
+  // Memoize the canEditNote function
   const canEditNote = useCallback((note: Note) => {
     return true; // For now, allow editing of all notes
   }, []);
@@ -58,6 +58,19 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
     setEditingNote(null);
   }, []);
 
+  const handleSubmit = useCallback(async (data: { title: string; content: string }) => {
+    try {
+      if (editingNote) {
+        await updateNote({ ...editingNote, ...data });
+      } else {
+        await createNote(data);
+      }
+      handleDialogClose();
+    } catch (error) {
+      console.error('Error handling note submission:', error);
+    }
+  }, [editingNote, createNote, updateNote, handleDialogClose]);
+
   return (
     <Card className="w-full">
       <NotesList
@@ -71,14 +84,7 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
       <NoteDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onSubmit={async (data) => {
-          if (editingNote) {
-            await updateNote({ ...editingNote, ...data });
-          } else {
-            await createNote(data);
-          }
-          handleDialogClose();
-        }}
+        onSubmit={handleSubmit}
         editingNote={editingNote}
       />
     </Card>
