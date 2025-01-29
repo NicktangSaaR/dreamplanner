@@ -26,13 +26,31 @@ const VideoPreview = ({
 
     const videoElement = videoRef.current;
     console.log("Video element found, checking stream...");
-    console.log("Stream status:", videoElement.srcObject ? "present" : "absent");
-
+    
+    // Ensure video element is properly configured
+    videoElement.muted = true;
+    videoElement.playsInline = true;
+    videoElement.autoplay = true;
+    
     if (videoElement.srcObject) {
-      console.log("Setting up video preview");
-      videoElement.play()
-        .then(() => console.log("Video preview playing successfully"))
-        .catch(error => console.error("Error playing video preview:", error));
+      console.log("Stream found, attempting to play");
+      const playPromise = videoElement.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => console.log("Video playing successfully"))
+          .catch(error => {
+            console.error("Error playing video:", error);
+            // Retry play after a short delay
+            setTimeout(() => {
+              videoElement.play()
+                .then(() => console.log("Video playing successfully on retry"))
+                .catch(e => console.error("Error playing video on retry:", e));
+            }, 1000);
+          });
+      }
+    } else {
+      console.log("No stream found in video element");
     }
   }, [videoRef]);
 

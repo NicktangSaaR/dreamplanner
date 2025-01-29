@@ -20,13 +20,8 @@ export const useVideoStream = () => {
 
       console.log("Requesting camera access...");
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "user",
-          frameRate: { ideal: 30 }
-        },
-        audio: true,
+        video: true,
+        audio: true
       });
       
       console.log("Camera access granted successfully");
@@ -35,9 +30,6 @@ export const useVideoStream = () => {
       if (videoRef.current) {
         console.log("Setting video stream to video element");
         videoRef.current.srcObject = mediaStream;
-        
-        // Force a reload of the video element
-        videoRef.current.load();
         
         try {
           await videoRef.current.play();
