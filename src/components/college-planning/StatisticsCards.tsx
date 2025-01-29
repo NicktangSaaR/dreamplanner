@@ -51,6 +51,17 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
     return latestDate.toLocaleDateString();
   };
 
+  const getGradeDistribution = (courses: Array<{ grade: string }>) => {
+    const distribution = courses.reduce((acc: { [key: string]: number }, course) => {
+      const grade = course.grade.charAt(0); // Get just the letter grade
+      acc[grade] = (acc[grade] || 0) + 1;
+      return acc;
+    }, {});
+    return distribution;
+  };
+
+  const gradeDistribution = getGradeDistribution(courses);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-950">
@@ -64,9 +75,16 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">GPA: {calculateGPA(courses)}</div>
-          <p className="text-sm text-muted-foreground">
-            {courses.length} course{courses.length !== 1 ? 's' : ''} this semester
-          </p>
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p>{courses.length} course{courses.length !== 1 ? 's' : ''}</p>
+            <div className="flex gap-2 flex-wrap">
+              {Object.entries(gradeDistribution).map(([grade, count]) => (
+                <span key={grade} className="text-xs bg-white/50 px-2 py-1 rounded">
+                  {grade}: {count}
+                </span>
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -81,9 +99,14 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{activities.length} Activities</div>
-          <p className="text-sm text-muted-foreground">
-            {calculateWeeklyHours(activities)} hours/week total
-          </p>
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p>{calculateWeeklyHours(activities)} hours/week total</p>
+            {activities.length > 0 && (
+              <p className="text-xs">
+                ~{(calculateWeeklyHours(activities) / activities.length).toFixed(1)} hours per activity
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -98,9 +121,14 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{notes.length} Notes</div>
-          <p className="text-sm text-muted-foreground">
-            Last updated: {getLastUpdateDate(notes)}
-          </p>
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p>Last updated: {getLastUpdateDate(notes)}</p>
+            {notes.length > 0 && (
+              <p className="text-xs">
+                {notes.length} total entries
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -115,15 +143,22 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{todoStats.total} Tasks</div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground gap-2">
-            <span className="flex items-center gap-1">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              {todoStats.completed} Done
-            </span>
-            <span className="flex items-center gap-1">
-              <Star className="h-4 w-4 text-yellow-400" />
-              {todoStats.starred} Starred
-            </span>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                {todoStats.completed} Done
+              </span>
+              <span className="flex items-center gap-1">
+                <Star className="h-4 w-4 text-yellow-400" />
+                {todoStats.starred} Starred
+              </span>
+            </div>
+            {todoStats.total > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {Math.round((todoStats.completed / todoStats.total) * 100)}% completed
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
