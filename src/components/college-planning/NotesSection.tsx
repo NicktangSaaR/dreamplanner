@@ -32,6 +32,7 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
 
   console.log("NotesSection - Current notes:", notes);
 
+  // Only call onNotesChange when notes actually change
   useEffect(() => {
     if (notes && onNotesChange) {
       console.log("NotesSection - Calling onNotesChange with:", notes);
