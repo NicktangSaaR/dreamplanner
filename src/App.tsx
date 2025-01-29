@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import AuthLayout from "@/components/auth/AuthLayout";
+import CollegePlanning from "@/pages/CollegePlanning";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import Profile from "@/pages/Profile";
@@ -20,13 +19,12 @@ export default function App() {
         <Route element={<AuthLayout />}>
           <Route path="/mock-interview" element={<MockInterview />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/college-planning" element={<CollegePlanning />} />
           <Route path="/counselor-dashboard" element={<CounselorDashboard />} />
           <Route path="/counselor-dashboard/student/:studentId/*" element={<CounselorDashboard />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <Toaster />
-      <Sonner />
     </BrowserRouter>
   );
 }
