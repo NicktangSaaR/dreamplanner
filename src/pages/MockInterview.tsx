@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
-import { Home, LogOut } from "lucide-react";
+import { Home, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import InterviewSettingsComponent from "@/components/mock-interview/InterviewSettings";
@@ -43,6 +43,7 @@ const MockInterview = () => {
     selectedQuestionId: null,
   });
 
+  const [showDeviceSetup, setShowDeviceSetup] = useState(false);
   const [deviceSetupComplete, setDeviceSetupComplete] = useState(() => {
     const storedSettings = localStorage.getItem(DEVICE_SETTINGS_KEY);
     if (!storedSettings) return false;
@@ -112,6 +113,7 @@ const MockInterview = () => {
 
   const handleDeviceSetupComplete = () => {
     setDeviceSetupComplete(true);
+    setShowDeviceSetup(false);
     toast.success("设备设置完成", {
       description: "您现在可以开始设置面试参数。"
     });
@@ -120,6 +122,14 @@ const MockInterview = () => {
   const selectedQuestion = questions.find(q => q.id === settings.selectedQuestionId);
 
   const renderContent = () => {
+    if (showDeviceSetup) {
+      return (
+        <div className="max-w-4xl mx-auto">
+          <DeviceSetup onComplete={handleDeviceSetupComplete} />
+        </div>
+      );
+    }
+
     if (!deviceSetupComplete) {
       return (
         <div className="max-w-4xl mx-auto">
@@ -198,6 +208,14 @@ const MockInterview = () => {
               <Home className="h-5 w-5" />
             </Button>
           </Link>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="w-10 h-10"
+            onClick={() => setShowDeviceSetup(true)}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
           <Button 
             variant="ghost" 
             size="icon" 
