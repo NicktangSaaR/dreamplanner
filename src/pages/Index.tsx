@@ -32,10 +32,17 @@ export default function Index() {
 
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const session = supabase.auth.getSession();
-    setIsAuthenticated(!!session);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      if (session?.user) {
+        setUserId(session.user.id);
+      }
+    };
+    checkAuth();
   }, []);
 
   const handleLogout = async () => {
@@ -49,7 +56,7 @@ export default function Index() {
   };
 
   const getDashboardLink = () => {
-    return isAuthenticated ? "/dashboard" : "/login";
+    return isAuthenticated && userId ? `/student-dashboard/${userId}` : "/login";
   };
 
   return (
