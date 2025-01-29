@@ -61,10 +61,8 @@ const MockInterview = () => {
       return;
     }
 
-    // First set the stage to preparation, which will render the video element
     setStage(InterviewStage.PREPARATION);
     
-    // Give a small delay to ensure the video element is mounted
     setTimeout(async () => {
       const success = await startStream();
       if (success) {
@@ -73,11 +71,22 @@ const MockInterview = () => {
           description: "准备时间开始计时。",
         });
       } else {
-        // If stream fails, go back to settings
         setStage(InterviewStage.SETTINGS);
       }
     }, 100);
   };
+
+  // 监听面试阶段变化，当进入REVIEW阶段时自动停止录制
+  useEffect(() => {
+    if (stage === InterviewStage.REVIEW) {
+      console.log("Interview stage changed to REVIEW, stopping recording");
+      stopRecording();
+      toast({
+        title: "面试结束",
+        description: "您现在可以查看录制的视频。",
+      });
+    }
+  }, [stage, stopRecording, toast]);
 
   const handleDeviceSetupComplete = () => {
     setDeviceSetupComplete(true);
@@ -149,7 +158,7 @@ const MockInterview = () => {
           videoRef={videoRef}
           recordedVideoUrl={recordedVideoUrl}
           isReviewStage={stage === InterviewStage.REVIEW}
-          onStopRecording={stopRecording}
+          onStopRecording={() => setStage(InterviewStage.REVIEW)}
           onStartNew={() => {
             setStage(InterviewStage.SETTINGS);
             setDeviceSetupComplete(false);

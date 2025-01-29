@@ -49,6 +49,7 @@ export const useInterviewState = (settings: InterviewSettings) => {
       timer = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
+            console.log("Response time ended, moving to review stage");
             setStage(InterviewStage.REVIEW);
             return 0;
           }
