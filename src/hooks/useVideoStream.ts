@@ -12,22 +12,44 @@ export const useVideoStream = () => {
 
   const startStream = async () => {
     try {
+      // First, check if we already have a stream and clean it up
       if (stream) {
-        console.log("Existing stream found, stopping it first");
-        stream.getTracks().forEach(track => track.stop());
+        console.log("Cleaning up existing stream");
+        stream.getTracks().forEach(track => {
+          track.stop();
+          console.log(`Stopped existing ${track.kind} track`);
+        });
       }
 
-      console.log("Requesting camera access...");
+      console.log("Requesting camera and microphone access...");
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: "user"
+          facingMode: "user",
+          frameRate: { ideal: 30 }
         },
-        audio: true
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        }
       });
       
-      console.log("Camera access granted successfully");
+      console.log("Camera and microphone access granted successfully");
+      
+      // Check if all tracks are active
+      const videoTrack = mediaStream.getVideoTracks()[0];
+      const audioTrack = mediaStream.getAudioTracks()[0];
+      
+      if (!videoTrack || !videoTrack.enabled) {
+        throw new Error("Video track is not available");
+      }
+      
+      if (!audioTrack || !audioTrack.enabled) {
+        console.warn("Audio track might not be available");
+      }
+      
       setStream(mediaStream);
       
       if (videoRef.current) {
@@ -35,14 +57,13 @@ export const useVideoStream = () => {
         videoRef.current.srcObject = mediaStream;
         
         try {
-          await videoRef.current.load();
           await videoRef.current.play();
           console.log("Video preview started playing");
         } catch (playError) {
           console.error("Error playing video:", playError);
           toast({
             title: "视频播放错误",
-            description: "无法播放视频预览，请刷新页面重试。",
+            description: "无法播放视频预览，请检查浏览器权限设置并刷新页面重试。",
             variant: "destructive",
           });
         }
@@ -58,9 +79,27 @@ export const useVideoStream = () => {
       return true;
     } catch (error) {
       console.error("Error accessing media devices:", error);
+      let errorMessage = "无法访问摄像头或麦克风。";
+      
+      if (error instanceof DOMException) {
+        switch (error.name) {
+          case 'NotAllowedError':
+            errorMessage += "请检查浏览器权限设置。";
+            break;
+          case 'NotFoundError':
+            errorMessage += "未找到摄像头或麦克风设备。";
+            break;
+          case 'NotReadableError':
+            errorMessage += "摄像头或麦克风可能被其他应用程序占用。";
+            break;
+          default:
+            errorMessage += "请确保设备正常工作并重试。";
+        }
+      }
+      
       toast({
-        title: "摄像头访问错误",
-        description: "无法访问摄像头或麦克风。请检查浏览器权限设置，并确保没有其他应用正在使用摄像头。",
+        title: "设备访问错误",
+        description: errorMessage,
         variant: "destructive",
       });
       return false;
