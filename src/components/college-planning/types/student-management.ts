@@ -3,6 +3,8 @@ import { User } from "@supabase/supabase-js";
 export interface AddStudentDialogProps {
   counselorId: string;
   onStudentAdded: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export interface StudentSearchFormData {

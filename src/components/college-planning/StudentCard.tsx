@@ -11,9 +11,10 @@ interface StudentCardProps {
     school: string | null;
     interested_majors: string[] | null;
   };
+  onClick?: () => void;
 }
 
-export default function StudentCard({ student }: StudentCardProps) {
+export default function StudentCard({ student, onClick }: StudentCardProps) {
   const navigate = useNavigate();
 
   const handleViewSummary = () => {
@@ -22,7 +23,7 @@ export default function StudentCard({ student }: StudentCardProps) {
   };
 
   return (
-    <Card>
+    <Card onClick={onClick}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
