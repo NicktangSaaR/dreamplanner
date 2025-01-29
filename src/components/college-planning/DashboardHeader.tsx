@@ -30,7 +30,7 @@ export default function DashboardHeader() {
           <div className="flex items-center gap-2">
             <GraduationCap className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">
-              {isCounselorDashboard ? "Counselor Dashboard" : studentId}
+              {isCounselorDashboard ? "Counselor Dashboard" : `${profile?.full_name || 'User'}'s Dashboard`}
             </h1>
           </div>
           <p className="text-lg text-gray-600">
