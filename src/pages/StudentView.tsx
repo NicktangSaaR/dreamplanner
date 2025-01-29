@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import TodoSection from "@/components/college-planning/TodoSection";
 import SharedFolderCard from "@/components/college-planning/SharedFolderCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SharedFolderDialog from "@/components/college-planning/SharedFolderDialog";
 import { toast } from "sonner";
 import StudentProfile from "@/components/college-planning/student-summary/StudentProfile";
@@ -20,6 +20,72 @@ export default function StudentView() {
   const queryClient = useQueryClient();
 
   console.log("StudentView - Viewing student:", studentId);
+
+  // Set up real-time subscription for all relevant tables
+  useEffect(() => {
+    if (!studentId) return;
+
+    const channels = [
+      supabase
+        .channel('student_data_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'courses',
+            filter: `student_id=eq.${studentId}`,
+          },
+          () => {
+            console.log('Courses changed, refreshing...');
+            queryClient.invalidateQueries({ queryKey: ["student-courses", studentId] });
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'extracurricular_activities',
+            filter: `student_id=eq.${studentId}`,
+          },
+          () => {
+            console.log('Activities changed, refreshing...');
+            queryClient.invalidateQueries({ queryKey: ["student-activities", studentId] });
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notes',
+            filter: `author_id=eq.${studentId}`,
+          },
+          () => {
+            console.log('Notes changed, refreshing...');
+            queryClient.invalidateQueries({ queryKey: ["student-notes", studentId] });
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'todos',
+            filter: `author_id=eq.${studentId}`,
+          },
+          () => {
+            console.log('Todos changed, refreshing...');
+            queryClient.invalidateQueries({ queryKey: ["student-todos", studentId] });
+          }
+        )
+        .subscribe();
+
+    return () => {
+      channels.unsubscribe();
+    };
+  }, [studentId, queryClient]);
 
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ["student-profile", studentId],
@@ -75,6 +141,7 @@ export default function StudentView() {
       const { data, error } = await supabase
         .from("notes")
         .select("*")
+        .eq("author_id", studentId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -128,6 +195,7 @@ export default function StudentView() {
 
       toast.success("Folder saved successfully");
       setIsEditingFolder(false);
+      queryClient.invalidateQueries({ queryKey: ["shared-folder", studentId] });
     } catch (error) {
       console.error("Error saving folder:", error);
       toast.error("Failed to save folder");
