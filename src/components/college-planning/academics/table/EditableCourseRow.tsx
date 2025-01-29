@@ -24,11 +24,12 @@ export default function EditableCourseRow({
   academicYears,
 }: EditableCourseRowProps) {
   return (
-    <TableRow>
+    <TableRow className="bg-muted/30">
       <TableCell>
         <Input
           value={editingCourse.name}
           onChange={(e) => onEditingCourseChange('name', e.target.value)}
+          className="h-8"
         />
       </TableCell>
       <TableCell>
@@ -36,7 +37,7 @@ export default function EditableCourseRow({
           value={editingCourse.grade_type || 'letter'}
           onValueChange={(value) => onEditingCourseChange('grade_type', value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="h-8">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -53,13 +54,14 @@ export default function EditableCourseRow({
             max="100"
             value={editingCourse.grade}
             onChange={(e) => onEditingCourseChange('grade', e.target.value)}
+            className="h-8"
           />
         ) : (
           <Select
             value={editingCourse.grade}
             onValueChange={(value) => onEditingCourseChange('grade', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-8">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -77,7 +79,7 @@ export default function EditableCourseRow({
           value={editingCourse.course_type}
           onValueChange={(value) => onEditingCourseChange('course_type', value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="h-8">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -94,7 +96,7 @@ export default function EditableCourseRow({
           value={editingCourse.grade_level}
           onValueChange={(value) => onEditingCourseChange('grade_level', value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="h-8">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -111,7 +113,7 @@ export default function EditableCourseRow({
           value={editingCourse.academic_year}
           onValueChange={(value) => onEditingCourseChange('academic_year', value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="h-8">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -125,28 +127,34 @@ export default function EditableCourseRow({
       </TableCell>
       <TableCell>
         <Input
-          value={editingCourse.semester}
+          value={editingCourse.semester || ''}
           onChange={(e) => onEditingCourseChange('semester', e.target.value)}
+          className="h-8"
+          placeholder="e.g. Fall"
         />
       </TableCell>
-      <TableCell>
+      <TableCell className="text-right">
         {calculateGPA(editingCourse.grade, editingCourse.course_type, editingCourse.grade_type).toFixed(2)}
       </TableCell>
       <TableCell>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onSaveEdit}
-        >
-          <Save className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onCancelEdit}
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onSaveEdit}
+            className="h-8 w-8"
+          >
+            <Save className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCancelEdit}
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );
