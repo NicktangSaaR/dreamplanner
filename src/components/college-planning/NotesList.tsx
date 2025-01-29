@@ -46,7 +46,7 @@ const NotesList = memo(function NotesList({
       <CardContent>
         <ScrollArea className="h-[300px] sm:h-[400px] w-full rounded-md border p-4">
           <div className="space-y-3">
-            {notes.map((note) => (
+            {Array.isArray(notes) && notes.map((note) => (
               <NoteCard
                 key={note.id}
                 note={note}
@@ -56,7 +56,7 @@ const NotesList = memo(function NotesList({
                 canEdit={canEditNote(note)}
               />
             ))}
-            {notes.length === 0 && (
+            {(!notes || notes.length === 0) && (
               <div className="text-center text-muted-foreground py-8">
                 No notes yet. Click "Add Note" to create one.
               </div>

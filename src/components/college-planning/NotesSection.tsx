@@ -1,8 +1,7 @@
+import { useState, useEffect, useCallback } from "react";
 import { useNotes } from "@/hooks/useNotes";
 import NoteDialog from "./NoteDialog";
 import NotesList from "./NotesList";
-import { useCallback, useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
 
 interface Note {
   id: string;
@@ -19,20 +18,12 @@ interface NotesSectionProps {
 }
 
 export default function NotesSection({ onNotesChange }: NotesSectionProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
-
-  const {
-    notes,
-    createNote,
-    updateNote,
-    handleTogglePin,
-    handleToggleStar,
-  } = useNotes();
+  const { notes, createNote, updateNote, handleTogglePin, handleToggleStar } = useNotes();
 
   console.log("NotesSection - Current notes:", notes);
 
-  // Only call onNotesChange when notes actually change
   useEffect(() => {
     if (notes && onNotesChange) {
       console.log("NotesSection - Calling onNotesChange with:", notes);
@@ -40,58 +31,57 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
     }
   }, [notes, onNotesChange]);
 
-  const canEditNote = useCallback((note: Note) => {
-    return true; // For now, allow editing of all notes
-  }, []);
-
-  const handleCreateNote = useCallback(() => {
-    console.log("NotesSection - Opening dialog for new note");
-    setEditingNote(null);
-    setIsDialogOpen(true);
-  }, []);
+  const handleCreateNote = useCallback(async (data: { title: string; content: string }) => {
+    try {
+      await createNote(data);
+      setOpen(false);
+    } catch (error) {
+      console.error("Error creating note:", error);
+    }
+  }, [createNote]);
 
   const handleEditNote = useCallback((note: Note) => {
-    console.log("NotesSection - Opening dialog to edit note:", note);
     setEditingNote(note);
-    setIsDialogOpen(true);
+    setOpen(true);
   }, []);
 
-  const handleDialogClose = useCallback(() => {
-    console.log("NotesSection - Closing dialog");
-    setIsDialogOpen(false);
-    setEditingNote(null);
-  }, []);
+  const handleUpdateNote = useCallback(async (data: { title: string; content: string }) => {
+    if (!editingNote) return;
 
-  const handleSubmit = useCallback(async (data: { title: string; content: string }) => {
     try {
-      console.log("NotesSection - Submitting note:", data);
-      if (editingNote) {
-        await updateNote({ ...editingNote, ...data });
-      } else {
-        await createNote(data);
-      }
-      handleDialogClose();
+      await updateNote({
+        ...editingNote,
+        title: data.title,
+        content: data.content,
+      });
+      setOpen(false);
+      setEditingNote(null);
     } catch (error) {
-      console.error('Error handling note submission:', error);
+      console.error("Error updating note:", error);
     }
-  }, [editingNote, createNote, updateNote, handleDialogClose]);
+  }, [editingNote, updateNote]);
+
+  const canEditNote = useCallback((note: Note) => {
+    return true; // This can be updated based on your requirements
+  }, []);
 
   return (
-    <Card className="w-full">
+    <div className="space-y-4">
       <NotesList
         notes={notes || []}
-        onCreateNote={handleCreateNote}
+        onCreateNote={() => setOpen(true)}
         onTogglePin={handleTogglePin}
         onToggleStar={handleToggleStar}
         onEdit={handleEditNote}
         canEditNote={canEditNote}
       />
+
       <NoteDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onSubmit={handleSubmit}
+        open={open}
+        onOpenChange={setOpen}
+        onSubmit={editingNote ? handleUpdateNote : handleCreateNote}
         editingNote={editingNote}
       />
-    </Card>
+    </div>
   );
 }
