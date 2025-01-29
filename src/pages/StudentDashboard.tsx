@@ -5,7 +5,7 @@ import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function StudentDashboard() {
@@ -13,6 +13,27 @@ export default function StudentDashboard() {
   const queryClient = useQueryClient();
 
   console.log("StudentDashboard - Student ID:", studentId);
+
+  // Memoize the invalidation callbacks to prevent unnecessary re-renders
+  const invalidateCourses = useCallback(() => {
+    console.log("Courses changed, invalidating query");
+    queryClient.invalidateQueries({ queryKey: ["student-courses", studentId] });
+  }, [studentId, queryClient]);
+
+  const invalidateActivities = useCallback(() => {
+    console.log("Activities changed, invalidating query");
+    queryClient.invalidateQueries({ queryKey: ["student-activities", studentId] });
+  }, [studentId, queryClient]);
+
+  const invalidateNotes = useCallback(() => {
+    console.log("Notes changed, invalidating query");
+    queryClient.invalidateQueries({ queryKey: ["student-notes", studentId] });
+  }, [studentId, queryClient]);
+
+  const invalidateTodos = useCallback(() => {
+    console.log("Todos changed, invalidating query");
+    queryClient.invalidateQueries({ queryKey: ["student-todos", studentId] });
+  }, [studentId, queryClient]);
 
   // Set up real-time subscriptions
   useEffect(() => {
@@ -27,10 +48,7 @@ export default function StudentDashboard() {
           schema: 'public',
           table: 'courses',
           filter: `student_id=eq.${studentId}`
-        }, () => {
-          console.log("Courses changed, invalidating query");
-          queryClient.invalidateQueries({ queryKey: ["student-courses", studentId] });
-        }),
+        }, invalidateCourses),
 
       supabase.channel('activities_changes')
         .on('postgres_changes', {
@@ -38,10 +56,7 @@ export default function StudentDashboard() {
           schema: 'public',
           table: 'extracurricular_activities',
           filter: `student_id=eq.${studentId}`
-        }, () => {
-          console.log("Activities changed, invalidating query");
-          queryClient.invalidateQueries({ queryKey: ["student-activities", studentId] });
-        }),
+        }, invalidateActivities),
 
       supabase.channel('notes_changes')
         .on('postgres_changes', {
@@ -49,10 +64,7 @@ export default function StudentDashboard() {
           schema: 'public',
           table: 'notes',
           filter: `author_id=eq.${studentId}`
-        }, () => {
-          console.log("Notes changed, invalidating query");
-          queryClient.invalidateQueries({ queryKey: ["student-notes", studentId] });
-        }),
+        }, invalidateNotes),
 
       supabase.channel('todos_changes')
         .on('postgres_changes', {
@@ -60,10 +72,7 @@ export default function StudentDashboard() {
           schema: 'public',
           table: 'todos',
           filter: `author_id=eq.${studentId}`
-        }, () => {
-          console.log("Todos changed, invalidating query");
-          queryClient.invalidateQueries({ queryKey: ["student-todos", studentId] });
-        })
+        }, invalidateTodos)
     ];
 
     // Subscribe to all channels
@@ -74,7 +83,7 @@ export default function StudentDashboard() {
       console.log("Cleaning up real-time subscriptions");
       channels.forEach(channel => supabase.removeChannel(channel));
     };
-  }, [studentId, queryClient]); // Only re-run if studentId or queryClient changes
+  }, [studentId, invalidateCourses, invalidateActivities, invalidateNotes, invalidateTodos]);
 
   // Fetch student data using the same hook as StudentView
   const {
