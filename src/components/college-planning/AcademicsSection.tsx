@@ -35,7 +35,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
   });
 
   // Fetch courses from Supabase only if external courses are not provided
-  const { data: fetchedCourses = [] } = useQuery({
+  const { data: fetchedCourses = [], refetch } = useQuery({
     queryKey: ['courses'],
     queryFn: async () => {
       if (externalCourses) {
@@ -98,6 +98,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
+      refetch(); // Explicitly refetch courses after successful addition
       toast({
         title: "Success",
         description: "Course added successfully",
@@ -133,6 +134,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
+      refetch(); // Explicitly refetch courses after successful update
       toast({
         title: "Success",
         description: "Course updated successfully",
@@ -151,6 +153,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
   // Update parent components when courses change
   useEffect(() => {
     if (onCoursesChange && courses) {
+      console.log("Updating parent with new courses:", courses);
       onCoursesChange(courses);
     }
   }, [courses, onCoursesChange]);
