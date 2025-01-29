@@ -4,19 +4,23 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+interface Feature {
+  title: string;
+  description: string;
+  icon: JSX.Element;
+}
+
 const Index = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
-    // Check authentication status when component mounts
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
 
       if (session?.user) {
-        // Fetch user profile to determine user type
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -29,7 +33,6 @@ const Index = () => {
 
     checkAuth();
 
-    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
       setIsAuthenticated(!!session);
@@ -83,12 +86,12 @@ const Index = () => {
             {isAuthenticated ? (
               <>
                 <Link to={getDashboardLink()}>
-                  <Button className="bg-primary hover:bg-primary/90 text-white transition-colors">
+                  <Button>
                     Dashboard
                   </Button>
                 </Link>
                 <Link to="/mock-interview">
-                  <Button className="bg-primary hover:bg-primary/90 text-white transition-colors">
+                  <Button>
                     Mock Interview
                   </Button>
                 </Link>
@@ -119,7 +122,7 @@ const Index = () => {
       </nav>
 
       <main className="container mx-auto px-4 pt-32">
-        <section className="max-w-4xl mx-auto text-center animate-fade-in">
+        <section className="max-w-4xl mx-auto text-center">
           <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
             Your Future Starts Here
           </span>
@@ -148,7 +151,7 @@ const Index = () => {
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="p-6 rounded-2xl bg-white shadow-sm border animate-fade-in"
+              className="p-6 rounded-2xl bg-white shadow-sm border"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -164,7 +167,7 @@ const Index = () => {
   );
 };
 
-const features = [
+const features: Feature[] = [
   {
     title: "Co-Working with your Counsellors",
     description: "Create and track your college application timeline with intelligent recommendations.",
