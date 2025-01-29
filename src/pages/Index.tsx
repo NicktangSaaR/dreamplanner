@@ -83,12 +83,12 @@ const Index = () => {
             {isAuthenticated ? (
               <>
                 <Link to={getDashboardLink()}>
-                  <Button variant="ghost" className="hover:text-primary transition-colors">
+                  <Button className="bg-primary hover:bg-primary/90 text-white transition-colors">
                     Dashboard
                   </Button>
                 </Link>
                 <Link to="/mock-interview">
-                  <Button variant="ghost" className="hover:text-primary transition-colors">
+                  <Button className="bg-primary hover:bg-primary/90 text-white transition-colors">
                     Mock Interview
                   </Button>
                 </Link>
