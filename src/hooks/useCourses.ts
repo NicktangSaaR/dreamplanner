@@ -2,12 +2,12 @@ import { Course } from "@/components/college-planning/types/course";
 import { useCoursesQuery } from "./queries/useCoursesQuery";
 import { useCourseMutations } from "./mutations/useCourseMutations";
 
-export const useCourses = (externalCourses?: Course[]) => {
+export const useCourses = (externalCourses?: Course[], studentId?: string) => {
   const { 
     data: courses = [], 
     isLoading,
     refetch 
-  } = useCoursesQuery(externalCourses);
+  } = useCoursesQuery(externalCourses, studentId);
 
   const { addCourse, updateCourse } = useCourseMutations(refetch);
 

@@ -3,20 +3,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Course } from "@/components/college-planning/types/course";
 import { toast } from "sonner";
 
-export const useCourseMutations = (refetch: () => void, studentId?: string) => {
+export const useCourseMutations = (refetch: () => void) => {
   const queryClient = useQueryClient();
 
   const addCourse = useMutation({
     mutationFn: async (newCourse: Omit<Course, 'id'>) => {
       console.log('Adding new course:', newCourse);
       
-      if (!studentId) {
+      if (!newCourse.student_id) {
         throw new Error('No student ID provided');
       }
 
       const { data, error } = await supabase
         .from('courses')
-        .insert([{ ...newCourse }])
+        .insert([newCourse])
         .select()
         .single();
 

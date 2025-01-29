@@ -16,7 +16,7 @@ export const useAcademicData = (
     isLoading,
     addCourse,
     updateCourse,
-  } = useCourses(externalCourses);
+  } = useCourses(externalCourses, effectiveStudentId);
 
   return {
     studentId: effectiveStudentId,
