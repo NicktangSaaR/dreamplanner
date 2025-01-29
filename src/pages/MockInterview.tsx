@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
-import { Home, LogOut, Settings, ArrowLeft } from "lucide-react";
+import { Home, LogOut, Settings, ArrowLeft, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import InterviewSettingsComponent from "@/components/mock-interview/InterviewSettings";
@@ -240,6 +240,11 @@ const MockInterview = () => {
           <Link to="/">
             <Button variant="ghost" size="icon" className="w-10 h-10">
               <Home className="h-5 w-5" />
+            </Button>
+          </Link>
+          <Link to={`/student-dashboard/${profile?.id}`}>
+            <Button variant="ghost" size="icon" className="w-10 h-10">
+              <LayoutDashboard className="h-5 w-5" />
             </Button>
           </Link>
           <Button 
