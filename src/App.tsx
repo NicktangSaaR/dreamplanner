@@ -22,6 +22,7 @@ export default function App() {
           <Route path="/college-planning" element={<CollegePlanning />} />
           <Route path="/counselor-dashboard" element={<CounselorDashboard />} />
           <Route path="/counselor-dashboard/student/:studentId/*" element={<CounselorDashboard />} />
+          <Route path="/student-dashboard/:studentId" element={<CollegePlanning />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
