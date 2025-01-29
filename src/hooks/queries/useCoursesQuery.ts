@@ -6,11 +6,13 @@ export const useCoursesQuery = (externalCourses?: Course[], studentId?: string) 
   return useQuery({
     queryKey: ['courses', studentId],
     queryFn: async () => {
+      // If external courses are provided, return those
       if (externalCourses) {
         console.log('Using external courses:', externalCourses);
         return externalCourses;
       }
 
+      // If no studentId is provided, return empty array
       if (!studentId) {
         console.log('No student ID provided for fetching courses');
         return [];
@@ -31,6 +33,6 @@ export const useCoursesQuery = (externalCourses?: Course[], studentId?: string) 
       console.log('Fetched courses:', data);
       return data as Course[];
     },
-    enabled: true,
+    enabled: !!studentId || !!externalCourses,
   });
 };

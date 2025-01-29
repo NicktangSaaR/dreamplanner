@@ -3,6 +3,8 @@ import { useCoursesQuery } from "./queries/useCoursesQuery";
 import { useCourseMutations } from "./mutations/useCourseMutations";
 
 export const useCourses = (externalCourses?: Course[], studentId?: string) => {
+  console.log("useCourses - Student ID:", studentId);
+  
   const { 
     data: courses = [], 
     isLoading,
