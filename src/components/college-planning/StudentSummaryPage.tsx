@@ -32,7 +32,7 @@ export default function StudentSummaryPage() {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching student profile:", error);
+        console.error("Error fetching profile:", error);
         throw error;
       }
 
@@ -111,15 +111,6 @@ export default function StudentSummaryPage() {
     enabled: !!studentId,
   });
 
-  const handleViewDashboard = () => {
-    console.log("View Dashboard clicked - studentId:", studentId);
-    if (!studentId) {
-      toast.error("Student ID is missing");
-      return;
-    }
-    navigate(`/counselor-dashboard/student/${studentId}`);
-  };
-
   const handleBack = () => {
     navigate(-1);
   };
@@ -135,25 +126,40 @@ export default function StudentSummaryPage() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={handleBack}
-            className="hover:bg-gray-100"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold">Student Summary</h1>
-        </div>
-        <Button onClick={handleViewDashboard}>View Dashboard</Button>
+      {/* Header with back button */}
+      <div className="flex items-center gap-4">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={handleBack}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-2xl font-bold">Student Summary</h1>
       </div>
 
-      <ProfileSection profile={profile} />
-      <AcademicSection courses={courses} />
-      <ActivitiesSection activities={activities} />
-      <ApplicationsSection applications={applications} />
+      {/* Main content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left column - Profile and Academics */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <ProfileSection profile={profile} />
+          </div>
+          <div className="bg-white rounded-lg shadow-sm">
+            <AcademicSection courses={courses} />
+          </div>
+        </div>
+
+        {/* Right column - Activities and Applications */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow-sm">
+            <ActivitiesSection activities={activities} />
+          </div>
+          <div className="bg-white rounded-lg shadow-sm">
+            <ApplicationsSection applications={applications} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
