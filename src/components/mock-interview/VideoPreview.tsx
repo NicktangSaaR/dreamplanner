@@ -25,7 +25,7 @@ const VideoPreview = ({
 
   useEffect(() => {
     if (!videoRef.current || !canvasRef.current) {
-      console.warn("Video or canvas element reference is null");
+      console.log("Video or canvas element reference is null");
       return;
     }
 
@@ -53,10 +53,8 @@ const VideoPreview = ({
     const drawVideoFrame = () => {
       if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
         updateCanvasSize();
-        ctx.save();
-        ctx.scale(-1, 1); // Mirror the context horizontally
-        ctx.drawImage(videoElement, -canvasElement.width, 0, canvasElement.width, canvasElement.height);
-        ctx.restore();
+        // Draw the video frame directly without mirroring
+        ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
       }
       requestAnimationFrame(drawVideoFrame);
     };
@@ -118,11 +116,12 @@ const VideoPreview = ({
               autoPlay
               playsInline
               muted
-              className="w-full h-full rounded-lg object-cover hidden"
+              className="w-full h-full rounded-lg object-cover"
             />
             <canvas
               ref={canvasRef}
-              className="w-full h-full rounded-lg object-cover"
+              className="absolute inset-0 w-full h-full rounded-lg object-cover"
+              style={{ transform: 'scaleX(-1)' }}
             />
           </>
         )}
