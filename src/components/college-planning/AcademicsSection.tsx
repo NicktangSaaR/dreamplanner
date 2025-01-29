@@ -42,7 +42,7 @@ export default function AcademicsSection({
   const handleAddCourse = async () => {
     if (newCourse.name && newCourse.grade && newCourse.semester && newCourse.grade_level && newCourse.academic_year) {
       console.log('Handling add course:', newCourse);
-      await addCourse(newCourse as Omit<Course, 'id'>);
+      await addCourse.mutate(newCourse as Omit<Course, 'id'>);
       setNewCourse({
         name: "",
         grade: "",
@@ -69,7 +69,7 @@ export default function AcademicsSection({
   const handleSaveEdit = async () => {
     if (editingCourse) {
       console.log('Saving edited course:', editingCourse);
-      await updateCourse(editingCourse);
+      await updateCourse.mutate(editingCourse);
       setEditingCourse(null);
     }
   };
