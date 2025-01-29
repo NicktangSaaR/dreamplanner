@@ -20,70 +20,7 @@ const VideoPreview = ({
   onStartNew
 }: VideoPreviewProps) => {
   const navigate = useNavigate();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const recordedVideoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (!videoRef.current || !canvasRef.current) {
-      console.log("Video or canvas element reference is null");
-      return;
-    }
-
-    const videoElement = videoRef.current;
-    const canvasElement = canvasRef.current;
-    const ctx = canvasElement.getContext('2d');
-    
-    if (!ctx) {
-      console.error("Could not get canvas context");
-      return;
-    }
-
-    // Set canvas dimensions to match video
-    const updateCanvasSize = () => {
-      if (videoElement.videoWidth && videoElement.videoHeight) {
-        canvasElement.width = videoElement.videoWidth;
-        canvasElement.height = videoElement.videoHeight;
-      } else {
-        canvasElement.width = videoElement.clientWidth;
-        canvasElement.height = videoElement.clientHeight;
-      }
-    };
-    
-    // Function to draw video frame on canvas
-    const drawVideoFrame = () => {
-      if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
-        updateCanvasSize();
-        // Draw the video frame directly without mirroring
-        ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-      }
-      requestAnimationFrame(drawVideoFrame);
-    };
-
-    // Start drawing frames when video plays
-    videoElement.addEventListener('play', () => {
-      console.log("Video started playing, beginning frame capture");
-      drawVideoFrame();
-    });
-
-    // Ensure video element is properly configured
-    videoElement.muted = true;
-    videoElement.playsInline = true;
-    videoElement.autoplay = true;
-    
-    if (videoElement.srcObject) {
-      console.log("Stream found, attempting to play");
-      videoElement.play()
-        .then(() => console.log("Video playing successfully"))
-        .catch(error => console.error("Error playing video:", error));
-    } else {
-      console.log("No stream found in video element");
-    }
-
-    // Cleanup
-    return () => {
-      videoElement.removeEventListener('play', drawVideoFrame);
-    };
-  }, [videoRef]);
 
   // Effect to handle recorded video playback
   useEffect(() => {
@@ -110,20 +47,14 @@ const VideoPreview = ({
             className="w-full h-full rounded-lg"
           />
         ) : (
-          <>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full rounded-lg object-cover"
-            />
-            <canvas
-              ref={canvasRef}
-              className="absolute inset-0 w-full h-full rounded-lg object-cover"
-              style={{ transform: 'scaleX(-1)' }}
-            />
-          </>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full rounded-lg object-cover"
+            style={{ transform: 'scaleX(-1)' }}
+          />
         )}
       </div>
       <div className="flex justify-center gap-4">

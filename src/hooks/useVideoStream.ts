@@ -12,9 +12,7 @@ export const useVideoStream = () => {
 
   const startStream = async () => {
     try {
-      // First, check if we already have a stream and clean it up
       if (stream) {
-        console.log("Cleaning up existing stream");
         stream.getTracks().forEach(track => {
           track.stop();
           console.log(`Stopped existing ${track.kind} track`);
@@ -35,45 +33,23 @@ export const useVideoStream = () => {
           sampleRate: 44100
         }
       });
-      
+
       console.log("Camera and microphone access granted successfully");
-      
-      // Check if all tracks are active
-      const videoTrack = mediaStream.getVideoTracks()[0];
-      const audioTrack = mediaStream.getAudioTracks()[0];
-      
-      if (!videoTrack || !videoTrack.enabled) {
-        throw new Error("Video track is not available");
-      }
-      
-      if (!audioTrack || !audioTrack.enabled) {
-        console.warn("Audio track might not be available");
-      }
-      
       setStream(mediaStream);
-      
+
       if (videoRef.current) {
-        console.log("Setting video stream to video element");
         videoRef.current.srcObject = mediaStream;
-        
         try {
           await videoRef.current.play();
-          console.log("Video preview started playing");
-        } catch (playError) {
-          console.error("Error playing video:", playError);
+          console.log("Video preview started successfully");
+        } catch (error) {
+          console.error("Error playing video:", error);
           toast({
             title: "视频播放错误",
-            description: "无法播放视频预览，请检查浏览器权限设置并刷新页面重试。",
+            description: "无法播放视频预览，请检查浏览器权限设置。",
             variant: "destructive",
           });
         }
-      } else {
-        console.warn("Video element reference not found");
-        toast({
-          title: "视频初始化错误",
-          description: "无法初始化视频预览，请刷新页面重试。",
-          variant: "destructive",
-        });
       }
 
       return true;
@@ -84,16 +60,16 @@ export const useVideoStream = () => {
       if (error instanceof DOMException) {
         switch (error.name) {
           case 'NotAllowedError':
-            errorMessage += "请检查浏览器权限设置。";
+            errorMessage = "请允许浏览器访问摄像头和麦克风。";
             break;
           case 'NotFoundError':
-            errorMessage += "未找到摄像头或麦克风设备。";
+            errorMessage = "未找到摄像头或麦克风设备。";
             break;
           case 'NotReadableError':
-            errorMessage += "摄像头或麦克风可能被其他应用程序占用。";
+            errorMessage = "无法访问摄像头或麦克风，可能被其他应用程序占用。";
             break;
           default:
-            errorMessage += "请确保设备正常工作并重试。";
+            errorMessage = "设备访问出错，请确保设备正常工作并重试。";
         }
       }
       
@@ -107,51 +83,53 @@ export const useVideoStream = () => {
   };
 
   const startRecording = () => {
-    if (stream) {
-      try {
-        const mediaRecorder = new MediaRecorder(stream, {
-          mimeType: 'video/webm;codecs=vp8,opus'
-        });
-        mediaRecorderRef.current = mediaRecorder;
-        const chunks: Blob[] = [];
+    if (!stream) {
+      console.error("No media stream available");
+      return;
+    }
 
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            chunks.push(event.data);
-          }
-        };
+    try {
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp8,opus'
+      });
+      mediaRecorderRef.current = mediaRecorder;
+      const chunks: Blob[] = [];
 
-        mediaRecorder.onstop = () => {
-          const blob = new Blob(chunks, { type: 'video/webm' });
-          setRecordedChunks(chunks);
-          const videoUrl = URL.createObjectURL(blob);
-          setRecordedVideoUrl(videoUrl);
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
 
-          // Create and trigger download
-          const downloadLink = document.createElement('a');
-          downloadLink.href = videoUrl;
-          downloadLink.download = `面试录制_${new Date().toLocaleString()}.webm`;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        setRecordedChunks(chunks);
+        const videoUrl = URL.createObjectURL(blob);
+        setRecordedVideoUrl(videoUrl);
 
-          toast({
-            title: "录制完成",
-            description: "面试视频已自动下载到您的设备中。",
-          });
-        };
+        const downloadLink = document.createElement('a');
+        downloadLink.href = videoUrl;
+        downloadLink.download = `面试录制_${new Date().toLocaleString()}.webm`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
 
-        mediaRecorder.start();
-        setIsRecording(true);
-        console.log("Recording started successfully");
-      } catch (error) {
-        console.error("Error starting recording:", error);
         toast({
-          title: "录制错误",
-          description: "开始录制时发生错误，请刷新页面重试。",
-          variant: "destructive",
+          title: "录制完成",
+          description: "面试视频已自动下载到您的设备中。",
         });
-      }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      console.log("Recording started successfully");
+    } catch (error) {
+      console.error("Error starting recording:", error);
+      toast({
+        title: "录制错误",
+        description: "开始录制时发生错误，请刷新页面重试。",
+        variant: "destructive",
+      });
     }
   };
 
@@ -170,7 +148,6 @@ export const useVideoStream = () => {
     }
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (stream) {
