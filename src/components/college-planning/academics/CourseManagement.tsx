@@ -45,7 +45,7 @@ export default function CourseManagement({
       return;
     }
 
-    if (newCourse.name && newCourse.grade && newCourse.semester && newCourse.grade_level && newCourse.academic_year) {
+    if (newCourse.name && newCourse.grade && newCourse.grade_level && newCourse.academic_year) {
       console.log('Handling add course:', newCourse);
       await addCourse.mutate({ ...newCourse, student_id: studentId });
       setNewCourse({
