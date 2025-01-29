@@ -40,11 +40,19 @@ export default function CourseTable({
   academicYears,
   isLoading
 }: CourseTableProps) {
+  console.log("CourseTable - Current courses:", courses);
+  console.log("CourseTable - Loading state:", isLoading);
+
   if (isLoading) {
     return <div className="text-center py-4">Loading courses...</div>;
   }
 
-  if (!courses.length) {
+  if (!Array.isArray(courses)) {
+    console.error("Courses is not an array:", courses);
+    return <div className="text-center py-4 text-muted-foreground">Error loading courses</div>;
+  }
+
+  if (courses.length === 0) {
     return <div className="text-center py-4 text-muted-foreground">No courses added yet</div>;
   }
 
