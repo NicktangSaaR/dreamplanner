@@ -61,14 +61,22 @@ const MockInterview = () => {
       return;
     }
 
-    const success = await startStream();
-    if (success) {
-      setStage(InterviewStage.PREPARATION);
-      toast({
-        title: "面试开始",
-        description: "准备时间开始计时。",
-      });
-    }
+    // First set the stage to preparation, which will render the video element
+    setStage(InterviewStage.PREPARATION);
+    
+    // Give a small delay to ensure the video element is mounted
+    setTimeout(async () => {
+      const success = await startStream();
+      if (success) {
+        toast({
+          title: "面试开始",
+          description: "准备时间开始计时。",
+        });
+      } else {
+        // If stream fails, go back to settings
+        setStage(InterviewStage.SETTINGS);
+      }
+    }, 100);
   };
 
   const handleDeviceSetupComplete = () => {
@@ -90,21 +98,15 @@ const MockInterview = () => {
       );
     }
 
-    if (stage === InterviewStage.SETTINGS) {
-      return (
-        <div className="grid md:grid-cols-2 gap-8">
+    return (
+      <div className="grid md:grid-cols-2 gap-8">
+        {stage === InterviewStage.SETTINGS ? (
           <InterviewSettingsComponent
             settings={settings}
             onSettingsChange={setSettings}
             onStartInterview={startInterview}
           />
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid md:grid-cols-2 gap-8">
-        {selectedQuestion && (
+        ) : selectedQuestion && (
           <>
             {stage === InterviewStage.PREPARATION && (
               <InterviewPreparation
