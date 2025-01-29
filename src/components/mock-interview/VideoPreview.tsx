@@ -38,12 +38,20 @@ const VideoPreview = ({
     }
 
     // Set canvas dimensions to match video
-    canvasElement.width = videoElement.clientWidth;
-    canvasElement.height = videoElement.clientHeight;
+    const updateCanvasSize = () => {
+      if (videoElement.videoWidth && videoElement.videoHeight) {
+        canvasElement.width = videoElement.videoWidth;
+        canvasElement.height = videoElement.videoHeight;
+      } else {
+        canvasElement.width = videoElement.clientWidth;
+        canvasElement.height = videoElement.clientHeight;
+      }
+    };
     
     // Function to draw video frame on canvas
     const drawVideoFrame = () => {
       if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+        updateCanvasSize();
         ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
       }
       requestAnimationFrame(drawVideoFrame);
@@ -64,9 +72,7 @@ const VideoPreview = ({
       console.log("Stream found, attempting to play");
       videoElement.play()
         .then(() => console.log("Video playing successfully"))
-        .catch(error => {
-          console.error("Error playing video:", error);
-        });
+        .catch(error => console.error("Error playing video:", error));
     } else {
       console.log("No stream found in video element");
     }
@@ -79,7 +85,7 @@ const VideoPreview = ({
 
   const handleStopRecording = () => {
     onStopRecording();
-    navigate(-1); // Navigate back to the previous page
+    navigate(-1);
   };
 
   return (
@@ -99,11 +105,11 @@ const VideoPreview = ({
               autoPlay
               playsInline
               muted
-              className="w-full h-full rounded-lg object-cover mirror hidden"
+              className="w-full h-full rounded-lg object-cover"
             />
             <canvas
               ref={canvasRef}
-              className="w-full h-full rounded-lg object-cover mirror absolute top-0 left-0"
+              className="w-full h-full rounded-lg object-cover absolute top-0 left-0"
               style={{ transform: 'scaleX(-1)' }}
             />
           </>
