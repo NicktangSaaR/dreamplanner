@@ -76,18 +76,11 @@ export const useCourses = (externalCourses?: Course[]) => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['courses'] });
       await refetch();
-      toast({
-        title: "Success",
-        description: "Course added successfully",
-      });
+      toast.success("Course added successfully");
     },
     onError: (error) => {
       console.error('Error in addCourseMutation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add course",
-        variant: "destructive",
-      });
+      toast.error("Failed to add course");
     },
   });
 
@@ -113,18 +106,11 @@ export const useCourses = (externalCourses?: Course[]) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
       refetch();
-      toast({
-        title: "Success",
-        description: "Course updated successfully",
-      });
+      toast.success("Course updated successfully");
     },
     onError: (error) => {
       console.error('Error in updateCourseMutation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update course",
-        variant: "destructive",
-      });
+      toast.error("Failed to update course");
     },
   });
 
