@@ -112,7 +112,7 @@ export default function StudentSummaryPage() {
   });
 
   const handleBack = () => {
-    navigate(-1);
+    navigate('/counselor-dashboard');
   };
 
   if (!studentId) {
