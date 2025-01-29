@@ -36,7 +36,10 @@ export default function CourseManagement({
   const academicYears = generateAcademicYears();
 
   const handleAddCourse = async () => {
+    console.log("Attempting to add course:", newCourse);
+    
     if (!studentId) {
+      console.error("No student ID provided");
       toast({
         title: "Error",
         description: "No student ID found. Please try again.",

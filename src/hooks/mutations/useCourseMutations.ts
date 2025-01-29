@@ -10,6 +10,11 @@ export const useCourseMutations = (refetch: () => void) => {
     mutationFn: async (newCourse: Omit<Course, 'id'>) => {
       console.log('Adding new course:', newCourse);
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       if (!newCourse.student_id) {
         throw new Error('No student ID provided');
       }
@@ -33,15 +38,21 @@ export const useCourseMutations = (refetch: () => void) => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
       refetch();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Error in addCourse mutation:', error);
-      toast.error('Failed to add course');
+      toast.error(error.message || 'Failed to add course');
     },
   });
 
   const updateCourse = useMutation({
     mutationFn: async (course: Course) => {
       console.log('Updating course:', course);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const { data, error } = await supabase
         .from('courses')
         .update(course)
@@ -62,9 +73,9 @@ export const useCourseMutations = (refetch: () => void) => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
       refetch();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Error in updateCourse mutation:', error);
-      toast.error('Failed to update course');
+      toast.error(error.message || 'Failed to update course');
     },
   });
 
