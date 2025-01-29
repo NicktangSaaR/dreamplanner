@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StopCircle } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 
 interface VideoPreviewProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -19,7 +18,6 @@ const VideoPreview = ({
   onStopRecording,
   onStartNew
 }: VideoPreviewProps) => {
-  const navigate = useNavigate();
   const recordedVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -27,6 +25,10 @@ const VideoPreview = ({
       console.log("Setting up recorded video playback:", recordedVideoUrl);
       recordedVideoRef.current.src = recordedVideoUrl;
       recordedVideoRef.current.load();
+      // 自动播放录制的视频
+      recordedVideoRef.current.play().catch(error => {
+        console.error("Error auto-playing recorded video:", error);
+      });
     }
   }, [isReviewStage, recordedVideoUrl]);
 
@@ -44,14 +46,21 @@ const VideoPreview = ({
 
   return (
     <Card className="p-6">
-      <div className="w-full aspect-video bg-gray-100 rounded-lg mb-4 overflow-hidden">
+      <div className="w-full aspect-video bg-gray-100 rounded-lg mb-4 overflow-hidden relative">
         {isReviewStage && recordedVideoUrl ? (
-          <video
-            ref={recordedVideoRef}
-            controls
-            playsInline
-            className="w-full h-full rounded-lg object-cover"
-          />
+          <>
+            <video
+              ref={recordedVideoRef}
+              controls
+              playsInline
+              className="w-full h-full rounded-lg object-cover"
+            />
+            <div className="absolute bottom-4 left-0 right-0 text-center">
+              <p className="text-sm text-gray-600 bg-white/80 px-2 py-1 rounded mx-auto inline-block">
+                您可以在此查看和回放录制的视频
+              </p>
+            </div>
+          </>
         ) : (
           <video
             ref={videoRef}
