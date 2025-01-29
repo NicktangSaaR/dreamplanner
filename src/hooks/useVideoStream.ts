@@ -39,6 +39,7 @@ export const useVideoStream = () => {
 
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        console.log("Setting video source object");
         try {
           await videoRef.current.play();
           console.log("Video preview started successfully");
@@ -50,6 +51,8 @@ export const useVideoStream = () => {
             variant: "destructive",
           });
         }
+      } else {
+        console.error("Video element reference is null");
       }
 
       return true;

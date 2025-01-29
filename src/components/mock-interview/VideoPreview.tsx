@@ -22,7 +22,6 @@ const VideoPreview = ({
   const navigate = useNavigate();
   const recordedVideoRef = useRef<HTMLVideoElement>(null);
 
-  // Effect to handle recorded video playback
   useEffect(() => {
     if (isReviewStage && recordedVideoUrl && recordedVideoRef.current) {
       console.log("Setting up recorded video playback:", recordedVideoUrl);
@@ -38,7 +37,7 @@ const VideoPreview = ({
 
   return (
     <Card className="p-6">
-      <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden relative">
+      <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
         {isReviewStage && recordedVideoUrl ? (
           <video
             ref={recordedVideoRef}
@@ -52,7 +51,7 @@ const VideoPreview = ({
             autoPlay
             playsInline
             muted
-            className="w-full h-full rounded-lg object-cover"
+            className="w-full h-full object-cover rounded-lg"
             style={{ transform: 'scaleX(-1)' }}
           />
         )}
