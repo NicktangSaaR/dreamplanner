@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
@@ -49,7 +48,6 @@ const MockInterview = () => {
     return Date.now() - settings.lastUpdated < SETTINGS_VALIDITY_DURATION;
   });
   
-  const { toast } = useToast();
   const { stage, setStage, timeLeft, countdownTime } = useInterviewState(settings);
   const { videoRef, recordedVideoUrl, startStream, startRecording, stopRecording } = useVideoStream();
 
