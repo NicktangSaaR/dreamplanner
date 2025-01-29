@@ -8,6 +8,7 @@ import InterviewPreparation from "@/components/mock-interview/InterviewPreparati
 import InterviewCountdown from "@/components/mock-interview/InterviewCountdown";
 import InterviewResponse from "@/components/mock-interview/InterviewResponse";
 import VideoPreview from "@/components/mock-interview/VideoPreview";
+import DeviceSetup from "@/components/mock-interview/DeviceSetup";
 import { useInterviewState } from "@/hooks/useInterviewState";
 import { useVideoStream } from "@/hooks/useVideoStream";
 
@@ -32,6 +33,7 @@ const MockInterview = () => {
     responseTime: 180,
     selectedQuestionId: null,
   });
+  const [showDeviceSetup, setShowDeviceSetup] = useState(true);
 
   const { toast } = useToast();
   const { stage, setStage, timeLeft, countdownTime } = useInterviewState(settings);
@@ -55,15 +57,23 @@ const MockInterview = () => {
     if (success) {
       setStage(InterviewStage.PREPARATION);
       toast({
-        title: "Interview Started",
-        description: "Preparation time has begun.",
+        title: "面试开始",
+        description: "准备时间开始计时。",
       });
     }
   };
 
   const selectedQuestion = questions.find(q => q.id === settings.selectedQuestionId);
 
+  const handleDeviceSetupComplete = () => {
+    setShowDeviceSetup(false);
+  };
+
   const renderContent = () => {
+    if (showDeviceSetup) {
+      return <DeviceSetup onComplete={handleDeviceSetupComplete} />;
+    }
+
     if (stage === InterviewStage.SETTINGS) {
       return (
         <div className="grid md:grid-cols-2 gap-8">
@@ -102,8 +112,8 @@ const MockInterview = () => {
             )}
             {stage === InterviewStage.REVIEW && (
               <div className="card p-6">
-                <h2 className="text-xl font-semibold mb-4">Interview Complete</h2>
-                <p>You can now review your recorded response.</p>
+                <h2 className="text-xl font-semibold mb-4">面试完成</h2>
+                <p>您现在可以查看录制的回答。</p>
               </div>
             )}
           </>
@@ -113,7 +123,10 @@ const MockInterview = () => {
           recordedVideoUrl={recordedVideoUrl}
           isReviewStage={stage === InterviewStage.REVIEW}
           onStopRecording={stopRecording}
-          onStartNew={() => setStage(InterviewStage.SETTINGS)}
+          onStartNew={() => {
+            setStage(InterviewStage.SETTINGS);
+            setShowDeviceSetup(true);
+          }}
         />
       </div>
     );
@@ -121,7 +134,7 @@ const MockInterview = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Mock Interview Practice</h1>
+      <h1 className="text-3xl font-bold mb-8">模拟面试练习</h1>
       {renderContent()}
     </div>
   );
