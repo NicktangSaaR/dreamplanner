@@ -176,7 +176,10 @@ export default function StudentView() {
           todoStats={todoStats}
         />
 
-        <AcademicSection courses={courses} />
+        <AcademicSection 
+          courses={courses} 
+          studentId={studentId || ""}
+        />
         
         <ActivitiesSection activities={activities} />
 
