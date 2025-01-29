@@ -35,9 +35,12 @@ const VideoPreview = ({
     navigate(-1);
   };
 
+  console.log("VideoPreview rendering, isReviewStage:", isReviewStage);
+  console.log("VideoRef current:", videoRef.current);
+
   return (
     <Card className="p-6">
-      <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+      <div className="w-full aspect-video bg-gray-100 rounded-lg mb-4">
         {isReviewStage && recordedVideoUrl ? (
           <video
             ref={recordedVideoRef}
@@ -51,7 +54,7 @@ const VideoPreview = ({
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover rounded-lg"
+            className="w-full h-full rounded-lg"
             style={{ transform: 'scaleX(-1)' }}
           />
         )}

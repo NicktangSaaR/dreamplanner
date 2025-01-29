@@ -37,9 +37,11 @@ export const useVideoStream = () => {
       console.log("Camera and microphone access granted successfully");
       setStream(mediaStream);
 
+      // Ensure videoRef is available before setting srcObject
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
         console.log("Setting video source object");
+        videoRef.current.srcObject = mediaStream;
+        
         try {
           await videoRef.current.play();
           console.log("Video preview started successfully");
@@ -53,6 +55,12 @@ export const useVideoStream = () => {
         }
       } else {
         console.error("Video element reference is null");
+        toast({
+          title: "视频初始化错误",
+          description: "无法初始化视频预览，请刷新页面重试。",
+          variant: "destructive",
+        });
+        return false;
       }
 
       return true;
