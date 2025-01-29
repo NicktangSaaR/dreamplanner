@@ -4,8 +4,6 @@ import { useProfile } from "@/hooks/useProfile";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useTodos } from "@/hooks/useTodos";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Course } from "@/components/college-planning/types/course";
@@ -38,6 +36,7 @@ export default function StudentDashboard() {
 
   console.log("StudentDashboard - studentId:", studentId);
   console.log("StudentDashboard - profile:", profile);
+  console.log("Current notes count:", notes.length);
 
   // Check access rights
   const { data: hasAccess, isLoading: checkingAccess } = useQuery({
@@ -114,8 +113,9 @@ export default function StudentDashboard() {
     return { completed, starred, total };
   };
 
-  const handleCoursesChange = (newCourses: Course[]) => {
-    setCourses(newCourses);
+  const handleNotesChange = (newNotes: Note[]) => {
+    console.log("Updating notes:", newNotes);
+    setNotes(newNotes);
   };
 
   if (checkingAccess) {
@@ -137,9 +137,9 @@ export default function StudentDashboard() {
       />
       <DashboardTabs
         courses={courses}
-        onCoursesChange={handleCoursesChange}
+        onCoursesChange={setCourses}
         onActivitiesChange={setActivities}
-        onNotesChange={setNotes}
+        onNotesChange={handleNotesChange}
       />
     </div>
   );
