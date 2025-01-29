@@ -34,7 +34,6 @@ const MockInterview = () => {
     selectedQuestionId: null,
   });
   const [deviceSetupComplete, setDeviceSetupComplete] = useState(false);
-
   const { toast } = useToast();
   const { stage, setStage, timeLeft, countdownTime } = useInterviewState(settings);
   const { videoRef, recordedVideoUrl, startStream, startRecording, stopRecording } = useVideoStream();
@@ -53,6 +52,15 @@ const MockInterview = () => {
   });
 
   const startInterview = async () => {
+    if (!deviceSetupComplete) {
+      toast({
+        title: "设备未设置",
+        description: "请先完成设备设置再开始面试。",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const success = await startStream();
     if (success) {
       setStage(InterviewStage.PREPARATION);
@@ -74,7 +82,6 @@ const MockInterview = () => {
   const selectedQuestion = questions.find(q => q.id === settings.selectedQuestionId);
 
   const renderContent = () => {
-    // Always show device setup first if not completed
     if (!deviceSetupComplete) {
       return (
         <div className="max-w-3xl mx-auto">
