@@ -11,13 +11,13 @@ interface InterviewResponseProps {
 
 const InterviewResponse = ({ question, timeLeft, totalTime }: InterviewResponseProps) => {
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Current Question</h2>
-      <p className="text-gray-600 mb-6">{question.title}</p>
-      <div className="space-y-4">
-        <p className="text-lg font-medium">Response Time</p>
-        <Progress value={(timeLeft / totalTime) * 100} />
-        <p className="text-center">{timeLeft} seconds remaining</p>
+    <Card className="p-8">
+      <h2 className="text-2xl font-bold mb-6">Current Question</h2>
+      <p className="text-2xl text-gray-800 mb-8 font-medium leading-relaxed">{question.title}</p>
+      <div className="space-y-6">
+        <p className="text-xl font-medium">Response Time</p>
+        <Progress value={(timeLeft / totalTime) * 100} className="h-3" />
+        <p className="text-center text-2xl font-semibold">{timeLeft} seconds remaining</p>
       </div>
     </Card>
   );

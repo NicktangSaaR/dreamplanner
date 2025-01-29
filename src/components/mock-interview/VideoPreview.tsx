@@ -25,7 +25,6 @@ const VideoPreview = ({
       console.log("Setting up recorded video playback:", recordedVideoUrl);
       recordedVideoRef.current.src = recordedVideoUrl;
       recordedVideoRef.current.load();
-      // 自动播放录制的视频
       recordedVideoRef.current.play().catch(error => {
         console.error("Error auto-playing recorded video:", error);
       });
@@ -36,13 +35,6 @@ const VideoPreview = ({
     console.log("Stopping recording and saving video...");
     onStopRecording();
   };
-
-  console.log("VideoPreview rendering:", {
-    isReviewStage,
-    recordedVideoUrl,
-    hasVideoRef: !!videoRef.current,
-    hasRecordedVideoRef: !!recordedVideoRef.current
-  });
 
   return (
     <Card className="p-6">
@@ -55,8 +47,8 @@ const VideoPreview = ({
               playsInline
               className="w-full h-full rounded-lg object-cover"
             />
-            <div className="absolute bottom-4 left-0 right-0 text-center">
-              <p className="text-sm text-gray-600 bg-white/80 px-2 py-1 rounded mx-auto inline-block">
+            <div className="absolute bottom-6 left-0 right-0 text-center">
+              <p className="text-lg font-medium text-gray-800 bg-white/90 px-4 py-2 rounded-full mx-auto inline-block shadow-lg">
                 您可以在此查看和回放录制的视频
               </p>
             </div>
@@ -74,16 +66,17 @@ const VideoPreview = ({
       </div>
       <div className="flex justify-center gap-4">
         {isReviewStage ? (
-          <Button onClick={onStartNew}>
+          <Button onClick={onStartNew} size="lg" className="text-lg">
             开始新的面试
           </Button>
         ) : (
           <Button
             onClick={handleStopRecording}
             variant="destructive"
-            className="flex items-center gap-2"
+            size="lg"
+            className="flex items-center gap-2 text-lg"
           >
-            <StopCircle className="w-4 h-4" />
+            <StopCircle className="w-5 h-5" />
             结束面试
           </Button>
         )}
