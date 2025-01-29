@@ -89,6 +89,7 @@ const VideoPreview = ({
           <video
             src={recordedVideoUrl}
             controls
+            autoPlay
             className="w-full h-full rounded-lg"
           />
         ) : (
