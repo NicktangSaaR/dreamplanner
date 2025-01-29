@@ -76,7 +76,6 @@ const MockInterview = () => {
     }, 100);
   };
 
-  // 监听面试阶段变化，当进入REVIEW阶段时自动停止录制
   useEffect(() => {
     if (stage === InterviewStage.REVIEW) {
       console.log("Interview stage changed to REVIEW, stopping recording");
