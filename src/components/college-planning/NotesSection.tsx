@@ -1,7 +1,7 @@
 import { useNotes } from "@/hooks/useNotes";
 import NoteDialog from "./NoteDialog";
 import NotesList from "./NotesList";
-import { useCallback, useEffect, useState, memo } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 
 interface Note {
@@ -75,18 +75,16 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
     }
   }, [editingNote, createNote, updateNote, handleDialogClose]);
 
-  const memoizedNotesList = memo(NotesList);
-
   return (
     <Card className="w-full">
-      {memoizedNotesList({
-        notes: notes || [],
-        onCreateNote: handleCreateNote,
-        onTogglePin: handleTogglePin,
-        onToggleStar: handleToggleStar,
-        onEdit: handleEditNote,
-        canEditNote: canEditNote
-      })}
+      <NotesList
+        notes={notes || []}
+        onCreateNote={handleCreateNote}
+        onTogglePin={handleTogglePin}
+        onToggleStar={handleToggleStar}
+        onEdit={handleEditNote}
+        canEditNote={canEditNote}
+      />
       <NoteDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
