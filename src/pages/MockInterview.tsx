@@ -165,14 +165,6 @@ const MockInterview = () => {
                 <div className="card p-8 bg-white rounded-lg shadow-lg">
                   <h2 className="text-2xl font-bold mb-6">面试完成</h2>
                   <p className="text-xl text-gray-700 mb-6">您现在可以查看录制的回答。</p>
-                  <button
-                    onClick={() => {
-                      setStage(InterviewStage.SETTINGS);
-                    }}
-                    className="px-6 py-3 bg-primary text-white rounded-lg text-lg font-medium hover:bg-primary/90 transition-colors"
-                  >
-                    开始新的面试
-                  </button>
                 </div>
               )}
             </div>
