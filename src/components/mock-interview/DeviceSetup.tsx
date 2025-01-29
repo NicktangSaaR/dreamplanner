@@ -18,12 +18,12 @@ const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState<string | null>(null);
+  const [isPreviewActive, setIsPreviewActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    // 获取可用的媒体设备
     const getDevices = async () => {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
@@ -69,9 +69,16 @@ const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
       });
 
       setStream(newStream);
+      setIsPreviewActive(true);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
       }
+
+      toast({
+        title: "预览开始",
+        description: "您现在可以查看摄像头预览并测试麦克风。",
+      });
     } catch (error) {
       console.error("Error starting preview:", error);
       toast({
@@ -121,92 +128,104 @@ const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
   }, [stream]);
 
   return (
-    <Card className="p-6 space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold mb-4">设备设置</h2>
-        <p className="text-gray-600 mb-6">
-          请选择并测试您的摄像头和麦克风设备，确保它们在面试过程中能够正常工作。
-        </p>
-      </div>
-
-      <div className="space-y-4">
+    <Card className="p-6">
+      <div className="space-y-6">
         <div>
-          <Label className="mb-2 flex items-center gap-2">
-            <Camera className="w-4 h-4" />
-            选择摄像头
-          </Label>
-          <Select value={selectedVideoDevice} onValueChange={setSelectedVideoDevice}>
-            <SelectTrigger>
-              <SelectValue placeholder="选择摄像头设备" />
-            </SelectTrigger>
-            <SelectContent>
-              {videoDevices.map(device => (
-                <SelectItem key={device.deviceId} value={device.deviceId}>
-                  {device.label || `摄像头 ${device.deviceId.slice(0, 8)}...`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <h2 className="text-2xl font-semibold mb-4">设备设置</h2>
+          <p className="text-gray-600 mb-6">
+            请选择并测试您的摄像头和麦克风设备，确保它们在面试过程中能够正常工作。
+          </p>
         </div>
 
-        <div>
-          <Label className="mb-2 flex items-center gap-2">
-            <Mic className="w-4 h-4" />
-            选择麦克风
-          </Label>
-          <Select value={selectedAudioDevice} onValueChange={setSelectedAudioDevice}>
-            <SelectTrigger>
-              <SelectValue placeholder="选择麦克风设备" />
-            </SelectTrigger>
-            <SelectContent>
-              {audioDevices.map(device => (
-                <SelectItem key={device.deviceId} value={device.deviceId}>
-                  {device.label || `麦克风 ${device.deviceId.slice(0, 8)}...`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <Label className="mb-2 flex items-center gap-2">
+                <Camera className="w-4 h-4" />
+                选择摄像头
+              </Label>
+              <Select value={selectedVideoDevice} onValueChange={setSelectedVideoDevice}>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择摄像头设备" />
+                </SelectTrigger>
+                <SelectContent>
+                  {videoDevices.map(device => (
+                    <SelectItem key={device.deviceId} value={device.deviceId}>
+                      {device.label || `摄像头 ${device.deviceId.slice(0, 8)}...`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-4">
-          <Button onClick={startPreview} className="w-full">
-            开始预览
-          </Button>
+            <div>
+              <Label className="mb-2 flex items-center gap-2">
+                <Mic className="w-4 h-4" />
+                选择麦克风
+              </Label>
+              <Select value={selectedAudioDevice} onValueChange={setSelectedAudioDevice}>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择麦克风设备" />
+                </SelectTrigger>
+                <SelectContent>
+                  {audioDevices.map(device => (
+                    <SelectItem key={device.deviceId} value={device.deviceId}>
+                      {device.label || `麦克风 ${device.deviceId.slice(0, 8)}...`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover"
-            />
+            <Button 
+              onClick={startPreview} 
+              className="w-full"
+              variant={isPreviewActive ? "secondary" : "default"}
+            >
+              {isPreviewActive ? "重新开始预览" : "开始预览"}
+            </Button>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-center gap-4">
-              {!isRecording ? (
-                <Button onClick={startRecording} className="flex items-center gap-2">
-                  <Play className="w-4 h-4" />
-                  录制测试音频
-                </Button>
-              ) : (
-                <Button onClick={stopRecording} variant="destructive" className="flex items-center gap-2">
-                  <StopCircle className="w-4 h-4" />
-                  停止录制
-                </Button>
+          <div className="space-y-4">
+            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-center gap-4">
+                {!isRecording ? (
+                  <Button onClick={startRecording} className="flex items-center gap-2">
+                    <Play className="w-4 h-4" />
+                    录制测试音频
+                  </Button>
+                ) : (
+                  <Button onClick={stopRecording} variant="destructive" className="flex items-center gap-2">
+                    <StopCircle className="w-4 h-4" />
+                    停止录制
+                  </Button>
+                )}
+              </div>
+              {audioURL && (
+                <audio controls className="w-full mt-4">
+                  <source src={audioURL} type="audio/webm" />
+                  您的浏览器不支持音频播放。
+                </audio>
               )}
             </div>
-            {audioURL && (
-              <audio controls className="w-full mt-4">
-                <source src={audioURL} type="audio/webm" />
-                您的浏览器不支持音频播放。
-              </audio>
-            )}
           </div>
         </div>
 
-        <Button onClick={onComplete} className="w-full" disabled={!stream}>
+        <Button 
+          onClick={onComplete} 
+          className="w-full" 
+          disabled={!stream}
+        >
           完成设置
         </Button>
       </div>
