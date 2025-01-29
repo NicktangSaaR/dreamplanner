@@ -93,23 +93,27 @@ export default function CourseManagement({
   };
 
   return (
-    <CardContent className="space-y-6">
-      <CourseForm
-        newCourse={newCourse}
-        onCourseChange={handleCourseChange}
-        onAddCourse={handleAddCourse}
-        academicYears={academicYears}
-      />
-      <CourseTable
-        courses={courses}
-        editingCourse={editingCourse}
-        onEditCourse={handleEditCourse}
-        onSaveEdit={handleSaveEdit}
-        onCancelEdit={() => setEditingCourse(null)}
-        onEditingCourseChange={handleEditingCourseChange}
-        academicYears={academicYears}
-        isLoading={isLoading}
-      />
+    <CardContent className="space-y-4">
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <CourseForm
+          newCourse={newCourse}
+          onCourseChange={handleCourseChange}
+          onAddCourse={handleAddCourse}
+          academicYears={academicYears}
+        />
+      </div>
+      <div className="mt-2">
+        <CourseTable
+          courses={courses}
+          editingCourse={editingCourse}
+          onEditCourse={handleEditCourse}
+          onSaveEdit={handleSaveEdit}
+          onCancelEdit={() => setEditingCourse(null)}
+          onEditingCourseChange={handleEditingCourseChange}
+          academicYears={academicYears}
+          isLoading={isLoading}
+        />
+      </div>
     </CardContent>
   );
 }

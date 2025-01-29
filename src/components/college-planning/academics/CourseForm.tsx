@@ -44,8 +44,8 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-6 gap-4">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         <div>
           <Label htmlFor="courseName">Course Name *</Label>
           <Input
@@ -53,6 +53,7 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
             value={newCourse.name}
             onChange={(e) => onCourseChange('name', e.target.value)}
             required
+            className="mt-1"
           />
         </div>
         <div>
@@ -61,7 +62,7 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
             value={newCourse.grade_type || 'letter'}
             onValueChange={(value) => onCourseChange('grade_type', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select grade type" />
             </SelectTrigger>
             <SelectContent>
@@ -77,7 +78,7 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
               value={newCourse.grade}
               onValueChange={(value) => onCourseChange('grade', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Select grade" />
               </SelectTrigger>
               <SelectContent>
@@ -98,7 +99,7 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
               value={newCourse.grade}
               onValueChange={(value) => onCourseChange('grade', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Select grade" />
               </SelectTrigger>
               <SelectContent>
@@ -117,7 +118,7 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
             value={newCourse.course_type}
             onValueChange={(value) => onCourseChange('course_type', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select type" />
             </SelectTrigger>
             <SelectContent>
@@ -135,7 +136,7 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
             value={newCourse.grade_level}
             onValueChange={(value) => onCourseChange('grade_level', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select grade level" />
             </SelectTrigger>
             <SelectContent>
@@ -153,7 +154,7 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
             value={newCourse.academic_year}
             onValueChange={(value) => onCourseChange('academic_year', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select year" />
             </SelectTrigger>
             <SelectContent>
@@ -165,17 +166,18 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
             </SelectContent>
           </Select>
         </div>
+        <div>
+          <Label htmlFor="semester">Semester</Label>
+          <Input
+            id="semester"
+            value={newCourse.semester}
+            onChange={(e) => onCourseChange('semester', e.target.value)}
+            placeholder="Enter semester"
+            className="mt-1"
+          />
+        </div>
       </div>
-      <div>
-        <Label htmlFor="semester">Semester</Label>
-        <Input
-          id="semester"
-          value={newCourse.semester}
-          onChange={(e) => onCourseChange('semester', e.target.value)}
-          placeholder="Enter semester"
-        />
-      </div>
-      <Button onClick={handleSubmit} className="w-full">
+      <Button onClick={handleSubmit} className="w-full mt-4">
         <PlusCircle className="mr-2 h-4 w-4" />
         Add Course
       </Button>

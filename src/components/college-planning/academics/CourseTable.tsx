@@ -31,7 +31,7 @@ export default function CourseTable({
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-full" />
@@ -39,21 +39,20 @@ export default function CourseTable({
     );
   }
 
-  // Ensure courses is an array and has items
   const coursesArray = Array.isArray(courses) ? courses : [];
   console.log("CourseTable - Processed courses array:", coursesArray);
   
   if (!coursesArray || coursesArray.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-center py-6 text-muted-foreground">
         <p>No courses added yet</p>
-        <p className="text-sm mt-2">Add your first course using the form above</p>
+        <p className="text-sm mt-1">Add your first course using the form above</p>
       </div>
     );
   }
 
   return (
-    <div className="border rounded-lg">
+    <div className="border rounded-lg overflow-hidden">
       <Table>
         <CourseTableHeader />
         <TableBody>
