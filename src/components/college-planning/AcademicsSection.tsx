@@ -27,14 +27,14 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
     grade_type: "letter",
   });
 
-  // Generate academic years - now includes 4 years in the past
+  // Generate academic years
   const currentYear = new Date().getFullYear();
   const academicYears = Array.from({ length: 8 }, (_, i) => {
     const year = currentYear - 4 + i;
     return `${year}-${year + 1}`;
   });
 
-  // Fetch courses from Supabase only if external courses are not provided
+  // Fetch courses from Supabase
   const { data: fetchedCourses = [], refetch } = useQuery({
     queryKey: ['courses'],
     queryFn: async () => {
@@ -70,6 +70,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
 
   const courses = externalCourses || fetchedCourses;
 
+  // Add course mutation
   const addCourseMutation = useMutation({
     mutationFn: async (courseData: Omit<Course, 'id'>) => {
       console.log('Adding new course:', courseData);
@@ -100,7 +101,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
-      refetch(); // Explicitly refetch courses after successful addition
+      refetch();
       toast({
         title: "Success",
         description: "Course added successfully",
@@ -116,6 +117,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
     },
   });
 
+  // Update course mutation
   const updateCourseMutation = useMutation({
     mutationFn: async (course: Course) => {
       console.log('Updating course:', course);
@@ -137,7 +139,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
-      refetch(); // Explicitly refetch courses after successful update
+      refetch();
       toast({
         title: "Success",
         description: "Course updated successfully",
