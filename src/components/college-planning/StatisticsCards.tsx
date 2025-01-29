@@ -19,6 +19,8 @@ interface StatisticsCardsProps {
 }
 
 export default function StatisticsCards({ courses, activities, notes, todoStats }: StatisticsCardsProps) {
+  console.log("StatisticsCards - Current notes count:", notes.length);
+
   const calculateGPA = (courses: Array<{ grade: string }>) => {
     const gradePoints: { [key: string]: number } = {
       'A': 4.0, 'A-': 3.7,

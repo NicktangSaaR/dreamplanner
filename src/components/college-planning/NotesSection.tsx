@@ -1,5 +1,5 @@
 import { useNotes } from "@/hooks/useNotes";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
@@ -126,6 +126,12 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
       });
     }
   };
+
+  // Call onNotesChange whenever notes change
+  useEffect(() => {
+    console.log("Notes updated in NotesSection:", notes);
+    onNotesChange?.(notes);
+  }, [notes, onNotesChange]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 relative">
