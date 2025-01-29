@@ -11,7 +11,8 @@ import ApplicationsSection from "./student-summary/ApplicationsSection";
 
 export default function StudentSummaryPage() {
   const navigate = useNavigate();
-  const { studentId = '' } = useParams<{ studentId: string }>();
+  const params = useParams();
+  const studentId = params.studentId;
   console.log("StudentSummaryPage - Received studentId:", studentId);
 
   // Fetch student profile
@@ -116,7 +117,7 @@ export default function StudentSummaryPage() {
       toast.error("Student ID is missing");
       return;
     }
-    navigate(`/student-dashboard/${studentId}`);
+    navigate(`/counselor-dashboard/student/${studentId}`);
   };
 
   const handleBack = () => {
