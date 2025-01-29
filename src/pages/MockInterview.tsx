@@ -14,6 +14,7 @@ import VideoPreview from "@/components/mock-interview/VideoPreview";
 import DeviceSetup from "@/components/mock-interview/DeviceSetup";
 import { useInterviewState } from "@/hooks/useInterviewState";
 import { useVideoStream } from "@/hooks/useVideoStream";
+import { useProfile } from "@/hooks/useProfile";
 
 interface InterviewSettings {
   prepTime: number;
@@ -35,11 +36,13 @@ const SETTINGS_VALIDITY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 const MockInterview = () => {
   const navigate = useNavigate();
+  const { profile } = useProfile();
   const [settings, setSettings] = useState<InterviewSettings>({
     prepTime: 120,
     responseTime: 180,
     selectedQuestionId: null,
   });
+
   const [deviceSetupComplete, setDeviceSetupComplete] = useState(() => {
     const storedSettings = localStorage.getItem(DEVICE_SETTINGS_KEY);
     if (!storedSettings) return false;
@@ -191,7 +194,12 @@ const MockInterview = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-12">
-        <h1 className="text-4xl font-bold text-center">模拟面试练习</h1>
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold text-center">模拟面试练习</h1>
+          <p className="text-gray-600 text-lg">
+            Hi, {profile?.full_name || '同学'}
+          </p>
+        </div>
         <div className="flex gap-4">
           <Link to="/">
             <Button variant="ghost" size="icon" className="w-10 h-10">
