@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Link, useNavigate } from "react-router-dom";
+import { Home, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import InterviewSettingsComponent from "@/components/mock-interview/InterviewSettings";
 import { InterviewStage } from "@/components/mock-interview/InterviewStage";
 import InterviewPreparation from "@/components/mock-interview/InterviewPreparation";
@@ -31,6 +35,7 @@ const DEVICE_SETTINGS_KEY = 'interview-device-settings';
 const SETTINGS_VALIDITY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 const MockInterview = () => {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<InterviewSettings>({
     prepTime: 120,
     responseTime: 180,
@@ -47,6 +52,17 @@ const MockInterview = () => {
   const { toast } = useToast();
   const { stage, setStage, timeLeft, countdownTime } = useInterviewState(settings);
   const { videoRef, recordedVideoUrl, startStream, startRecording, stopRecording } = useVideoStream();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Successfully logged out");
+      navigate("/");
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error("Error logging out");
+    }
+  };
 
   const { data: questions = [] } = useQuery({
     queryKey: ['interview-questions'],
@@ -181,7 +197,24 @@ const MockInterview = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-12 text-center">模拟面试练习</h1>
+      <div className="flex justify-between items-center mb-12">
+        <h1 className="text-4xl font-bold text-center">模拟面试练习</h1>
+        <div className="flex gap-4">
+          <Link to="/">
+            <Button variant="ghost" size="icon" className="w-10 h-10">
+              <Home className="h-5 w-5" />
+            </Button>
+          </Link>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="w-10 h-10"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
       {renderContent()}
     </div>
   );
