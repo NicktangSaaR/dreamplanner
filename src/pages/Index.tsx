@@ -78,13 +78,6 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-semibold text-primary">EduPath</h1>
-            {isAuthenticated && (
-              <Link to="/mock-interview">
-                <Button variant="ghost" className="hover:text-primary transition-colors">
-                  Mock Interview
-                </Button>
-              </Link>
-            )}
           </div>
           <div className="space-x-4">
             {isAuthenticated ? (
@@ -92,6 +85,11 @@ const Index = () => {
                 <Link to={getDashboardLink()}>
                   <Button variant="ghost" className="hover:text-primary transition-colors">
                     Dashboard
+                  </Button>
+                </Link>
+                <Link to="/mock-interview">
+                  <Button variant="ghost" className="hover:text-primary transition-colors">
+                    Mock Interview
                   </Button>
                 </Link>
                 <Button 
