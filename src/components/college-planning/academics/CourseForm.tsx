@@ -42,12 +42,6 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
 
     // If validation passes, call onAddCourse
     onAddCourse();
-    
-    // Show success toast
-    toast({
-      title: "Success",
-      description: "Course added successfully",
-    });
   };
 
   return (
