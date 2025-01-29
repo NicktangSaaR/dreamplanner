@@ -11,7 +11,7 @@ import InterviewPreparation from "@/components/mock-interview/InterviewPreparati
 import InterviewCountdown from "@/components/mock-interview/InterviewCountdown";
 import InterviewResponse from "@/components/mock-interview/InterviewResponse";
 import VideoPreview from "@/components/mock-interview/VideoPreview";
-import DeviceSetup from "@/components/mock-interview/DeviceSetup";
+import DeviceSetup from "@/components/mock-interview/device-setup/DeviceSetup";
 import { useInterviewState } from "@/hooks/useInterviewState";
 import { useVideoStream } from "@/hooks/useVideoStream";
 import { useProfile } from "@/hooks/useProfile";
