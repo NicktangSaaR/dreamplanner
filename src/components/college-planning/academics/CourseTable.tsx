@@ -32,16 +32,11 @@ export default function CourseTable({
     return <div className="text-center py-4">Loading courses...</div>;
   }
 
-  // Check if courses is undefined or null before checking length
-  if (!courses) {
-    console.error("Courses is undefined or null:", courses);
-    return <div className="text-center py-4 text-muted-foreground">Error loading courses</div>;
-  }
-
-  // Ensure courses is an array
+  // Ensure courses is an array and has items
   const coursesArray = Array.isArray(courses) ? courses : [];
+  console.log("CourseTable - Processed courses array:", coursesArray);
   
-  if (coursesArray.length === 0) {
+  if (!coursesArray || coursesArray.length === 0) {
     return <div className="text-center py-4 text-muted-foreground">No courses added yet</div>;
   }
 
@@ -49,8 +44,9 @@ export default function CourseTable({
     <Table>
       <CourseTableHeader />
       <TableBody>
-        {coursesArray.map((course) =>
-          editingCourse?.id === course.id ? (
+        {coursesArray.map((course) => {
+          console.log("Rendering course:", course);
+          return editingCourse?.id === course.id ? (
             <EditableCourseRow
               key={course.id}
               editingCourse={editingCourse}
@@ -65,8 +61,8 @@ export default function CourseTable({
               course={course}
               onEditCourse={onEditCourse}
             />
-          )
-        )}
+          );
+        })}
       </TableBody>
     </Table>
   );
