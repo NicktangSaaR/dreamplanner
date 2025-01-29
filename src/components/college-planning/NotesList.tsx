@@ -47,14 +47,16 @@ const NotesList = memo(function NotesList({
         <ScrollArea className="h-[300px] sm:h-[400px] w-full rounded-md border p-4">
           <div className="space-y-3">
             {Array.isArray(notes) && notes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onTogglePin={onTogglePin}
-                onToggleStar={onToggleStar}
-                onEdit={onEdit}
-                canEdit={canEditNote(note)}
-              />
+              note && note.id ? (
+                <NoteCard
+                  key={note.id}
+                  note={note}
+                  onTogglePin={onTogglePin}
+                  onToggleStar={onToggleStar}
+                  onEdit={onEdit}
+                  canEdit={canEditNote(note)}
+                />
+              ) : null
             ))}
             {(!notes || notes.length === 0) && (
               <div className="text-center text-muted-foreground py-8">

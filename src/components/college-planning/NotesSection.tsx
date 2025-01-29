@@ -20,12 +20,12 @@ interface NotesSectionProps {
 export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   const [open, setOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const { notes, createNote, updateNote, handleTogglePin, handleToggleStar } = useNotes();
+  const { notes = [], createNote, updateNote, handleTogglePin, handleToggleStar } = useNotes();
 
   console.log("NotesSection - Current notes:", notes);
 
   useEffect(() => {
-    if (notes && onNotesChange) {
+    if (Array.isArray(notes) && onNotesChange) {
       console.log("NotesSection - Calling onNotesChange with:", notes);
       onNotesChange(notes);
     }
@@ -41,12 +41,14 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   }, [createNote]);
 
   const handleEditNote = useCallback((note: Note) => {
-    setEditingNote(note);
-    setOpen(true);
+    if (note && note.id) {
+      setEditingNote(note);
+      setOpen(true);
+    }
   }, []);
 
   const handleUpdateNote = useCallback(async (data: { title: string; content: string }) => {
-    if (!editingNote) return;
+    if (!editingNote?.id) return;
 
     try {
       await updateNote({
@@ -62,13 +64,18 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   }, [editingNote, updateNote]);
 
   const canEditNote = useCallback((note: Note) => {
-    return true; // This can be updated based on your requirements
+    return Boolean(note?.id);
   }, []);
+
+  if (!Array.isArray(notes)) {
+    console.error("Notes is not an array:", notes);
+    return null;
+  }
 
   return (
     <div className="space-y-4">
       <NotesList
-        notes={notes || []}
+        notes={notes}
         onCreateNote={() => setOpen(true)}
         onTogglePin={handleTogglePin}
         onToggleStar={handleToggleStar}
