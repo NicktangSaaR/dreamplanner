@@ -1,29 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Course } from "@/components/college-planning/types/course";
+import { useParams } from "react-router-dom";
 
 export const useCoursesQuery = (externalCourses?: Course[]) => {
+  const { studentId } = useParams();
+  
   return useQuery({
-    queryKey: ['courses'],
+    queryKey: ['courses', studentId],
     queryFn: async () => {
       if (externalCourses) {
         console.log('Using external courses:', externalCourses);
         return externalCourses;
       }
 
-      console.log('Fetching courses from database');
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        console.error('No authenticated user found');
-        throw new Error('No authenticated user found');
+      if (!studentId) {
+        console.error('No student ID provided');
+        return [];
       }
-
-      // Get the current URL path
-      const path = window.location.pathname;
-      // Extract student ID from the URL if it exists
-      const studentIdMatch = path.match(/student-dashboard\/([^/]+)/);
-      const studentId = studentIdMatch ? studentIdMatch[1] : user.id;
 
       console.log('Fetching courses for student ID:', studentId);
 
@@ -41,9 +35,6 @@ export const useCoursesQuery = (externalCourses?: Course[]) => {
       console.log('Fetched courses:', data);
       return data as Course[];
     },
-    enabled: true,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    staleTime: 0,
+    enabled: !!studentId || !!externalCourses,
   });
 };

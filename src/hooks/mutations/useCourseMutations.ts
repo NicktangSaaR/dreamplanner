@@ -3,22 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Course } from "@/components/college-planning/types/course";
 import { toast } from "sonner";
 
-export const useCourseMutations = (refetch: () => void) => {
+export const useCourseMutations = (refetch: () => void, studentId?: string) => {
   const addCourse = useMutation({
     mutationFn: async (newCourse: Omit<Course, 'id'>) => {
       console.log('Adding new course:', newCourse);
       
-      // Get the current URL path
-      const path = window.location.pathname;
-      // Extract student ID from the URL if it exists
-      const studentIdMatch = path.match(/student-dashboard\/([^/]+)/);
-      
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      
-      const studentId = studentIdMatch ? studentIdMatch[1] : user?.id;
-      if (!studentId) throw new Error('No student ID found');
+      if (!studentId) {
+        throw new Error('No student ID provided');
+      }
 
       const { data, error } = await supabase
         .from('courses')
