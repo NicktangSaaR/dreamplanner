@@ -151,6 +151,11 @@ export default function StudentView() {
     total: todos.length,
   };
 
+  // Transform activities to match the expected format
+  const transformedActivities = activities.map(activity => ({
+    timeCommitment: activity.time_commitment || "",
+  }));
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <DashboardHeader />
@@ -160,7 +165,7 @@ export default function StudentView() {
 
         <StatisticsCards
           courses={courses}
-          activities={activities}
+          activities={transformedActivities}
           notes={notes}
           todoStats={todoStats}
         />
