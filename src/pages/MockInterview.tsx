@@ -27,13 +27,23 @@ interface Question {
   is_system: boolean;
 }
 
+const DEVICE_SETTINGS_KEY = 'interview-device-settings';
+const SETTINGS_VALIDITY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
 const MockInterview = () => {
   const [settings, setSettings] = useState<InterviewSettings>({
     prepTime: 120,
     responseTime: 180,
     selectedQuestionId: null,
   });
-  const [deviceSetupComplete, setDeviceSetupComplete] = useState(false);
+  const [deviceSetupComplete, setDeviceSetupComplete] = useState(() => {
+    const storedSettings = localStorage.getItem(DEVICE_SETTINGS_KEY);
+    if (!storedSettings) return false;
+    
+    const settings = JSON.parse(storedSettings);
+    return Date.now() - settings.lastUpdated < SETTINGS_VALIDITY_DURATION;
+  });
+  
   const { toast } = useToast();
   const { stage, setStage, timeLeft, countdownTime } = useInterviewState(settings);
   const { videoRef, recordedVideoUrl, startStream, startRecording, stopRecording } = useVideoStream();
@@ -143,7 +153,6 @@ const MockInterview = () => {
                 <button
                   onClick={() => {
                     setStage(InterviewStage.SETTINGS);
-                    setDeviceSetupComplete(false);
                   }}
                   className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                 >
@@ -160,7 +169,6 @@ const MockInterview = () => {
           onStopRecording={() => setStage(InterviewStage.REVIEW)}
           onStartNew={() => {
             setStage(InterviewStage.SETTINGS);
-            setDeviceSetupComplete(false);
           }}
         />
       </div>

@@ -10,6 +10,15 @@ interface DeviceSetupProps {
   onComplete: () => void;
 }
 
+interface StoredDeviceSettings {
+  videoDeviceId: string;
+  audioDeviceId: string;
+  lastUpdated: number;
+}
+
+const DEVICE_SETTINGS_KEY = 'interview-device-settings';
+const SETTINGS_VALIDITY_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
 const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
@@ -23,6 +32,25 @@ const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const { toast } = useToast();
 
+  const loadStoredSettings = (): StoredDeviceSettings | null => {
+    const storedSettings = localStorage.getItem(DEVICE_SETTINGS_KEY);
+    if (!storedSettings) return null;
+
+    const settings: StoredDeviceSettings = JSON.parse(storedSettings);
+    const isValid = Date.now() - settings.lastUpdated < SETTINGS_VALIDITY_DURATION;
+    
+    return isValid ? settings : null;
+  };
+
+  const saveDeviceSettings = () => {
+    const settings: StoredDeviceSettings = {
+      videoDeviceId: selectedVideoDevice,
+      audioDeviceId: selectedAudioDevice,
+      lastUpdated: Date.now()
+    };
+    localStorage.setItem(DEVICE_SETTINGS_KEY, JSON.stringify(settings));
+  };
+
   useEffect(() => {
     const getDevices = async () => {
       try {
@@ -32,9 +60,21 @@ const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
         
         setVideoDevices(videos);
         setAudioDevices(audios);
+
+        const storedSettings = loadStoredSettings();
         
-        if (videos.length > 0) setSelectedVideoDevice(videos[0].deviceId);
-        if (audios.length > 0) setSelectedAudioDevice(audios[0].deviceId);
+        if (storedSettings && 
+            videos.some(d => d.deviceId === storedSettings.videoDeviceId) && 
+            audios.some(d => d.deviceId === storedSettings.audioDeviceId)) {
+          console.log("Using stored device settings:", storedSettings);
+          setSelectedVideoDevice(storedSettings.videoDeviceId);
+          setSelectedAudioDevice(storedSettings.audioDeviceId);
+          // Automatically start preview with stored settings
+          setTimeout(() => startPreview(storedSettings.videoDeviceId, storedSettings.audioDeviceId), 500);
+        } else {
+          if (videos.length > 0) setSelectedVideoDevice(videos[0].deviceId);
+          if (audios.length > 0) setSelectedAudioDevice(audios[0].deviceId);
+        }
       } catch (error) {
         console.error("Error getting devices:", error);
         toast({
@@ -48,7 +88,7 @@ const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
     getDevices();
   }, [toast]);
 
-  const startPreview = async () => {
+  const startPreview = async (videoId = selectedVideoDevice, audioId = selectedAudioDevice) => {
     try {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -56,13 +96,13 @@ const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
 
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          deviceId: selectedVideoDevice,
+          deviceId: videoId,
           width: { ideal: 1280 },
           height: { ideal: 720 },
           frameRate: { ideal: 30 }
         },
         audio: {
-          deviceId: selectedAudioDevice,
+          deviceId: audioId,
           echoCancellation: true,
           noiseSuppression: true,
         }
@@ -127,6 +167,11 @@ const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
     };
   }, [stream]);
 
+  const handleComplete = () => {
+    saveDeviceSettings();
+    onComplete();
+  };
+
   return (
     <Card className="p-6">
       <div className="space-y-6">
@@ -134,6 +179,7 @@ const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
           <h2 className="text-2xl font-semibold mb-4">设备设置</h2>
           <p className="text-gray-600 mb-6">
             请选择并测试您的摄像头和麦克风设备，确保它们在面试过程中能够正常工作。
+            {loadStoredSettings() && "您之前的设备设置已自动加载。"}
           </p>
         </div>
 
@@ -178,7 +224,7 @@ const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
             </div>
 
             <Button 
-              onClick={startPreview} 
+              onClick={() => startPreview()} 
               className="w-full"
               variant={isPreviewActive ? "secondary" : "default"}
             >
@@ -222,7 +268,7 @@ const DeviceSetup = ({ onComplete }: DeviceSetupProps) => {
         </div>
 
         <Button 
-          onClick={onComplete} 
+          onClick={handleComplete} 
           className="w-full" 
           disabled={!stream}
         >
