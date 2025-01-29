@@ -40,7 +40,7 @@ export const useVideoStream = () => {
       if (videoRef.current) {
         console.log("Setting video source object");
         videoRef.current.srcObject = mediaStream;
-        startRecording();
+        startRecording(mediaStream);
         return true;
       } else {
         console.error("Video element reference is null");
@@ -80,31 +80,34 @@ export const useVideoStream = () => {
     }
   };
 
-  const startRecording = () => {
-    if (!stream) {
+  const startRecording = (streamToRecord: MediaStream) => {
+    console.log("Starting recording with stream:", streamToRecord);
+    if (!streamToRecord) {
       console.error("No media stream available");
       return;
     }
 
     try {
-      const mediaRecorder = new MediaRecorder(stream, {
+      const mediaRecorder = new MediaRecorder(streamToRecord, {
         mimeType: 'video/webm;codecs=vp8,opus'
       });
       mediaRecorderRef.current = mediaRecorder;
       const chunks: Blob[] = [];
 
       mediaRecorder.ondataavailable = (event) => {
+        console.log("Received data chunk of size:", event.data.size);
         if (event.data.size > 0) {
           chunks.push(event.data);
         }
       };
 
       mediaRecorder.onstop = () => {
+        console.log("MediaRecorder stopped, processing chunks...");
         const blob = new Blob(chunks, { type: 'video/webm' });
-        setRecordedChunks(chunks);
         const videoUrl = URL.createObjectURL(blob);
+        console.log("Created video URL:", videoUrl);
         setRecordedVideoUrl(videoUrl);
-        console.log("Recording completed, video URL created:", videoUrl);
+        setRecordedChunks(chunks);
 
         const downloadLink = document.createElement('a');
         downloadLink.href = videoUrl;
