@@ -77,10 +77,8 @@ const MockInterview = () => {
 
   const startInterview = async () => {
     if (!deviceSetupComplete) {
-      toast({
-        title: "设备未设置",
-        description: "请先完成设备设置再开始面试。",
-        variant: "destructive",
+      toast.error("设备未设置", {
+        description: "请先完成设备设置再开始面试。"
       });
       return;
     }
@@ -90,9 +88,8 @@ const MockInterview = () => {
     setTimeout(async () => {
       const success = await startStream();
       if (success) {
-        toast({
-          title: "面试开始",
-          description: "准备时间开始计时。",
+        toast.success("面试开始", {
+          description: "准备时间开始计时。"
         });
       } else {
         setStage(InterviewStage.SETTINGS);
@@ -104,18 +101,16 @@ const MockInterview = () => {
     if (stage === InterviewStage.REVIEW) {
       console.log("Interview stage changed to REVIEW, stopping recording");
       stopRecording();
-      toast({
-        title: "面试结束",
-        description: "您现在可以查看录制的视频。",
+      toast.success("面试结束", {
+        description: "您现在可以查看录制的视频。"
       });
     }
-  }, [stage, stopRecording, toast]);
+  }, [stage, stopRecording]);
 
   const handleDeviceSetupComplete = () => {
     setDeviceSetupComplete(true);
-    toast({
-      title: "设备设置完成",
-      description: "您现在可以开始设置面试参数。",
+    toast.success("设备设置完成", {
+      description: "您现在可以开始设置面试参数。"
     });
   };
 
