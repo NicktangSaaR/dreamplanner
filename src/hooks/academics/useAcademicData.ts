@@ -7,7 +7,7 @@ export const useAcademicData = (
   externalCourses?: Course[],
   onCoursesChange?: (courses: Course[]) => void
 ) => {
-  const { studentId } = useParams<{ studentId: string }>();
+  const { studentId = '' } = useParams<{ studentId: string }>();
   const { profile } = useProfile();
   
   // If no studentId in URL params, use the profile id
@@ -21,19 +21,6 @@ export const useAcademicData = (
     addCourse,
     updateCourse,
   } = useCourses(externalCourses, effectiveStudentId);
-
-  // Don't return until we have a valid student ID
-  if (!effectiveStudentId) {
-    console.log("useAcademicData - No effective student ID available");
-    return {
-      studentId: null,
-      courses: [],
-      isLoading: true,
-      addCourse,
-      updateCourse,
-      onCoursesChange,
-    };
-  }
 
   return {
     studentId: effectiveStudentId,

@@ -9,16 +9,19 @@ import { Badge } from "@/components/ui/badge";
 
 export default function StudentSummaryPage() {
   const navigate = useNavigate();
-  const { studentId } = useParams();
+  const { studentId = '' } = useParams<{ studentId: string }>();
   console.log("StudentSummaryPage - Received studentId:", studentId);
 
   // Fetch student profile
   const { data: profile } = useQuery({
     queryKey: ["student-profile", studentId],
     queryFn: async () => {
-      if (!studentId) throw new Error("No student ID provided");
+      if (!studentId) {
+        console.error("No student ID provided");
+        throw new Error("No student ID provided");
+      }
       
-      console.log("Fetching student profile data");
+      console.log("Fetching student profile data for ID:", studentId);
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -40,8 +43,12 @@ export default function StudentSummaryPage() {
   const { data: courses = [] } = useQuery({
     queryKey: ["student-courses", studentId],
     queryFn: async () => {
-      if (!studentId) return [];
+      if (!studentId) {
+        console.log("No student ID available for courses query");
+        return [];
+      }
       
+      console.log("Fetching courses for student:", studentId);
       const { data, error } = await supabase
         .from("courses")
         .select("*")
@@ -53,12 +60,12 @@ export default function StudentSummaryPage() {
         throw error;
       }
 
+      console.log("Fetched courses:", data);
       return data;
     },
     enabled: !!studentId,
   });
 
-  // Fetch college applications
   const { data: applications = [] } = useQuery({
     queryKey: ["student-applications", studentId],
     queryFn: async () => {
@@ -80,7 +87,6 @@ export default function StudentSummaryPage() {
     enabled: !!studentId,
   });
 
-  // Fetch extracurricular activities
   const { data: activities = [] } = useQuery({
     queryKey: ["student-activities", studentId],
     queryFn: async () => {
@@ -115,11 +121,15 @@ export default function StudentSummaryPage() {
     navigate(-1);
   };
 
+  if (!studentId) {
+    toast.error("No student ID provided");
+    return null;
+  }
+
   if (!profile) {
     return <div>Loading...</div>;
   }
 
-  // Calculate GPA
   const calculateCurrentGPA = () => {
     if (courses.length === 0) return "0.00";
     const validCourses = courses.filter(course => course.gpa_value !== null);
@@ -253,4 +263,3 @@ export default function StudentSummaryPage() {
       </Card>
     </div>
   );
-}
