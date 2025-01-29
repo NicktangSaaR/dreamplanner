@@ -1,14 +1,9 @@
 import { useParams } from "react-router-dom";
 import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
-import AcademicsSection from "@/components/college-planning/AcademicsSection";
-import ExtracurricularSection from "@/components/college-planning/ExtracurricularSection";
-import NotesSection from "@/components/college-planning/NotesSection";
-import TodoSection from "@/components/college-planning/TodoSection";
-import CollegeListSection from "@/components/college-planning/CollegeListSection";
+import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useState } from "react";
 import { Course } from "@/components/college-planning/types/course";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function StudentDashboard() {
   const { studentId } = useParams();
@@ -27,45 +22,24 @@ export default function StudentDashboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="container mx-auto px-4 py-6 space-y-8">
+      <div className="max-w-7xl mx-auto">
         <DashboardHeader />
-        
-        <StatisticsCards 
-          courses={courses}
-          activities={activities}
-          notes={notes}
-          todoStats={getTodoStats()}
-        />
-
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          {/* Left Column */}
-          <div className="space-y-8">
-            <ScrollArea className="h-[calc(100vh-2rem)]">
-              <div className="space-y-8 pr-4">
-                <AcademicsSection
-                  courses={courses}
-                  onCoursesChange={setCourses}
-                />
-                <ExtracurricularSection 
-                  onActivitiesChange={setActivities}
-                />
-              </div>
-            </ScrollArea>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-8">
-            <ScrollArea className="h-[calc(100vh-2rem)]">
-              <div className="space-y-8 pr-4">
-                <CollegeListSection />
-                <NotesSection 
-                  onNotesChange={setNotes}
-                />
-                <TodoSection />
-              </div>
-            </ScrollArea>
-          </div>
+        <div className="mt-8">
+          <StatisticsCards 
+            courses={courses}
+            activities={activities}
+            notes={notes}
+            todoStats={getTodoStats()}
+          />
+        </div>
+        <div className="mt-8">
+          <DashboardTabs
+            courses={courses}
+            onCoursesChange={setCourses}
+            onActivitiesChange={setActivities}
+            onNotesChange={setNotes}
+          />
         </div>
       </div>
     </div>
