@@ -44,8 +44,8 @@ const NotesList = memo(({
         </Button>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[300px] sm:h-[400px] w-full rounded-md border">
-          <div className="space-y-3 p-4">
+        <ScrollArea className="h-[300px] sm:h-[400px] w-full rounded-md border p-4">
+          <div className="space-y-3">
             {notes.map((note) => (
               <NoteCard
                 key={note.id}

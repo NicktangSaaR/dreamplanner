@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { useNotes } from "@/hooks/useNotes";
 import NoteDialog from "./NoteDialog";
 import NotesList from "./NotesList";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface Note {
   id: string;
@@ -19,6 +19,9 @@ interface NotesSectionProps {
 }
 
 export default function NotesSection({ onNotesChange }: NotesSectionProps) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
+  
   const {
     notes,
     createNote,
@@ -40,22 +43,43 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
     }
   }, [notes, onNotesChange]);
 
+  const handleCreateNote = useCallback(() => {
+    setEditingNote(null);
+    setIsDialogOpen(true);
+  }, []);
+
+  const handleEditNote = useCallback((note: Note) => {
+    setEditingNote(note);
+    setIsDialogOpen(true);
+  }, []);
+
+  const handleDialogClose = useCallback(() => {
+    setIsDialogOpen(false);
+    setEditingNote(null);
+  }, []);
+
   return (
     <Card className="w-full">
       <NotesList
         notes={notes}
-        onCreateNote={() => {
-          // Dialog handling is done in NoteDialog
-        }}
+        onCreateNote={handleCreateNote}
         onTogglePin={handleTogglePin}
         onToggleStar={handleToggleStar}
-        onEdit={updateNote}
+        onEdit={handleEditNote}
         canEditNote={canEditNote}
       />
       <NoteDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
         onSubmit={async (data) => {
-          await createNote(data);
+          if (editingNote) {
+            await updateNote({ ...editingNote, ...data });
+          } else {
+            await createNote(data);
+          }
+          handleDialogClose();
         }}
+        editingNote={editingNote}
       />
     </Card>
   );
