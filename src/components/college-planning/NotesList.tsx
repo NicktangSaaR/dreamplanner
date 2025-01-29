@@ -1,5 +1,5 @@
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import NoteCard from "./NoteCard";
@@ -11,7 +11,6 @@ interface Note {
   content: string;
   date: string;
   author_name?: string;
-  author_id?: string;
   is_pinned?: boolean;
   stars?: number;
 }
@@ -25,7 +24,6 @@ interface NotesListProps {
   canEditNote: (note: Note) => boolean;
 }
 
-// Memoize the component to prevent unnecessary re-renders
 const NotesList = memo(({
   notes,
   onCreateNote,
@@ -39,15 +37,15 @@ const NotesList = memo(({
   return (
     <Card className="shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle>Notes</CardTitle>
-        <Button onClick={onCreateNote} size="sm" className="whitespace-nowrap">
-          <Plus className="h-4 w-4 mr-2" />
+        <h3 className="text-lg font-semibold">Notes</h3>
+        <Button onClick={onCreateNote} variant="outline" size="sm">
+          <Plus className="h-4 w-4 mr-1" />
           Add Note
         </Button>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[300px] sm:h-[400px] w-full pr-4">
-          <div className="space-y-3">
+        <ScrollArea className="h-[300px] sm:h-[400px] w-full rounded-md border">
+          <div className="space-y-3 p-4">
             {notes.map((note) => (
               <NoteCard
                 key={note.id}
@@ -59,9 +57,9 @@ const NotesList = memo(({
               />
             ))}
             {notes.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
+              <div className="text-center text-muted-foreground py-8">
                 No notes yet. Click "Add Note" to create one.
-              </p>
+              </div>
             )}
           </div>
         </ScrollArea>
@@ -70,7 +68,6 @@ const NotesList = memo(({
   );
 });
 
-// Add display name for debugging purposes
 NotesList.displayName = "NotesList";
 
 export default NotesList;
