@@ -19,10 +19,18 @@ export const useCoursesQuery = (externalCourses?: Course[]) => {
         throw new Error('No authenticated user found');
       }
 
+      // Get the current URL path
+      const path = window.location.pathname;
+      // Extract student ID from the URL if it exists
+      const studentIdMatch = path.match(/student-dashboard\/([^/]+)/);
+      const studentId = studentIdMatch ? studentIdMatch[1] : user.id;
+
+      console.log('Fetching courses for student ID:', studentId);
+
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('student_id', user.id)
+        .eq('student_id', studentId)
         .order('created_at', { ascending: false });
 
       if (error) {
