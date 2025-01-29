@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, BookOpen, CheckCircle2, ListTodo, StickyNote, Star } from "lucide-react";
+import { calculateGPA, GRADE_TO_GPA } from "./academics/GradeCalculator";
 
 interface StatisticsCardsProps {
   courses: Array<{
     grade: string;
+    course_type: string;
+    grade_type?: string;
   }>;
   activities: Array<{
     timeCommitment: string;
@@ -21,20 +24,16 @@ interface StatisticsCardsProps {
 export default function StatisticsCards({ courses, activities, notes, todoStats }: StatisticsCardsProps) {
   console.log("StatisticsCards - Current notes count:", notes.length);
 
-  const calculateGPA = (courses: Array<{ grade: string }>) => {
-    const gradePoints: { [key: string]: number } = {
-      'A': 4.0, 'A-': 3.7,
-      'B+': 3.3, 'B': 3.0, 'B-': 2.7,
-      'C+': 2.3, 'C': 2.0, 'C-': 1.7,
-      'D+': 1.3, 'D': 1.0, 'F': 0.0
-    };
-
-    const validGrades = courses.filter(course => course.grade in gradePoints);
-    if (validGrades.length === 0) return 0;
-
-    const totalPoints = validGrades.reduce((sum, course) => 
-      sum + (gradePoints[course.grade] || 0), 0);
-    return (totalPoints / validGrades.length).toFixed(2);
+  const calculateCurrentGPA = () => {
+    if (courses.length === 0) return "0.00";
+    const validCourses = courses.filter(course => course.grade !== "In Progress");
+    if (validCourses.length === 0) return "0.00";
+    
+    const totalGPA = validCourses.reduce((sum, course) => {
+      return sum + calculateGPA(course.grade, course.course_type || 'Regular', course.grade_type);
+    }, 0);
+    
+    return (totalGPA / validCourses.length).toFixed(2);
   };
 
   const calculateWeeklyHours = (activities: Array<{ timeCommitment: string }>) => {
@@ -74,7 +73,7 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">GPA: {calculateGPA(courses)}</div>
+          <div className="text-2xl font-bold">GPA: {calculateCurrentGPA()}</div>
           <div className="text-sm text-muted-foreground space-y-1">
             <p>{courses.length} course{courses.length !== 1 ? 's' : ''}</p>
             <div className="flex gap-2 flex-wrap">
