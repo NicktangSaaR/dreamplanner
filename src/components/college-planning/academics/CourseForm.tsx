@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle } from "lucide-react";
 import { GRADE_TO_GPA, COURSE_TYPE_BONUS, SPECIAL_GRADES } from "./GradeCalculator";
+import { useToast } from "@/components/ui/use-toast";
 
 interface CourseFormProps {
   newCourse: {
@@ -21,17 +22,44 @@ interface CourseFormProps {
 }
 
 const GRADE_LEVELS = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
+const SEMESTERS = ['Fall', 'Spring', 'Summer'];
 
 export default function CourseForm({ newCourse, onCourseChange, onAddCourse, academicYears }: CourseFormProps) {
+  const { toast } = useToast();
+
+  const handleSubmit = () => {
+    console.log("Attempting to add course:", newCourse);
+    
+    // Validate required fields
+    if (!newCourse.name || !newCourse.grade || !newCourse.grade_level || !newCourse.academic_year) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // If validation passes, call onAddCourse
+    onAddCourse();
+    
+    // Show success toast
+    toast({
+      title: "Success",
+      description: "Course added successfully",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-6 gap-4">
         <div>
-          <Label htmlFor="courseName">Course Name</Label>
+          <Label htmlFor="courseName">Course Name *</Label>
           <Input
             id="courseName"
             value={newCourse.name}
             onChange={(e) => onCourseChange('name', e.target.value)}
+            required
           />
         </div>
         <div>
@@ -50,7 +78,7 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
           </Select>
         </div>
         <div>
-          <Label htmlFor="grade">Grade</Label>
+          <Label htmlFor="grade">Grade *</Label>
           {newCourse.grade_type === '100-point' ? (
             <Select
               value={newCourse.grade}
@@ -109,7 +137,7 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
           </Select>
         </div>
         <div>
-          <Label htmlFor="gradeLevel">Grade Level</Label>
+          <Label htmlFor="gradeLevel">Grade Level *</Label>
           <Select
             value={newCourse.grade_level}
             onValueChange={(value) => onCourseChange('grade_level', value)}
@@ -127,7 +155,7 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
           </Select>
         </div>
         <div>
-          <Label htmlFor="academicYear">Academic Year</Label>
+          <Label htmlFor="academicYear">Academic Year *</Label>
           <Select
             value={newCourse.academic_year}
             onValueChange={(value) => onCourseChange('academic_year', value)}
@@ -145,7 +173,25 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
           </Select>
         </div>
       </div>
-      <Button onClick={onAddCourse} className="w-full">
+      <div>
+        <Label htmlFor="semester">Semester</Label>
+        <Select
+          value={newCourse.semester}
+          onValueChange={(value) => onCourseChange('semester', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select semester" />
+          </SelectTrigger>
+          <SelectContent>
+            {SEMESTERS.map((semester) => (
+              <SelectItem key={semester} value={semester}>
+                {semester}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <Button onClick={handleSubmit} className="w-full">
         <PlusCircle className="mr-2 h-4 w-4" />
         Add Course
       </Button>
