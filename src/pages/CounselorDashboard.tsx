@@ -1,17 +1,17 @@
 import { useNavigate } from "react-router-dom";
 import { useCounselorStudents } from "@/hooks/useCounselorStudents";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, LogOut, User, Video } from "lucide-react";
 import StudentCard from "@/components/college-planning/StudentCard";
-import AddStudentDialog from "@/components/college-planning/AddStudentDialog";
+import InviteStudentDialog from "@/components/college-planning/InviteStudentDialog";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function CounselorDashboard() {
   const navigate = useNavigate();
-  const { data: students = [], isLoading } = useCounselorStudents();
-  const [showAddStudent, setShowAddStudent] = useState(false);
+  const { data: students = [], isLoading, refetch } = useCounselorStudents();
   const [counselorId, setCounselorId] = useState('');
+  const [showInviteStudent, setShowInviteStudent] = useState(false);
 
   useEffect(() => {
     const fetchCounselorId = async () => {
@@ -27,6 +27,11 @@ export default function CounselorDashboard() {
     navigate(`/counselor-dashboard/student/${studentId}`);
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -35,10 +40,32 @@ export default function CounselorDashboard() {
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">My Students</h1>
-        <Button onClick={() => setShowAddStudent(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Student
-        </Button>
+        <div className="flex items-center gap-4">
+          <InviteStudentDialog 
+            counselorId={counselorId}
+          />
+          <Button 
+            variant="outline"
+            onClick={() => navigate('/mock-interview')}
+          >
+            <Video className="mr-2 h-4 w-4" />
+            Mock Interview
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={() => navigate('/profile')}
+          >
+            <User className="mr-2 h-4 w-4" />
+            My Profile
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={handleLogout}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Log Out
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -50,13 +77,6 @@ export default function CounselorDashboard() {
           />
         ))}
       </div>
-
-      <AddStudentDialog
-        counselorId={counselorId}
-        onStudentAdded={() => {}}
-        open={showAddStudent}
-        onOpenChange={setShowAddStudent}
-      />
     </div>
   );
 }
