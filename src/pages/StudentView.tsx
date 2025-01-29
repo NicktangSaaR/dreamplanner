@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import TodoSection from "@/components/college-planning/TodoSection";
+import CollegeListSection from "@/components/college-planning/CollegeListSection";
 import StudentProfile from "@/components/college-planning/student-summary/StudentProfile";
 import RecentNotes from "@/components/college-planning/student-summary/RecentNotes";
 import ActivitiesSection from "@/components/college-planning/student-summary/ActivitiesSection";
@@ -81,6 +82,7 @@ export default function StudentView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-6">
             <TodoSection />
+            <CollegeListSection />
             <SharedFolderSection studentId={studentId || ""} />
           </div>
 
