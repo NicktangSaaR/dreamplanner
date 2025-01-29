@@ -57,7 +57,11 @@ const MockInterview = () => {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      console.log("Logging out...");
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      console.log("Logged out successfully");
       toast.success("Successfully logged out");
       navigate("/");
     } catch (error) {
