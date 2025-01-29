@@ -146,7 +146,10 @@ export default function StudentSummaryPage() {
             <ProfileSection profile={profile} />
           </div>
           <div className="bg-white rounded-lg shadow-sm">
-            <AcademicSection courses={courses} />
+            <AcademicSection 
+              courses={courses} 
+              studentId={studentId}
+            />
           </div>
         </div>
 
