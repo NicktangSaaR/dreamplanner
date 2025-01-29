@@ -42,9 +42,9 @@ export const useCourses = (externalCourses?: Course[]) => {
       return data as Course[];
     },
     enabled: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     refetchOnMount: true,
-    staleTime: 0, // Always fetch fresh data
+    staleTime: 0,
   });
 
   const addCourseMutation = useMutation({
@@ -75,7 +75,11 @@ export const useCourses = (externalCourses?: Course[]) => {
       console.log('Successfully added course:', data);
       return data;
     },
-    onSuccess: async () => {
+    onSuccess: async (newCourse) => {
+      // Immediately update the cache with the new course
+      const currentCourses = queryClient.getQueryData<Course[]>(['courses']) || [];
+      queryClient.setQueryData(['courses'], [newCourse, ...currentCourses]);
+      
       await queryClient.invalidateQueries({ queryKey: ['courses'] });
       await refetch();
       toast.success("Course added successfully");
@@ -105,7 +109,14 @@ export const useCourses = (externalCourses?: Course[]) => {
       console.log('Successfully updated course:', data);
       return data;
     },
-    onSuccess: async () => {
+    onSuccess: async (updatedCourse) => {
+      // Immediately update the cache with the updated course
+      const currentCourses = queryClient.getQueryData<Course[]>(['courses']) || [];
+      const updatedCourses = currentCourses.map(course => 
+        course.id === updatedCourse.id ? updatedCourse : course
+      );
+      queryClient.setQueryData(['courses'], updatedCourses);
+      
       await queryClient.invalidateQueries({ queryKey: ['courses'] });
       await refetch();
       toast.success("Course updated successfully");
