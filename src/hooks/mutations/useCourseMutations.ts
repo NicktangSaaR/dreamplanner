@@ -1,9 +1,11 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Course } from "@/components/college-planning/types/course";
 import { toast } from "sonner";
 
 export const useCourseMutations = (refetch: () => void, studentId?: string) => {
+  const queryClient = useQueryClient();
+
   const addCourse = useMutation({
     mutationFn: async (newCourse: Omit<Course, 'id'>) => {
       console.log('Adding new course:', newCourse);
@@ -28,6 +30,7 @@ export const useCourseMutations = (refetch: () => void, studentId?: string) => {
     },
     onSuccess: () => {
       toast.success('Course added successfully');
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
       refetch();
     },
     onError: (error) => {
@@ -56,6 +59,7 @@ export const useCourseMutations = (refetch: () => void, studentId?: string) => {
     },
     onSuccess: () => {
       toast.success('Course updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
       refetch();
     },
     onError: (error) => {
