@@ -2,8 +2,6 @@ import { useParams } from "react-router-dom";
 import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import TodoSection from "@/components/college-planning/TodoSection";
@@ -11,7 +9,8 @@ import SharedFolderCard from "@/components/college-planning/SharedFolderCard";
 import { useState } from "react";
 import SharedFolderDialog from "@/components/college-planning/SharedFolderDialog";
 import { toast } from "sonner";
-import ActivitiesSection from "@/components/college-planning/student-summary/ActivitiesSection";
+import StudentProfile from "@/components/college-planning/student-summary/StudentProfile";
+import RecentNotes from "@/components/college-planning/student-summary/RecentNotes";
 
 export default function StudentView() {
   const { studentId } = useParams();
@@ -61,15 +60,7 @@ export default function StudentView() {
         .eq("student_id", studentId);
 
       if (error) throw error;
-      
-      // Transform the data to match the expected format
-      return data.map(activity => ({
-        id: activity.id,
-        name: activity.name,
-        role: activity.role,
-        description: activity.description,
-        timeCommitment: activity.time_commitment, // Transform snake_case to camelCase
-      }));
+      return data;
     },
   });
 
@@ -165,36 +156,8 @@ export default function StudentView() {
       <DashboardHeader />
       
       <div className="space-y-6">
-        {/* Profile Summary Card */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h2 className="text-2xl font-bold mb-4">{profile.full_name}</h2>
-                <div className="space-y-2 text-sm">
-                  <p><span className="font-medium">Grade:</span> {profile.grade || "Not set"}</p>
-                  <p><span className="font-medium">School:</span> {profile.school || "Not set"}</p>
-                  {profile.interested_majors && profile.interested_majors.length > 0 && (
-                    <p><span className="font-medium">Interested Majors:</span> {profile.interested_majors.join(", ")}</p>
-                  )}
-                  {profile.graduation_school && (
-                    <p><span className="font-medium">Graduation School:</span> {profile.graduation_school}</p>
-                  )}
-                </div>
-              </div>
-              <div>
-                {profile.background_intro && (
-                  <div>
-                    <h3 className="font-medium mb-2">Background</h3>
-                    <p className="text-sm text-muted-foreground">{profile.background_intro}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StudentProfile profile={profile} />
 
-        {/* Statistics Overview */}
         <StatisticsCards
           courses={courses}
           activities={activities}
@@ -202,9 +165,7 @@ export default function StudentView() {
           todoStats={todoStats}
         />
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
           <div className="space-y-6">
             <TodoSection />
             <SharedFolderCard
@@ -213,32 +174,7 @@ export default function StudentView() {
             />
           </div>
 
-          {/* Right Column - Scrollable Notes */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Recent Notes</h3>
-              <ScrollArea className="h-[400px]">
-                <div className="space-y-4">
-                  {notes.map((note) => (
-                    <div
-                      key={note.id}
-                      className="p-4 rounded-lg border bg-card"
-                    >
-                      <h4 className="font-medium">{note.title}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">{note.content}</p>
-                      <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-                        <span>{new Date(note.created_at!).toLocaleDateString()}</span>
-                        {note.author_name && <span>By: {note.author_name}</span>}
-                      </div>
-                    </div>
-                  ))}
-                  {notes.length === 0 && (
-                    <p className="text-center text-muted-foreground">No notes found</p>
-                  )}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+          <RecentNotes notes={notes} />
         </div>
       </div>
 
