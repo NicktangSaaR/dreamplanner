@@ -186,8 +186,8 @@ const features = [
     ),
   },
   {
-    title: "Counselor Connection",
-    description: "Direct communication with your counselor for guidance and support.",
+    title: "Built-in Mock Interview Practice",
+    description: "Practice your interview skills with our built-in mock interview system.",
     icon: (
       <svg
         className="w-6 h-6 text-primary"
