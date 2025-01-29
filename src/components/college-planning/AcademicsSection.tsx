@@ -65,7 +65,9 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
       console.log('Fetched courses:', data);
       return data as Course[];
     },
-    enabled: !externalCourses,
+    enabled: true, // Always enable the query
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchOnMount: true, // Refetch when component mounts
   });
 
   const courses = externalCourses || fetchedCourses;
@@ -99,12 +101,21 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
       console.log('Successfully added course:', data);
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
-      refetch();
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['courses'] });
+      await refetch(); // Explicitly refetch after invalidation
       toast({
         title: "Success",
         description: "Course added successfully",
+      });
+      setNewCourse({
+        name: "",
+        grade: "",
+        semester: "",
+        course_type: "Regular",
+        grade_level: "",
+        academic_year: "",
+        grade_type: "letter",
       });
     },
     onError: (error) => {
@@ -163,20 +174,10 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
     }
   }, [courses, onCoursesChange]);
 
-  const handleAddCourse = () => {
+  const handleAddCourse = async () => {
     if (newCourse.name && newCourse.grade && newCourse.semester && newCourse.grade_level && newCourse.academic_year) {
       console.log('Handling add course:', newCourse);
-      addCourseMutation.mutate(newCourse as Omit<Course, 'id'>);
-
-      setNewCourse({
-        name: "",
-        grade: "",
-        semester: "",
-        course_type: "Regular",
-        grade_level: "",
-        academic_year: "",
-        grade_type: "letter",
-      });
+      await addCourseMutation.mutateAsync(newCourse as Omit<Course, 'id'>);
     } else {
       toast({
         title: "Missing Information",
