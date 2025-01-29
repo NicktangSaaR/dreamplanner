@@ -24,14 +24,14 @@ interface NotesListProps {
   canEditNote: (note: Note) => boolean;
 }
 
-const NotesList = memo(({
+const NotesList = memo(function NotesList({
   notes,
   onCreateNote,
   onTogglePin,
   onToggleStar,
   onEdit,
   canEditNote,
-}: NotesListProps) => {
+}: NotesListProps) {
   console.log("NotesList - Rendering with notes:", notes);
 
   return (
