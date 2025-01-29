@@ -164,18 +164,16 @@ export default function StudentView() {
       <div className="space-y-6">
         <StudentProfile profile={profile} />
         
-        <div className="grid grid-cols-1 gap-6">
-          <AcademicSection courses={courses} />
-          
-          <StatisticsCards
-            courses={courses}
-            activities={transformedActivities}
-            notes={notes}
-            todoStats={todoStats}
-          />
+        <StatisticsCards
+          courses={courses}
+          activities={transformedActivities}
+          notes={notes}
+          todoStats={todoStats}
+        />
 
-          <ActivitiesSection activities={activities} />
-        </div>
+        <AcademicSection courses={courses} />
+        
+        <ActivitiesSection activities={activities} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-6">
