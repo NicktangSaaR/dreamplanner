@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -19,13 +19,23 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log("Attempting login with email:", email);
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       });
 
       if (signInError) {
-        toast.error(signInError.message);
+        console.error("Login error:", signInError);
+        
+        // Handle specific error cases
+        if (signInError.message.includes("Invalid login credentials")) {
+          toast.error("Invalid email or password. Please try again.");
+        } else if (signInError.message.includes("Email not confirmed")) {
+          toast.error("Please verify your email before logging in.");
+        } else {
+          toast.error(signInError.message);
+        }
         return;
       }
 
@@ -68,8 +78,8 @@ export default function Login() {
 
       toast.success("Successfully logged in!");
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("An error occurred during login");
+      console.error("Unexpected login error:", error);
+      toast.error("An unexpected error occurred during login");
     } finally {
       setIsLoading(false);
     }
