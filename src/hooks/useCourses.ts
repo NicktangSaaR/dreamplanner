@@ -11,8 +11,12 @@ export const useCourses = (externalCourses?: Course[]) => {
 
   const { addCourse, updateCourse } = useCourseMutations(refetch);
 
+  // If external courses are provided, use those, otherwise use fetched courses
+  const finalCourses = externalCourses ?? courses;
+  console.log("useCourses - Final courses:", finalCourses);
+
   return {
-    courses: externalCourses ?? courses,
+    courses: finalCourses,
     isLoading,
     addCourse,
     updateCourse,

@@ -16,7 +16,7 @@ export const useCoursesQuery = (externalCourses?: Course[]) => {
       
       if (userError || !user) {
         console.error('No authenticated user found');
-        return [];
+        throw new Error('No authenticated user found');
       }
 
       const { data, error } = await supabase
