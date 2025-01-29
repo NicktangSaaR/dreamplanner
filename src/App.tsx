@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AuthLayout from "@/components/auth/AuthLayout";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
-import CollegePlanning from "@/pages/CollegePlanning";
 import Profile from "@/pages/Profile";
 import CounselorDashboard from "@/pages/CounselorDashboard";
 import StudentDashboard from "@/pages/StudentDashboard";
@@ -27,7 +26,6 @@ export default function App() {
           <Route path="/signup" element={<Signup />} />
           <Route element={<AuthLayout />}>
             <Route path="/mock-interview" element={<MockInterview />} />
-            <Route path="/college-planning" element={<CollegePlanning />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/counselor-dashboard" element={<CounselorDashboard />} />
             <Route 
