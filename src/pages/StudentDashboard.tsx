@@ -34,6 +34,15 @@ interface ActiveUser {
   lastActive: string;
 }
 
+interface PresenceState {
+  [key: string]: {
+    id: string;
+    name: string;
+    type: 'student' | 'counselor';
+    lastActive: string;
+  }[];
+}
+
 export default function StudentDashboard() {
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
@@ -97,23 +106,25 @@ export default function StudentDashboard() {
 
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannel.presenceState();
-        const users = Object.values(state).flat() as ActiveUser[];
+        const state = presenceChannel.presenceState() as PresenceState;
+        const users = Object.values(state).flat();
         setActiveUsers(users);
         console.log('Active users:', users);
       })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
-        toast.info(`${newPresences[0].name} joined the dashboard`);
+        const newUser = newPresences[0] as ActiveUser;
+        toast.info(`${newUser.name} joined the dashboard`);
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
-        toast.info(`${leftPresences[0].name} left the dashboard`);
+        const leftUser = leftPresences[0] as ActiveUser;
+        toast.info(`${leftUser.name} left the dashboard`);
       })
       .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
+        if (status === 'SUBSCRIBED' && profile) {
           await presenceChannel.track({
-            id: profile?.id,
-            name: profile?.full_name,
-            type: profile?.user_type,
+            id: profile.id,
+            name: profile.full_name || 'Anonymous',
+            type: profile.user_type as 'student' | 'counselor',
             lastActive: new Date().toISOString(),
           });
         }
