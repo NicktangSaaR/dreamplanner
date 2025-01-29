@@ -129,13 +129,20 @@ const MockInterview = () => {
     });
   };
 
+  const handleDeviceSetupBack = () => {
+    setShowDeviceSetup(false);
+  };
+
   const selectedQuestion = questions.find(q => q.id === settings.selectedQuestionId);
 
   const renderContent = () => {
     if (showDeviceSetup) {
       return (
         <div className="max-w-4xl mx-auto">
-          <DeviceSetup onComplete={handleDeviceSetupComplete} />
+          <DeviceSetup 
+            onComplete={handleDeviceSetupComplete} 
+            onBack={handleDeviceSetupBack}
+          />
         </div>
       );
     }
@@ -143,7 +150,10 @@ const MockInterview = () => {
     if (!deviceSetupComplete) {
       return (
         <div className="max-w-4xl mx-auto">
-          <DeviceSetup onComplete={handleDeviceSetupComplete} />
+          <DeviceSetup 
+            onComplete={handleDeviceSetupComplete}
+            onBack={handleDeviceSetupBack}
+          />
         </div>
       );
     }
