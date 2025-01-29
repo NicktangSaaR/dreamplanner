@@ -33,12 +33,15 @@ export const useVideoStream = () => {
       setStream(mediaStream);
       
       if (videoRef.current) {
+        console.log("Setting video stream to video element");
         videoRef.current.srcObject = mediaStream;
-        console.log("Video stream assigned to video element");
+        
+        // Force a reload of the video element
+        videoRef.current.load();
         
         try {
           await videoRef.current.play();
-          console.log("Video preview started successfully");
+          console.log("Video preview started playing");
         } catch (playError) {
           console.error("Error playing video:", playError);
           toast({

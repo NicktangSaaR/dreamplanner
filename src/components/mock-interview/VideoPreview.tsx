@@ -24,21 +24,17 @@ const VideoPreview = ({
       return;
     }
 
-    if (videoRef.current.srcObject) {
+    const videoElement = videoRef.current;
+    console.log("Video element found, checking stream...");
+    console.log("Stream status:", videoElement.srcObject ? "present" : "absent");
+
+    if (videoElement.srcObject) {
       console.log("Setting up video preview");
-      const playVideo = async () => {
-        try {
-          await videoRef.current?.play();
-          console.log("Video preview playing successfully");
-        } catch (error) {
-          console.error("Error playing video preview:", error);
-        }
-      };
-      playVideo();
-    } else {
-      console.warn("No video stream available");
+      videoElement.play()
+        .then(() => console.log("Video preview playing successfully"))
+        .catch(error => console.error("Error playing video preview:", error));
     }
-  }, [videoRef, videoRef.current?.srcObject]);
+  }, [videoRef]);
 
   return (
     <Card className="p-6">
