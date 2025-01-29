@@ -39,6 +39,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
     queryKey: ['courses'],
     queryFn: async () => {
       if (externalCourses) {
+        console.log('Using external courses:', externalCourses);
         return externalCourses;
       }
 
@@ -64,7 +65,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
       console.log('Fetched courses:', data);
       return data as Course[];
     },
-    enabled: !externalCourses, // Only run the query if external courses are not provided
+    enabled: !externalCourses,
   });
 
   const courses = externalCourses || fetchedCourses;
@@ -94,6 +95,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
         throw error;
       }
 
+      console.log('Successfully added course:', data);
       return data;
     },
     onSuccess: () => {
@@ -130,6 +132,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
         throw error;
       }
 
+      console.log('Successfully updated course:', data);
       return data;
     },
     onSuccess: () => {
@@ -160,6 +163,7 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
 
   const handleAddCourse = () => {
     if (newCourse.name && newCourse.grade && newCourse.semester && newCourse.grade_level && newCourse.academic_year) {
+      console.log('Handling add course:', newCourse);
       addCourseMutation.mutate(newCourse as Omit<Course, 'id'>);
 
       setNewCourse({
@@ -171,15 +175,23 @@ export default function AcademicsSection({ courses: externalCourses, onCoursesCh
         academic_year: "",
         grade_type: "letter",
       });
+    } else {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
     }
   };
 
   const handleEditCourse = (course: Course) => {
+    console.log('Handling edit course:', course);
     setEditingCourse(course);
   };
 
   const handleSaveEdit = () => {
     if (editingCourse) {
+      console.log('Saving edited course:', editingCourse);
       updateCourseMutation.mutate(editingCourse);
       setEditingCourse(null);
     }
