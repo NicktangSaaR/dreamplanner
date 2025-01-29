@@ -94,7 +94,8 @@ const Index = () => {
                 </Link>
                 <Button 
                   onClick={handleLogout}
-                  className="bg-primary hover:bg-primary/90 text-white transition-colors"
+                  variant="ghost"
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   Log out
                 </Button>
