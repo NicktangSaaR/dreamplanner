@@ -166,7 +166,7 @@ const Index = () => {
 
 const features = [
   {
-    title: "Smart Planning",
+    title: "Co-Working with your Planning Team",
     description: "Create and track your college application timeline with intelligent recommendations.",
     icon: (
       <svg
