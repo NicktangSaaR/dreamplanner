@@ -22,13 +22,7 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const { notes = [], createNote, updateNote, handleTogglePin, handleToggleStar } = useNotes();
 
-  // Only call onNotesChange when notes actually change
-  useEffect(() => {
-    if (onNotesChange && Array.isArray(notes)) {
-      onNotesChange(notes);
-    }
-  }, [notes, onNotesChange]);
-
+  // Memoize handlers to prevent unnecessary re-renders
   const handleCreateNote = useCallback(async (data: { title: string; content: string }) => {
     try {
       await createNote(data);
@@ -65,10 +59,12 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
     return Boolean(note?.id);
   }, []);
 
-  if (!Array.isArray(notes)) {
-    console.error("Notes is not an array:", notes);
-    return null;
-  }
+  // Only call onNotesChange when notes actually change
+  useEffect(() => {
+    if (onNotesChange && Array.isArray(notes)) {
+      onNotesChange(notes);
+    }
+  }, [notes, onNotesChange]);
 
   return (
     <div className="space-y-4">
