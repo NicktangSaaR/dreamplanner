@@ -211,7 +211,6 @@ export default function StudentView() {
               folder={sharedFolder}
               onEditClick={() => setIsEditingFolder(true)}
             />
-            <ActivitiesSection activities={activities} />
           </div>
 
           {/* Right Column - Scrollable Notes */}
