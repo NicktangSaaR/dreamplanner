@@ -52,7 +52,10 @@ const VideoPreview = ({
     const drawVideoFrame = () => {
       if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
         updateCanvasSize();
-        ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+        ctx.save();
+        ctx.scale(-1, 1); // Mirror the context horizontally
+        ctx.drawImage(videoElement, -canvasElement.width, 0, canvasElement.width, canvasElement.height);
+        ctx.restore();
       }
       requestAnimationFrame(drawVideoFrame);
     };
@@ -105,12 +108,11 @@ const VideoPreview = ({
               autoPlay
               playsInline
               muted
-              className="w-full h-full rounded-lg object-cover"
+              className="w-full h-full rounded-lg object-cover hidden"
             />
             <canvas
               ref={canvasRef}
-              className="w-full h-full rounded-lg object-cover absolute top-0 left-0"
-              style={{ transform: 'scaleX(-1)' }}
+              className="w-full h-full rounded-lg object-cover"
             />
           </>
         )}
