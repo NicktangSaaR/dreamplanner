@@ -11,6 +11,7 @@ import SharedFolderDialog from "@/components/college-planning/SharedFolderDialog
 import { toast } from "sonner";
 import StudentProfile from "@/components/college-planning/student-summary/StudentProfile";
 import RecentNotes from "@/components/college-planning/student-summary/RecentNotes";
+import ActivitiesSection from "@/components/college-planning/student-summary/ActivitiesSection";
 
 export default function StudentView() {
   const { studentId } = useParams();
@@ -162,6 +163,8 @@ export default function StudentView() {
       
       <div className="space-y-6">
         <StudentProfile profile={profile} />
+        
+        <ActivitiesSection activities={activities} />
 
         <StatisticsCards
           courses={courses}
