@@ -5,12 +5,13 @@ import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function StudentDashboard() {
   const { studentId } = useParams();
   const queryClient = useQueryClient();
+  const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
 
   console.log("StudentDashboard - Student ID:", studentId);
 
@@ -40,7 +41,15 @@ export default function StudentDashboard() {
     if (!studentId) return;
 
     console.log("Setting up real-time subscriptions for student:", studentId);
-    
+
+    // Clean up existing channels before creating new ones
+    channelsRef.current.forEach(channel => {
+      console.log("Removing existing channel");
+      supabase.removeChannel(channel);
+    });
+    channelsRef.current = [];
+
+    // Create new channels
     const channels = [
       supabase.channel('courses_changes')
         .on('postgres_changes', {
@@ -76,12 +85,16 @@ export default function StudentDashboard() {
     ];
 
     // Subscribe to all channels
-    Promise.all(channels.map(channel => channel.subscribe()));
+    Promise.all(channels.map(channel => channel.subscribe())).then(() => {
+      console.log("All channels subscribed successfully");
+      channelsRef.current = channels;
+    });
 
-    // Cleanup function to unsubscribe from all channels
+    // Cleanup function
     return () => {
       console.log("Cleaning up real-time subscriptions");
-      channels.forEach(channel => supabase.removeChannel(channel));
+      channelsRef.current.forEach(channel => supabase.removeChannel(channel));
+      channelsRef.current = [];
     };
   }, [studentId, invalidateCourses, invalidateActivities, invalidateNotes, invalidateTodos]);
 
