@@ -42,16 +42,36 @@ export default function Index() {
         setUserId(session.user.id);
       }
     };
+    
     checkAuth();
+
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
+      setIsAuthenticated(!!session);
+      setUserId(session?.user?.id || null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error("Error logging out");
-    } else {
-      toast.success("Logged out successfully");
-      navigate("/");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error logging out:", error);
+        toast.error("Error logging out");
+      } else {
+        setIsAuthenticated(false);
+        setUserId(null);
+        toast.success("Logged out successfully");
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Unexpected error during logout:", error);
+      toast.error("An unexpected error occurred");
     }
   };
 
