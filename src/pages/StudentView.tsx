@@ -78,9 +78,12 @@ export default function StudentView() {
           console.log('Todos changed, refreshing...');
           queryClient.invalidateQueries({ queryKey: ["student-todos", studentId] });
         }
-      )
-      .subscribe();
+      );
 
+    // Subscribe to the channel
+    channel.subscribe();
+
+    // Cleanup function
     return () => {
       channel.unsubscribe();
     };
