@@ -25,8 +25,9 @@ export default function StudentView() {
   useEffect(() => {
     if (!studentId) return;
 
-    const channel = supabase
-      .channel('student_data_changes')
+    const channel = supabase.channel('student_data_changes');
+
+    channel
       .on(
         'postgres_changes',
         {
