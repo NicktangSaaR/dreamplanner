@@ -74,8 +74,13 @@ const MockInterview = () => {
   const selectedQuestion = questions.find(q => q.id === settings.selectedQuestionId);
 
   const renderContent = () => {
+    // Always show device setup first if not completed
     if (!deviceSetupComplete) {
-      return <DeviceSetup onComplete={handleDeviceSetupComplete} />;
+      return (
+        <div className="max-w-3xl mx-auto">
+          <DeviceSetup onComplete={handleDeviceSetupComplete} />
+        </div>
+      );
     }
 
     if (stage === InterviewStage.SETTINGS) {
@@ -118,6 +123,15 @@ const MockInterview = () => {
               <div className="card p-6">
                 <h2 className="text-xl font-semibold mb-4">面试完成</h2>
                 <p>您现在可以查看录制的回答。</p>
+                <button
+                  onClick={() => {
+                    setStage(InterviewStage.SETTINGS);
+                    setDeviceSetupComplete(false);
+                  }}
+                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  开始新的面试
+                </button>
               </div>
             )}
           </>
