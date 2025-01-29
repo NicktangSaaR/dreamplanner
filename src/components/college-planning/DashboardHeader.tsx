@@ -1,4 +1,4 @@
-import { GraduationCap, User, LogOut } from "lucide-react";
+import { GraduationCap, User, LogOut, Video } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/useProfile";
@@ -37,6 +37,12 @@ export default function DashboardHeader() {
           </p>
         </div>
         <div className="flex gap-2 mt-4 sm:mt-0">
+          <Link to="/mock-interview">
+            <Button variant="default" className="w-full sm:w-auto flex items-center justify-center gap-2">
+              <Video className="h-4 w-4" />
+              Mock Interview
+            </Button>
+          </Link>
           <Link to="/profile">
             <Button variant="default" className="w-full sm:w-auto flex items-center justify-center gap-2">
               <User className="h-4 w-4" />
