@@ -37,6 +37,7 @@ export default function StudentDashboard() {
   console.log("StudentDashboard - studentId:", studentId);
   console.log("StudentDashboard - profile:", profile);
   console.log("Current notes count:", notes.length);
+  console.log("Current courses count:", courses.length);
 
   // Check access rights
   const { data: hasAccess, isLoading: checkingAccess } = useQuery({
@@ -118,6 +119,11 @@ export default function StudentDashboard() {
     setNotes(newNotes);
   };
 
+  const handleCoursesChange = (newCourses: Course[]) => {
+    console.log("Updating courses:", newCourses);
+    setCourses(newCourses);
+  };
+
   if (checkingAccess) {
     return <div>Loading...</div>;
   }
@@ -137,7 +143,7 @@ export default function StudentDashboard() {
       />
       <DashboardTabs
         courses={courses}
-        onCoursesChange={setCourses}
+        onCoursesChange={handleCoursesChange}
         onActivitiesChange={setActivities}
         onNotesChange={handleNotesChange}
       />
