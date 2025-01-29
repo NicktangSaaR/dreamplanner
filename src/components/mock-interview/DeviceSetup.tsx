@@ -1,19 +1,65 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DeviceSetupProps {
   onComplete: () => void;
   onBack?: () => void;
 }
 
+interface MediaDevice {
+  deviceId: string;
+  label: string;
+}
+
 const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
   const [isCameraWorking, setIsCameraWorking] = useState(false);
   const [isAudioWorking, setIsAudioWorking] = useState(false);
+  const [videoDevices, setVideoDevices] = useState<MediaDevice[]>([]);
+  const [audioDevices, setAudioDevices] = useState<MediaDevice[]>([]);
+  const [selectedVideoDevice, setSelectedVideoDevice] = useState<string>("");
+  const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+
+  useEffect(() => {
+    const loadDevices = async () => {
+      try {
+        // 请求权限以获取设备标签
+        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        
+        const videos = devices.filter(device => device.kind === 'videoinput')
+          .map(device => ({
+            deviceId: device.deviceId,
+            label: device.label || `摄像头 ${videoDevices.length + 1}`
+          }));
+        
+        const audios = devices.filter(device => device.kind === 'audioinput')
+          .map(device => ({
+            deviceId: device.deviceId,
+            label: device.label || `麦克风 ${audioDevices.length + 1}`
+          }));
+
+        setVideoDevices(videos);
+        setAudioDevices(audios);
+
+        if (videos.length > 0) setSelectedVideoDevice(videos[0].deviceId);
+        if (audios.length > 0) setSelectedAudioDevice(audios[0].deviceId);
+
+        console.log("Available video devices:", videos);
+        console.log("Available audio devices:", audios);
+      } catch (error) {
+        console.error("Error loading devices:", error);
+        toast.error("无法加载设备列表，请确保允许浏览器访问摄像头和麦克风。");
+      }
+    };
+
+    loadDevices();
+  }, []);
 
   const startCamera = async () => {
     try {
@@ -21,9 +67,18 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
         stream.getTracks().forEach(track => track.stop());
       }
 
+      console.log("Starting camera with devices:", {
+        video: selectedVideoDevice,
+        audio: selectedAudioDevice
+      });
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
+        video: {
+          deviceId: selectedVideoDevice ? { exact: selectedVideoDevice } : undefined
+        },
+        audio: {
+          deviceId: selectedAudioDevice ? { exact: selectedAudioDevice } : undefined
+        }
       });
 
       setStream(mediaStream);
@@ -32,7 +87,7 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
         videoRef.current.srcObject = mediaStream;
         setIsCameraWorking(true);
         setIsAudioWorking(true);
-        toast.success("摄像头和麦克风已成功开启");
+        toast.success("设备测试已开始");
       }
     } catch (error) {
       console.error("Error accessing media devices:", error);
@@ -115,6 +170,38 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
         </div>
 
         <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span>摄像头：</span>
+            <Select value={selectedVideoDevice} onValueChange={setSelectedVideoDevice}>
+              <SelectTrigger className="w-[260px]">
+                <SelectValue placeholder="选择摄像头" />
+              </SelectTrigger>
+              <SelectContent>
+                {videoDevices.map((device) => (
+                  <SelectItem key={device.deviceId} value={device.deviceId}>
+                    {device.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span>麦克风：</span>
+            <Select value={selectedAudioDevice} onValueChange={setSelectedAudioDevice}>
+              <SelectTrigger className="w-[260px]">
+                <SelectValue placeholder="选择麦克风" />
+              </SelectTrigger>
+              <SelectContent>
+                {audioDevices.map((device) => (
+                  <SelectItem key={device.deviceId} value={device.deviceId}>
+                    {device.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex items-center justify-between">
             <span>摄像头状态：</span>
             <span className={isCameraWorking ? "text-green-500" : "text-red-500"}>
