@@ -37,22 +37,11 @@ export const useVideoStream = () => {
       console.log("Camera and microphone access granted successfully");
       setStream(mediaStream);
 
-      // Ensure videoRef is available before setting srcObject
       if (videoRef.current) {
         console.log("Setting video source object");
         videoRef.current.srcObject = mediaStream;
-        
-        try {
-          await videoRef.current.play();
-          console.log("Video preview started successfully");
-        } catch (error) {
-          console.error("Error playing video:", error);
-          toast({
-            title: "视频播放错误",
-            description: "无法播放视频预览，请检查浏览器权限设置。",
-            variant: "destructive",
-          });
-        }
+        startRecording();
+        return true;
       } else {
         console.error("Video element reference is null");
         toast({
@@ -62,8 +51,6 @@ export const useVideoStream = () => {
         });
         return false;
       }
-
-      return true;
     } catch (error) {
       console.error("Error accessing media devices:", error);
       let errorMessage = "无法访问摄像头或麦克风。";
@@ -117,6 +104,7 @@ export const useVideoStream = () => {
         setRecordedChunks(chunks);
         const videoUrl = URL.createObjectURL(blob);
         setRecordedVideoUrl(videoUrl);
+        console.log("Recording completed, video URL created:", videoUrl);
 
         const downloadLink = document.createElement('a');
         downloadLink.href = videoUrl;
@@ -145,9 +133,10 @@ export const useVideoStream = () => {
   };
 
   const stopRecording = () => {
+    console.log("Stopping recording...");
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
-      console.log("Recording stopped");
+      console.log("MediaRecorder stopped");
       setIsRecording(false);
     }
     if (stream) {

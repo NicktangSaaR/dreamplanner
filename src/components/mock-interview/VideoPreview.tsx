@@ -31,22 +31,26 @@ const VideoPreview = ({
   }, [isReviewStage, recordedVideoUrl]);
 
   const handleStopRecording = () => {
+    console.log("Stopping recording and saving video...");
     onStopRecording();
-    navigate(-1);
   };
 
-  console.log("VideoPreview rendering, isReviewStage:", isReviewStage);
-  console.log("VideoRef current:", videoRef.current);
+  console.log("VideoPreview rendering:", {
+    isReviewStage,
+    recordedVideoUrl,
+    hasVideoRef: !!videoRef.current,
+    hasRecordedVideoRef: !!recordedVideoRef.current
+  });
 
   return (
     <Card className="p-6">
-      <div className="w-full aspect-video bg-gray-100 rounded-lg mb-4">
+      <div className="w-full aspect-video bg-gray-100 rounded-lg mb-4 overflow-hidden">
         {isReviewStage && recordedVideoUrl ? (
           <video
             ref={recordedVideoRef}
             controls
             playsInline
-            className="w-full h-full rounded-lg"
+            className="w-full h-full rounded-lg object-cover"
           />
         ) : (
           <video
@@ -54,7 +58,7 @@ const VideoPreview = ({
             autoPlay
             playsInline
             muted
-            className="w-full h-full rounded-lg"
+            className="w-full h-full rounded-lg object-cover"
             style={{ transform: 'scaleX(-1)' }}
           />
         )}
