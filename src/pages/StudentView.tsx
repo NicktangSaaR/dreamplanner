@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import StudentProfile from "@/components/college-planning/student-summary/StudentProfile";
 import RecentNotes from "@/components/college-planning/student-summary/RecentNotes";
 import ActivitiesSection from "@/components/college-planning/student-summary/ActivitiesSection";
+import AcademicSection from "@/components/college-planning/student-summary/AcademicSection";
 
 export default function StudentView() {
   const { studentId } = useParams();
@@ -152,7 +153,6 @@ export default function StudentView() {
     total: todos.length,
   };
 
-  // Transform activities to match the expected format
   const transformedActivities = activities.map(activity => ({
     timeCommitment: activity.time_commitment || "",
   }));
@@ -164,14 +164,18 @@ export default function StudentView() {
       <div className="space-y-6">
         <StudentProfile profile={profile} />
         
-        <ActivitiesSection activities={activities} />
+        <div className="grid grid-cols-1 gap-6">
+          <AcademicSection courses={courses} />
+          
+          <StatisticsCards
+            courses={courses}
+            activities={transformedActivities}
+            notes={notes}
+            todoStats={todoStats}
+          />
 
-        <StatisticsCards
-          courses={courses}
-          activities={transformedActivities}
-          notes={notes}
-          todoStats={todoStats}
-        />
+          <ActivitiesSection activities={activities} />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-6">
