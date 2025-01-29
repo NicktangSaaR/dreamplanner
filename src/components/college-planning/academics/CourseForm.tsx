@@ -22,7 +22,6 @@ interface CourseFormProps {
 }
 
 const GRADE_LEVELS = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
-const SEMESTERS = ['Fall', 'Spring', 'Summer'];
 
 export default function CourseForm({ newCourse, onCourseChange, onAddCourse, academicYears }: CourseFormProps) {
   const { toast } = useToast();
@@ -169,21 +168,12 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
       </div>
       <div>
         <Label htmlFor="semester">Semester</Label>
-        <Select
+        <Input
+          id="semester"
           value={newCourse.semester}
-          onValueChange={(value) => onCourseChange('semester', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select semester" />
-          </SelectTrigger>
-          <SelectContent>
-            {SEMESTERS.map((semester) => (
-              <SelectItem key={semester} value={semester}>
-                {semester}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(e) => onCourseChange('semester', e.target.value)}
+          placeholder="Enter semester"
+        />
       </div>
       <Button onClick={handleSubmit} className="w-full">
         <PlusCircle className="mr-2 h-4 w-4" />
