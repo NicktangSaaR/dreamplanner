@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StopCircle } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface VideoPreviewProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -18,6 +19,8 @@ const VideoPreview = ({
   onStopRecording,
   onStartNew
 }: VideoPreviewProps) => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (!videoRef.current) {
       console.warn("Video element reference is null");
@@ -54,6 +57,11 @@ const VideoPreview = ({
     }
   }, [videoRef]);
 
+  const handleStopRecording = () => {
+    onStopRecording();
+    navigate(-1); // Navigate back to the previous page
+  };
+
   return (
     <Card className="p-6">
       <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
@@ -81,7 +89,7 @@ const VideoPreview = ({
           </Button>
         ) : (
           <Button
-            onClick={onStopRecording}
+            onClick={handleStopRecording}
             variant="destructive"
             className="flex items-center gap-2"
           >
