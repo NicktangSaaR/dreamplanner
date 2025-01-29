@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Course } from "@/components/college-planning/types/course";
 import { toast } from "sonner";
 import DashboardHeader from "@/components/college-planning/DashboardHeader";
+import { Badge } from "@/components/ui/badge";
+import { User } from "lucide-react";
 
 interface ActivityType {
   id: string;
@@ -25,6 +27,13 @@ interface Note {
   date: string;
 }
 
+interface ActiveUser {
+  id: string;
+  name: string;
+  type: 'student' | 'counselor';
+  lastActive: string;
+}
+
 export default function StudentDashboard() {
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
@@ -32,6 +41,7 @@ export default function StudentDashboard() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [activities, setActivities] = useState<ActivityType[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
   const { todos } = useTodos();
 
   console.log("StudentDashboard - studentId:", studentId);
@@ -76,8 +86,79 @@ export default function StudentDashboard() {
     enabled: !!profile?.id && !!studentId,
   });
 
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!studentId || !hasAccess) return;
+
+    console.log("Setting up real-time subscriptions");
+
+    // Channel for presence
+    const presenceChannel = supabase.channel(`presence:${studentId}`);
+
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState();
+        const users = Object.values(state).flat() as ActiveUser[];
+        setActiveUsers(users);
+        console.log('Active users:', users);
+      })
+      .on('presence', { event: 'join' }, ({ newPresences }) => {
+        toast.info(`${newPresences[0].name} joined the dashboard`);
+      })
+      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        toast.info(`${leftPresences[0].name} left the dashboard`);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.track({
+            id: profile?.id,
+            name: profile?.full_name,
+            type: profile?.user_type,
+            lastActive: new Date().toISOString(),
+          });
+        }
+      });
+
+    // Channel for data changes
+    const changesChannel = supabase.channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'courses' },
+        (payload) => {
+          console.log('Course change received:', payload);
+          // Refresh courses data
+          refetchData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'extracurricular_activities' },
+        (payload) => {
+          console.log('Activity change received:', payload);
+          // Refresh activities data
+          refetchData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notes' },
+        (payload) => {
+          console.log('Note change received:', payload);
+          // Refresh notes data
+          refetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log("Cleaning up real-time subscriptions");
+      supabase.removeChannel(presenceChannel);
+      supabase.removeChannel(changesChannel);
+    };
+  }, [studentId, hasAccess, profile]);
+
   // Fetch student profile
-  const { data: studentProfile } = useQuery({
+  const { data: studentProfile, refetch: refetchData } = useQuery({
     queryKey: ["student-profile", studentId],
     queryFn: async () => {
       if (!studentId) throw new Error("No student ID provided");
@@ -135,6 +216,25 @@ export default function StudentDashboard() {
   return (
     <div className="container mx-auto p-4 space-y-6">
       <DashboardHeader />
+      
+      {/* Active Users Section */}
+      <div className="flex items-center gap-2 mb-4">
+        <User className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">Active users:</span>
+        <div className="flex gap-2">
+          {activeUsers.map((user) => (
+            <Badge
+              key={user.id}
+              variant={user.type === 'counselor' ? 'secondary' : 'outline'}
+              className="flex items-center gap-1"
+            >
+              {user.name}
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+            </Badge>
+          ))}
+        </div>
+      </div>
+
       <StatisticsCards
         courses={courses}
         activities={activities}
