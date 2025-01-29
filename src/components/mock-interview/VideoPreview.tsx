@@ -20,16 +20,41 @@ const VideoPreview = ({
   onStartNew
 }: VideoPreviewProps) => {
   const navigate = useNavigate();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!videoRef.current) {
-      console.warn("Video element reference is null");
+    if (!videoRef.current || !canvasRef.current) {
+      console.warn("Video or canvas element reference is null");
       return;
     }
 
     const videoElement = videoRef.current;
-    console.log("Video element found, checking stream...");
+    const canvasElement = canvasRef.current;
+    const ctx = canvasElement.getContext('2d');
     
+    if (!ctx) {
+      console.error("Could not get canvas context");
+      return;
+    }
+
+    // Set canvas dimensions to match video
+    canvasElement.width = videoElement.clientWidth;
+    canvasElement.height = videoElement.clientHeight;
+    
+    // Function to draw video frame on canvas
+    const drawVideoFrame = () => {
+      if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+        ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+      }
+      requestAnimationFrame(drawVideoFrame);
+    };
+
+    // Start drawing frames when video plays
+    videoElement.addEventListener('play', () => {
+      console.log("Video started playing, beginning frame capture");
+      drawVideoFrame();
+    });
+
     // Ensure video element is properly configured
     videoElement.muted = true;
     videoElement.playsInline = true;
@@ -37,24 +62,19 @@ const VideoPreview = ({
     
     if (videoElement.srcObject) {
       console.log("Stream found, attempting to play");
-      const playPromise = videoElement.play();
-      
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => console.log("Video playing successfully"))
-          .catch(error => {
-            console.error("Error playing video:", error);
-            // Retry play after a short delay
-            setTimeout(() => {
-              videoElement.play()
-                .then(() => console.log("Video playing successfully on retry"))
-                .catch(e => console.error("Error playing video on retry:", e));
-            }, 1000);
-          });
-      }
+      videoElement.play()
+        .then(() => console.log("Video playing successfully"))
+        .catch(error => {
+          console.error("Error playing video:", error);
+        });
     } else {
       console.log("No stream found in video element");
     }
+
+    // Cleanup
+    return () => {
+      videoElement.removeEventListener('play', drawVideoFrame);
+    };
   }, [videoRef]);
 
   const handleStopRecording = () => {
@@ -64,7 +84,7 @@ const VideoPreview = ({
 
   return (
     <Card className="p-6">
-      <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+      <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden relative">
         {isReviewStage && recordedVideoUrl ? (
           <video
             src={recordedVideoUrl}
@@ -72,14 +92,20 @@ const VideoPreview = ({
             className="w-full h-full rounded-lg"
           />
         ) : (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full rounded-lg object-cover mirror"
-            style={{ transform: 'scaleX(-1)' }}
-          />
+          <>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full rounded-lg object-cover mirror hidden"
+            />
+            <canvas
+              ref={canvasRef}
+              className="w-full h-full rounded-lg object-cover mirror absolute top-0 left-0"
+              style={{ transform: 'scaleX(-1)' }}
+            />
+          </>
         )}
       </div>
       <div className="flex justify-center gap-4">

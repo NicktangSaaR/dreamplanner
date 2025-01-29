@@ -20,7 +20,11 @@ export const useVideoStream = () => {
 
       console.log("Requesting camera access...");
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user"
+        },
         audio: true
       });
       
@@ -32,6 +36,8 @@ export const useVideoStream = () => {
         videoRef.current.srcObject = mediaStream;
         
         try {
+          // Ensure video is loaded before playing
+          await videoRef.current.load();
           await videoRef.current.play();
           console.log("Video preview started playing");
         } catch (playError) {
