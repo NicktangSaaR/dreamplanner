@@ -12,7 +12,7 @@ export const useCourses = (externalCourses?: Course[]) => {
   const { addCourse, updateCourse } = useCourseMutations(refetch);
 
   return {
-    courses: externalCourses || courses,
+    courses: externalCourses ?? courses,
     isLoading,
     addCourse,
     updateCourse,

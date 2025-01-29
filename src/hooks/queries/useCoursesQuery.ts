@@ -34,7 +34,7 @@ export const useCoursesQuery = (externalCourses?: Course[]) => {
       return data as Course[];
     },
     enabled: true,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     refetchOnMount: true,
     staleTime: 0,
   });
