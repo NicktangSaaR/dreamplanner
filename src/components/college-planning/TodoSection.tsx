@@ -7,6 +7,7 @@ import { Check, Star, StarOff, Trash, Plus, Wand2 } from "lucide-react";
 import { useTodos } from "@/hooks/useTodos";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function TodoSection() {
   const [newTodoTitle, setNewTodoTitle] = useState("");
@@ -29,23 +30,19 @@ export default function TodoSection() {
 
     setIsGenerating(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-todos`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ content }),
-        }
-      );
+      console.log("Generating todos with content:", content);
+      
+      const { data, error } = await supabase.functions.invoke('generate-todos', {
+        body: { content }
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate todos");
+      if (error) {
+        console.error("Error generating todos:", error);
+        throw error;
       }
 
-      const { todos: generatedTodos } = await response.json();
+      console.log("Generated todos response:", data);
+      const { todos: generatedTodos } = data;
       
       // Create each generated todo
       for (const todoTitle of generatedTodos) {
