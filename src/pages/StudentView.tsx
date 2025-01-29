@@ -11,6 +11,7 @@ import SharedFolderCard from "@/components/college-planning/SharedFolderCard";
 import { useState } from "react";
 import SharedFolderDialog from "@/components/college-planning/SharedFolderDialog";
 import { toast } from "sonner";
+import ActivitiesSection from "@/components/college-planning/student-summary/ActivitiesSection";
 
 export default function StudentView() {
   const { studentId } = useParams();
@@ -60,7 +61,15 @@ export default function StudentView() {
         .eq("student_id", studentId);
 
       if (error) throw error;
-      return data;
+      
+      // Transform the data to match the expected format
+      return data.map(activity => ({
+        id: activity.id,
+        name: activity.name,
+        role: activity.role,
+        description: activity.description,
+        timeCommitment: activity.time_commitment, // Transform snake_case to camelCase
+      }));
     },
   });
 
@@ -202,6 +211,7 @@ export default function StudentView() {
               folder={sharedFolder}
               onEditClick={() => setIsEditingFolder(true)}
             />
+            <ActivitiesSection activities={activities} />
           </div>
 
           {/* Right Column - Scrollable Notes */}
