@@ -53,7 +53,8 @@ export default function Profile() {
     if (profile?.user_type === 'counselor') {
       navigate('/counselor-dashboard');
     } else {
-      navigate('/college-planning');
+      // Navigate to student dashboard with the student's ID
+      navigate(`/student-dashboard/${profile?.id}`);
     }
   };
 
