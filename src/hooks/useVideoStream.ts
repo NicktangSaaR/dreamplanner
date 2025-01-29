@@ -12,7 +12,6 @@ export const useVideoStream = () => {
 
   const startStream = async () => {
     try {
-      // First check if we already have a stream
       if (stream) {
         console.log("Existing stream found, stopping it first");
         stream.getTracks().forEach(track => track.stop());
@@ -36,7 +35,6 @@ export const useVideoStream = () => {
         videoRef.current.srcObject = mediaStream;
         
         try {
-          // Ensure video is loaded before playing
           await videoRef.current.load();
           await videoRef.current.play();
           console.log("Video preview started playing");
@@ -87,7 +85,21 @@ export const useVideoStream = () => {
         mediaRecorder.onstop = () => {
           const blob = new Blob(chunks, { type: 'video/webm' });
           setRecordedChunks(chunks);
-          setRecordedVideoUrl(URL.createObjectURL(blob));
+          const videoUrl = URL.createObjectURL(blob);
+          setRecordedVideoUrl(videoUrl);
+
+          // Create and trigger download
+          const downloadLink = document.createElement('a');
+          downloadLink.href = videoUrl;
+          downloadLink.download = `面试录制_${new Date().toLocaleString()}.webm`;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+
+          toast({
+            title: "录制完成",
+            description: "面试视频已自动下载到您的设备中。",
+          });
         };
 
         mediaRecorder.start();
