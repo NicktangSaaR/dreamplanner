@@ -21,6 +21,7 @@ const VideoPreview = ({
 }: VideoPreviewProps) => {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const recordedVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (!videoRef.current || !canvasRef.current) {
@@ -86,6 +87,15 @@ const VideoPreview = ({
     };
   }, [videoRef]);
 
+  // Effect to handle recorded video playback
+  useEffect(() => {
+    if (isReviewStage && recordedVideoUrl && recordedVideoRef.current) {
+      console.log("Setting up recorded video playback:", recordedVideoUrl);
+      recordedVideoRef.current.src = recordedVideoUrl;
+      recordedVideoRef.current.load();
+    }
+  }, [isReviewStage, recordedVideoUrl]);
+
   const handleStopRecording = () => {
     onStopRecording();
     navigate(-1);
@@ -96,9 +106,9 @@ const VideoPreview = ({
       <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden relative">
         {isReviewStage && recordedVideoUrl ? (
           <video
-            src={recordedVideoUrl}
+            ref={recordedVideoRef}
             controls
-            autoPlay
+            playsInline
             className="w-full h-full rounded-lg"
           />
         ) : (
