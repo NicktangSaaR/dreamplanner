@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Profile } from "./useProfile";
+import { RealtimePresenceState } from "@supabase/supabase-js";
 
 export interface ActiveUser {
   id: string;
@@ -31,9 +32,9 @@ export function usePresence(studentId: string | undefined, profile: Profile | nu
 
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannel.presenceState() as PresenceState;
+        const state = presenceChannel.presenceState() as RealtimePresenceState<ActiveUser>;
         const users = Object.values(state).flat();
-        setActiveUsers(users);
+        setActiveUsers(users as ActiveUser[]);
         console.log('Active users:', users);
       })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
@@ -46,12 +47,14 @@ export function usePresence(studentId: string | undefined, profile: Profile | nu
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED' && profile) {
-          await presenceChannel.track({
+          const presenceData: ActiveUser = {
             id: profile.id,
             name: profile.full_name || 'Anonymous',
             type: profile.user_type as 'student' | 'counselor',
             lastActive: new Date().toISOString(),
-          });
+          };
+          
+          await presenceChannel.track(presenceData);
         }
       });
 
