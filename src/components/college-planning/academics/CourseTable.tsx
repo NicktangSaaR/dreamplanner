@@ -26,7 +26,7 @@ export default function CourseTable({
   academicYears,
   isLoading
 }: CourseTableProps) {
-  console.log("CourseTable - Current courses:", courses);
+  console.log("CourseTable - Received courses:", courses);
   console.log("CourseTable - Loading state:", isLoading);
 
   if (isLoading) {

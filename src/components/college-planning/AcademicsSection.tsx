@@ -22,12 +22,19 @@ export default function AcademicsSection({
   } = useAcademicData(externalCourses, onCoursesChange);
 
   console.log("AcademicsSection - Current courses:", courses);
+  console.log("AcademicsSection - External courses:", externalCourses);
+  console.log("AcademicsSection - Student ID:", studentId);
+
+  if (!studentId) {
+    console.log("No student ID available");
+    return <div>Loading...</div>;
+  }
 
   return (
-    <Card>
-      <AcademicsHeader courses={courses} />
+    <Card className="w-full">
+      <AcademicsHeader courses={courses || []} />
       <CourseManagement
-        courses={courses}
+        courses={courses || []}
         isLoading={isLoading}
         studentId={studentId}
         addCourse={addCourse}

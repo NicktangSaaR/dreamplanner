@@ -18,7 +18,7 @@ export default function DashboardTabs({
   onActivitiesChange,
   onNotesChange,
 }: DashboardTabsProps) {
-  console.log("DashboardTabs - Current courses:", courses);
+  console.log("DashboardTabs - Received courses:", courses);
 
   return (
     <Tabs defaultValue="academics" className="w-full">
@@ -28,7 +28,7 @@ export default function DashboardTabs({
         <TabsTrigger value="notes">Notes</TabsTrigger>
         <TabsTrigger value="todos">To-Dos</TabsTrigger>
       </TabsList>
-      <TabsContent value="academics">
+      <TabsContent value="academics" className="mt-6">
         <AcademicsSection 
           courses={courses}
           onCoursesChange={onCoursesChange}
