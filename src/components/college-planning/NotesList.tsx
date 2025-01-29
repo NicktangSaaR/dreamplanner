@@ -32,8 +32,6 @@ const NotesList = memo(function NotesList({
   onEdit,
   canEditNote,
 }: NotesListProps) {
-  console.log("NotesList - Rendering with notes:", notes);
-
   return (
     <Card className="shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -46,7 +44,7 @@ const NotesList = memo(function NotesList({
       <CardContent>
         <ScrollArea className="h-[300px] sm:h-[400px] w-full rounded-md border p-4">
           <div className="space-y-3">
-            {Array.isArray(notes) && notes.map((note) => (
+            {notes.map((note) => (
               note && note.id ? (
                 <NoteCard
                   key={note.id}
@@ -58,7 +56,7 @@ const NotesList = memo(function NotesList({
                 />
               ) : null
             ))}
-            {(!notes || notes.length === 0) && (
+            {notes.length === 0 && (
               <div className="text-center text-muted-foreground py-8">
                 No notes yet. Click "Add Note" to create one.
               </div>

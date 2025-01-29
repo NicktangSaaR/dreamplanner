@@ -22,11 +22,9 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const { notes = [], createNote, updateNote, handleTogglePin, handleToggleStar } = useNotes();
 
-  console.log("NotesSection - Current notes:", notes);
-
+  // Only call onNotesChange when notes actually change
   useEffect(() => {
-    if (Array.isArray(notes) && onNotesChange) {
-      console.log("NotesSection - Calling onNotesChange with:", notes);
+    if (onNotesChange && Array.isArray(notes)) {
       onNotesChange(notes);
     }
   }, [notes, onNotesChange]);
