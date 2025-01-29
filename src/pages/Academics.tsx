@@ -9,10 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function Academics() {
   const navigate = useNavigate();
-  const { studentId } = useParams();
+  const { studentId = '' } = useParams<{ studentId: string }>();
   const location = useLocation();
   const [courses, setCourses] = useState<Course[]>([]);
   const isCounselorView = location.pathname.includes('/counselor-dashboard');
+
+  console.log("Academics page - Student ID:", studentId);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -22,6 +24,7 @@ export default function Academics() {
       }
 
       try {
+        console.log("Fetching courses for student:", studentId);
         const { data, error } = await supabase
           .from("courses")
           .select("*")
@@ -33,6 +36,7 @@ export default function Academics() {
           return;
         }
 
+        console.log("Fetched courses:", data);
         setCourses(data || []);
       } catch (error) {
         console.error("Error:", error);
