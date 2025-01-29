@@ -187,7 +187,7 @@ const features = [
   },
   {
     title: "Built-in Mock Interview Practice",
-    description: "Practice your interview skills with our built-in mock interview system.",
+    description: "Polish your interview skills for different types of interviews with our comprehensive practice system.",
     icon: (
       <svg
         className="w-6 h-6 text-primary"
