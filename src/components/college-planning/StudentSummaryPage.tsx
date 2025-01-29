@@ -263,4 +263,4 @@ export default function StudentSummaryPage() {
       </Card>
     </div>
   );
-} // Added missing closing brace here
+} // Added missing closing brace
