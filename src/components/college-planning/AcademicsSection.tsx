@@ -7,6 +7,7 @@ import CourseTable from "./academics/CourseTable";
 import { Course } from "./types/course";
 import { useCourses } from "@/hooks/useCourses";
 import { generateAcademicYears } from "@/utils/academicYears";
+import { useParams } from "react-router-dom";
 
 interface AcademicsSectionProps {
   courses?: Course[];
@@ -18,6 +19,7 @@ export default function AcademicsSection({
   onCoursesChange 
 }: AcademicsSectionProps) {
   const { toast } = useToast();
+  const { studentId } = useParams();
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [newCourse, setNewCourse] = useState({
     name: "",
@@ -40,9 +42,18 @@ export default function AcademicsSection({
   }, [courses, onCoursesChange]);
 
   const handleAddCourse = async () => {
+    if (!studentId) {
+      toast({
+        title: "Error",
+        description: "No student ID found. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (newCourse.name && newCourse.grade && newCourse.semester && newCourse.grade_level && newCourse.academic_year) {
       console.log('Handling add course:', newCourse);
-      await addCourse.mutate(newCourse as Omit<Course, 'id'>);
+      await addCourse.mutate({ ...newCourse, student_id: studentId });
       setNewCourse({
         name: "",
         grade: "",

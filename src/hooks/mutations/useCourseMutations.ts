@@ -14,7 +14,7 @@ export const useCourseMutations = (refetch: () => void, studentId?: string) => {
 
       const { data, error } = await supabase
         .from('courses')
-        .insert([{ ...newCourse, student_id: studentId }])
+        .insert([{ ...newCourse }])
         .select()
         .single();
 
