@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import DashboardHeader from "@/components/college-planning/DashboardHeader";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
@@ -17,6 +17,7 @@ import AcademicSection from "@/components/college-planning/student-summary/Acade
 export default function StudentView() {
   const { studentId } = useParams();
   const [isEditingFolder, setIsEditingFolder] = useState(false);
+  const queryClient = useQueryClient();
 
   console.log("StudentView - Viewing student:", studentId);
 
@@ -133,6 +134,10 @@ export default function StudentView() {
     }
   };
 
+  const handleNotesChange = () => {
+    queryClient.invalidateQueries({ queryKey: ["student-notes", studentId] });
+  };
+
   const isLoading = isLoadingProfile || isLoadingCourses || isLoadingActivities || isLoadingNotes || isLoadingTodos;
 
   if (isLoading) {
@@ -184,7 +189,11 @@ export default function StudentView() {
             />
           </div>
 
-          <RecentNotes notes={notes} />
+          <RecentNotes 
+            notes={notes} 
+            studentId={studentId || ""} 
+            onNotesChange={handleNotesChange}
+          />
         </div>
       </div>
 
