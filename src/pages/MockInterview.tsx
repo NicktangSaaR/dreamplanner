@@ -33,7 +33,7 @@ const MockInterview = () => {
     responseTime: 180,
     selectedQuestionId: null,
   });
-  const [showDeviceSetup, setShowDeviceSetup] = useState(true);
+  const [deviceSetupComplete, setDeviceSetupComplete] = useState(false);
 
   const { toast } = useToast();
   const { stage, setStage, timeLeft, countdownTime } = useInterviewState(settings);
@@ -63,14 +63,18 @@ const MockInterview = () => {
     }
   };
 
-  const selectedQuestion = questions.find(q => q.id === settings.selectedQuestionId);
-
   const handleDeviceSetupComplete = () => {
-    setShowDeviceSetup(false);
+    setDeviceSetupComplete(true);
+    toast({
+      title: "设备设置完成",
+      description: "您现在可以开始设置面试参数。",
+    });
   };
 
+  const selectedQuestion = questions.find(q => q.id === settings.selectedQuestionId);
+
   const renderContent = () => {
-    if (showDeviceSetup) {
+    if (!deviceSetupComplete) {
       return <DeviceSetup onComplete={handleDeviceSetupComplete} />;
     }
 
@@ -125,7 +129,7 @@ const MockInterview = () => {
           onStopRecording={stopRecording}
           onStartNew={() => {
             setStage(InterviewStage.SETTINGS);
-            setShowDeviceSetup(true);
+            setDeviceSetupComplete(false);
           }}
         />
       </div>
