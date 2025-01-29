@@ -4,21 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import StudentCard from "@/components/college-planning/StudentCard";
 import AddStudentDialog from "@/components/college-planning/AddStudentDialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function CounselorDashboard() {
   const navigate = useNavigate();
   const { data: students = [], isLoading } = useCounselorStudents();
   const [showAddStudent, setShowAddStudent] = useState(false);
+  const [counselorId, setCounselorId] = useState('');
+
+  useEffect(() => {
+    const fetchCounselorId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCounselorId(user.id);
+      }
+    };
+    fetchCounselorId();
+  }, []);
 
   const handleStudentClick = (studentId: string) => {
     navigate(`/counselor-dashboard/student/${studentId}`);
-  };
-
-  const getCounselorId = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user?.id || '';
   };
 
   if (isLoading) {
@@ -46,7 +52,7 @@ export default function CounselorDashboard() {
       </div>
 
       <AddStudentDialog
-        counselorId={getCounselorId()}
+        counselorId={counselorId}
         onStudentAdded={() => {}}
         open={showAddStudent}
         onOpenChange={setShowAddStudent}
