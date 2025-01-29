@@ -11,7 +11,7 @@ export default function DashboardHeader() {
   const location = useLocation();
 
   const handleBack = () => {
-    navigate('/');
+    navigate('/counselor-dashboard');
   };
 
   const handleLogout = async () => {
