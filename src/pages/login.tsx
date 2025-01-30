@@ -58,13 +58,13 @@ export default function Login() {
 
       console.log("User profile:", profile);
 
-      // Redirect based on user type
-      if (profile.is_admin) {
-        navigate("/admin-dashboard");
-      } else if (profile.user_type === "counselor") {
+      // Redirect based on user type first, then admin status
+      if (profile.user_type === "counselor") {
         navigate("/counselor-dashboard");
       } else if (profile.user_type === "student") {
         navigate(`/student-dashboard/${data.user.id}`);
+      } else if (profile.is_admin) {
+        navigate("/admin-dashboard");
       } else {
         navigate("/college-planning");
       }
