@@ -2,12 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { useProfile } from "@/hooks/useProfile";
 import { useInterviewState } from "@/hooks/useInterviewState";
 import { useVideoStream } from "@/hooks/useVideoStream";
 import { useInterviewQuestions } from "@/hooks/useInterviewQuestions";
-import { Question, InterviewSettings } from "@/components/mock-interview/types";
+import { InterviewSettings } from "@/components/mock-interview/types";
 import { InterviewStage } from "@/components/mock-interview/InterviewStage";
 import InterviewHeader from "@/components/mock-interview/header/InterviewHeader";
 import InterviewContent from "@/components/mock-interview/content/InterviewContent";
@@ -39,19 +38,6 @@ const MockInterview = () => {
   const { stage, setStage, timeLeft, countdownTime } = useInterviewState(settings);
   const { videoRef, recordedVideoUrl, startStream, stopRecording } = useVideoStream();
 
-  const { data: questions = [] } = useQuery({
-    queryKey: ['interview-questions'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('mock_interview_questions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as Question[];
-    },
-  });
-
   const {
     initializeQuestions,
     getCurrentQuestion,
@@ -59,7 +45,7 @@ const MockInterview = () => {
     hasMoreQuestions,
     totalQuestions,
     currentQuestionNumber
-  } = useInterviewQuestions(questions, settings);
+  } = useInterviewQuestions(settings);
 
   const selectedQuestion = getCurrentQuestion();
 
