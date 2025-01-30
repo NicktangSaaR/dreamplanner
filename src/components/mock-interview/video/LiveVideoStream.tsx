@@ -10,12 +10,21 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
 
   const initializeVideoStream = async () => {
     try {
-      console.log("Initializing video stream...");
+      console.log("Starting video stream initialization...");
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error("MediaDevices API not supported");
+        toast.error("您的浏览器不支持视频功能，请使用最新版本的Chrome或Firefox");
+        return;
+      }
+
       if (videoRef.current) {
         // Stop any existing streams
         if (videoRef.current.srcObject instanceof MediaStream) {
           console.log("Stopping existing stream tracks");
-          videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+          videoRef.current.srcObject.getTracks().forEach(track => {
+            track.stop();
+            console.log(`Stopped ${track.kind} track`);
+          });
         }
 
         console.log("Requesting camera and microphone permissions...");
@@ -23,29 +32,32 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
           video: {
             width: { ideal: 1280 },
             height: { ideal: 720 },
-            facingMode: "user"
+            facingMode: "user",
+            frameRate: { ideal: 30 }
           },
           audio: {
             echoCancellation: true,
-            noiseSuppression: true
+            noiseSuppression: true,
+            sampleRate: 44100
           }
         });
 
         console.log("Camera and microphone permissions granted");
         videoRef.current.srcObject = stream;
         
-        // Add event listeners to track video element state
         videoRef.current.onloadedmetadata = () => {
-          console.log("Video metadata loaded");
-          videoRef.current?.play().catch(error => {
-            console.error("Error playing video:", error);
-            toast.error("视频播放失败，请刷新页面重试");
-          });
-        };
-        
-        videoRef.current.onplay = () => {
-          console.log("Video started playing successfully");
-          onStreamInitialized?.(stream);
+          console.log("Video metadata loaded, attempting to play...");
+          if (videoRef.current) {
+            videoRef.current.play()
+              .then(() => {
+                console.log("Video playback started successfully");
+                onStreamInitialized?.(stream);
+              })
+              .catch(error => {
+                console.error("Error starting video playback:", error);
+                toast.error("视频播放失败，请检查设备权限并刷新页面");
+              });
+          }
         };
 
         videoRef.current.onerror = (event) => {
@@ -64,13 +76,19 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
       if (error instanceof DOMException) {
         switch (error.name) {
           case 'NotAllowedError':
-            errorMessage = "请允许浏览器访问摄像头和麦克风";
+            errorMessage = "请允许浏览器访问摄像头和麦克风，并刷新页面重试";
             break;
           case 'NotFoundError':
-            errorMessage = "未找到摄像头或麦克风设备";
+            errorMessage = "未找到摄像头或麦克风设备，请确保设备已正确连接";
             break;
           case 'NotReadableError':
             errorMessage = "无法访问摄像头或麦克风，可能被其他应用程序占用";
+            break;
+          case 'OverconstrainedError':
+            errorMessage = "摄像头不支持请求的视频设置，请刷新页面重试";
+            break;
+          case 'SecurityError':
+            errorMessage = "访问媒体设备被安全策略阻止，请检查浏览器设置";
             break;
           default:
             errorMessage = "设备访问出错，请确保设备正常工作并重试";
@@ -82,6 +100,7 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
   };
 
   useEffect(() => {
+    console.log("LiveVideoStream component mounted, initializing stream...");
     initializeVideoStream();
 
     return () => {
