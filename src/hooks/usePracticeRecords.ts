@@ -18,9 +18,9 @@ export const usePracticeRecords = () => {
     queryKey: ["practice-records"],
     queryFn: async () => {
       console.log("Fetching practice records...");
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!sessionData.session?.user?.id) {
+      if (!session?.user?.id) {
         console.log("No authenticated user found");
         return [];
       }
@@ -35,7 +35,7 @@ export const usePracticeRecords = () => {
             title
           )
         `)
-        .eq('user_id', sessionData.session.user.id)
+        .eq('user_id', session.user.id)
         .order("practice_date", { ascending: false });
 
       if (error) {
