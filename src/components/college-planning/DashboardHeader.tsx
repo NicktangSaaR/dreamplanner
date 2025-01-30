@@ -10,33 +10,6 @@ export default function DashboardHeader() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleProfile = () => {
-    if (isLoading) {
-      toast.info("Loading profile data...");
-      return;
-    }
-
-    if (error) {
-      console.error("Error accessing profile:", error);
-      toast.error("Unable to access profile: " + error.message);
-      return;
-    }
-
-    if (!profile) {
-      console.error("Profile data is not available");
-      toast.error("Unable to access profile data. Please try logging in again.");
-      return;
-    }
-
-    console.log("Navigating to profile page for user type:", profile.user_type);
-    
-    if (profile.user_type === 'counselor') {
-      navigate('/counselor-profile');
-    } else {
-      navigate('/student-profile');
-    }
-  };
-
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -58,9 +31,6 @@ export default function DashboardHeader() {
       <div className="flex gap-2">
         <Button onClick={handleMockInterview} variant="outline">
           Mock Interview
-        </Button>
-        <Button onClick={handleProfile} variant="outline">
-          View Profile
         </Button>
         <Button onClick={handleLogout} variant="outline">
           <LogOut className="mr-2" />
