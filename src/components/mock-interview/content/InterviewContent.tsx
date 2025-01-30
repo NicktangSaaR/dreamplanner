@@ -6,6 +6,7 @@ import InterviewResponse from "@/components/mock-interview/InterviewResponse";
 import VideoPreview from "@/components/mock-interview/VideoPreview";
 import DeviceSetup from "@/components/mock-interview/device-setup/DeviceSetup";
 import { Question, InterviewSettings } from "@/components/mock-interview/types";
+import { Button } from "@/components/ui/button";
 
 interface InterviewContentProps {
   showDeviceSetup: boolean;
@@ -26,6 +27,7 @@ interface InterviewContentProps {
   onDeviceSetupBack: () => void;
   onStopRecording: () => void;
   onStartNew: () => void;
+  onNextQuestion: () => void;
 }
 
 const InterviewContent = ({
@@ -47,6 +49,7 @@ const InterviewContent = ({
   onDeviceSetupBack,
   onStopRecording,
   onStartNew,
+  onNextQuestion,
 }: InterviewContentProps) => {
   if (showDeviceSetup || !deviceSetupComplete) {
     return (
@@ -112,6 +115,14 @@ const InterviewContent = ({
                     ? "准备进入下一个问题"
                     : "您现在可以查看录制的回答"}
                 </p>
+                {settings.practiceMode === 'multiple' && hasMoreQuestions && (
+                  <Button 
+                    onClick={onNextQuestion}
+                    className="w-full"
+                  >
+                    继续下一题
+                  </Button>
+                )}
               </div>
             )}
           </div>

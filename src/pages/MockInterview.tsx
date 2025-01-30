@@ -98,25 +98,22 @@ const MockInterview = () => {
     });
   };
 
+  const handleNextQuestion = () => {
+    if (hasMoreQuestions()) {
+      moveToNextQuestion();
+      setStage(InterviewStage.PREPARATION);
+      toast.success("进入下一题", {
+        description: "准备时间开始计时。"
+      });
+    }
+  };
+
   useEffect(() => {
     if (stage === InterviewStage.REVIEW) {
       console.log("Interview stage changed to REVIEW, stopping recording");
       stopRecording();
-      
-      // Check if there are more questions
-      if (hasMoreQuestions()) {
-        toast.success("当前问题回答完成", {
-          description: "准备进入下一个问题。"
-        });
-        moveToNextQuestion();
-        setStage(InterviewStage.PREPARATION);
-      } else {
-        toast.success("面试结束", {
-          description: "您现在可以查看录制的视频。"
-        });
-      }
     }
-  }, [stage, stopRecording, hasMoreQuestions, moveToNextQuestion, setStage]);
+  }, [stage, stopRecording]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -146,6 +143,7 @@ const MockInterview = () => {
         currentQuestionNumber={currentQuestionNumber}
         totalQuestions={totalQuestions}
         hasMoreQuestions={hasMoreQuestions()}
+        onNextQuestion={handleNextQuestion}
       />
     </div>
   );
