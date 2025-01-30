@@ -11,10 +11,6 @@ import { InterviewStage } from "@/components/mock-interview/InterviewStage";
 import InterviewHeader from "@/components/mock-interview/header/InterviewHeader";
 import InterviewContent from "@/components/mock-interview/content/InterviewContent";
 
-// Constants for device settings
-const DEVICE_SETTINGS_KEY = 'interview-device-settings';
-const SETTINGS_VALIDITY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-
 const MockInterview = () => {
   const navigate = useNavigate();
   const { profile } = useProfile();
@@ -36,7 +32,7 @@ const MockInterview = () => {
   });
 
   const { stage, setStage, timeLeft, countdownTime } = useInterviewState(settings);
-  const { videoRef, recordedVideoUrl, startStream, stopRecording } = useVideoStream();
+  const { recordedVideoUrl, startStream, stopRecording } = useVideoStream();
 
   const {
     initializeQuestions,
@@ -132,7 +128,6 @@ const MockInterview = () => {
         selectedQuestion={selectedQuestion}
         timeLeft={timeLeft}
         countdownTime={countdownTime}
-        videoRef={videoRef}
         recordedVideoUrl={recordedVideoUrl}
         onSettingsChange={setSettings}
         onStartInterview={handleStartInterview}
