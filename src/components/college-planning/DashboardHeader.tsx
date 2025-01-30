@@ -22,7 +22,7 @@ export default function DashboardHeader() {
   };
 
   const handleProfile = () => {
-    // Update the navigation based on user type
+    console.log("Profile button clicked, user type:", profile?.user_type);
     if (profile?.user_type === 'student') {
       navigate('/student-profile');
     } else if (profile?.user_type === 'counselor') {
