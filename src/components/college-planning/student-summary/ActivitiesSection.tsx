@@ -1,8 +1,8 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ActivityForm from "../extracurricular/ActivityForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,7 +66,9 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
       toast.success("Activity added successfully");
       
       // Invalidate the activities query to trigger a refresh
-      queryClient.invalidateQueries({ queryKey: ["student-activities", studentId] });
+      await queryClient.invalidateQueries({ 
+        queryKey: ["student-activities", studentId] 
+      });
       
       setIsDialogOpen(false);
       setNewActivity({

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ActivityForm from "./extracurricular/ActivityForm";
 import ActivityTable from "./extracurricular/ActivityTable";
@@ -18,19 +18,27 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
     timeCommitment: "",
   });
 
-  useEffect(() => {
-    onActivitiesChange?.(activities);
+  // Memoize the activities change callback to prevent unnecessary re-renders
+  const handleActivitiesChange = useCallback(() => {
+    if (onActivitiesChange) {
+      onActivitiesChange(activities);
+    }
   }, [activities, onActivitiesChange]);
+
+  useEffect(() => {
+    handleActivitiesChange();
+  }, [handleActivitiesChange]);
 
   const handleAddActivity = () => {
     if (newActivity.name && newActivity.role) {
-      setActivities([
+      const updatedActivities = [
         ...activities,
         {
           id: Date.now().toString(),
           ...newActivity,
         },
-      ]);
+      ];
+      setActivities(updatedActivities);
       setNewActivity({
         name: "",
         role: "",
