@@ -26,6 +26,7 @@ const VideoPreview = ({
   const queryClient = useQueryClient();
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [streamError, setStreamError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleStreamInitialized = (newStream: MediaStream) => {
     console.log("Stream initialized in VideoPreview:", {
@@ -46,24 +47,32 @@ const VideoPreview = ({
 
   const handleStopRecording = async () => {
     console.log("Stopping recording and saving video...");
-    if (stream) {
-      stream.getTracks().forEach(track => {
-        track.stop();
-        console.log(`Stopped ${track.kind} track`);
-      });
-      setStream(null);
-    }
-    onStopRecording();
+    setIsSaving(true);
+    
+    try {
+      if (stream) {
+        stream.getTracks().forEach(track => {
+          track.stop();
+          console.log(`Stopped ${track.kind} track`);
+        });
+        setStream(null);
+      }
+      
+      onStopRecording();
 
-    if (recordedVideoUrl && selectedQuestionId) {
-      try {
+      if (recordedVideoUrl && selectedQuestionId) {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user?.id) {
           throw new Error("No authenticated user found");
         }
 
-        console.log("Saving practice record to database...");
+        console.log("Saving practice record to database...", {
+          videoUrl: recordedVideoUrl,
+          questionId: selectedQuestionId,
+          userId: session.user.id
+        });
+
         const { error } = await supabase
           .from("interview_practice_records")
           .insert({
@@ -75,12 +84,14 @@ const VideoPreview = ({
         if (error) throw error;
 
         console.log("Practice record saved successfully");
-        queryClient.invalidateQueries({ queryKey: ["practice-records"] });
+        await queryClient.invalidateQueries({ queryKey: ["practice-records"] });
         toast.success("练习记录已保存");
-      } catch (error) {
-        console.error("Error saving practice record:", error);
-        toast.error("保存练习记录失败");
       }
+    } catch (error) {
+      console.error("Error saving practice record:", error);
+      toast.error("保存练习记录失败，请重试");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -129,10 +140,10 @@ const VideoPreview = ({
             variant="destructive"
             size="lg"
             className="flex items-center gap-2 text-lg"
-            disabled={!!streamError}
+            disabled={!!streamError || isSaving}
           >
             <StopCircle className="w-5 h-5" />
-            结束面试
+            {isSaving ? "保存中..." : "结束面试"}
           </Button>
         )}
       </div>

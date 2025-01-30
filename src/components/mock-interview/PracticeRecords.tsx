@@ -44,6 +44,8 @@ const PracticeRecords = () => {
       console.log("Fetched practice records:", data);
       return data as PracticeRecord[];
     },
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 
   const deleteRecord = useMutation({
@@ -62,6 +64,7 @@ const PracticeRecords = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["practice-records"] });
       toast.success("练习记录已删除");
+      setSelectedVideo(null);
     },
     onError: (error) => {
       console.error("Error in deleteRecord mutation:", error);
@@ -110,7 +113,7 @@ const PracticeRecords = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h3 className="font-medium">
-                  {record.mock_interview_questions.title}
+                  {record.mock_interview_questions?.title || "未知题目"}
                 </h3>
                 <div className="flex items-center text-sm text-gray-500">
                   <Calendar className="w-4 h-4 mr-1" />
