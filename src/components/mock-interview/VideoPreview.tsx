@@ -20,34 +20,47 @@ const VideoPreview = ({
 }: VideoPreviewProps) => {
   const recordedVideoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    // When not in review stage and videoRef exists, ensure video stream is properly connected
-    if (!isReviewStage && videoRef.current) {
-      console.log("Checking video stream initialization...");
-      if (!videoRef.current.srcObject) {
-        console.log("Video stream not found, requesting new stream...");
-        navigator.mediaDevices.getUserMedia({
+  const initializeVideoStream = async () => {
+    try {
+      console.log("Initializing video stream...");
+      if (videoRef.current) {
+        // Stop any existing streams
+        if (videoRef.current.srcObject instanceof MediaStream) {
+          console.log("Stopping existing stream tracks");
+          videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true
-        }).then(stream => {
-          console.log("New stream obtained successfully");
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play().catch(error => {
-              console.error("Error playing new video stream:", error);
-            });
-          }
-        }).catch(error => {
-          console.error("Error obtaining new video stream:", error);
         });
-      } else {
-        console.log("Existing stream found, ensuring playback");
-        videoRef.current.play().catch(error => {
-          console.error("Error playing existing video stream:", error);
+        console.log("New stream obtained successfully");
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        console.log("Video stream started playing");
+      }
+    } catch (error) {
+      console.error("Error initializing video stream:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!isReviewStage) {
+      console.log("Not in review stage, initializing video stream");
+      initializeVideoStream();
+    }
+
+    return () => {
+      // Cleanup function to stop tracks when component unmounts or when entering review stage
+      if (videoRef.current?.srcObject instanceof MediaStream) {
+        console.log("Cleaning up video stream");
+        videoRef.current.srcObject.getTracks().forEach(track => {
+          track.stop();
+          console.log(`Stopped ${track.kind} track`);
         });
       }
-    }
-  }, [isReviewStage, videoRef]);
+    };
+  }, [isReviewStage]); // Re-run when isReviewStage changes
 
   useEffect(() => {
     if (isReviewStage && recordedVideoUrl && recordedVideoRef.current) {
