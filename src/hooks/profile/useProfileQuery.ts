@@ -29,9 +29,9 @@ export const useProfileQuery = () => {
       const transformedData: Profile = {
         ...data,
         social_media: data.social_media ? {
-          linkedin: data.social_media.linkedin || undefined,
-          twitter: data.social_media.twitter || undefined,
-          instagram: data.social_media.instagram || undefined,
+          linkedin: (data.social_media as any).linkedin || undefined,
+          twitter: (data.social_media as any).twitter || undefined,
+          instagram: (data.social_media as any).instagram || undefined,
         } : null
       };
 

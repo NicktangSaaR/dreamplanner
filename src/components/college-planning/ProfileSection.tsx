@@ -13,11 +13,11 @@ export default function ProfileSection() {
   const form = useForm<ProfileFormData>({
     defaultValues: {
       full_name: profile?.full_name || "",
-      grade: profile?.grade || "",
-      school: profile?.school || "",
+      grade: profile?.grade || null,
+      school: profile?.school || null,
       interested_majors: profile?.interested_majors?.join(", ") || "",
-      graduation_school: profile?.graduation_school || "",
-      background_intro: profile?.background_intro || "",
+      graduation_school: profile?.graduation_school || null,
+      background_intro: profile?.background_intro || null,
       social_media: {
         instagram: profile?.social_media?.instagram || "",
         linkedin: profile?.social_media?.linkedin || "",
