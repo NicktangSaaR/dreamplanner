@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function DashboardHeader() {
   const navigate = useNavigate();
@@ -17,6 +19,22 @@ export default function DashboardHeader() {
 
   const handleBack = () => {
     navigate('/counselor-dashboard');
+  };
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error logging out:", error);
+        toast.error("Error logging out");
+      } else {
+        toast.success("Logged out successfully");
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Unexpected error during logout:", error);
+      toast.error("An unexpected error occurred");
+    }
   };
 
   return (
@@ -37,13 +55,23 @@ export default function DashboardHeader() {
       </div>
       <div className="flex gap-2">
         {profile?.user_type === 'student' && (
-          <Button onClick={handleProfile} variant="outline">
-            My Profile
+          <>
+            <Button onClick={handleProfile} variant="outline">
+              My Profile
+            </Button>
+            <Button onClick={handleMockInterview} variant="outline">
+              Mock Interview
+            </Button>
+            <Button onClick={handleLogout} variant="outline">
+              Log Out
+            </Button>
+          </>
+        )}
+        {profile?.user_type === 'counselor' && (
+          <Button onClick={handleMockInterview} variant="outline">
+            Mock Interview
           </Button>
         )}
-        <Button onClick={handleMockInterview} variant="outline">
-          Mock Interview
-        </Button>
       </div>
     </div>
   );
