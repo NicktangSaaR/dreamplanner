@@ -166,6 +166,7 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
           onVideoDeviceChange={setSelectedVideoDevice}
           onAudioDeviceChange={setSelectedAudioDevice}
           isCameraWorking={isCameraWorking}
+          isAudioWorking={isAudioWorking}
         />
 
         <AudioMeter
