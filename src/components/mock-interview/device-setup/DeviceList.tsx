@@ -1,5 +1,6 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MediaDevice } from "@/types/device";
+import DeviceSelector from "./DeviceSelector";
+import DeviceStatus from "./DeviceStatus";
 
 interface DeviceListProps {
   videoDevices: MediaDevice[];
@@ -24,51 +25,22 @@ const DeviceList = ({
 }: DeviceListProps) => {
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <span>摄像头：</span>
-        <Select value={selectedVideoDevice} onValueChange={onVideoDeviceChange}>
-          <SelectTrigger className="w-[260px]">
-            <SelectValue placeholder="选择摄像头" />
-          </SelectTrigger>
-          <SelectContent>
-            {videoDevices.map((device) => (
-              <SelectItem key={device.deviceId} value={device.deviceId}>
-                {device.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <DeviceSelector
+        label="摄像头"
+        devices={videoDevices}
+        selectedDevice={selectedVideoDevice}
+        onDeviceChange={onVideoDeviceChange}
+      />
       
-      <div className="flex items-center justify-between">
-        <span>麦克风：</span>
-        <Select value={selectedAudioDevice} onValueChange={onAudioDeviceChange}>
-          <SelectTrigger className="w-[260px]">
-            <SelectValue placeholder="选择麦克风" />
-          </SelectTrigger>
-          <SelectContent>
-            {audioDevices.map((device) => (
-              <SelectItem key={device.deviceId} value={device.deviceId}>
-                {device.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <DeviceSelector
+        label="麦克风"
+        devices={audioDevices}
+        selectedDevice={selectedAudioDevice}
+        onDeviceChange={onAudioDeviceChange}
+      />
 
-      <div className="flex items-center justify-between">
-        <span>摄像头状态：</span>
-        <span className={isCameraWorking ? "text-green-500" : "text-red-500"}>
-          {isCameraWorking ? "正常" : "未开启"}
-        </span>
-      </div>
-      
-      <div className="flex items-center justify-between">
-        <span>麦克风状态：</span>
-        <span className={isAudioWorking ? "text-green-500" : "text-red-500"}>
-          {isAudioWorking ? "正常" : "未开启"}
-        </span>
-      </div>
+      <DeviceStatus label="摄像头" isWorking={isCameraWorking} />
+      <DeviceStatus label="麦克风" isWorking={isAudioWorking} />
     </div>
   );
 };

@@ -1,9 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-interface MediaDevice {
-  deviceId: string;
-  label: string;
-}
+import { MediaDevice } from "@/types/device";
 
 interface DeviceSelectorProps {
   label: string;
