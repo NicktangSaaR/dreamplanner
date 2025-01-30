@@ -89,6 +89,7 @@ export default function CourseManagement({
   }, [editingCourse, updateCourse]);
 
   const handleDeleteCourse = useCallback(async (courseId: string) => {
+    console.log("Attempting to delete course:", courseId);
     if (deleteCourse) {
       try {
         await deleteCourse(courseId);
@@ -96,7 +97,13 @@ export default function CourseManagement({
           title: "Success",
           description: "Course deleted successfully",
         });
+        // Update local state if onCoursesChange is provided
+        if (onCoursesChange) {
+          const updatedCourses = courses.filter(course => course.id !== courseId);
+          onCoursesChange(updatedCourses);
+        }
       } catch (error) {
+        console.error("Error deleting course:", error);
         toast({
           title: "Error",
           description: "Failed to delete course",
@@ -104,7 +111,7 @@ export default function CourseManagement({
         });
       }
     }
-  }, [deleteCourse, toast]);
+  }, [deleteCourse, toast, courses, onCoursesChange]);
 
   const handleCourseChange = useCallback((field: string, value: string) => {
     setNewCourse(prev => ({ ...prev, [field]: value }));

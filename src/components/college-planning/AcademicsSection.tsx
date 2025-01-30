@@ -24,6 +24,7 @@ export default function AcademicsSection({
   } = useAcademicData(externalCourses, onCoursesChange);
 
   const handleCoursesChange = useCallback((newCourses: Course[]) => {
+    console.log("Handling courses change:", newCourses);
     if (onCoursesChange) {
       onCoursesChange(newCourses);
     }
