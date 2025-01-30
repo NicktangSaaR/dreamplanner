@@ -76,15 +76,12 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
           <div className="text-2xl font-bold">GPA: {calculateCurrentGPA()}</div>
           <div className="text-sm text-muted-foreground space-y-2">
             <p>{courses.length} course{courses.length !== 1 ? 's' : ''}</p>
-            <div className="space-y-1">
-              <p className="text-xs font-medium">Course Types:</p>
-              <div className="flex gap-2 flex-wrap">
-                {Object.entries(courseTypeDistribution).map(([type, count]) => (
-                  <span key={type} className="text-xs bg-white/50 px-2 py-1 rounded">
-                    {type}: {count}
-                  </span>
-                ))}
-              </div>
+            <div className="flex gap-2 flex-wrap">
+              {Object.entries(courseTypeDistribution).map(([type, count]) => (
+                <span key={type} className="text-xs bg-white/50 px-2 py-1 rounded">
+                  {type}: {count}
+                </span>
+              ))}
             </div>
           </div>
         </CardContent>
