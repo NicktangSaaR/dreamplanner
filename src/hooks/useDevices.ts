@@ -18,25 +18,28 @@ export const useDevices = () => {
       const videoInputs = devices
         .filter(device => device.kind === "videoinput")
         .map(device => ({
-          id: device.deviceId,
+          deviceId: device.deviceId,
           label: device.label || `Camera ${device.deviceId.slice(0, 5)}...`
         }));
       
       const audioInputs = devices
         .filter(device => device.kind === "audioinput")
         .map(device => ({
-          id: device.deviceId,
+          deviceId: device.deviceId,
           label: device.label || `Microphone ${device.deviceId.slice(0, 5)}...`
         }));
+
+      console.log("Found video devices:", videoInputs);
+      console.log("Found audio devices:", audioInputs);
 
       setVideoDevices(videoInputs);
       setAudioDevices(audioInputs);
 
       if (videoInputs.length > 0 && !selectedVideoDevice) {
-        setSelectedVideoDevice(videoInputs[0].id);
+        setSelectedVideoDevice(videoInputs[0].deviceId);
       }
       if (audioInputs.length > 0 && !selectedAudioDevice) {
-        setSelectedAudioDevice(audioInputs[0].id);
+        setSelectedAudioDevice(audioInputs[0].deviceId);
       }
     } catch (error) {
       console.error("Error getting devices:", error);
