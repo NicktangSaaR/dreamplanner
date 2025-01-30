@@ -1,21 +1,23 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+
+export interface SocialMedia {
+  instagram?: string;
+  linkedin?: string;
+  twitter?: string;
+}
 
 export interface Profile {
   id: string;
+  user_type: string;
   full_name: string | null;
+  created_at: string;
+  updated_at: string;
   grade: string | null;
   school: string | null;
   interested_majors: string[] | null;
-  social_media: {
-    instagram?: string;
-    linkedin?: string;
-    twitter?: string;
-  } | null;
+  social_media: SocialMedia | null;
   personal_website: string | null;
-  user_type: string;
   graduation_school: string | null;
   background_intro: string | null;
   is_admin: boolean | null;
@@ -26,10 +28,10 @@ interface RawProfile extends Omit<Profile, 'social_media'> {
   social_media: any;
 }
 
-const transformProfile = (rawProfile: RawProfile): Profile => {
+const transformProfile = (rawProfile: RawProfile | null): Profile | null => {
   if (!rawProfile) return null;
   
-  let socialMedia = null;
+  let socialMedia: SocialMedia | null = null;
   try {
     if (rawProfile.social_media) {
       // If it's a string, try to parse it
@@ -37,7 +39,7 @@ const transformProfile = (rawProfile: RawProfile): Profile => {
         socialMedia = JSON.parse(rawProfile.social_media);
       } else {
         // If it's already an object, use it directly
-        socialMedia = rawProfile.social_media;
+        socialMedia = rawProfile.social_media as SocialMedia;
       }
     }
   } catch (error) {
@@ -51,75 +53,30 @@ const transformProfile = (rawProfile: RawProfile): Profile => {
   };
 };
 
-export function useProfile() {
-  const queryClient = useQueryClient();
-  const [error, setError] = useState<string | null>(null);
-
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ["profile"],
+export function useProfile(userId?: string) {
+  return useQuery({
+    queryKey: ["profile", userId],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
-
-      console.log("Fetching profile for user:", user.id);
+      if (!userId) throw new Error("No user ID provided");
       
+      console.log("Fetching profile for user:", userId);
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error fetching profile:", error);
-        setError(error.message);
-        return null;
-      }
-
-      console.log("Profile data:", data);
-      return data ? transformProfile(data as RawProfile) : null;
-    },
-  });
-
-  const updateProfile = useMutation({
-    mutationFn: async (updatedProfile: Partial<Profile>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
-
-      console.log("Updating profile for user:", user.id, "with data:", updatedProfile);
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .upsert({
-          id: user.id,
-          user_type: 'student',
-          ...updatedProfile
-        })
-        .select()
+        .eq("id", userId)
         .single();
 
       if (error) {
-        console.error("Error updating profile:", error);
+        console.error("Error fetching profile:", error);
         throw error;
       }
-      
-      console.log("Profile updated successfully:", data);
-      return transformProfile(data as RawProfile);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      toast.success("Profile updated successfully");
-    },
-    onError: (error) => {
-      console.error("Mutation error:", error);
-      toast.error("Failed to update profile");
-      setError(error.message);
-    },
-  });
 
-  return {
-    profile,
-    isLoading,
-    error,
-    updateProfile,
-  };
+      console.log("Raw profile data:", data);
+      const transformedProfile = transformProfile(data);
+      console.log("Transformed profile:", transformedProfile);
+      
+      return transformedProfile;
+    },
+    enabled: !!userId,
+  });
 }

@@ -6,7 +6,7 @@ interface RawProfile extends Omit<Profile, 'social_media'> {
   social_media: any;
 }
 
-const transformProfile = (rawProfile: RawProfile): Profile => {
+const transformProfile = (rawProfile: RawProfile | null): Profile | null => {
   if (!rawProfile) return null;
   
   let socialMedia = null;
@@ -37,14 +37,23 @@ export const useStudentData = (studentId: string | undefined) => {
     queryFn: async () => {
       if (!studentId) throw new Error("No student ID provided");
       
+      console.log("Fetching profile for student:", studentId);
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", studentId)
         .single();
 
-      if (error) throw error;
-      return transformProfile(data as RawProfile);
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
+      }
+
+      console.log("Raw student profile data:", data);
+      const transformedProfile = transformProfile(data as RawProfile);
+      console.log("Transformed student profile:", transformedProfile);
+      
+      return transformedProfile;
     },
     enabled: !!studentId,
   });
