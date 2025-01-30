@@ -46,8 +46,10 @@ export const usePracticeRecords = () => {
       console.log("Fetched practice records:", data);
       return data as PracticeRecord[];
     },
+    staleTime: 0, // Always fetch fresh data
     refetchOnMount: true,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    refetchInterval: 3000 // Refetch every 3 seconds to catch new records
   });
 
   const deleteRecord = useMutation({

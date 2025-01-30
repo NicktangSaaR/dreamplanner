@@ -12,7 +12,7 @@ const PracticeRecords = () => {
     return <div className="text-center py-8">加载练习记录中...</div>;
   }
 
-  console.log("Rendering practice records:", records);
+  console.log("Rendering practice records component with records:", records);
 
   return (
     <div className="space-y-6">
