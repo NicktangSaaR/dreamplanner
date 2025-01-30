@@ -1,96 +1,79 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { useProfile } from "@/hooks/useProfile";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import DashboardHeader from "@/components/college-planning/DashboardHeader";
+import StatisticsCards from "@/components/college-planning/StatisticsCards";
+import DashboardTabs from "@/components/college-planning/DashboardTabs";
+import { useStudentData } from "@/hooks/student/useStudentData";
+import { useStudentRealtime } from "@/hooks/student/useStudentRealtime";
+import { useTodos } from "@/hooks/useTodos";
 
 export default function StudentDashboard() {
-  const navigate = useNavigate();
   const { studentId } = useParams();
-  const { profile } = useProfile(studentId);
+  const queryClient = useQueryClient();
+  console.log("StudentDashboard - Student ID:", studentId);
 
-  const { data: relationship } = useQuery({
-    queryKey: ["counselor-relationship", studentId],
-    enabled: !!studentId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("counselor_student_relationships")
-        .select(`
-          counselor_id,
-          counselor:profiles!counselor_student_relationships_counselor_profiles_fkey(
-            full_name
-          )
-        `)
-        .eq("student_id", studentId)
-        .maybeSingle();
+  // Set up real-time subscriptions
+  useStudentRealtime(studentId, queryClient);
 
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Fetch student data
+  const {
+    profile,
+    courses,
+    activities,
+    notes,
+    isLoading,
+  } = useStudentData(studentId);
 
-  const handleBack = () => {
-    navigate("/");
+  // Use the useTodos hook to get real-time todo data
+  const { todos, isLoading: isTodosLoading } = useTodos();
+
+  if (isLoading || isTodosLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const todoStats = {
+    completed: todos.filter(todo => todo.completed).length,
+    starred: todos.filter(todo => todo.starred).length,
+    total: todos.length,
   };
 
-  const handleProfileClick = () => {
-    navigate(`/student-profile`);
-  };
+  console.log("StudentDashboard - Current todo stats:", todoStats);
 
-  if (!profile) return null;
+  const transformedActivities = activities.map(activity => ({
+    timeCommitment: activity.time_commitment || "",
+  }));
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-3xl font-bold">Student Dashboard</h1>
+    <div className="container mx-auto px-4 py-6 space-y-8">
+      <div className="max-w-7xl mx-auto">
+        <DashboardHeader />
+        <div className="mt-8">
+          <StatisticsCards 
+            courses={courses}
+            activities={transformedActivities}
+            notes={notes}
+            todoStats={todoStats}
+          />
         </div>
-        <Button onClick={handleProfileClick}>View Profile</Button>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Name: {profile.full_name}</p>
-            <p>Grade: {profile.grade}</p>
-            <p>School: {profile.school}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Counselor Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {relationship ? (
-              <p>Current Counselor: {relationship.counselor?.full_name}</p>
-            ) : (
-              <p>No counselor assigned</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button
-              className="w-full"
-              onClick={() => navigate("/mock-interview")}
-            >
-              Start Mock Interview
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="mt-8">
+          <DashboardTabs
+            courses={courses}
+            onCoursesChange={(newCourses) => {
+              queryClient.setQueryData(["student-courses", studentId], newCourses);
+            }}
+            onActivitiesChange={(newActivities) => {
+              queryClient.setQueryData(["student-activities", studentId], newActivities);
+            }}
+            onNotesChange={(newNotes) => {
+              queryClient.setQueryData(["student-notes", studentId], newNotes);
+            }}
+          />
+        </div>
       </div>
     </div>
   );
