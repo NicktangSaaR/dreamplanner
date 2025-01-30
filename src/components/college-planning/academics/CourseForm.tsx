@@ -166,21 +166,23 @@ export default function CourseForm({ newCourse, onCourseChange, onAddCourse, aca
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <Label htmlFor="semester">Semester</Label>
-          <Input
-            id="semester"
-            value={newCourse.semester}
-            onChange={(e) => onCourseChange('semester', e.target.value)}
-            placeholder="Enter semester"
-            className="mt-1"
-          />
+        <div className="flex items-end gap-3">
+          <div className="flex-1">
+            <Label htmlFor="semester">Semester</Label>
+            <Input
+              id="semester"
+              value={newCourse.semester}
+              onChange={(e) => onCourseChange('semester', e.target.value)}
+              placeholder="Enter semester"
+              className="mt-1"
+            />
+          </div>
+          <Button onClick={handleSubmit} className="mb-[1px]">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Course
+          </Button>
         </div>
       </div>
-      <Button onClick={handleSubmit} className="w-full mt-4">
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Add Course
-      </Button>
     </div>
   );
 }
