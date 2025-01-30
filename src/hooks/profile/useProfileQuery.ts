@@ -35,11 +35,13 @@ export const useProfileQuery = () => {
 
       // Handle interested_majors with proper type checking
       let interestedMajors: string[] | null = null;
-      if (data.interested_majors) {
-        if (Array.isArray(data.interested_majors)) {
-          interestedMajors = data.interested_majors;
-        } else if (typeof data.interested_majors === 'string') {
-          interestedMajors = data.interested_majors.split(',').map(m => m.trim());
+      const rawMajors = data.interested_majors as string[] | string | null;
+
+      if (rawMajors) {
+        if (Array.isArray(rawMajors)) {
+          interestedMajors = rawMajors;
+        } else if (typeof rawMajors === 'string') {
+          interestedMajors = rawMajors.split(',').map(m => m.trim());
         }
       }
 
