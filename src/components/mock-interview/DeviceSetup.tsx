@@ -26,36 +26,80 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
   useEffect(() => {
     const loadDevices = async () => {
       try {
-        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        console.log("Requesting initial device permissions...");
+        // First request permissions
+        const initialStream = await navigator.mediaDevices.getUserMedia({ 
+          video: true, 
+          audio: true 
+        });
+        console.log("Initial permissions granted");
+
+        // Then enumerate devices
         const devices = await navigator.mediaDevices.enumerateDevices();
+        console.log("Available devices:", devices);
         
-        const videos = devices.filter(device => device.kind === 'videoinput')
+        const videos = devices
+          .filter(device => device.kind === 'videoinput')
           .map(device => ({
             deviceId: device.deviceId,
             label: device.label || `摄像头 ${videoDevices.length + 1}`
           }));
         
-        const audios = devices.filter(device => device.kind === 'audioinput')
+        const audios = devices
+          .filter(device => device.kind === 'audioinput')
           .map(device => ({
             deviceId: device.deviceId,
             label: device.label || `麦克风 ${audioDevices.length + 1}`
           }));
 
+        console.log("Processed video devices:", videos);
+        console.log("Processed audio devices:", audios);
+
         setVideoDevices(videos);
         setAudioDevices(audios);
 
-        if (videos.length > 0) setSelectedVideoDevice(videos[0].deviceId);
-        if (audios.length > 0) setSelectedAudioDevice(audios[0].deviceId);
+        if (videos.length > 0) {
+          setSelectedVideoDevice(videos[0].deviceId);
+        }
+        if (audios.length > 0) {
+          setSelectedAudioDevice(audios[0].deviceId);
+        }
 
-        console.log("Available video devices:", videos);
-        console.log("Available audio devices:", audios);
+        // Stop the initial stream since we'll create a new one with selected devices
+        initialStream.getTracks().forEach(track => track.stop());
       } catch (error) {
         console.error("Error loading devices:", error);
-        toast.error("无法加载设备列表，请确保允许浏览器访问摄像头和麦克风。");
+        let errorMessage = "无法加载设备列表";
+        
+        if (error instanceof DOMException) {
+          switch (error.name) {
+            case 'NotAllowedError':
+              errorMessage = "请在浏览器设置中允许访问摄像头和麦克风";
+              break;
+            case 'NotFoundError':
+              errorMessage = "未找到摄像头或麦克风设备";
+              break;
+            case 'NotReadableError':
+              errorMessage = "无法访问摄像头或麦克风，请确认没有其他应用正在使用";
+              break;
+            default:
+              errorMessage = "设备访问出错，请确保设备正常工作并重试";
+          }
+        }
+        
+        toast.error(errorMessage);
       }
     };
 
     loadDevices();
+    
+    // Listen for device changes
+    navigator.mediaDevices.addEventListener('devicechange', loadDevices);
+    
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', loadDevices);
+      stopDevices();
+    };
   }, []);
 
   const startCamera = async () => {
@@ -88,21 +132,21 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
       }
     } catch (error) {
       console.error("Error accessing media devices:", error);
-      let errorMessage = "无法访问摄像头或麦克风。";
+      let errorMessage = "无法访问摄像头或麦克风";
       
       if (error instanceof DOMException) {
         switch (error.name) {
           case 'NotAllowedError':
-            errorMessage = "请允许浏览器访问摄像头和麦克风。";
+            errorMessage = "请在浏览器设置中允许访问摄像头和麦克风";
             break;
           case 'NotFoundError':
-            errorMessage = "未找到摄像头或麦克风设备。";
+            errorMessage = "未找到摄像头或麦克风设备";
             break;
           case 'NotReadableError':
-            errorMessage = "无法访问摄像头或麦克风，可能被其他应用程序占用。";
+            errorMessage = "无法访问摄像头或麦克风，请确认没有其他应用正在使用";
             break;
           default:
-            errorMessage = "设备访问出错，请确保设备正常工作并重试。";
+            errorMessage = "设备访问出错，请确保设备正常工作并重试";
         }
       }
       
