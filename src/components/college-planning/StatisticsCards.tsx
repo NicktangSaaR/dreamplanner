@@ -24,13 +24,18 @@ interface StatisticsCardsProps {
 export default function StatisticsCards({ courses, activities, notes, todoStats }: StatisticsCardsProps) {
   console.log("StatisticsCards - Current notes count:", notes.length);
 
-  const calculateCurrentGPA = () => {
+  const calculateCurrentGPA = (weighted: boolean = true) => {
     if (courses.length === 0) return "0.00";
     const validCourses = courses.filter(course => course.grade !== "In Progress");
     if (validCourses.length === 0) return "0.00";
     
     const totalGPA = validCourses.reduce((sum, course) => {
-      return sum + calculateGPA(course.grade, course.course_type || 'Regular', course.grade_type);
+      if (weighted) {
+        return sum + calculateGPA(course.grade, course.course_type || 'Regular', course.grade_type);
+      } else {
+        // For unweighted, always use 'Regular' as course type
+        return sum + calculateGPA(course.grade, 'Regular', course.grade_type);
+      }
     }, 0);
     
     return (totalGPA / validCourses.length).toFixed(2);
@@ -73,8 +78,17 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">GPA: {calculateCurrentGPA()}</div>
-          <div className="text-sm text-muted-foreground space-y-2">
+          <div className="space-y-2">
+            <div>
+              <p className="text-sm text-muted-foreground">Weighted</p>
+              <p className="text-2xl font-bold">GPA: {calculateCurrentGPA(true)}/4</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Unweighted</p>
+              <p className="text-2xl font-bold">GPA: {calculateCurrentGPA(false)}/4</p>
+            </div>
+          </div>
+          <div className="text-sm text-muted-foreground space-y-2 mt-2">
             <p>{courses.length} course{courses.length !== 1 ? 's' : ''}</p>
             <div className="flex gap-2 flex-wrap">
               {Object.entries(courseTypeDistribution).map(([type, count]) => (
