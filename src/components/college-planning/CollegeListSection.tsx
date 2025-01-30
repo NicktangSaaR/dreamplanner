@@ -31,6 +31,7 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useParams } from "react-router-dom";
 
 const formSchema = z.object({
   college_name: z.string().min(1, "College name is required"),
@@ -103,6 +104,7 @@ async function getCollegeUrl(collegeName: string): Promise<string> {
 export default function CollegeListSection() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { studentId } = useParams();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -114,16 +116,19 @@ export default function CollegeListSection() {
   });
 
   const { data: applications, refetch } = useQuery({
-    queryKey: ["college-applications"],
+    queryKey: ["college-applications", studentId],
     queryFn: async () => {
-      console.log("Fetching college applications");
+      console.log("Fetching college applications for student:", studentId);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
+
+      // If studentId is provided (counselor view), use that, otherwise use current user's id
+      const targetStudentId = studentId || user.id;
 
       const { data, error } = await supabase
         .from("college_applications")
         .select("*")
-        .eq("student_id", user.id)
+        .eq("student_id", targetStudentId)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -142,6 +147,9 @@ export default function CollegeListSection() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
+      // If studentId is provided (counselor view), use that, otherwise use current user's id
+      const targetStudentId = studentId || user.id;
+
       const collegeUrl = await getCollegeUrl(values.college_name);
       
       const applicationData = {
@@ -150,7 +158,7 @@ export default function CollegeListSection() {
         degree: values.degree,
         category: values.category,
         college_url: collegeUrl,
-        student_id: user.id
+        student_id: targetStudentId
       };
 
       const { error } = await supabase
