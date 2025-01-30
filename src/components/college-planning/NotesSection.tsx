@@ -7,6 +7,7 @@ import NotesList from "./notes/NotesList";
 import { useNotes } from "@/hooks/useNotes";
 import { Note } from "./types/note";
 import { useParams } from "react-router-dom";
+import SharedFolderSection from "./student-summary/SharedFolderSection";
 
 interface NotesSectionProps {
   onNotesChange?: (notes: Note[]) => void;
@@ -55,32 +56,40 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <StickyNote className="h-5 w-5" />
-            <CardTitle>Notes</CardTitle>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <StickyNote className="h-5 w-5" />
+              <CardTitle>Notes</CardTitle>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add Note
+            </Button>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Add Note
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <NotesList
-          notes={notes}
-          onTogglePin={handleTogglePinNote}
-          onToggleStar={handleToggleStarNote}
-          onEdit={setEditingNote}
-          canEdit={true}
-        />
-      </CardContent>
+        </CardHeader>
+        <CardContent>
+          <NotesList
+            notes={notes}
+            onTogglePin={handleTogglePinNote}
+            onToggleStar={handleToggleStarNote}
+            onEdit={setEditingNote}
+            canEdit={true}
+          />
+        </CardContent>
+      </Card>
+
+      {studentId && (
+        <Card>
+          <SharedFolderSection studentId={studentId} />
+        </Card>
+      )}
 
       <NoteDialog
         open={isDialogOpen || !!editingNote}
@@ -91,6 +100,6 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
         onSubmit={editingNote ? handleEditNote : handleCreateNote}
         editingNote={editingNote}
       />
-    </Card>
+    </div>
   );
 }
