@@ -17,7 +17,6 @@ interface InterviewContentProps {
   selectedQuestion: Question | undefined;
   timeLeft: number;
   countdownTime: number;
-  videoRef: React.RefObject<HTMLVideoElement>;
   recordedVideoUrl: string | null;
   currentQuestionNumber?: number;
   totalQuestions?: number;
@@ -39,7 +38,6 @@ const InterviewContent = ({
   selectedQuestion,
   timeLeft,
   countdownTime,
-  videoRef,
   recordedVideoUrl,
   currentQuestionNumber = 1,
   totalQuestions = 1,
@@ -133,7 +131,6 @@ const InterviewContent = ({
             )}
           </div>
           <VideoPreview
-            videoRef={videoRef}
             recordedVideoUrl={recordedVideoUrl}
             isReviewStage={stage === InterviewStage.REVIEW}
             onStopRecording={onStopRecording}
