@@ -31,12 +31,20 @@ const VideoPreview = ({
 
     if (recordedVideoUrl && selectedQuestionId) {
       try {
+        // Get the current user's session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user?.id) {
+          throw new Error("No authenticated user found");
+        }
+
         console.log("Saving practice record to database...");
         const { error } = await supabase
           .from("interview_practice_records")
           .insert({
             video_url: recordedVideoUrl,
-            question_id: selectedQuestionId
+            question_id: selectedQuestionId,
+            user_id: session.user.id
           });
 
         if (error) throw error;
