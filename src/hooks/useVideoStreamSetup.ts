@@ -13,6 +13,7 @@ export const useVideoStreamSetup = ({
   const streamRef = useRef<MediaStream | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [initializationAttempts, setInitializationAttempts] = useState(0);
+  const mountedRef = useRef(true);
 
   const stopStream = () => {
     console.log("Stopping video stream");
@@ -36,7 +37,9 @@ export const useVideoStreamSetup = ({
   const initializeStream = async () => {
     try {
       // 先停止任何现有的流
-      stopStream();
+      if (streamRef.current) {
+        stopStream();
+      }
 
       console.log("Requesting media stream...");
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -57,6 +60,12 @@ export const useVideoStreamSetup = ({
         videoTracks: stream.getVideoTracks().length,
         audioTracks: stream.getAudioTracks().length
       });
+
+      if (!mountedRef.current) {
+        console.log("Component unmounted, cleaning up new stream");
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -109,7 +118,7 @@ export const useVideoStreamSetup = ({
       } catch (error) {
         console.error(`Initialization retry ${initializationAttempts + 1} failed:`, error);
         if (initializationAttempts < 2) {
-          setTimeout(retryInitialization, 1000); // Wait 1 second before next retry
+          setTimeout(retryInitialization, 1000);
         }
       }
     }
@@ -117,10 +126,10 @@ export const useVideoStreamSetup = ({
 
   useEffect(() => {
     console.log("Setting up video stream");
-    let mounted = true;
+    mountedRef.current = true;
 
     const init = async () => {
-      if (mounted) {
+      if (mountedRef.current) {
         try {
           await initializeStream();
         } catch (error) {
@@ -134,7 +143,7 @@ export const useVideoStreamSetup = ({
 
     return () => {
       console.log("Cleaning up video stream");
-      mounted = false;
+      mountedRef.current = false;
       stopStream();
     };
   }, []);

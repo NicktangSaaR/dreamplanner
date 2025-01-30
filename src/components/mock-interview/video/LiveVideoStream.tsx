@@ -14,7 +14,7 @@ const LiveVideoStream = ({
 }: LiveVideoStreamProps) => {
   const { 
     videoRef, 
-    isInitialized, 
+    isInitialized,
     initializeStream,
     retryInitialization 
   } = useVideoStreamSetup({
@@ -23,16 +23,28 @@ const LiveVideoStream = ({
   });
 
   useEffect(() => {
+    let mounted = true;
+    
     const init = async () => {
+      if (!mounted) return;
+      
       try {
+        console.log("Initializing stream in LiveVideoStream");
         await initializeStream();
       } catch (error) {
         console.error("Error initializing stream in LiveVideoStream:", error);
-        retryInitialization();
+        if (mounted) {
+          retryInitialization();
+        }
       }
     };
+
     init();
-  }, []); // 仅在组件挂载时执行
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div className="relative w-full h-full">
