@@ -14,7 +14,7 @@ export default function ExtracurricularSection({ onActivitiesChange }: { onActiv
     name: "",
     role: "",
     description: "",
-    timeCommitment: "",
+    time_commitment: "",
   });
   const { toast } = useToast();
 
@@ -51,7 +51,10 @@ export default function ExtracurricularSection({ onActivitiesChange }: { onActiv
         .from("extracurricular_activities")
         .insert([
           {
-            ...newActivity,
+            name: newActivity.name,
+            role: newActivity.role,
+            description: newActivity.description,
+            time_commitment: newActivity.time_commitment,
             student_id: user.id,
           },
         ]);
@@ -68,7 +71,7 @@ export default function ExtracurricularSection({ onActivitiesChange }: { onActiv
         name: "",
         role: "",
         description: "",
-        timeCommitment: "",
+        time_commitment: "",
       });
       setIsDialogOpen(false);
       

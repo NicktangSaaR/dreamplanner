@@ -8,7 +8,7 @@ interface ActivityFormDialogProps {
     name: string;
     role: string;
     description: string;
-    timeCommitment: string;
+    time_commitment: string;
   };
   onActivityChange: (field: string, value: string) => void;
   onAddActivity: () => Promise<void>;
@@ -23,7 +23,6 @@ export default function ActivityFormDialog({
 }: ActivityFormDialogProps) {
   const handleAddActivity = async () => {
     await onAddActivity();
-    // Don't call onOpenChange here - it will be handled by the parent component
   };
 
   return (

@@ -3,5 +3,5 @@ export interface Activity {
   name: string;
   role: string;
   description?: string;
-  timeCommitment?: string;
+  time_commitment?: string;
 }

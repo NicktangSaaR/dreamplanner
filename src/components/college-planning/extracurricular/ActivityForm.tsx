@@ -8,7 +8,7 @@ interface ActivityFormProps {
     name: string;
     role: string;
     description: string;
-    timeCommitment: string;
+    time_commitment: string;
   };
   onActivityChange: (field: string, value: string) => void;
   onAddActivity: () => Promise<void>;
@@ -59,13 +59,13 @@ export default function ActivityForm({
         />
       </div>
       <div>
-        <label htmlFor="timeCommitment" className="block text-sm font-medium mb-1">
+        <label htmlFor="time_commitment" className="block text-sm font-medium mb-1">
           Time Commitment
         </label>
         <Input
-          id="timeCommitment"
-          value={newActivity.timeCommitment}
-          onChange={(e) => onActivityChange("timeCommitment", e.target.value)}
+          id="time_commitment"
+          value={newActivity.time_commitment}
+          onChange={(e) => onActivityChange("time_commitment", e.target.value)}
         />
       </div>
       <Button type="submit" className="w-full">

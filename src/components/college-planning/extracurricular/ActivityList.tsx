@@ -16,8 +16,8 @@ export default function ActivityList({ activities }: ActivityListProps) {
               <p className="font-medium">{activity.name}</p>
               <p className="text-sm text-gray-600">{activity.role}</p>
             </div>
-            {activity.timeCommitment && (
-              <Badge variant="secondary">{activity.timeCommitment}</Badge>
+            {activity.time_commitment && (
+              <Badge variant="secondary">{activity.time_commitment}</Badge>
             )}
           </div>
           {activity.description && (
