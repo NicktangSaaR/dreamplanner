@@ -134,5 +134,6 @@ export const useDevices = () => {
     isAudioWorking,
     startDeviceTest,
     stopDevices,
+    stream, // Added stream to the return value
   };
 };

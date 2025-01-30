@@ -83,7 +83,7 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
         <DeviceControls
           isCameraWorking={isCameraWorking}
           isAudioWorking={isAudioWorking}
-          onTest={startDeviceTest}
+          onTest={() => startDeviceTest(videoRef)}
           onComplete={handleComplete}
           videoRef={videoRef}
         />
