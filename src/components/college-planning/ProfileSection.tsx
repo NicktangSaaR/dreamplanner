@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useProfile } from "@/hooks/useProfile";
 import ProfileDisplay from "./ProfileDisplay";
 import ProfileEditForm from "./ProfileEditForm";
-import { ProfileFormData } from "./types";
+import { ProfileFormData } from "@/types/profile";
 
 export default function ProfileSection() {
   const { profile, updateProfile } = useProfile();
@@ -28,17 +28,21 @@ export default function ProfileSection() {
   });
 
   const onSubmit = async (data: ProfileFormData) => {
-    await updateProfile.mutateAsync({
-      full_name: data.full_name,
-      grade: data.grade,
-      school: data.school,
-      interested_majors: data.interested_majors.split(",").map(m => m.trim()),
-      graduation_school: data.graduation_school,
-      background_intro: data.background_intro,
-      social_media: data.social_media,
-      personal_website: data.personal_website,
-    });
-    setIsEditing(false);
+    try {
+      await updateProfile.mutateAsync({
+        full_name: data.full_name,
+        grade: data.grade,
+        school: data.school,
+        interested_majors: data.interested_majors.split(",").map(m => m.trim()),
+        graduation_school: data.graduation_school,
+        background_intro: data.background_intro,
+        social_media: data.social_media,
+        personal_website: data.personal_website,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
   };
 
   const isCounselor = profile?.user_type === 'counselor';

@@ -25,8 +25,18 @@ export const useProfileQuery = () => {
         throw error;
       }
 
-      console.log("Profile data fetched:", data);
-      return data;
+      // Transform the social_media field to ensure type safety
+      const transformedData: Profile = {
+        ...data,
+        social_media: data.social_media ? {
+          linkedin: data.social_media.linkedin || undefined,
+          twitter: data.social_media.twitter || undefined,
+          instagram: data.social_media.instagram || undefined,
+        } : null
+      };
+
+      console.log("Profile data fetched:", transformedData);
+      return transformedData;
     },
   });
 };
