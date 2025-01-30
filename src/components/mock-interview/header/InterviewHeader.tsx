@@ -9,6 +9,7 @@ interface InterviewHeaderProps {
   onBackToSettings: () => void;
   onShowDeviceSetup: () => void;
   onLogout: () => void;
+  onCleanupMedia?: () => void;
 }
 
 const InterviewHeader = ({
@@ -17,7 +18,15 @@ const InterviewHeader = ({
   onBackToSettings,
   onShowDeviceSetup,
   onLogout,
+  onCleanupMedia,
 }: InterviewHeaderProps) => {
+  const handleHomeClick = () => {
+    console.log("Cleaning up media streams before navigating home");
+    if (onCleanupMedia) {
+      onCleanupMedia();
+    }
+  };
+
   return (
     <div className="flex justify-between items-center mb-12">
       <div className="space-y-2">
@@ -37,7 +46,7 @@ const InterviewHeader = ({
             <ArrowLeft className="h-5 w-5" />
           </Button>
         )}
-        <Link to="/">
+        <Link to="/" onClick={handleHomeClick}>
           <Button variant="ghost" size="icon" className="w-10 h-10">
             <Home className="h-5 w-5" />
           </Button>
