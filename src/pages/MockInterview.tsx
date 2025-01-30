@@ -15,6 +15,7 @@ import DeviceSetup from "@/components/mock-interview/device-setup/DeviceSetup";
 import { useInterviewState } from "@/hooks/useInterviewState";
 import { useVideoStream } from "@/hooks/useVideoStream";
 import { useProfile } from "@/hooks/useProfile";
+import { Question, InterviewSettings } from "@/components/mock-interview/types";
 
 const DEVICE_SETTINGS_KEY = 'interview-device-settings';
 const SETTINGS_VALIDITY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
@@ -22,12 +23,12 @@ const SETTINGS_VALIDITY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 const MockInterview = () => {
   const navigate = useNavigate();
   const { profile } = useProfile();
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<InterviewSettings>({
     prepTime: 120,
     responseTime: 180,
     selectedQuestionId: null,
-    practiceMode: 'single' as const,
-    questionOrder: 'sequential' as const,
+    practiceMode: 'single',
+    questionOrder: 'sequential',
     numberOfQuestions: 2,
   });
 
