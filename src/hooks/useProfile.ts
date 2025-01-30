@@ -5,6 +5,7 @@ export interface SocialMedia {
   instagram?: string;
   linkedin?: string;
   twitter?: string;
+  [key: string]: string | undefined; // Add index signature
 }
 
 export interface Profile {
@@ -26,13 +27,6 @@ export interface Profile {
 
 interface RawProfile extends Omit<Profile, 'social_media'> {
   social_media: any;
-}
-
-interface UseProfileResult {
-  profile: Profile | null;
-  isLoading: boolean;
-  error: Error | null;
-  updateProfile: ReturnType<typeof useMutation<Profile, Error, Partial<Profile>>>;
 }
 
 const transformProfile = (rawProfile: RawProfile | null): Profile | null => {
@@ -58,10 +52,10 @@ const transformProfile = (rawProfile: RawProfile | null): Profile | null => {
   };
 };
 
-export function useProfile(userId?: string): UseProfileResult {
+export function useProfile(userId?: string) {
   const queryClient = useQueryClient();
 
-  const { data: profile, isLoading, error } = useQuery({
+  const query = useQuery({
     queryKey: ["profile", userId],
     queryFn: async () => {
       if (!userId) throw new Error("No user ID provided");
@@ -87,13 +81,19 @@ export function useProfile(userId?: string): UseProfileResult {
     enabled: !!userId,
   });
 
-  const updateProfile = useMutation({
+  const mutation = useMutation({
     mutationFn: async (updates: Partial<Profile>) => {
       if (!userId) throw new Error("No user ID provided");
 
+      // Convert social_media to a plain object before sending to Supabase
+      const updatesForDb = {
+        ...updates,
+        social_media: updates.social_media ? { ...updates.social_media } : null
+      };
+
       const { data, error } = await supabase
         .from("profiles")
-        .update(updates)
+        .update(updatesForDb)
         .eq("id", userId)
         .select()
         .single();
@@ -107,9 +107,9 @@ export function useProfile(userId?: string): UseProfileResult {
   });
 
   return {
-    profile: profile || null,
-    isLoading,
-    error: error as Error | null,
-    updateProfile,
+    profile: query.data,
+    isLoading: query.isLoading,
+    error: query.error as Error | null,
+    updateProfile: mutation
   };
 }
