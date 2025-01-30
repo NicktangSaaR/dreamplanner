@@ -6,6 +6,7 @@ import { Question, InterviewSettings as Settings } from "./types";
 import TimeSettings from "./settings/TimeSettings";
 import QuestionBankSelect from "./settings/QuestionBankSelect";
 import AddQuestionDialog from "./settings/AddQuestionDialog";
+import PracticeModeSettings from "./settings/PracticeModeSettings";
 
 interface InterviewSettingsProps {
   settings: Settings;
@@ -53,6 +54,23 @@ const InterviewSettings = ({
           onQuestionSelect={(questionId) => onSettingsChange({
             ...settings,
             selectedQuestionId: questionId
+          })}
+        />
+        <PracticeModeSettings
+          practiceMode={settings.practiceMode}
+          questionOrder={settings.questionOrder}
+          numberOfQuestions={settings.numberOfQuestions}
+          onPracticeModeChange={(mode) => onSettingsChange({
+            ...settings,
+            practiceMode: mode
+          })}
+          onQuestionOrderChange={(order) => onSettingsChange({
+            ...settings,
+            questionOrder: order
+          })}
+          onNumberOfQuestionsChange={(num) => onSettingsChange({
+            ...settings,
+            numberOfQuestions: num
           })}
         />
         <AddQuestionDialog />

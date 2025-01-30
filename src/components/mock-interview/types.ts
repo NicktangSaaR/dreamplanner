@@ -11,4 +11,7 @@ export interface InterviewSettings {
   prepTime: number;
   responseTime: number;
   selectedQuestionId: string | null;
+  practiceMode: 'single' | 'multiple';
+  questionOrder: 'sequential' | 'random';
+  numberOfQuestions: number;
 }
