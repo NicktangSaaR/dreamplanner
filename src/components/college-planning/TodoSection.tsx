@@ -5,18 +5,7 @@ import TodoForm from "./todos/TodoForm";
 import BulkImportForm from "./todos/BulkImportForm";
 import TodoItem from "./todos/TodoItem";
 import { useCallback, memo } from "react";
-
-// Define the Todo type interface
-interface Todo {
-  id: string;
-  title: string;
-  completed: boolean;
-  starred: boolean;
-  author_id: string;
-  created_at: string;
-  updated_at: string;
-  due_date: string;
-}
+import { Todo } from "@/hooks/todos/useTodoQuery";
 
 // Define props interface for TodoList
 interface TodoListProps {
