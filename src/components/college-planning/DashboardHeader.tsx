@@ -22,7 +22,12 @@ export default function DashboardHeader() {
   };
 
   const handleProfile = () => {
-    navigate('/profile');
+    // Update the navigation based on user type
+    if (profile?.user_type === 'student') {
+      navigate('/student-profile');
+    } else if (profile?.user_type === 'counselor') {
+      navigate('/counselor-profile');
+    }
   };
 
   const handleMockInterview = () => {
@@ -74,6 +79,7 @@ export default function DashboardHeader() {
           size="icon"
           onClick={handleProfile}
           className="hover:bg-secondary"
+          title="Profile"
         >
           <UserRound className="h-5 w-5" />
         </Button>
@@ -82,6 +88,7 @@ export default function DashboardHeader() {
           size="icon"
           onClick={handleLogout}
           className="hover:bg-secondary"
+          title="Logout"
         >
           <LogOut className="h-5 w-5" />
         </Button>
