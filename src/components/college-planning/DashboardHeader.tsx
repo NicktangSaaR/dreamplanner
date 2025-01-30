@@ -22,11 +22,19 @@ export default function DashboardHeader() {
   };
 
   const handleProfile = () => {
-    console.log("Profile button clicked, user type:", profile?.user_type);
-    if (profile?.user_type === 'student') {
+    console.log("Profile button clicked, profile data:", profile);
+    
+    // Get user type from profile
+    const userType = profile?.user_type;
+    console.log("User type:", userType);
+
+    if (userType === 'student') {
       navigate('/student-profile');
-    } else if (profile?.user_type === 'counselor') {
+    } else if (userType === 'counselor') {
       navigate('/counselor-profile');
+    } else {
+      console.error("Unknown user type:", userType);
+      toast.error("Unable to determine user type");
     }
   };
 
