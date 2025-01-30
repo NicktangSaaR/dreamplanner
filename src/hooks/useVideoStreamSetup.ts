@@ -12,13 +12,18 @@ export const useVideoStreamSetup = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [initializationAttempts, setInitializationAttempts] = useState(0);
 
   const stopStream = () => {
     console.log("Stopping video stream");
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => {
         track.stop();
-        console.log(`Stopped ${track.kind} track:`, track.label);
+        console.log(`Stopped ${track.kind} track:`, {
+          label: track.label,
+          enabled: track.enabled,
+          readyState: track.readyState
+        });
       });
       streamRef.current = null;
     }
@@ -95,6 +100,21 @@ export const useVideoStreamSetup = ({
     }
   };
 
+  const retryInitialization = async () => {
+    if (initializationAttempts < 3) {
+      console.log(`Retrying stream initialization (attempt ${initializationAttempts + 1}/3)...`);
+      setInitializationAttempts(prev => prev + 1);
+      try {
+        await initializeStream();
+      } catch (error) {
+        console.error(`Initialization retry ${initializationAttempts + 1} failed:`, error);
+        if (initializationAttempts < 2) {
+          setTimeout(retryInitialization, 1000); // Wait 1 second before next retry
+        }
+      }
+    }
+  };
+
   useEffect(() => {
     console.log("Setting up video stream");
     let mounted = true;
@@ -105,6 +125,7 @@ export const useVideoStreamSetup = ({
           await initializeStream();
         } catch (error) {
           console.error("Failed to initialize stream:", error);
+          retryInitialization();
         }
       }
     };
@@ -122,6 +143,7 @@ export const useVideoStreamSetup = ({
     videoRef,
     isInitialized,
     stopStream,
-    initializeStream // 导出初始化方法以便需要时重新初始化
+    initializeStream,
+    retryInitialization
   };
 };

@@ -12,18 +12,23 @@ const LiveVideoStream = ({
   onStreamError,
   isRecording = false
 }: LiveVideoStreamProps) => {
-  const { videoRef, isInitialized, initializeStream } = useVideoStreamSetup({
+  const { 
+    videoRef, 
+    isInitialized, 
+    initializeStream,
+    retryInitialization 
+  } = useVideoStreamSetup({
     onStreamInitialized,
     onStreamError
   });
 
   useEffect(() => {
-    // 组件挂载时尝试初始化流
     const init = async () => {
       try {
         await initializeStream();
       } catch (error) {
         console.error("Error initializing stream in LiveVideoStream:", error);
+        retryInitialization();
       }
     };
     init();
