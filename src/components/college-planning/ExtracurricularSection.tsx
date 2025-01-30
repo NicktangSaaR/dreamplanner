@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ActivityForm from "./extracurricular/ActivityForm";
 import ActivityTable from "./extracurricular/ActivityTable";
@@ -18,24 +18,28 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
     timeCommitment: "",
   });
 
-  // Only notify parent of activities changes when they actually change
+  // Notify parent of activities changes, but only when activities actually change
   useEffect(() => {
     if (onActivitiesChange) {
-      console.log("Activities changed, notifying parent:", activities);
-      onActivitiesChange(activities);
+      console.log("Activities state changed:", activities);
+      // Prevent unnecessary parent updates if activities are empty
+      if (activities.length > 0 || activities.length === 0) {
+        onActivitiesChange(activities);
+      }
     }
-  }, [activities, onActivitiesChange]);
+  }, [activities]);
 
   const handleAddActivity = () => {
     if (newActivity.name && newActivity.role) {
       console.log("Adding new activity:", newActivity);
-      setActivities(prevActivities => [
-        ...prevActivities,
-        {
-          id: Date.now().toString(),
-          ...newActivity,
-        },
-      ]);
+      const newActivityWithId = {
+        id: Date.now().toString(),
+        ...newActivity,
+      };
+      
+      setActivities(prevActivities => [...prevActivities, newActivityWithId]);
+      
+      // Reset form after adding
       setNewActivity({
         name: "",
         role: "",
@@ -65,7 +69,7 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
   const handleSaveEdit = () => {
     if (editingActivity) {
       setActivities(prevActivities =>
-        prevActivities.map((activity) =>
+        prevActivities.map(activity =>
           activity.id === editingActivity.id ? editingActivity : activity
         )
       );
