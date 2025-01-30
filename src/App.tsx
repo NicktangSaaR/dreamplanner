@@ -4,7 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import AuthLayout from "@/components/auth/AuthLayout";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
-import Profile from "@/pages/Profile";
+import StudentProfilePage from "@/pages/StudentProfilePage";
+import CounselorProfilePage from "@/pages/CounselorProfilePage";
 import CounselorDashboard from "@/pages/CounselorDashboard";
 import StudentDashboard from "@/pages/StudentDashboard";
 import StudentView from "@/pages/StudentView";
@@ -24,7 +25,8 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
         <Route element={<AuthLayout />}>
           <Route path="/mock-interview" element={<MockInterview />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/student-profile" element={<StudentProfilePage />} />
+          <Route path="/counselor-profile" element={<CounselorProfilePage />} />
           <Route path="/counselor-dashboard" element={<CounselorDashboard />} />
           <Route
             path="/counselor-dashboard/student/:studentId"
