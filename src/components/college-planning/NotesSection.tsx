@@ -1,7 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNotes } from "@/hooks/useNotes";
+import { useState, useCallback, useEffect } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import NoteDialog from "./NoteDialog";
-import NotesList from "./NotesList";
+import { useNotes } from "@/hooks/useNotes";
+import NoteListItem from "./notes/NoteListItem";
 
 interface Note {
   id: string;
@@ -58,24 +62,44 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
     return Boolean(note?.id);
   }, []);
 
-  // Only notify parent when notes change and are valid
   useEffect(() => {
-    if (onNotesChange && Array.isArray(notes)) {
-      console.log("Notes changed:", notes);
-      onNotesChange(notes);
-    }
+    if (!onNotesChange || !Array.isArray(notes)) return;
+    console.log("Notes changed:", notes);
+    onNotesChange(notes);
   }, [notes, onNotesChange]);
 
   return (
-    <div className="space-y-4">
-      <NotesList
-        notes={notes}
-        onCreateNote={() => setOpen(true)}
-        onTogglePin={handleTogglePin}
-        onToggleStar={handleToggleStar}
-        onEdit={handleEditNote}
-        canEditNote={canEditNote}
-      />
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <h3 className="text-lg font-semibold">Notes</h3>
+        <Button onClick={() => setOpen(true)} variant="outline" size="sm">
+          <Plus className="h-4 w-4 mr-1" />
+          Add Note
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[300px] sm:h-[400px] w-full rounded-md border p-4">
+          <div className="space-y-3">
+            {Array.isArray(notes) && notes.map((note) => (
+              note && note.id ? (
+                <NoteListItem
+                  key={note.id}
+                  note={note}
+                  onTogglePin={handleTogglePin}
+                  onToggleStar={handleToggleStar}
+                  onEdit={handleEditNote}
+                  canEdit={canEditNote(note)}
+                />
+              ) : null
+            ))}
+            {(!Array.isArray(notes) || notes.length === 0) && (
+              <div className="text-center text-muted-foreground py-8">
+                No notes yet. Click "Add Note" to create one.
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </CardContent>
 
       <NoteDialog
         open={open}
@@ -83,6 +107,6 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
         onSubmit={editingNote ? handleUpdateNote : handleCreateNote}
         editingNote={editingNote}
       />
-    </div>
+    </Card>
   );
 }
