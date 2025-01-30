@@ -33,7 +33,17 @@ export const useProfileQuery = () => {
         instagram?: string; 
       } | null;
 
-      // Transform the social_media field to ensure type safety
+      // Handle interested_majors with proper type checking
+      let interestedMajors: string[] | null = null;
+      if (data.interested_majors) {
+        if (Array.isArray(data.interested_majors)) {
+          interestedMajors = data.interested_majors;
+        } else if (typeof data.interested_majors === 'string') {
+          interestedMajors = data.interested_majors.split(',').map(m => m.trim());
+        }
+      }
+
+      // Transform the data with proper type handling
       const transformedData: Profile = {
         ...data,
         social_media: socialMedia ? {
@@ -41,13 +51,7 @@ export const useProfileQuery = () => {
           twitter: socialMedia.twitter || "",
           instagram: socialMedia.instagram || "",
         } : null,
-        interested_majors: data.interested_majors 
-          ? Array.isArray(data.interested_majors)
-            ? data.interested_majors
-            : typeof data.interested_majors === 'string'
-              ? data.interested_majors.split(',').map(m => m.trim())
-              : []
-          : null
+        interested_majors: interestedMajors
       };
 
       console.log("Profile data fetched:", transformedData);
