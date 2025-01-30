@@ -21,6 +21,16 @@ const VideoPreview = ({
   const recordedVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
+    // When not in review stage and videoRef exists, ensure video stream is properly connected
+    if (!isReviewStage && videoRef.current && videoRef.current.srcObject) {
+      console.log("Reinitializing live video preview");
+      videoRef.current.play().catch(error => {
+        console.error("Error playing live video:", error);
+      });
+    }
+  }, [isReviewStage, videoRef]);
+
+  useEffect(() => {
     if (isReviewStage && recordedVideoUrl && recordedVideoRef.current) {
       console.log("Setting up recorded video playback:", recordedVideoUrl);
       recordedVideoRef.current.src = recordedVideoUrl;
