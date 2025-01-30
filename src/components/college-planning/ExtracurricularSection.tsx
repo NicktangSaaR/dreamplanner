@@ -99,7 +99,11 @@ export default function ExtracurricularSection({ onActivitiesChange }: { onActiv
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <h3 className="text-lg font-semibold">Extracurricular Activities</h3>
-        <Button onClick={() => setIsDialogOpen(true)} variant="outline" size="sm">
+        <Button 
+          onClick={() => setIsDialogOpen(true)} 
+          className="bg-[#9b87f5] hover:bg-[#7E69AB] text-white"
+          size="sm"
+        >
           <Plus className="h-4 w-4 mr-1" />
           Add Activity
         </Button>
