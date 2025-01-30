@@ -23,7 +23,7 @@ export default function DashboardTabs({
 
   return (
     <Tabs defaultValue="academics" className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-5 bg-card">
         <TabsTrigger value="academics">Academics</TabsTrigger>
         <TabsTrigger value="extracurricular">Extracurricular</TabsTrigger>
         <TabsTrigger value="notes">Notes</TabsTrigger>
