@@ -29,10 +29,13 @@ export const useProfileQuery = () => {
       const transformedData: Profile = {
         ...data,
         social_media: data.social_media ? {
-          linkedin: (data.social_media as any).linkedin || undefined,
-          twitter: (data.social_media as any).twitter || undefined,
-          instagram: (data.social_media as any).instagram || undefined,
-        } : null
+          linkedin: data.social_media.linkedin || "",
+          twitter: data.social_media.twitter || "",
+          instagram: data.social_media.instagram || "",
+        } : null,
+        interested_majors: Array.isArray(data.interested_majors) 
+          ? data.interested_majors 
+          : data.interested_majors?.split(',').map(m => m.trim()) || null
       };
 
       console.log("Profile data fetched:", transformedData);

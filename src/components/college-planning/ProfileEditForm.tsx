@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { ProfileFormData } from "./types";
+import { ProfileFormData } from "@/types/profile";
 import { UseFormReturn } from "react-hook-form";
 
 interface ProfileEditFormProps {

@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Edit, Globe } from "lucide-react";
-import { Profile } from "@/hooks/useProfile";
+import { Profile } from "@/types/profile";
 
 interface ProfileDisplayProps {
   profile: Profile | null;
@@ -48,7 +48,7 @@ export default function ProfileDisplay({ profile, onEdit }: ProfileDisplayProps)
                 <Label>School</Label>
                 <p className="text-sm">{profile?.school || "Not set"}</p>
               </div>
-              <div>
+              <div className="col-span-2">
                 <Label>Interested Majors</Label>
                 <p className="text-sm">{profile?.interested_majors?.join(", ") || "Not set"}</p>
               </div>
