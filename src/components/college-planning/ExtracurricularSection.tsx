@@ -18,27 +18,24 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
     timeCommitment: "",
   });
 
-  // Memoize the activities change callback to prevent unnecessary re-renders
-  const handleActivitiesChange = useCallback(() => {
+  // Only notify parent of activities changes when they actually change
+  useEffect(() => {
     if (onActivitiesChange) {
+      console.log("Activities changed, notifying parent:", activities);
       onActivitiesChange(activities);
     }
   }, [activities, onActivitiesChange]);
 
-  useEffect(() => {
-    handleActivitiesChange();
-  }, [handleActivitiesChange]);
-
   const handleAddActivity = () => {
     if (newActivity.name && newActivity.role) {
-      const updatedActivities = [
-        ...activities,
+      console.log("Adding new activity:", newActivity);
+      setActivities(prevActivities => [
+        ...prevActivities,
         {
           id: Date.now().toString(),
           ...newActivity,
         },
-      ];
-      setActivities(updatedActivities);
+      ]);
       setNewActivity({
         name: "",
         role: "",
@@ -49,7 +46,7 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
   };
 
   const handleActivityChange = (field: string, value: string) => {
-    setNewActivity({ ...newActivity, [field]: value });
+    setNewActivity(prev => ({ ...prev, [field]: value }));
   };
 
   const handleEditActivity = (activity: Activity) => {
@@ -58,17 +55,17 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
 
   const handleEditingActivityChange = (field: string, value: string) => {
     if (editingActivity) {
-      setEditingActivity({
-        ...editingActivity,
+      setEditingActivity(prev => ({
+        ...prev!,
         [field]: value,
-      });
+      }));
     }
   };
 
   const handleSaveEdit = () => {
     if (editingActivity) {
-      setActivities(
-        activities.map((activity) =>
+      setActivities(prevActivities =>
+        prevActivities.map((activity) =>
           activity.id === editingActivity.id ? editingActivity : activity
         )
       );

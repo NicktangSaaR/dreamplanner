@@ -36,13 +36,18 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
   console.log("ActivitiesSection - Rendering with activities:", activities);
 
   const handleActivityChange = (field: string, value: string) => {
-    setNewActivity({ ...newActivity, [field]: value });
+    setNewActivity(prev => ({ ...prev, [field]: value }));
   };
 
   const handleAddActivity = async () => {
     try {
       if (!newActivity.name || !newActivity.role) {
         toast.error("Activity name and role are required");
+        return;
+      }
+
+      if (!studentId) {
+        toast.error("No student ID available");
         return;
       }
 
@@ -65,7 +70,7 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
       console.log("Activity added successfully");
       toast.success("Activity added successfully");
       
-      // Invalidate the activities query to trigger a refresh
+      // Invalidate and refetch the activities query
       await queryClient.invalidateQueries({ 
         queryKey: ["student-activities", studentId] 
       });
