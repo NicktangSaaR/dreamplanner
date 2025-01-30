@@ -26,6 +26,7 @@ const VideoPreview = ({
 }: VideoPreviewProps) => {
   const queryClient = useQueryClient();
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [streamError, setStreamError] = useState<string | null>(null);
 
   const handleStreamInitialized = (newStream: MediaStream) => {
     console.log("Stream initialized in VideoPreview:", {
@@ -33,6 +34,15 @@ const VideoPreview = ({
       audioTracks: newStream.getAudioTracks().length
     });
     setStream(newStream);
+    setStreamError(null); // Clear any previous errors
+  };
+
+  const handleStreamError = (error: Error) => {
+    console.error("Stream initialization error:", error);
+    setStreamError(error.message);
+    toast.error("视频初始化失败", {
+      description: error.message
+    });
   };
 
   const handleStopRecording = async () => {
@@ -86,7 +96,19 @@ const VideoPreview = ({
         {isReviewStage && recordedVideoUrl ? (
           <RecordedVideoPlayer recordedVideoUrl={recordedVideoUrl} />
         ) : (
-          <LiveVideoStream onStreamInitialized={handleStreamInitialized} />
+          <>
+            <LiveVideoStream 
+              onStreamInitialized={handleStreamInitialized} 
+              onStreamError={handleStreamError}
+            />
+            {streamError && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100/90">
+                <p className="text-red-500 text-center p-4">
+                  {streamError}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
       <div className="flex justify-center gap-4">
@@ -100,6 +122,7 @@ const VideoPreview = ({
             variant="destructive"
             size="lg"
             className="flex items-center gap-2 text-lg"
+            disabled={!!streamError}
           >
             <StopCircle className="w-5 h-5" />
             结束面试

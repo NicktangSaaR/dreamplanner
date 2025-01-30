@@ -1,11 +1,14 @@
 import { useEffect, useRef } from "react";
-import { toast } from "sonner";
 
 interface LiveVideoStreamProps {
   onStreamInitialized?: (stream: MediaStream) => void;
+  onStreamError?: (error: Error) => void;
 }
 
-const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
+const LiveVideoStream = ({ 
+  onStreamInitialized,
+  onStreamError 
+}: LiveVideoStreamProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const initializeVideoStream = async () => {
@@ -67,10 +70,10 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
           onStreamInitialized?.(stream);
         } catch (playError) {
           console.error("Error starting video playback:", playError);
-          throw new Error("Failed to start video playback");
+          throw new Error("无法开始视频播放，请检查设备权限");
         }
       } else {
-        throw new Error("Video element reference not found");
+        throw new Error("视频元素未找到");
       }
     } catch (error) {
       console.error("Error in initializeVideoStream:", error);
@@ -111,8 +114,9 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
         }
       }
       
-      toast.error(errorMessage);
-      throw error;
+      const finalError = new Error(errorMessage);
+      onStreamError?.(finalError);
+      throw finalError;
     }
   };
 
@@ -120,6 +124,7 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
     console.log("LiveVideoStream component mounted");
     initializeVideoStream().catch(error => {
       console.error("Failed to initialize video stream:", error);
+      onStreamError?.(error);
     });
 
     return () => {
@@ -136,7 +141,7 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
         videoRef.current.srcObject = null;
       }
     };
-  }, []);
+  }, [onStreamError]);
 
   return (
     <video
