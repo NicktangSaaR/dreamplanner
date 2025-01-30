@@ -9,15 +9,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, List } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import QuestionBankDialog from "./QuestionBankDialog";
+import QuestionListDialog from "./QuestionListDialog";
 import { useState } from "react";
 import { Question } from "@/components/mock-interview/types";
 
 const QuestionBankManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isQuestionListOpen, setIsQuestionListOpen] = useState(false);
+  const [selectedBank, setSelectedBank] = useState<Question | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const queryClient = useQueryClient();
 
@@ -70,6 +73,11 @@ const QuestionBankManagement = () => {
     }
   };
 
+  const handleManageQuestions = (bank: Question) => {
+    setSelectedBank(bank);
+    setIsQuestionListOpen(true);
+  };
+
   if (isLoading) {
     return <div>Loading question banks...</div>;
   }
@@ -105,7 +113,14 @@ const QuestionBankManagement = () => {
               </TableCell>
               <TableCell>{question.preparation_time}s</TableCell>
               <TableCell>{question.response_time}s</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleManageQuestions(question)}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -135,6 +150,14 @@ const QuestionBankManagement = () => {
           setEditingQuestion(null);
         }}
       />
+
+      {selectedBank && (
+        <QuestionListDialog
+          open={isQuestionListOpen}
+          onOpenChange={setIsQuestionListOpen}
+          bank={selectedBank}
+        />
+      )}
     </div>
   );
 };

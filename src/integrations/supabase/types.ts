@@ -162,6 +162,41 @@ export type Database = {
         }
         Relationships: []
       }
+      mock_interview_bank_questions: {
+        Row: {
+          bank_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          bank_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          bank_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_interview_bank_questions_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "mock_interview_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mock_interview_questions: {
         Row: {
           created_at: string | null
