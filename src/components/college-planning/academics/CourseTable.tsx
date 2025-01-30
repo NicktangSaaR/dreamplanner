@@ -12,6 +12,7 @@ interface CourseTableProps {
   onSaveEdit: () => void;
   onCancelEdit: () => void;
   onEditingCourseChange: (field: string, value: string) => void;
+  onDeleteCourse?: (courseId: string) => void;
   academicYears: string[];
   isLoading?: boolean;
 }
@@ -23,6 +24,7 @@ export default function CourseTable({
   onSaveEdit,
   onCancelEdit,
   onEditingCourseChange,
+  onDeleteCourse,
   academicYears,
   isLoading
 }: CourseTableProps) {
@@ -72,6 +74,7 @@ export default function CourseTable({
                 key={course.id}
                 course={course}
                 onEditCourse={onEditCourse}
+                onDeleteCourse={onDeleteCourse}
               />
             );
           })}

@@ -19,6 +19,7 @@ export default function AcademicsSection({
     isLoading,
     addCourse,
     updateCourse,
+    deleteCourse,
   } = useAcademicData(externalCourses, onCoursesChange);
 
   console.log("AcademicsSection - Current courses:", courses);
@@ -39,6 +40,7 @@ export default function AcademicsSection({
         studentId={studentId}
         addCourse={addCourse}
         updateCourse={updateCourse}
+        deleteCourse={deleteCourse}
       />
     </Card>
   );

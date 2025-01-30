@@ -12,6 +12,7 @@ interface CourseManagementProps {
   studentId?: string;
   addCourse: any;
   updateCourse: any;
+  deleteCourse?: (courseId: string) => Promise<void>;
 }
 
 export default function CourseManagement({
@@ -20,6 +21,7 @@ export default function CourseManagement({
   studentId,
   addCourse,
   updateCourse,
+  deleteCourse,
 }: CourseManagementProps) {
   const { toast } = useToast();
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -82,6 +84,25 @@ export default function CourseManagement({
     }
   };
 
+  const handleDeleteCourse = async (courseId: string) => {
+    if (deleteCourse) {
+      try {
+        await deleteCourse(courseId);
+        toast({
+          title: "Success",
+          description: "Course deleted successfully",
+        });
+      } catch (error) {
+        console.error('Error deleting course:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete course",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const handleCourseChange = (field: string, value: string) => {
     setNewCourse({ ...newCourse, [field]: value });
   };
@@ -110,6 +131,7 @@ export default function CourseManagement({
           onSaveEdit={handleSaveEdit}
           onCancelEdit={() => setEditingCourse(null)}
           onEditingCourseChange={handleEditingCourseChange}
+          onDeleteCourse={handleDeleteCourse}
           academicYears={academicYears}
           isLoading={isLoading}
         />

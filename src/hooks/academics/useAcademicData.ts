@@ -20,6 +20,7 @@ export const useAcademicData = (
     isLoading,
     addCourse,
     updateCourse,
+    deleteCourse,
   } = useCourses(externalCourses, effectiveStudentId);
 
   return {
@@ -28,6 +29,7 @@ export const useAcademicData = (
     isLoading,
     addCourse,
     updateCourse,
+    deleteCourse,
     onCoursesChange,
   };
 };

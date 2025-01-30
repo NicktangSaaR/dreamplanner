@@ -11,7 +11,7 @@ export const useCourses = (externalCourses?: Course[], studentId?: string) => {
     refetch 
   } = useCoursesQuery(externalCourses, studentId);
 
-  const { addCourse, updateCourse } = useCourseMutations(refetch);
+  const { addCourse, updateCourse, deleteCourse } = useCourseMutations(refetch);
 
   // If external courses are provided, use those, otherwise use fetched courses
   const finalCourses = externalCourses ?? courses;
@@ -22,5 +22,6 @@ export const useCourses = (externalCourses?: Course[], studentId?: string) => {
     isLoading,
     addCourse,
     updateCourse,
+    deleteCourse,
   };
 };

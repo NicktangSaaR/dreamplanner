@@ -1,11 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Course } from "@/components/college-planning/types/course";
 import { toast } from "sonner";
 
 export const useCourseMutations = (refetch: () => void) => {
-  const queryClient = useQueryClient();
-
   const addCourse = useMutation({
     mutationFn: async (newCourse: Omit<Course, 'id'>) => {
       console.log('Adding new course:', newCourse);
@@ -35,7 +33,6 @@ export const useCourseMutations = (refetch: () => void) => {
     },
     onSuccess: () => {
       toast.success('Course added successfully');
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
       refetch();
     },
     onError: (error: Error) => {
@@ -70,7 +67,6 @@ export const useCourseMutations = (refetch: () => void) => {
     },
     onSuccess: () => {
       toast.success('Course updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
       refetch();
     },
     onError: (error: Error) => {
@@ -79,8 +75,31 @@ export const useCourseMutations = (refetch: () => void) => {
     },
   });
 
+  const deleteCourse = async (courseId: string) => {
+    console.log('Deleting course:', courseId);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    const { error } = await supabase
+      .from('courses')
+      .delete()
+      .eq('id', courseId);
+
+    if (error) {
+      console.error('Error deleting course:', error);
+      throw error;
+    }
+
+    console.log('Successfully deleted course:', courseId);
+    refetch();
+  };
+
   return {
     addCourse,
     updateCourse,
+    deleteCourse,
   };
 };
