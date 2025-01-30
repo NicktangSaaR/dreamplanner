@@ -4,7 +4,31 @@ import { useTodos } from "@/hooks/useTodos";
 import TodoForm from "./todos/TodoForm";
 import BulkImportForm from "./todos/BulkImportForm";
 import TodoItem from "./todos/TodoItem";
-import { useCallback } from "react";
+import { useCallback, memo } from "react";
+
+// Memoize TodoList component to prevent unnecessary re-renders
+const TodoList = memo(({ 
+  todos, 
+  onToggleStatus, 
+  onToggleStarred, 
+  onUpdate, 
+  onDelete 
+}) => (
+  <div className="space-y-2">
+    {todos.map((todo) => (
+      <TodoItem
+        key={todo.id}
+        todo={todo}
+        onToggleStatus={onToggleStatus}
+        onToggleStarred={onToggleStarred}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+      />
+    ))}
+  </div>
+));
+
+TodoList.displayName = 'TodoList';
 
 export default function TodoSection() {
   const {
@@ -53,18 +77,15 @@ export default function TodoSection() {
         <TodoForm onSubmit={handleCreateTodo} />
         <BulkImportForm onImport={handleBulkImport} />
         <div className="h-[300px] w-full rounded-md border">
-          <ScrollArea className="h-full w-full p-4">
-            <div className="space-y-2">
-              {todos.map((todo) => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  onToggleStatus={handleToggleStatus}
-                  onToggleStarred={handleToggleStarred}
-                  onUpdate={handleUpdateTodo}
-                  onDelete={handleDeleteTodo}
-                />
-              ))}
+          <ScrollArea className="h-full w-full">
+            <div className="p-4">
+              <TodoList
+                todos={todos}
+                onToggleStatus={handleToggleStatus}
+                onToggleStarred={handleToggleStarred}
+                onUpdate={handleUpdateTodo}
+                onDelete={handleDeleteTodo}
+              />
             </div>
           </ScrollArea>
         </div>
