@@ -38,7 +38,7 @@ export default function CounselorDashboard() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">My Students</h1>
         <div className="flex items-center gap-4">
           <InviteStudentDialog 

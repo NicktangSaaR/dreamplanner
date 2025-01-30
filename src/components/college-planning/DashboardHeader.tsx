@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 export default function DashboardHeader() {
   const { profile, isLoading, error } = useProfile();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -40,7 +39,7 @@ export default function DashboardHeader() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-2xl font-bold">My Dashboard</h1>
+        <h1 className="text-2xl font-bold">Student Dashboard</h1>
       </div>
       <div className="flex gap-2">
         <Button onClick={handleMockInterview} variant="outline">
