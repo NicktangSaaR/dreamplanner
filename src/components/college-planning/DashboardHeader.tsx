@@ -28,11 +28,12 @@ export default function DashboardHeader() {
       return;
     }
 
-    const isStudentRoute = location.pathname.includes("student-dashboard");
-    if (isStudentRoute) {
-      navigate(`/student-profile/${profile.id}`);
+    console.log("Navigating to profile page for user type:", profile.user_type);
+    
+    if (profile.user_type === 'counselor') {
+      navigate('/counselor-profile');
     } else {
-      navigate(`/counselor-profile/${profile.id}`);
+      navigate('/student-profile');
     }
   };
 
