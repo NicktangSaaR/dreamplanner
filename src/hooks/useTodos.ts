@@ -98,6 +98,27 @@ export function useTodos() {
     },
   });
 
+  const updateTodo = useMutation({
+    mutationFn: async ({ id, title }: { id: string; title: string }) => {
+      const { data, error } = await supabase
+        .from("todos")
+        .update({ title })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+    onError: (error) => {
+      toast.error("Failed to update todo");
+      setError(error.message);
+    },
+  });
+
   const deleteTodo = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("todos").delete().eq("id", id);
@@ -120,6 +141,7 @@ export function useTodos() {
     createTodo,
     toggleTodoStatus,
     toggleStarred,
+    updateTodo,
     deleteTodo,
   };
 }

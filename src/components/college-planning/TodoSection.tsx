@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, Star, StarOff, Trash, Plus, Upload } from "lucide-react";
+import { Check, Star, StarOff, Trash, Plus, Upload, Pencil, X } from "lucide-react";
 import { useTodos } from "@/hooks/useTodos";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -11,7 +11,9 @@ import { toast } from "sonner";
 export default function TodoSection() {
   const [newTodoTitle, setNewTodoTitle] = useState("");
   const [content, setContent] = useState("");
-  const { todos, createTodo, toggleTodoStatus, toggleStarred, deleteTodo } = useTodos();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const { todos, createTodo, toggleTodoStatus, toggleStarred, deleteTodo, updateTodo } = useTodos();
 
   const handleCreateTodo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +34,6 @@ export default function TodoSection() {
     try {
       console.log("Bulk importing todos:", todoTitles);
       
-      // Create todos in sequence
       for (const title of todoTitles) {
         if (title.trim()) {
           await createTodo.mutateAsync(title.trim());
@@ -44,6 +45,28 @@ export default function TodoSection() {
     } catch (error) {
       console.error("Error importing todos:", error);
       toast.error("Failed to import todos. Please try again.");
+    }
+  };
+
+  const startEditing = (todo: { id: string; title: string }) => {
+    setEditingId(todo.id);
+    setEditingTitle(todo.title);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditingTitle("");
+  };
+
+  const handleUpdate = async (id: string) => {
+    if (!editingTitle.trim()) return;
+    try {
+      await updateTodo.mutateAsync({ id, title: editingTitle });
+      setEditingId(null);
+      setEditingTitle("");
+      toast.success("Todo updated successfully");
+    } catch (error) {
+      toast.error("Failed to update todo");
     }
   };
 
@@ -98,11 +121,36 @@ export default function TodoSection() {
                   >
                     <Check className={`h-4 w-4 ${todo.completed ? "text-green-500" : "text-gray-300"}`} />
                   </Button>
-                  <span className={`${todo.completed ? "line-through text-gray-500" : ""}`}>
-                    {todo.title}
-                  </span>
+                  {editingId === todo.id ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        className="min-w-[200px]"
+                      />
+                      <Button size="sm" onClick={() => handleUpdate(todo.id)}>
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={cancelEditing}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <span className={`${todo.completed ? "line-through text-gray-500" : ""}`}>
+                      {todo.title}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
+                  {editingId !== todo.id && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => startEditing(todo)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
