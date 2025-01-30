@@ -18,6 +18,7 @@ export default function CounselorView() {
   const { profile } = useProfile();
   const { data: students, isLoading, refetch } = useCounselorStudents();
   const [isEditingFolder, setIsEditingFolder] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   console.log("Counselor profile:", profile);
   console.log("Students data:", students);
@@ -55,14 +56,26 @@ export default function CounselorView() {
         </div>
       </div>
 
-      <ProfileDisplay profile={profile} />
+      <ProfileDisplay 
+        profile={profile} 
+        onEdit={() => setIsEditingProfile(true)}
+      />
       
       <SharedFolderCard
         folder={null}
         onEditClick={() => setIsEditingFolder(true)}
       />
       
-      <StatisticsCards />
+      <StatisticsCards 
+        courses={[]}
+        activities={[]}
+        notes={[]}
+        todoStats={{
+          completed: 0,
+          starred: 0,
+          total: 0
+        }}
+      />
 
       {isLoading ? (
         <div className="flex justify-center">
