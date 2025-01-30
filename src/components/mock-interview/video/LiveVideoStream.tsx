@@ -48,12 +48,24 @@ const LiveVideoStream = ({
         audioTracks: stream.getAudioTracks().length
       });
 
-      streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+        
+        // Wait for the video to be ready to play
+        await new Promise<void>((resolve) => {
+          if (!videoRef.current) return;
+          videoRef.current.onloadedmetadata = () => {
+            resolve();
+          };
+        });
+
+        // Start playing the video
         await videoRef.current.play();
         console.log("Video playback started");
         onStreamInitialized?.(stream);
+      } else {
+        throw new Error("Video element reference not found");
       }
     } catch (error) {
       console.error("Error in initializeStream:", error);
@@ -83,12 +95,21 @@ const LiveVideoStream = ({
 
   useEffect(() => {
     console.log("LiveVideoStream component mounted");
-    initializeStream().catch(error => {
-      console.error("Failed to initialize stream:", error);
-    });
+    let mounted = true;
+
+    const init = async () => {
+      if (mounted) {
+        await initializeStream().catch(error => {
+          console.error("Failed to initialize stream:", error);
+        });
+      }
+    };
+
+    init();
 
     return () => {
       console.log("LiveVideoStream component unmounting");
+      mounted = false;
       stopStream();
     };
   }, []);
