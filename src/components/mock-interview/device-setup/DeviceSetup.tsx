@@ -4,6 +4,7 @@ import DeviceList from "./DeviceList";
 import DeviceControls from "./DeviceControls";
 import VideoPreview from "./VideoPreview";
 import { useVideoPreview } from "@/hooks/useVideoPreview";
+import { toast } from "sonner";
 
 interface DeviceSetupProps {
   onComplete: () => void;
@@ -33,6 +34,7 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
   const handleComplete = () => {
     if (!isCameraWorking || !isAudioWorking) {
       console.log("Cannot complete setup - devices not working");
+      toast.error("请先完成设备测试，确保摄像头和麦克风正常工作");
       return;
     }
     console.log("Device setup complete, stopping devices...");
@@ -46,10 +48,18 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
   };
 
   useEffect(() => {
+    // Automatically start device test when component mounts
+    const initDevices = async () => {
+      console.log("Initializing devices...");
+      await startDeviceTest();
+    };
+    
+    initDevices();
+    
     return () => {
       stopDevices();
     };
-  }, [stopDevices]);
+  }, [startDeviceTest, stopDevices]);
 
   return (
     <div className="space-y-8">
