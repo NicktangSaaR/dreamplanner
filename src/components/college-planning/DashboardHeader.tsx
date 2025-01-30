@@ -32,9 +32,11 @@ export default function DashboardHeader() {
     <div className="flex justify-between items-center mb-6">
       <h1 className="text-2xl font-bold">Student Dashboard</h1>
       <div className="flex gap-2">
-        <Button onClick={handleProfile} variant="outline">
-          My Profile
-        </Button>
+        {profile?.user_type === 'student' && (
+          <Button onClick={handleProfile} variant="outline">
+            My Profile
+          </Button>
+        )}
         <Button onClick={handleMockInterview} variant="outline">
           Mock Interview
         </Button>
