@@ -22,11 +22,30 @@ const VideoPreview = ({
 
   useEffect(() => {
     // When not in review stage and videoRef exists, ensure video stream is properly connected
-    if (!isReviewStage && videoRef.current && videoRef.current.srcObject) {
-      console.log("Reinitializing live video preview");
-      videoRef.current.play().catch(error => {
-        console.error("Error playing live video:", error);
-      });
+    if (!isReviewStage && videoRef.current) {
+      console.log("Checking video stream initialization...");
+      if (!videoRef.current.srcObject) {
+        console.log("Video stream not found, requesting new stream...");
+        navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true
+        }).then(stream => {
+          console.log("New stream obtained successfully");
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(error => {
+              console.error("Error playing new video stream:", error);
+            });
+          }
+        }).catch(error => {
+          console.error("Error obtaining new video stream:", error);
+        });
+      } else {
+        console.log("Existing stream found, ensuring playback");
+        videoRef.current.play().catch(error => {
+          console.error("Error playing existing video stream:", error);
+        });
+      }
     }
   }, [isReviewStage, videoRef]);
 
