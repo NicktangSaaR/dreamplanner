@@ -3,10 +3,10 @@ import { useParams } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckSquare } from "lucide-react";
-import { useTodos } from "@/hooks/useTodos";
 import TodoForm from "./todos/TodoForm";
 import BulkImportForm from "./todos/BulkImportForm";
 import TodoList from "./todos/TodoList";
+import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
 
 export default function TodoSection() {
   const { studentId } = useParams();
@@ -18,37 +18,31 @@ export default function TodoSection() {
     toggleStarred,
     updateTodo,
     deleteTodo,
-  } = useTodos();
-
-  // Filter todos based on the current context
-  const filteredTodos = todos.filter(todo => {
-    if (profile?.user_type === 'counselor' && studentId) {
-      return todo.author_id === studentId;
-    }
-    return todo.author_id === profile?.id;
-  });
+  } = useStudentTodos(studentId);
 
   console.log("TodoSection - Current user type:", profile?.user_type);
   console.log("TodoSection - Student ID from params:", studentId);
-  console.log("TodoSection - Filtered todos:", filteredTodos);
+  console.log("TodoSection - Filtered todos:", todos);
 
   const handleCreateTodo = useCallback(async (title: string) => {
+    if (!studentId) return;
     await createTodo.mutateAsync({
       title,
-      authorId: studentId || profile?.id
+      authorId: studentId
     });
-  }, [createTodo, studentId, profile?.id]);
+  }, [createTodo, studentId]);
 
   const handleBulkImport = useCallback(async (titles: string[]) => {
+    if (!studentId) return;
     for (const title of titles) {
       if (title.trim()) {
         await createTodo.mutateAsync({
           title: title.trim(),
-          authorId: studentId || profile?.id
+          authorId: studentId
         });
       }
     }
-  }, [createTodo, studentId, profile?.id]);
+  }, [createTodo, studentId]);
 
   const handleToggleStatus = useCallback(async (id: string, completed: boolean) => {
     await toggleTodoStatus.mutateAsync({ id, completed });
@@ -79,7 +73,7 @@ export default function TodoSection() {
         <BulkImportForm onImport={handleBulkImport} />
         <div className="border rounded-md">
           <TodoList
-            todos={filteredTodos}
+            todos={todos}
             onToggleStatus={handleToggleStatus}
             onToggleStarred={handleToggleStarred}
             onUpdate={handleUpdateTodo}
