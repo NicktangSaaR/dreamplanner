@@ -7,9 +7,27 @@ interface RawProfile extends Omit<Profile, 'social_media'> {
 }
 
 const transformProfile = (rawProfile: RawProfile): Profile => {
+  if (!rawProfile) return null;
+  
+  let socialMedia = null;
+  try {
+    if (rawProfile.social_media) {
+      // If it's a string, try to parse it
+      if (typeof rawProfile.social_media === 'string') {
+        socialMedia = JSON.parse(rawProfile.social_media);
+      } else {
+        // If it's already an object, use it directly
+        socialMedia = rawProfile.social_media;
+      }
+    }
+  } catch (error) {
+    console.error("Error parsing social_media:", error);
+    socialMedia = null;
+  }
+
   return {
     ...rawProfile,
-    social_media: rawProfile.social_media ? JSON.parse(JSON.stringify(rawProfile.social_media)) : null
+    social_media: socialMedia
   };
 };
 
