@@ -1,5 +1,4 @@
 import { Calculator } from "lucide-react";
-
 export const GRADE_TO_GPA: { [key: string]: number } = {
   'A+': 4.0, 'A': 4.0, 'A-': 3.7,
   'B+': 3.3, 'B': 3.0, 'B-': 2.7,
@@ -160,7 +159,7 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
         <div className="flex items-center gap-2 bg-purple-50 p-3 rounded-lg">
           <Calculator className="h-5 w-5 text-purple-600" />
           <div>
-            <p className="text-xs font-medium text-purple-600">100-Point Average</p>
+            <p className="text-xs font-medium text-purple-600">Overall 100-Point Average</p>
             <p className="text-lg font-bold text-purple-700">{average100Point}</p>
           </div>
         </div>
@@ -170,7 +169,7 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
         {academicYears.map(year => {
           const year100PointAvg = calculateYear100PointAverage(courses, year);
           return (
-            <div key={year} className="grid grid-cols-2 gap-2">
+            <div key={year} className="grid grid-cols-3 gap-2">
               <div className="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
                 <div>
                   <p className="text-xs font-medium text-green-600">{year} Weighted</p>
@@ -188,9 +187,9 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
                 </div>
               </div>
               {year100PointAvg !== null && (
-                <div className="col-span-2 flex items-center gap-2 bg-purple-50 p-2 rounded-lg">
+                <div className="flex items-center gap-2 bg-purple-50 p-2 rounded-lg">
                   <div>
-                    <p className="text-xs font-medium text-purple-600">{year} 100-Point Average</p>
+                    <p className="text-xs font-medium text-purple-600">{year} 100-Point</p>
                     <p className="text-base font-bold text-purple-700">{year100PointAvg}</p>
                   </div>
                 </div>
