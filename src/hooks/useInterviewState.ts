@@ -1,11 +1,6 @@
 import { useState, useEffect } from "react";
 import { InterviewStage } from "@/components/mock-interview/InterviewStage";
-
-interface InterviewSettings {
-  prepTime: number;
-  responseTime: number;
-  selectedQuestionId: string | null;
-}
+import { InterviewSettings } from "@/components/mock-interview/types";
 
 export const useInterviewState = (settings: InterviewSettings) => {
   const [stage, setStage] = useState<InterviewStage>(InterviewStage.SETTINGS);

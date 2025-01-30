@@ -16,31 +16,19 @@ import { useInterviewState } from "@/hooks/useInterviewState";
 import { useVideoStream } from "@/hooks/useVideoStream";
 import { useProfile } from "@/hooks/useProfile";
 
-interface InterviewSettings {
-  prepTime: number;
-  responseTime: number;
-  selectedQuestionId: string | null;
-}
-
-interface Question {
-  id: string;
-  title: string;
-  description: string | null;
-  preparation_time: number;
-  response_time: number;
-  is_system: boolean;
-}
-
 const DEVICE_SETTINGS_KEY = 'interview-device-settings';
 const SETTINGS_VALIDITY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 const MockInterview = () => {
   const navigate = useNavigate();
   const { profile } = useProfile();
-  const [settings, setSettings] = useState<InterviewSettings>({
+  const [settings, setSettings] = useState({
     prepTime: 120,
     responseTime: 180,
     selectedQuestionId: null,
+    practiceMode: 'single' as const,
+    questionOrder: 'sequential' as const,
+    numberOfQuestions: 2,
   });
 
   const [showDeviceSetup, setShowDeviceSetup] = useState(false);
@@ -51,7 +39,7 @@ const MockInterview = () => {
     const settings = JSON.parse(storedSettings);
     return Date.now() - settings.lastUpdated < SETTINGS_VALIDITY_DURATION;
   });
-  
+
   const { stage, setStage, timeLeft, countdownTime } = useInterviewState(settings);
   const { videoRef, recordedVideoUrl, startStream, startRecording, stopRecording } = useVideoStream();
 
