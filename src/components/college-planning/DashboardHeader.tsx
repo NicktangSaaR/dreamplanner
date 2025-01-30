@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { LogOut, UserRound } from "lucide-react";
+import { LogOut, UserRound, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -25,6 +25,10 @@ export default function DashboardHeader() {
     navigate('/profile');
   };
 
+  const handleMockInterview = () => {
+    navigate('/mock-interview');
+  };
+
   return (
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-4">
@@ -41,6 +45,15 @@ export default function DashboardHeader() {
       </div>
 
       <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleMockInterview}
+          className="hover:bg-secondary"
+          title="Mock Interview"
+        >
+          <Video className="h-5 w-5" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
