@@ -11,6 +11,8 @@ import SharedFolderDialog from "./SharedFolderDialog";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ProfileDisplay from "./ProfileDisplay";
+import StatisticsCards from "./StatisticsCards";
 
 export default function CounselorView() {
   const { profile } = useProfile();
@@ -53,10 +55,14 @@ export default function CounselorView() {
         </div>
       </div>
 
+      <ProfileDisplay profile={profile} />
+      
       <SharedFolderCard
         folder={null}
         onEditClick={() => setIsEditingFolder(true)}
       />
+      
+      <StatisticsCards />
 
       {isLoading ? (
         <div className="flex justify-center">
