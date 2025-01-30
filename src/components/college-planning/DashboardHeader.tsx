@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function DashboardHeader() {
-  const { profile, isLoading } = useProfile();
+  const { profile, isLoading, error } = useProfile();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -23,13 +23,19 @@ export default function DashboardHeader() {
 
   const handleProfile = () => {
     if (isLoading) {
-      console.log("Profile data is still loading...");
+      toast.info("Loading profile data...");
+      return;
+    }
+
+    if (error) {
+      console.error("Error accessing profile:", error);
+      toast.error("Unable to access profile: " + error.message);
       return;
     }
 
     if (!profile) {
       console.error("Profile data is not available");
-      toast.error("Unable to access profile data");
+      toast.error("Unable to access profile data. Please try logging in again.");
       return;
     }
 
