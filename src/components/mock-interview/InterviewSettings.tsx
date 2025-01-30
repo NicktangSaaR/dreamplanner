@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +24,13 @@ import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Question {
   id: string;
@@ -70,6 +76,9 @@ const InterviewSettings = ({ settings, onSettingsChange, onStartInterview }: Int
       return data as Question[];
     },
   });
+
+  const systemQuestions = questions.filter(q => q.is_system);
+  const customQuestions = questions.filter(q => !q.is_system);
 
   const onSubmitQuestion = async (values: any) => {
     try {
@@ -129,28 +138,46 @@ const InterviewSettings = ({ settings, onSettingsChange, onStartInterview }: Int
           />
         </div>
         <div>
-          <Label className="mb-2 block">Select Question</Label>
-          <RadioGroup
+          <Label className="mb-2 block">Select Question Bank</Label>
+          <Select
             value={settings.selectedQuestionId || ""}
             onValueChange={(value) => onSettingsChange({
               ...settings,
               selectedQuestionId: value
             })}
           >
-            <div className="space-y-4">
-              {questions.map((question) => (
-                <div key={question.id} className="flex items-start space-x-3">
-                  <RadioGroupItem value={question.id} id={question.id} />
-                  <div>
-                    <Label htmlFor={question.id}>{question.title}</Label>
-                    {question.description && (
-                      <p className="text-sm text-gray-500">{question.description}</p>
-                    )}
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a question bank" />
+            </SelectTrigger>
+            <SelectContent>
+              <div className="space-y-4">
+                {systemQuestions.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="font-semibold px-2 py-1.5 text-sm text-muted-foreground">
+                      System Question Banks
+                    </div>
+                    {systemQuestions.map((question) => (
+                      <SelectItem key={question.id} value={question.id}>
+                        {question.title}
+                      </SelectItem>
+                    ))}
                   </div>
-                </div>
-              ))}
-            </div>
-          </RadioGroup>
+                )}
+                {customQuestions.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="font-semibold px-2 py-1.5 text-sm text-muted-foreground">
+                      Custom Questions
+                    </div>
+                    {customQuestions.map((question) => (
+                      <SelectItem key={question.id} value={question.id}>
+                        {question.title}
+                      </SelectItem>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </SelectContent>
+          </Select>
         </div>
         <Dialog>
           <DialogTrigger asChild>
