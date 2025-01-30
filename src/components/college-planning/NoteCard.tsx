@@ -39,7 +39,7 @@ export default function NoteCard({
                 <span className="hidden sm:inline">•</span>
               )}
               {note.author_name && (
-                <span>by {note.author_name}</span>
+                <span>{note.author_name}</span>
               )}
               {note.stars > 0 && (
                 <>
