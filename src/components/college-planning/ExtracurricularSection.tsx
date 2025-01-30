@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ActivityForm from "./extracurricular/ActivityForm";
 import ActivityTable from "./extracurricular/ActivityTable";
@@ -18,28 +18,18 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
     timeCommitment: "",
   });
 
-  // Notify parent of activities changes, but only when activities actually change
-  useEffect(() => {
-    if (onActivitiesChange) {
-      console.log("Activities state changed:", activities);
-      // Prevent unnecessary parent updates if activities are empty
-      if (activities.length > 0 || activities.length === 0) {
-        onActivitiesChange(activities);
-      }
-    }
-  }, [activities]);
-
-  const handleAddActivity = () => {
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleAddActivity = useCallback(() => {
     if (newActivity.name && newActivity.role) {
       console.log("Adding new activity:", newActivity);
-      const newActivityWithId = {
-        id: Date.now().toString(),
-        ...newActivity,
-      };
+      setActivities(prevActivities => [
+        ...prevActivities,
+        {
+          id: Date.now().toString(),
+          ...newActivity,
+        },
+      ]);
       
-      setActivities(prevActivities => [...prevActivities, newActivityWithId]);
-      
-      // Reset form after adding
       setNewActivity({
         name: "",
         role: "",
@@ -47,26 +37,21 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
         timeCommitment: "",
       });
     }
-  };
+  }, [newActivity]);
 
-  const handleActivityChange = (field: string, value: string) => {
+  const handleActivityChange = useCallback((field: string, value: string) => {
     setNewActivity(prev => ({ ...prev, [field]: value }));
-  };
+  }, []);
 
-  const handleEditActivity = (activity: Activity) => {
+  const handleEditActivity = useCallback((activity: Activity) => {
     setEditingActivity(activity);
-  };
+  }, []);
 
-  const handleEditingActivityChange = (field: string, value: string) => {
-    if (editingActivity) {
-      setEditingActivity(prev => ({
-        ...prev!,
-        [field]: value,
-      }));
-    }
-  };
+  const handleEditingActivityChange = useCallback((field: string, value: string) => {
+    setEditingActivity(prev => prev ? { ...prev, [field]: value } : null);
+  }, []);
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = useCallback(() => {
     if (editingActivity) {
       setActivities(prevActivities =>
         prevActivities.map(activity =>
@@ -75,7 +60,15 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
       );
       setEditingActivity(null);
     }
-  };
+  }, [editingActivity]);
+
+  // Only notify parent of activities changes when they actually change and are valid
+  useEffect(() => {
+    if (onActivitiesChange && Array.isArray(activities)) {
+      console.log("Activities state changed:", activities);
+      onActivitiesChange(activities);
+    }
+  }, [activities, onActivitiesChange]);
 
   return (
     <Card>

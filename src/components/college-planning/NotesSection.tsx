@@ -59,9 +59,10 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
     return Boolean(note?.id);
   }, []);
 
-  // Only call onNotesChange when notes actually change
+  // Only call onNotesChange when notes actually change and is a valid array
   useEffect(() => {
     if (onNotesChange && Array.isArray(notes)) {
+      console.log("Notes changed, notifying parent:", notes);
       onNotesChange(notes);
     }
   }, [notes, onNotesChange]);
