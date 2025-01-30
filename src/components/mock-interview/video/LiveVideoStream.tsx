@@ -19,11 +19,23 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
       // Try to access the stream directly
       console.log("Attempting to access media stream...");
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user",
+          frameRate: { ideal: 30 }
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        }
       });
 
-      console.log("Successfully obtained media stream");
+      console.log("Successfully obtained media stream:", {
+        videoTracks: stream.getVideoTracks().length,
+        audioTracks: stream.getAudioTracks().length
+      });
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -82,12 +94,14 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
     init();
 
     return () => {
+      console.log("LiveVideoStream component unmounting");
       if (videoRef.current?.srcObject instanceof MediaStream) {
-        console.log("Cleaning up video stream");
-        videoRef.current.srcObject.getTracks().forEach(track => {
+        const stream = videoRef.current.srcObject;
+        stream.getTracks().forEach(track => {
           track.stop();
           console.log(`Stopped ${track.kind} track`);
         });
+        videoRef.current.srcObject = null;
       }
     };
   }, []);

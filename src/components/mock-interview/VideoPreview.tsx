@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import LiveVideoStream from "./video/LiveVideoStream";
 import RecordedVideoPlayer from "./video/RecordedVideoPlayer";
+import { useEffect, useState } from "react";
 
 interface VideoPreviewProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -24,6 +25,15 @@ const VideoPreview = ({
   selectedQuestionId
 }: VideoPreviewProps) => {
   const queryClient = useQueryClient();
+  const [stream, setStream] = useState<MediaStream | null>(null);
+
+  const handleStreamInitialized = (newStream: MediaStream) => {
+    console.log("Stream initialized in VideoPreview:", {
+      videoTracks: newStream.getVideoTracks().length,
+      audioTracks: newStream.getAudioTracks().length
+    });
+    setStream(newStream);
+  };
 
   const handleStopRecording = async () => {
     console.log("Stopping recording and saving video...");
@@ -31,7 +41,6 @@ const VideoPreview = ({
 
     if (recordedVideoUrl && selectedQuestionId) {
       try {
-        // Get the current user's session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user?.id) {
@@ -59,13 +68,25 @@ const VideoPreview = ({
     }
   };
 
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        console.log("Cleaning up stream in VideoPreview");
+        stream.getTracks().forEach(track => {
+          track.stop();
+          console.log(`Stopped ${track.kind} track`);
+        });
+      }
+    };
+  }, [stream]);
+
   return (
     <Card className="p-6">
       <div className="w-full aspect-video bg-gray-100 rounded-lg mb-4 overflow-hidden relative">
         {isReviewStage && recordedVideoUrl ? (
           <RecordedVideoPlayer recordedVideoUrl={recordedVideoUrl} />
         ) : (
-          <LiveVideoStream />
+          <LiveVideoStream onStreamInitialized={handleStreamInitialized} />
         )}
       </div>
       <div className="flex justify-center gap-4">
