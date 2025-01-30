@@ -7,6 +7,8 @@ import { InterviewStage } from "@/components/mock-interview/InterviewStage";
 import InterviewHeader from "@/components/mock-interview/header/InterviewHeader";
 import InterviewContent from "@/components/mock-interview/content/InterviewContent";
 import { useInterviewManager } from "@/hooks/useInterviewManager";
+import { useEffect } from "react";
+import { DEVICE_SETTINGS_KEY, SETTINGS_VALIDITY_DURATION } from "@/components/mock-interview/constants";
 
 const MockInterview = () => {
   const navigate = useNavigate();
@@ -31,6 +33,30 @@ const MockInterview = () => {
     handleNextQuestion
   } = useInterviewManager();
 
+  // 检查设备设置状态
+  useEffect(() => {
+    const checkDeviceSetup = () => {
+      const storedSettings = localStorage.getItem(DEVICE_SETTINGS_KEY);
+      if (!storedSettings) {
+        console.log("No device settings found, showing device setup");
+        setShowDeviceSetup(true);
+        return;
+      }
+
+      const settings = JSON.parse(storedSettings);
+      const isValid = Date.now() - settings.lastUpdated < SETTINGS_VALIDITY_DURATION;
+      
+      if (!isValid) {
+        console.log("Device settings expired, showing device setup");
+        setShowDeviceSetup(true);
+      } else {
+        console.log("Valid device settings found:", settings);
+      }
+    };
+
+    checkDeviceSetup();
+  }, []);
+
   const handleLogout = async () => {
     try {
       console.log("Logging out...");
@@ -46,6 +72,11 @@ const MockInterview = () => {
     }
   };
 
+  const handleCleanupMedia = () => {
+    console.log("Cleaning up media streams");
+    stopRecording();
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <InterviewHeader
@@ -54,6 +85,7 @@ const MockInterview = () => {
         onBackToSettings={() => setStage(InterviewStage.SETTINGS)}
         onShowDeviceSetup={() => setShowDeviceSetup(true)}
         onLogout={handleLogout}
+        onCleanupMedia={handleCleanupMedia}
       />
       <InterviewContent
         showDeviceSetup={showDeviceSetup}

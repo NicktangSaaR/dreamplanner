@@ -5,6 +5,8 @@ import TimeSettings from "./settings/TimeSettings";
 import QuestionBankSelect from "./settings/QuestionBankSelect";
 import AddQuestionDialog from "./settings/AddQuestionDialog";
 import PracticeModeSettings from "./settings/PracticeModeSettings";
+import { DEVICE_SETTINGS_KEY } from "./constants";
+import { toast } from "sonner";
 
 interface InterviewSettingsProps {
   settings: Settings;
@@ -17,6 +19,27 @@ const InterviewSettings = ({
   onSettingsChange, 
   onStartInterview 
 }: InterviewSettingsProps) => {
+  const handleStartInterview = () => {
+    // 验证设备设置
+    const storedSettings = localStorage.getItem(DEVICE_SETTINGS_KEY);
+    if (!storedSettings) {
+      toast.error("请先完成设备设置", {
+        description: "开始面试前需要进行设备检测"
+      });
+      return;
+    }
+
+    // 验证是否选择了题目
+    if (!settings.selectedQuestionId) {
+      toast.error("请选择面试题目", {
+        description: "开始面试前需要选择一个题目"
+      });
+      return;
+    }
+
+    onStartInterview();
+  };
+
   return (
     <Card className="p-6">
       <h2 className="text-xl font-semibold mb-4">Interview Settings</h2>
@@ -59,7 +82,7 @@ const InterviewSettings = ({
         />
         <AddQuestionDialog />
         <Button
-          onClick={onStartInterview}
+          onClick={handleStartInterview}
           className="w-full"
           disabled={!settings.selectedQuestionId}
         >
