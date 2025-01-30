@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { LogOut, UserRound, Video } from "lucide-react";
+import { LogOut, UserRound, Video, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -29,9 +29,24 @@ export default function DashboardHeader() {
     navigate('/mock-interview');
   };
 
+  const handleBack = () => {
+    navigate('/counselor-dashboard');
+  };
+
   return (
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-4">
+        {location.pathname.includes('/counselor-dashboard/student/') && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleBack}
+            className="hover:bg-secondary"
+            title="Back to My Students"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        )}
         <div>
           <h1 className="text-3xl font-bold">
             {profile?.user_type === 'counselor' ? "Counselor Dashboard" : "My Dashboard"}
