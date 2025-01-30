@@ -33,7 +33,6 @@ const MockInterview = () => {
     handleNextQuestion
   } = useInterviewManager();
 
-  // 检查设备设置状态
   useEffect(() => {
     const checkDeviceSetup = () => {
       const storedSettings = localStorage.getItem(DEVICE_SETTINGS_KEY);
@@ -77,6 +76,11 @@ const MockInterview = () => {
     stopRecording();
   };
 
+  const handleStartQuestion = () => {
+    console.log("Starting question, moving to preparation stage");
+    setStage(InterviewStage.PREPARATION);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <InterviewHeader
@@ -106,6 +110,7 @@ const MockInterview = () => {
         totalQuestions={totalQuestions}
         hasMoreQuestions={hasMoreQuestions}
         onNextQuestion={handleNextQuestion}
+        onStartQuestion={handleStartQuestion}
       />
     </div>
   );
