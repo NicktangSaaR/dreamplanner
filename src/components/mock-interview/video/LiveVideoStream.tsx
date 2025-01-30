@@ -11,9 +11,22 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
   const initializeVideoStream = async () => {
     try {
       console.log("Starting video stream initialization...");
+      
+      // Check browser compatibility
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         console.error("MediaDevices API not supported");
         toast.error("您的浏览器不支持视频功能，请使用最新版本的Chrome或Firefox");
+        return;
+      }
+
+      // First check if we can enumerate devices
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const hasVideoDevice = devices.some(device => device.kind === 'videoinput');
+      const hasAudioDevice = devices.some(device => device.kind === 'audioinput');
+
+      if (!hasVideoDevice || !hasAudioDevice) {
+        console.error("Required devices not found:", { hasVideoDevice, hasAudioDevice });
+        toast.error("未检测到摄像头或麦克风，请确保设备已正确连接");
         return;
       }
 
@@ -27,36 +40,26 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
           });
         }
 
-        console.log("Requesting camera and microphone permissions...");
+        // Try with basic constraints first
+        console.log("Requesting camera and microphone access with basic constraints...");
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            facingMode: "user",
-            frameRate: { ideal: 30 }
-          },
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            sampleRate: 44100
-          }
+          video: true,
+          audio: true
         });
 
-        console.log("Camera and microphone permissions granted");
+        console.log("Basic camera and microphone access granted, setting up video element");
         videoRef.current.srcObject = stream;
         
-        videoRef.current.onloadedmetadata = () => {
+        // Set up video element event handlers
+        videoRef.current.onloadedmetadata = async () => {
           console.log("Video metadata loaded, attempting to play...");
-          if (videoRef.current) {
-            videoRef.current.play()
-              .then(() => {
-                console.log("Video playback started successfully");
-                onStreamInitialized?.(stream);
-              })
-              .catch(error => {
-                console.error("Error starting video playback:", error);
-                toast.error("视频播放失败，请检查设备权限并刷新页面");
-              });
+          try {
+            await videoRef.current?.play();
+            console.log("Video playback started successfully");
+            onStreamInitialized?.(stream);
+          } catch (error) {
+            console.error("Error starting video playback:", error);
+            toast.error("视频播放失败，请检查设备权限并刷新页面");
           }
         };
 
@@ -101,7 +104,10 @@ const LiveVideoStream = ({ onStreamInitialized }: LiveVideoStreamProps) => {
 
   useEffect(() => {
     console.log("LiveVideoStream component mounted, initializing stream...");
-    initializeVideoStream();
+    const init = async () => {
+      await initializeVideoStream();
+    };
+    init();
 
     return () => {
       if (videoRef.current?.srcObject instanceof MediaStream) {
