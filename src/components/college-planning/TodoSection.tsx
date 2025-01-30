@@ -6,6 +6,8 @@ import BulkImportForm from "./todos/BulkImportForm";
 import TodoItem from "./todos/TodoItem";
 import { useCallback, memo } from "react";
 import { Todo } from "@/hooks/todos/useTodoQuery";
+import { useParams } from "react-router-dom";
+import { useProfile } from "@/hooks/useProfile";
 
 // Define props interface for TodoList
 interface TodoListProps {
@@ -41,6 +43,8 @@ const TodoList = memo(({
 TodoList.displayName = 'TodoList';
 
 export default function TodoSection() {
+  const { studentId } = useParams();
+  const { profile } = useProfile();
   const {
     todos,
     createTodo,
@@ -50,17 +54,35 @@ export default function TodoSection() {
     deleteTodo,
   } = useTodos();
 
+  // Filter todos based on the current context
+  const filteredTodos = todos.filter(todo => {
+    if (profile?.user_type === 'counselor' && studentId) {
+      return todo.author_id === studentId;
+    }
+    return todo.author_id === profile?.id;
+  });
+
+  console.log("TodoSection - Current user type:", profile?.user_type);
+  console.log("TodoSection - Student ID from params:", studentId);
+  console.log("TodoSection - Filtered todos:", filteredTodos);
+
   const handleCreateTodo = useCallback(async (title: string) => {
-    await createTodo.mutateAsync(title);
-  }, [createTodo]);
+    await createTodo.mutateAsync({
+      title,
+      authorId: studentId || profile?.id
+    });
+  }, [createTodo, studentId, profile?.id]);
 
   const handleBulkImport = useCallback(async (titles: string[]) => {
     for (const title of titles) {
       if (title.trim()) {
-        await createTodo.mutateAsync(title.trim());
+        await createTodo.mutateAsync({
+          title: title.trim(),
+          authorId: studentId || profile?.id
+        });
       }
     }
-  }, [createTodo]);
+  }, [createTodo, studentId, profile?.id]);
 
   const handleToggleStatus = useCallback(async (id: string, completed: boolean) => {
     await toggleTodoStatus.mutateAsync({ id, completed });
@@ -90,7 +112,7 @@ export default function TodoSection() {
           <ScrollArea className="h-full w-full">
             <div className="p-4">
               <TodoList
-                todos={todos}
+                todos={filteredTodos}
                 onToggleStatus={handleToggleStatus}
                 onToggleStarred={handleToggleStarred}
                 onUpdate={handleUpdateTodo}
