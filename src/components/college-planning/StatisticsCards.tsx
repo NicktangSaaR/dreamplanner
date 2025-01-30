@@ -59,7 +59,17 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
     return distribution;
   };
 
+  const getCourseTypeDistribution = (courses: Array<{ course_type: string }>) => {
+    const distribution = courses.reduce((acc: { [key: string]: number }, course) => {
+      const type = course.course_type || 'Regular';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+    return distribution;
+  };
+
   const gradeDistribution = getGradeDistribution(courses);
+  const courseTypeDistribution = getCourseTypeDistribution(courses);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -74,14 +84,27 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">GPA: {calculateCurrentGPA()}</div>
-          <div className="text-sm text-muted-foreground space-y-1">
+          <div className="text-sm text-muted-foreground space-y-2">
             <p>{courses.length} course{courses.length !== 1 ? 's' : ''}</p>
-            <div className="flex gap-2 flex-wrap">
-              {Object.entries(gradeDistribution).map(([grade, count]) => (
-                <span key={grade} className="text-xs bg-white/50 px-2 py-1 rounded">
-                  {grade}: {count}
-                </span>
-              ))}
+            <div className="space-y-1">
+              <p className="text-xs font-medium">Grades:</p>
+              <div className="flex gap-2 flex-wrap">
+                {Object.entries(gradeDistribution).map(([grade, count]) => (
+                  <span key={grade} className="text-xs bg-white/50 px-2 py-1 rounded">
+                    {grade}: {count}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium">Course Types:</p>
+              <div className="flex gap-2 flex-wrap">
+                {Object.entries(courseTypeDistribution).map(([type, count]) => (
+                  <span key={type} className="text-xs bg-white/50 px-2 py-1 rounded">
+                    {type}: {count}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </CardContent>
