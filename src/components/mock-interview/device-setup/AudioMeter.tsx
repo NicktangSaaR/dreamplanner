@@ -15,7 +15,7 @@ const AudioMeter = ({ stream, isAudioWorking }: AudioMeterProps) => {
   useEffect(() => {
     if (stream && isAudioWorking) {
       try {
-        console.log("Setting up audio meter with stream");
+        console.log("Setting up audio meter with microphone stream");
         
         // 创建或重用 AudioContext
         if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
@@ -24,9 +24,17 @@ const AudioMeter = ({ stream, isAudioWorking }: AudioMeterProps) => {
 
         // 创建分析器节点
         analyserRef.current = audioContextRef.current.createAnalyser();
-        analyserRef.current.fftSize = 1024;
-        analyserRef.current.smoothingTimeConstant = 0.3;
+        analyserRef.current.fftSize = 2048; // 提高精度
+        analyserRef.current.smoothingTimeConstant = 0.5; // 平滑处理
 
+        // 获取麦克风输入源
+        const microphone = stream.getAudioTracks()[0];
+        if (!microphone) {
+          console.error("No microphone track found in stream");
+          return;
+        }
+
+        console.log("Creating microphone source from track:", microphone.label);
         const source = audioContextRef.current.createMediaStreamSource(stream);
         source.connect(analyserRef.current);
 
@@ -34,15 +42,16 @@ const AudioMeter = ({ stream, isAudioWorking }: AudioMeterProps) => {
 
         const updateAudioLevel = () => {
           if (analyserRef.current) {
-            analyserRef.current.getByteFrequencyData(dataArray);
+            analyserRef.current.getByteTimeDomainData(dataArray); // 使用时域数据而不是频域
             
-            // 计算音频电平
+            // 计算音频电平 - 使用 RMS (Root Mean Square) 计算
             let sum = 0;
             for (let i = 0; i < dataArray.length; i++) {
-              sum += dataArray[i];
+              const amplitude = (dataArray[i] - 128) / 128; // 转换为 -1 到 1 的范围
+              sum += amplitude * amplitude;
             }
-            const average = sum / dataArray.length;
-            const normalizedLevel = Math.min(100, (average / 128) * 100);
+            const rms = Math.sqrt(sum / dataArray.length);
+            const normalizedLevel = Math.min(100, rms * 400); // 调整灵敏度
             
             setAudioLevel(normalizedLevel);
             animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
@@ -50,7 +59,7 @@ const AudioMeter = ({ stream, isAudioWorking }: AudioMeterProps) => {
         };
 
         updateAudioLevel();
-        console.log("Audio meter setup complete");
+        console.log("Audio meter setup complete for microphone input");
       } catch (error) {
         console.error("Error setting up audio meter:", error);
       }
@@ -75,6 +84,7 @@ const AudioMeter = ({ stream, isAudioWorking }: AudioMeterProps) => {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span>麦克风音量</span>
+        <span className="text-sm text-gray-500">{Math.round(audioLevel)}%</span>
       </div>
       <Progress value={audioLevel} className="h-2" />
     </div>
