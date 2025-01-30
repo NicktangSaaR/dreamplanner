@@ -1,46 +1,12 @@
+import { useCallback } from "react";
+import { useParams } from "react-router-dom";
+import { useProfile } from "@/hooks/useProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { CheckSquare } from "lucide-react";
 import { useTodos } from "@/hooks/useTodos";
 import TodoForm from "./todos/TodoForm";
 import BulkImportForm from "./todos/BulkImportForm";
-import TodoItem from "./todos/TodoItem";
-import { useCallback, memo } from "react";
-import { Todo } from "@/hooks/todos/useTodoQuery";
-import { useParams } from "react-router-dom";
-import { useProfile } from "@/hooks/useProfile";
-
-// Define props interface for TodoList
-interface TodoListProps {
-  todos: Todo[];
-  onToggleStatus: (id: string, completed: boolean) => Promise<void>;
-  onToggleStarred: (id: string, starred: boolean) => Promise<void>;
-  onUpdate: (id: string, title: string) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
-}
-
-// Memoize TodoList component to prevent unnecessary re-renders
-const TodoList = memo(({ 
-  todos, 
-  onToggleStatus, 
-  onToggleStarred, 
-  onUpdate, 
-  onDelete 
-}: TodoListProps) => (
-  <div className="space-y-2">
-    {todos.map((todo) => (
-      <TodoItem
-        key={todo.id}
-        todo={todo}
-        onToggleStatus={onToggleStatus}
-        onToggleStarred={onToggleStarred}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
-    ))}
-  </div>
-));
-
-TodoList.displayName = 'TodoList';
+import TodoList from "./todos/TodoList";
 
 export default function TodoSection() {
   const { studentId } = useParams();
@@ -102,24 +68,23 @@ export default function TodoSection() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>To-Do List</CardTitle>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <CheckSquare className="h-5 w-5" />
+          <CardTitle>To-Do List</CardTitle>
+        </div>
       </CardHeader>
       <CardContent>
         <TodoForm onSubmit={handleCreateTodo} />
         <BulkImportForm onImport={handleBulkImport} />
-        <div className="h-[300px] w-full rounded-md border">
-          <ScrollArea className="h-full w-full">
-            <div className="p-4">
-              <TodoList
-                todos={filteredTodos}
-                onToggleStatus={handleToggleStatus}
-                onToggleStarred={handleToggleStarred}
-                onUpdate={handleUpdateTodo}
-                onDelete={handleDeleteTodo}
-              />
-            </div>
-          </ScrollArea>
+        <div className="border rounded-md">
+          <TodoList
+            todos={filteredTodos}
+            onToggleStatus={handleToggleStatus}
+            onToggleStarred={handleToggleStarred}
+            onUpdate={handleUpdateTodo}
+            onDelete={handleDeleteTodo}
+          />
         </div>
       </CardContent>
     </Card>
