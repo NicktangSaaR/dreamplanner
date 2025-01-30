@@ -81,7 +81,7 @@ export default function StatisticsCards({ courses, activities, notes, todoStats 
           <div className="space-y-2">
             <div>
               <p className="text-sm text-muted-foreground">Weighted</p>
-              <p className="text-2xl font-bold">GPA: {calculateCurrentGPA(true)}/4</p>
+              <p className="text-2xl font-bold">GPA: {calculateCurrentGPA(true)}/5</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Unweighted</p>
