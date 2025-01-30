@@ -3,16 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, Star, StarOff, Trash, Plus, Wand2, Upload } from "lucide-react";
+import { Check, Star, StarOff, Trash, Plus, Upload } from "lucide-react";
 import { useTodos } from "@/hooks/useTodos";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function TodoSection() {
   const [newTodoTitle, setNewTodoTitle] = useState("");
   const [content, setContent] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
   const { todos, createTodo, toggleTodoStatus, toggleStarred, deleteTodo } = useTodos();
 
   const handleCreateTodo = async (e: React.FormEvent) => {
@@ -20,43 +18,6 @@ export default function TodoSection() {
     if (!newTodoTitle.trim()) return;
     await createTodo.mutateAsync(newTodoTitle);
     setNewTodoTitle("");
-  };
-
-  const handleGenerateTodos = async () => {
-    if (!content.trim()) {
-      toast.error("Please enter some content to generate todos from");
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      console.log("Generating todos with content:", content);
-      
-      const { data, error } = await supabase.functions.invoke('generate-todos', {
-        body: { content }
-      });
-
-      if (error) {
-        console.error("Error generating todos:", error);
-        throw error;
-      }
-
-      console.log("Generated todos response:", data);
-      const { todos: generatedTodos } = data;
-      
-      // Create each generated todo
-      for (const todoTitle of generatedTodos) {
-        await createTodo.mutateAsync(todoTitle);
-      }
-
-      setContent("");
-      toast.success("Successfully generated todos!");
-    } catch (error) {
-      console.error("Error generating todos:", error);
-      toast.error("Failed to generate todos. Please try again.");
-    } finally {
-      setIsGenerating(false);
-    }
   };
 
   const handleBulkImport = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -109,27 +70,17 @@ export default function TodoSection() {
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Enter text to generate todos from, or paste multiple todos (one per line) for bulk import..."
+            placeholder="Paste multiple todos (one per line) for bulk import..."
             className="mb-2"
           />
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleGenerateTodos} 
-              disabled={isGenerating || !content.trim()}
-              className="flex-1"
-            >
-              <Wand2 className="h-4 w-4 mr-2" />
-              {isGenerating ? "Generating..." : "Generate Todos"}
-            </Button>
-            <Button 
-              onClick={() => handleBulkImport({ target: { value: content } } as React.ChangeEvent<HTMLTextAreaElement>)}
-              disabled={!content.trim()}
-              className="flex-1"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Bulk Import
-            </Button>
-          </div>
+          <Button 
+            onClick={() => handleBulkImport({ target: { value: content } } as React.ChangeEvent<HTMLTextAreaElement>)}
+            disabled={!content.trim()}
+            className="w-full"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Bulk Import
+          </Button>
         </div>
 
         <ScrollArea className="h-[300px] w-full rounded-md border p-4">
