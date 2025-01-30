@@ -16,7 +16,8 @@ const LiveVideoStream = ({
     videoRef, 
     isInitialized,
     initializeStream,
-    retryInitialization 
+    retryInitialization,
+    stopStream
   } = useVideoStreamSetup({
     onStreamInitialized,
     onStreamError
@@ -42,7 +43,9 @@ const LiveVideoStream = ({
     init();
 
     return () => {
+      console.log("LiveVideoStream component unmounting");
       mounted = false;
+      stopStream();
     };
   }, []);
 

@@ -16,8 +16,8 @@ export const useVideoStreamSetup = ({
   const mountedRef = useRef(true);
 
   const stopStream = () => {
-    console.log("Stopping video stream");
     if (streamRef.current) {
+      console.log("Stopping existing stream tracks");
       streamRef.current.getTracks().forEach(track => {
         track.stop();
         console.log(`Stopped ${track.kind} track:`, {
@@ -35,13 +35,16 @@ export const useVideoStreamSetup = ({
   };
 
   const initializeStream = async () => {
-    try {
-      // 先停止任何现有的流
-      if (streamRef.current) {
-        stopStream();
-      }
+    if (!mountedRef.current) {
+      console.log("Component not mounted, skipping initialization");
+      return;
+    }
 
-      console.log("Requesting media stream...");
+    try {
+      // 确保先停止任何现有的流
+      stopStream();
+
+      console.log("Requesting new media stream...");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
@@ -56,16 +59,16 @@ export const useVideoStreamSetup = ({
         }
       });
 
-      console.log("Media stream obtained:", {
-        videoTracks: stream.getVideoTracks().length,
-        audioTracks: stream.getAudioTracks().length
-      });
-
       if (!mountedRef.current) {
-        console.log("Component unmounted, cleaning up new stream");
+        console.log("Component unmounted during stream initialization, cleaning up");
         stream.getTracks().forEach(track => track.stop());
         return;
       }
+
+      console.log("Media stream obtained successfully:", {
+        videoTracks: stream.getVideoTracks().length,
+        audioTracks: stream.getAudioTracks().length
+      });
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -76,12 +79,16 @@ export const useVideoStreamSetup = ({
           videoRef.current.onloadedmetadata = () => resolve();
         });
 
+        if (!mountedRef.current) {
+          console.log("Component unmounted during video setup, cleaning up");
+          stopStream();
+          return;
+        }
+
         await videoRef.current.play();
-        console.log("Video playback started");
+        console.log("Video playback started successfully");
         setIsInitialized(true);
         onStreamInitialized?.(stream);
-      } else {
-        throw new Error("Video element reference not found");
       }
     } catch (error) {
       console.error("Stream initialization error:", error);
@@ -142,7 +149,7 @@ export const useVideoStreamSetup = ({
     init();
 
     return () => {
-      console.log("Cleaning up video stream");
+      console.log("Cleaning up video stream on unmount");
       mountedRef.current = false;
       stopStream();
     };
@@ -151,8 +158,8 @@ export const useVideoStreamSetup = ({
   return {
     videoRef,
     isInitialized,
-    stopStream,
     initializeStream,
-    retryInitialization
+    retryInitialization,
+    stopStream
   };
 };
