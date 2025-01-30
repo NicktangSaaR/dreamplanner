@@ -76,6 +76,7 @@ const InterviewContent = ({
   };
 
   const isRecording = stage === InterviewStage.RESPONSE;
+  const showVideoPreview = stage !== InterviewStage.SETTINGS && stage !== InterviewStage.READY;
 
   return (
     <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
@@ -142,14 +143,16 @@ const InterviewContent = ({
               </div>
             )}
           </div>
-          <VideoPreview
-            recordedVideoUrl={recordedVideoUrl}
-            isReviewStage={stage === InterviewStage.REVIEW}
-            onStopRecording={onStopRecording}
-            onStartNew={onStartNew}
-            selectedQuestionId={selectedQuestion.id}
-            isRecording={isRecording}
-          />
+          {showVideoPreview && (
+            <VideoPreview
+              recordedVideoUrl={recordedVideoUrl}
+              isReviewStage={stage === InterviewStage.REVIEW}
+              onStopRecording={onStopRecording}
+              onStartNew={onStartNew}
+              selectedQuestionId={selectedQuestion.id}
+              isRecording={isRecording}
+            />
+          )}
         </>
       )}
     </div>

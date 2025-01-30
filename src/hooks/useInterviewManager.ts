@@ -44,8 +44,9 @@ export const useInterviewManager = () => {
       return;
     }
 
+    console.log("Starting interview, initializing questions");
     initializeQuestions();
-    setStage(InterviewStage.PREPARATION);
+    setStage(InterviewStage.READY);
   };
 
   const handleDeviceSetupComplete = () => {
@@ -61,8 +62,9 @@ export const useInterviewManager = () => {
 
   const handleNextQuestion = () => {
     if (hasMoreQuestions()) {
+      console.log("Moving to next question");
       moveToNextQuestion();
-      setStage(InterviewStage.PREPARATION);
+      setStage(InterviewStage.READY);
       toast.success("进入下一题", {
         description: "准备时间开始计时。"
       });
