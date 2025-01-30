@@ -47,19 +47,26 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
     onBack();
   };
 
+  // Initialize devices only once when component mounts
   useEffect(() => {
-    // Automatically start device test when component mounts
+    console.log("DeviceSetup component mounted");
     const initDevices = async () => {
-      console.log("Initializing devices...");
-      await startDeviceTest();
+      try {
+        console.log("Initializing devices...");
+        await startDeviceTest();
+      } catch (error) {
+        console.error("Error initializing devices:", error);
+      }
     };
     
     initDevices();
     
+    // Cleanup when component unmounts
     return () => {
+      console.log("DeviceSetup component unmounting");
       stopDevices();
     };
-  }, [startDeviceTest, stopDevices]);
+  }, []); // Empty dependency array to run only once on mount
 
   return (
     <div className="space-y-8">
