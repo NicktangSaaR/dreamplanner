@@ -15,6 +15,10 @@ export default function TodoSection() {
     deleteTodo,
   } = useTodos();
 
+  const handleCreateTodo = async (title: string) => {
+    await createTodo.mutateAsync(title);
+  };
+
   const handleBulkImport = async (titles: string[]) => {
     for (const title of titles) {
       if (title.trim()) {
@@ -23,13 +27,29 @@ export default function TodoSection() {
     }
   };
 
+  const handleToggleStatus = async (id: string, completed: boolean) => {
+    await toggleTodoStatus.mutateAsync({ id, completed });
+  };
+
+  const handleToggleStarred = async (id: string, starred: boolean) => {
+    await toggleStarred.mutateAsync({ id, starred });
+  };
+
+  const handleUpdateTodo = async (id: string, title: string) => {
+    await updateTodo.mutateAsync({ id, title });
+  };
+
+  const handleDeleteTodo = async (id: string) => {
+    await deleteTodo.mutateAsync(id);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>To-Do List</CardTitle>
       </CardHeader>
       <CardContent>
-        <TodoForm onSubmit={createTodo.mutateAsync} />
+        <TodoForm onSubmit={handleCreateTodo} />
         <BulkImportForm onImport={handleBulkImport} />
         <ScrollArea className="h-[300px] w-full rounded-md border p-4">
           <div className="space-y-2">
@@ -37,10 +57,10 @@ export default function TodoSection() {
               <TodoItem
                 key={todo.id}
                 todo={todo}
-                onToggleStatus={(id, completed) => toggleTodoStatus.mutate({ id, completed })}
-                onToggleStarred={(id, starred) => toggleStarred.mutate({ id, starred })}
-                onUpdate={(id, title) => updateTodo.mutateAsync({ id, title })}
-                onDelete={(id) => deleteTodo.mutate(id)}
+                onToggleStatus={handleToggleStatus}
+                onToggleStarred={handleToggleStarred}
+                onUpdate={handleUpdateTodo}
+                onDelete={handleDeleteTodo}
               />
             ))}
           </div>
