@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function DashboardHeader() {
-  const { profile } = useProfile();
+  const { profile, isLoading } = useProfile();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,18 +22,26 @@ export default function DashboardHeader() {
   };
 
   const handleProfile = () => {
-    console.log("Profile button clicked, profile data:", profile);
-    
-    // Get user type from profile
-    const userType = profile?.user_type;
-    console.log("User type:", userType);
+    if (isLoading) {
+      console.log("Profile data is still loading...");
+      return;
+    }
 
-    if (userType === 'student') {
+    if (!profile) {
+      console.error("Profile data is not available");
+      toast.error("Unable to access profile data");
+      return;
+    }
+
+    console.log("Profile button clicked, profile data:", profile);
+    console.log("User type:", profile.user_type);
+
+    if (profile.user_type === 'student') {
       navigate('/student-profile');
-    } else if (userType === 'counselor') {
+    } else if (profile.user_type === 'counselor') {
       navigate('/counselor-profile');
     } else {
-      console.error("Unknown user type:", userType);
+      console.error("Unknown user type:", profile.user_type);
       toast.error("Unable to determine user type");
     }
   };
@@ -88,6 +96,7 @@ export default function DashboardHeader() {
           onClick={handleProfile}
           className="hover:bg-secondary"
           title="Profile"
+          disabled={isLoading}
         >
           <UserRound className="h-5 w-5" />
         </Button>
