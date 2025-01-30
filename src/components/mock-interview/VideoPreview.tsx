@@ -45,18 +45,28 @@ const VideoPreview = ({
     });
   };
 
+  const cleanupMediaStream = () => {
+    if (stream) {
+      console.log("Cleaning up media stream...");
+      stream.getTracks().forEach(track => {
+        track.stop();
+        console.log(`Stopped ${track.kind} track:`, {
+          label: track.label,
+          enabled: track.enabled,
+          readyState: track.readyState
+        });
+      });
+      setStream(null);
+    }
+  };
+
   const handleStopRecording = async () => {
     console.log("Stopping recording and saving video...");
     setIsSaving(true);
     
     try {
-      if (stream) {
-        stream.getTracks().forEach(track => {
-          track.stop();
-          console.log(`Stopped ${track.kind} track`);
-        });
-        setStream(null);
-      }
+      // First, ensure all media tracks are properly stopped
+      cleanupMediaStream();
       
       onStopRecording();
 
@@ -95,18 +105,15 @@ const VideoPreview = ({
     }
   };
 
+  // Cleanup media stream when component unmounts or when moving to review stage
   useEffect(() => {
+    if (isReviewStage) {
+      cleanupMediaStream();
+    }
     return () => {
-      if (stream) {
-        console.log("Cleaning up stream in VideoPreview");
-        stream.getTracks().forEach(track => {
-          track.stop();
-          console.log(`Stopped ${track.kind} track`);
-        });
-        setStream(null);
-      }
+      cleanupMediaStream();
     };
-  }, [stream]);
+  }, [isReviewStage]);
 
   return (
     <Card className="p-6">
