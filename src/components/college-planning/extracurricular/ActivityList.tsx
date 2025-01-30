@@ -1,33 +1,86 @@
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Activity } from "../types/activity";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import ActivityTable from "./ActivityTable";
 
 interface ActivityListProps {
   activities: Activity[];
 }
 
 export default function ActivityList({ activities }: ActivityListProps) {
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const queryClient = useQueryClient();
+
+  const handleEditActivity = (activity: Activity) => {
+    setEditingActivity(activity);
+  };
+
+  const handleEditingActivityChange = (field: string, value: string) => {
+    if (editingActivity) {
+      setEditingActivity({
+        ...editingActivity,
+        [field]: value,
+      });
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingActivity) return;
+
+    try {
+      const { error } = await supabase
+        .from("extracurricular_activities")
+        .update({
+          name: editingActivity.name,
+          role: editingActivity.role,
+          description: editingActivity.description,
+          time_commitment: editingActivity.time_commitment,
+        })
+        .eq("id", editingActivity.id);
+
+      if (error) throw error;
+
+      toast.success("活动更新成功");
+      await queryClient.invalidateQueries({ queryKey: ["extracurricular-activities"] });
+      setEditingActivity(null);
+    } catch (error) {
+      console.error("Error updating activity:", error);
+      toast.error("更新活动失败");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingActivity(null);
+  };
+
+  const handleDeleteActivity = async (activityId: string) => {
+    try {
+      const { error } = await supabase
+        .from("extracurricular_activities")
+        .delete()
+        .eq("id", activityId);
+
+      if (error) throw error;
+
+      toast.success("活动删除成功");
+      await queryClient.invalidateQueries({ queryKey: ["extracurricular-activities"] });
+    } catch (error) {
+      console.error("Error deleting activity:", error);
+      toast.error("删除活动失败");
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 gap-4">
-      {activities.map((activity) => (
-        <Card key={activity.id} className="p-3 bg-white/50 hover:bg-white/80 transition-colors">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="font-medium">{activity.name}</p>
-              <p className="text-sm text-gray-600">{activity.role}</p>
-            </div>
-            {activity.time_commitment && (
-              <Badge variant="secondary">{activity.time_commitment}</Badge>
-            )}
-          </div>
-          {activity.description && (
-            <p className="text-sm text-gray-600 mt-2">{activity.description}</p>
-          )}
-        </Card>
-      ))}
-      {activities.length === 0 && (
-        <p className="text-gray-500 text-center">No extracurricular activities recorded</p>
-      )}
-    </div>
+    <ActivityTable
+      activities={activities}
+      editingActivity={editingActivity}
+      onEditActivity={handleEditActivity}
+      onSaveEdit={handleSaveEdit}
+      onCancelEdit={handleCancelEdit}
+      onEditingActivityChange={handleEditingActivityChange}
+      onDeleteActivity={handleDeleteActivity}
+    />
   );
 }
