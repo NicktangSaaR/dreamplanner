@@ -6,6 +6,7 @@ import NoteDialog from "./NoteDialog";
 import NotesList from "./notes/NotesList";
 import { useNotes } from "@/hooks/useNotes";
 import { Note } from "./types/note";
+import { useParams } from "react-router-dom";
 
 interface NotesSectionProps {
   onNotesChange?: (notes: Note[]) => void;
@@ -14,34 +15,42 @@ interface NotesSectionProps {
 export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const { notes, createNote, updateNote, handleTogglePin, handleToggleStar } = useNotes();
+  const { studentId } = useParams();
+  const { notes, createNote, updateNote, handleTogglePin, handleToggleStar } = useNotes(studentId);
+
+  console.log("NotesSection - studentId:", studentId);
+  console.log("NotesSection - notes:", notes);
 
   const handleCreateNote = async (data: { title: string; content: string }) => {
-    await createNote(data);
+    if (!studentId) return;
+    
+    await createNote(data, studentId);
     setIsDialogOpen(false);
     if (onNotesChange) onNotesChange(notes);
   };
 
   const handleEditNote = async (data: { title: string; content: string }) => {
-    if (!editingNote) return;
+    if (!editingNote || !studentId) return;
     
     await updateNote({
       ...editingNote,
       title: data.title,
       content: data.content,
-    });
+    }, studentId);
     
     setEditingNote(null);
     if (onNotesChange) onNotesChange(notes);
   };
 
   const handleTogglePinNote = async (note: Note) => {
-    await handleTogglePin(note);
+    if (!studentId) return;
+    await handleTogglePin(note, studentId);
     if (onNotesChange) onNotesChange(notes);
   };
 
   const handleToggleStarNote = async (note: Note) => {
-    await handleToggleStar(note);
+    if (!studentId) return;
+    await handleToggleStar(note, studentId);
     if (onNotesChange) onNotesChange(notes);
   };
 

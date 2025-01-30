@@ -17,17 +17,23 @@ interface NoteFormData {
   content: string;
 }
 
-export function useNotes() {
+export function useNotes(studentId?: string) {
   const [notes, setNotes] = useState<Note[]>([]);
   const { toast } = useToast();
 
   const fetchNotes = async () => {
     try {
-      const { data: notesData, error } = await supabase
+      const query = supabase
         .from('notes')
         .select('*')
         .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false });
+
+      if (studentId) {
+        query.eq('author_id', studentId);
+      }
+
+      const { data: notesData, error } = await query;
 
       if (error) throw error;
       
@@ -46,7 +52,7 @@ export function useNotes() {
     }
   };
 
-  const createNote = async (data: NoteFormData) => {
+  const createNote = async (data: NoteFormData, forStudentId?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -59,8 +65,8 @@ export function useNotes() {
         .insert([{
           title: data.title,
           content: data.content,
-          author_id: user.id,
-          author_name: user.email // Using email as author_name for now
+          author_id: forStudentId || user.id,
+          author_name: user.email
         }]);
 
       if (error) throw error;
@@ -80,7 +86,7 @@ export function useNotes() {
     }
   };
 
-  const updateNote = async (note: Note) => {
+  const updateNote = async (note: Note, forStudentId?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -94,8 +100,7 @@ export function useNotes() {
           title: note.title,
           content: note.content,
         })
-        .eq('id', note.id)
-        .eq('author_id', user.id); // Ensure user can only update their own notes
+        .eq('id', note.id);
 
       if (error) throw error;
 
@@ -114,7 +119,7 @@ export function useNotes() {
     }
   };
 
-  const handleTogglePin = async (note: Note) => {
+  const handleTogglePin = async (note: Note, forStudentId?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -125,8 +130,7 @@ export function useNotes() {
       const { error } = await supabase
         .from('notes')
         .update({ is_pinned: !note.is_pinned })
-        .eq('id', note.id)
-        .eq('author_id', user.id); // Ensure user can only pin/unpin their own notes
+        .eq('id', note.id);
 
       if (error) throw error;
 
@@ -149,7 +153,7 @@ export function useNotes() {
     }
   };
 
-  const handleToggleStar = async (note: Note) => {
+  const handleToggleStar = async (note: Note, forStudentId?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -161,8 +165,7 @@ export function useNotes() {
       const { error } = await supabase
         .from('notes')
         .update({ stars: newStars })
-        .eq('id', note.id)
-        .eq('author_id', user.id); // Ensure user can only star their own notes
+        .eq('id', note.id);
 
       if (error) throw error;
 
@@ -187,7 +190,7 @@ export function useNotes() {
 
   useEffect(() => {
     fetchNotes();
-  }, []);
+  }, [studentId]);
 
   return {
     notes,
