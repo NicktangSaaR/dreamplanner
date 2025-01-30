@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, Star, StarOff, Trash, Plus, Wand2 } from "lucide-react";
+import { Check, Star, StarOff, Trash, Plus, Wand2, Upload } from "lucide-react";
 import { useTodos } from "@/hooks/useTodos";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -59,6 +59,33 @@ export default function TodoSection() {
     }
   };
 
+  const handleBulkImport = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    const todoTitles = text.split('\n').filter(title => title.trim());
+    
+    if (todoTitles.length === 0) {
+      toast.error("Please enter at least one todo item");
+      return;
+    }
+
+    try {
+      console.log("Bulk importing todos:", todoTitles);
+      
+      // Create todos in sequence
+      for (const title of todoTitles) {
+        if (title.trim()) {
+          await createTodo.mutateAsync(title.trim());
+        }
+      }
+
+      setContent("");
+      toast.success(`Successfully imported ${todoTitles.length} todos!`);
+    } catch (error) {
+      console.error("Error importing todos:", error);
+      toast.error("Failed to import todos. Please try again.");
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -82,17 +109,27 @@ export default function TodoSection() {
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Enter text to generate todos from..."
+            placeholder="Enter text to generate todos from, or paste multiple todos (one per line) for bulk import..."
             className="mb-2"
           />
-          <Button 
-            onClick={handleGenerateTodos} 
-            disabled={isGenerating || !content.trim()}
-            className="w-full"
-          >
-            <Wand2 className="h-4 w-4 mr-2" />
-            {isGenerating ? "Generating..." : "Generate Todos"}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleGenerateTodos} 
+              disabled={isGenerating || !content.trim()}
+              className="flex-1"
+            >
+              <Wand2 className="h-4 w-4 mr-2" />
+              {isGenerating ? "Generating..." : "Generate Todos"}
+            </Button>
+            <Button 
+              onClick={() => handleBulkImport({ target: { value: content } } as React.ChangeEvent<HTMLTextAreaElement>)}
+              disabled={!content.trim()}
+              className="flex-1"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Bulk Import
+            </Button>
+          </div>
         </div>
 
         <ScrollArea className="h-[300px] w-full rounded-md border p-4">
