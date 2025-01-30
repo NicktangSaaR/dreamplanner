@@ -32,8 +32,8 @@ export default function ActivityForm({
     if (numericValue === '') {
       onActivityChange("time_commitment", '');
     } else {
-      // Append "Hours" to the numeric value
-      onActivityChange("time_commitment", `${numericValue} Hours`);
+      // Append "Hours/Week" to the numeric value
+      onActivityChange("time_commitment", `${numericValue} Hours/Week`);
     }
   };
 
@@ -73,14 +73,14 @@ export default function ActivityForm({
       </div>
       <div>
         <label htmlFor="time_commitment" className="block text-sm font-medium mb-1">
-          Time Commitment (Hours)
+          Time Commitment (Hours/Week)
         </label>
         <Input
           id="time_commitment"
           type="text"
-          value={newActivity.time_commitment.replace(" Hours", "")}
+          value={newActivity.time_commitment.replace(" Hours/Week", "")}
           onChange={(e) => handleTimeCommitmentChange(e.target.value)}
-          placeholder="Enter number of hours"
+          placeholder="Enter number of hours per week"
         />
       </div>
       <Button type="submit" className="w-full">
