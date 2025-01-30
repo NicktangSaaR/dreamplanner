@@ -22,7 +22,6 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const { notes = [], createNote, updateNote, handleTogglePin, handleToggleStar } = useNotes();
 
-  // Memoize handlers to prevent unnecessary re-renders
   const handleCreateNote = useCallback(async (data: { title: string; content: string }) => {
     try {
       await createNote(data);
@@ -59,10 +58,10 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
     return Boolean(note?.id);
   }, []);
 
-  // Only call onNotesChange when notes actually change and is a valid array
+  // Only notify parent when notes change and are valid
   useEffect(() => {
     if (onNotesChange && Array.isArray(notes)) {
-      console.log("Notes changed, notifying parent:", notes);
+      console.log("Notes changed:", notes);
       onNotesChange(notes);
     }
   }, [notes, onNotesChange]);

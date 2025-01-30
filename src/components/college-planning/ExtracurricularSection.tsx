@@ -18,18 +18,15 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
     timeCommitment: "",
   });
 
-  // Memoize handlers to prevent unnecessary re-renders
   const handleAddActivity = useCallback(() => {
     if (newActivity.name && newActivity.role) {
       console.log("Adding new activity:", newActivity);
-      setActivities(prevActivities => [
-        ...prevActivities,
-        {
-          id: Date.now().toString(),
-          ...newActivity,
-        },
-      ]);
+      const activityToAdd = {
+        id: Date.now().toString(),
+        ...newActivity,
+      };
       
+      setActivities(prevActivities => [...prevActivities, activityToAdd]);
       setNewActivity({
         name: "",
         role: "",
@@ -62,10 +59,10 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
     }
   }, [editingActivity]);
 
-  // Only notify parent of activities changes when they actually change and are valid
+  // Notify parent only when activities change and are valid
   useEffect(() => {
     if (onActivitiesChange && Array.isArray(activities)) {
-      console.log("Activities state changed:", activities);
+      console.log("Activities changed:", activities);
       onActivitiesChange(activities);
     }
   }, [activities, onActivitiesChange]);
