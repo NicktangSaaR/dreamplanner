@@ -4,6 +4,7 @@ import DeviceHeader from "./DeviceHeader";
 import DeviceList from "./DeviceList";
 import DeviceControls from "./DeviceControls";
 import VideoPreview from "./VideoPreview";
+import AudioMeter from "./AudioMeter";
 import { useVideoPreview } from "@/hooks/useVideoPreview";
 import { toast } from "sonner";
 
@@ -34,7 +35,10 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
 
   const handleComplete = () => {
     if (!isCameraWorking || !isAudioWorking) {
-      console.log("Cannot complete setup - devices not working");
+      console.log("Cannot complete setup - devices not working", {
+        camera: isCameraWorking,
+        audio: isAudioWorking
+      });
       toast.error("请先完成设备测试，确保摄像头和麦克风正常工作");
       return;
     }
@@ -48,7 +52,7 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
     onBack();
   };
 
-  // Initialize devices only once when component mounts
+  // Initialize devices when component mounts
   useEffect(() => {
     console.log("DeviceSetup component mounted");
     const initDevices = async () => {
@@ -85,6 +89,12 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
             isCameraWorking={isCameraWorking}
             isAudioWorking={isAudioWorking}
           />
+          
+          <AudioMeter 
+            stream={stream}
+            isAudioWorking={isAudioWorking}
+          />
+
           <DeviceControls
             isCameraWorking={isCameraWorking}
             isAudioWorking={isAudioWorking}

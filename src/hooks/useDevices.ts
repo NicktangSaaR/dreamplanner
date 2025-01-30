@@ -94,9 +94,7 @@ export const useDevices = () => {
       const videoTrack = newStream.getVideoTracks()[0];
       if (videoTrack) {
         console.log("Video track obtained:", videoTrack.label);
-        const videoSettings = videoTrack.getSettings();
-        console.log("Video settings:", videoSettings);
-        // Immediately set camera as working if we got a video track
+        console.log("Video settings:", videoTrack.getSettings());
         setIsCameraWorking(true);
       }
 
@@ -104,9 +102,7 @@ export const useDevices = () => {
       const audioTrack = newStream.getAudioTracks()[0];
       if (audioTrack) {
         console.log("Audio track obtained:", audioTrack.label);
-        const audioSettings = audioTrack.getSettings();
-        console.log("Audio settings:", audioSettings);
-        // Immediately set audio as working if we got an audio track
+        console.log("Audio settings:", audioTrack.getSettings());
         setIsAudioWorking(true);
       }
 

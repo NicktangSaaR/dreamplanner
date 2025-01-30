@@ -15,10 +15,14 @@ const AudioMeter = ({ stream, isAudioWorking }: AudioMeterProps) => {
   useEffect(() => {
     if (stream && isAudioWorking) {
       try {
+        console.log("Setting up audio meter with stream:", stream);
+        
+        // Create AudioContext if it doesn't exist
         if (!audioContextRef.current) {
           audioContextRef.current = new AudioContext();
         }
 
+        // Create Analyser if it doesn't exist
         if (!analyserRef.current) {
           analyserRef.current = audioContextRef.current.createAnalyser();
           analyserRef.current.fftSize = 256;
@@ -40,12 +44,14 @@ const AudioMeter = ({ stream, isAudioWorking }: AudioMeterProps) => {
         };
 
         updateAudioLevel();
+        console.log("Audio meter setup complete");
       } catch (error) {
         console.error("Error setting up audio meter:", error);
       }
     }
 
     return () => {
+      console.log("Cleaning up audio meter");
       if (audioContextRef.current?.state !== 'closed') {
         audioContextRef.current?.close();
       }
