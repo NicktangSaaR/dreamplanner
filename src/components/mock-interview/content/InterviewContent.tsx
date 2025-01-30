@@ -1,0 +1,109 @@
+import { InterviewStage } from "@/components/mock-interview/InterviewStage";
+import InterviewSettingsComponent from "@/components/mock-interview/InterviewSettings";
+import InterviewPreparation from "@/components/mock-interview/InterviewPreparation";
+import InterviewCountdown from "@/components/mock-interview/InterviewCountdown";
+import InterviewResponse from "@/components/mock-interview/InterviewResponse";
+import VideoPreview from "@/components/mock-interview/VideoPreview";
+import DeviceSetup from "@/components/mock-interview/device-setup/DeviceSetup";
+import { Question, InterviewSettings } from "@/components/mock-interview/types";
+
+interface InterviewContentProps {
+  showDeviceSetup: boolean;
+  deviceSetupComplete: boolean;
+  stage: InterviewStage;
+  settings: InterviewSettings;
+  selectedQuestion: Question | undefined;
+  timeLeft: number;
+  countdownTime: number;
+  videoRef: React.RefObject<HTMLVideoElement>;
+  recordedVideoUrl: string | null;
+  onSettingsChange: (settings: InterviewSettings) => void;
+  onStartInterview: () => void;
+  onDeviceSetupComplete: () => void;
+  onDeviceSetupBack: () => void;
+  onStopRecording: () => void;
+  onStartNew: () => void;
+}
+
+const InterviewContent = ({
+  showDeviceSetup,
+  deviceSetupComplete,
+  stage,
+  settings,
+  selectedQuestion,
+  timeLeft,
+  countdownTime,
+  videoRef,
+  recordedVideoUrl,
+  onSettingsChange,
+  onStartInterview,
+  onDeviceSetupComplete,
+  onDeviceSetupBack,
+  onStopRecording,
+  onStartNew,
+}: InterviewContentProps) => {
+  if (showDeviceSetup || !deviceSetupComplete) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <DeviceSetup 
+          onComplete={onDeviceSetupComplete} 
+          onBack={onDeviceSetupBack}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+      {stage === InterviewStage.SETTINGS ? (
+        <div className="lg:col-span-2">
+          <InterviewSettingsComponent
+            settings={settings}
+            onSettingsChange={onSettingsChange}
+            onStartInterview={onStartInterview}
+          />
+        </div>
+      ) : selectedQuestion && (
+        <>
+          <div className="space-y-6">
+            {stage === InterviewStage.PREPARATION && (
+              <InterviewPreparation
+                question={selectedQuestion}
+                timeLeft={timeLeft}
+                totalTime={settings.prepTime}
+              />
+            )}
+            {stage === InterviewStage.COUNTDOWN && (
+              <InterviewCountdown
+                countdownTime={countdownTime}
+                question={selectedQuestion}
+              />
+            )}
+            {stage === InterviewStage.RESPONSE && (
+              <InterviewResponse
+                question={selectedQuestion}
+                timeLeft={timeLeft}
+                totalTime={settings.responseTime}
+              />
+            )}
+            {stage === InterviewStage.REVIEW && (
+              <div className="card p-8 bg-white rounded-lg shadow-lg">
+                <h2 className="text-2xl font-bold mb-6">面试完成</h2>
+                <p className="text-xl text-gray-700 mb-6">您现在可以查看录制的回答。</p>
+              </div>
+            )}
+          </div>
+          <VideoPreview
+            videoRef={videoRef}
+            recordedVideoUrl={recordedVideoUrl}
+            isReviewStage={stage === InterviewStage.REVIEW}
+            onStopRecording={onStopRecording}
+            onStartNew={onStartNew}
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
+export default InterviewContent;
