@@ -1,8 +1,9 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useDevices } from "@/hooks/useDevices";
 import DeviceList from "./DeviceList";
 import DeviceControls from "./DeviceControls";
 import VideoPreview from "./VideoPreview";
+import { useVideoPreview } from "@/hooks/useVideoPreview";
 
 interface DeviceSetupProps {
   onComplete: () => void;
@@ -26,21 +27,36 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
     stream
   } = useDevices();
 
+  // Use the useVideoPreview hook to handle video preview
+  useVideoPreview(videoRef, stream);
+
   const handleComplete = () => {
+    if (!isCameraWorking || !isAudioWorking) {
+      console.log("Cannot complete setup - devices not working");
+      return;
+    }
     console.log("Device setup complete, stopping devices...");
     stopDevices();
     onComplete();
   };
+
+  const handleBack = () => {
+    stopDevices();
+    onBack();
+  };
+
+  useEffect(() => {
+    return () => {
+      stopDevices();
+    };
+  }, [stopDevices]);
 
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">设备设置</h2>
         <button
-          onClick={() => {
-            stopDevices();
-            onBack();
-          }}
+          onClick={handleBack}
           className="text-gray-500 hover:text-gray-700"
         >
           返回
@@ -62,10 +78,7 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
           <DeviceControls
             isCameraWorking={isCameraWorking}
             isAudioWorking={isAudioWorking}
-            onTest={() => {
-              console.log("Starting device test...");
-              startDeviceTest();
-            }}
+            onTest={startDeviceTest}
             onComplete={handleComplete}
             videoRef={videoRef}
           />

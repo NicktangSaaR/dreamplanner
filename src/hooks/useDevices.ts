@@ -13,6 +13,14 @@ export const useDevices = () => {
 
   const getDevices = useCallback(async () => {
     try {
+      // First request permissions to ensure we get labeled devices
+      const initialStream = await navigator.mediaDevices.getUserMedia({ 
+        video: true, 
+        audio: true 
+      });
+      console.log("Got initial permission stream");
+      
+      // Enumerate devices after getting permissions
       const devices = await navigator.mediaDevices.enumerateDevices();
       
       const videoInputs = devices
@@ -41,22 +49,14 @@ export const useDevices = () => {
       if (audioInputs.length > 0 && !selectedAudioDevice) {
         setSelectedAudioDevice(audioInputs[0].deviceId);
       }
+
+      // Stop the initial permission stream
+      initialStream.getTracks().forEach(track => track.stop());
     } catch (error) {
       console.error("Error getting devices:", error);
       toast.error("获取设备列表失败");
     }
   }, [selectedVideoDevice, selectedAudioDevice]);
-
-  useEffect(() => {
-    getDevices();
-    
-    // Listen for device changes
-    navigator.mediaDevices.addEventListener('devicechange', getDevices);
-    
-    return () => {
-      navigator.mediaDevices.removeEventListener('devicechange', getDevices);
-    };
-  }, [getDevices]);
 
   const stopDevices = useCallback(() => {
     console.log("Stopping all media tracks...");
@@ -81,10 +81,13 @@ export const useDevices = () => {
       // Stop any existing streams
       stopDevices();
 
-      const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { deviceId: selectedVideoDevice },
-        audio: { deviceId: selectedAudioDevice }
-      });
+      const constraints = {
+        video: selectedVideoDevice ? { deviceId: { exact: selectedVideoDevice } } : true,
+        audio: selectedAudioDevice ? { deviceId: { exact: selectedAudioDevice } } : true
+      };
+
+      console.log("Requesting media with constraints:", constraints);
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
 
       console.log("Got new media stream:", newStream);
       setStream(newStream);
@@ -104,13 +107,27 @@ export const useDevices = () => {
       }
 
       toast.success("设备测试成功");
+      return newStream;
     } catch (error) {
       console.error("Error testing devices:", error);
       toast.error("设备测试失败，请检查设备权限设置");
       setIsCameraWorking(false);
       setIsAudioWorking(false);
+      return null;
     }
   }, [selectedVideoDevice, selectedAudioDevice, stopDevices]);
+
+  useEffect(() => {
+    getDevices();
+    
+    // Listen for device changes
+    navigator.mediaDevices.addEventListener('devicechange', getDevices);
+    
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', getDevices);
+      stopDevices();
+    };
+  }, [getDevices, stopDevices]);
 
   return {
     videoDevices,
