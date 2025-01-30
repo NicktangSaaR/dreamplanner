@@ -25,7 +25,7 @@ export default function DashboardHeader() {
   };
 
   const handleProfile = () => {
-    navigate(`/student-profile/${profile?.id}`);
+    navigate("/student-profile");
   };
 
   return (
@@ -33,7 +33,7 @@ export default function DashboardHeader() {
       <h1 className="text-2xl font-bold">Student Dashboard</h1>
       <div className="flex gap-2">
         <Button onClick={handleProfile} variant="outline">
-          Profile Settings
+          My Profile
         </Button>
         <Button onClick={handleMockInterview} variant="outline">
           Mock Interview
