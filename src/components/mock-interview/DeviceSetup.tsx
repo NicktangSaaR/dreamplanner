@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DeviceSetupProps {
@@ -22,13 +23,16 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
   const [audioDevices, setAudioDevices] = useState<MediaDevice[]>([]);
   const [selectedVideoDevice, setSelectedVideoDevice] = useState<string>("");
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>("");
+  const [audioLevel, setAudioLevel] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number>();
 
   useEffect(() => {
     const loadDevices = async () => {
       try {
-        // 请求权限以获取设备标签
         await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         const devices = await navigator.mediaDevices.enumerateDevices();
         
@@ -59,7 +63,51 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
     };
 
     loadDevices();
+
+    return () => {
+      if (audioContextRef.current?.state !== 'closed') {
+        audioContextRef.current?.close();
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
   }, []);
+
+  const startAudioMeter = (mediaStream: MediaStream) => {
+    try {
+      // 创建音频上下文
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext();
+      }
+
+      // 创建分析器节点
+      if (!analyserRef.current) {
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        analyserRef.current.fftSize = 256;
+      }
+
+      // 连接音频源到分析器
+      const source = audioContextRef.current.createMediaStreamSource(mediaStream);
+      source.connect(analyserRef.current);
+
+      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+
+      const updateAudioLevel = () => {
+        if (analyserRef.current) {
+          analyserRef.current.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((acc, value) => acc + value, 0) / dataArray.length;
+          const normalizedLevel = Math.min(100, (average / 128) * 100);
+          setAudioLevel(normalizedLevel);
+          animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
+        }
+      };
+
+      updateAudioLevel();
+    } catch (error) {
+      console.error("Error setting up audio meter:", error);
+    }
+  };
 
   const startCamera = async () => {
     try {
@@ -87,6 +135,7 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
         videoRef.current.srcObject = mediaStream;
         setIsCameraWorking(true);
         setIsAudioWorking(true);
+        startAudioMeter(mediaStream);
         toast.success("设备测试已开始");
       }
     } catch (error) {
@@ -125,6 +174,13 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current?.state !== 'closed') {
+        audioContextRef.current?.close();
+      }
+      setAudioLevel(0);
     }
   };
 
@@ -209,11 +265,18 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
             </span>
           </div>
           
-          <div className="flex items-center justify-between">
-            <span>麦克风状态：</span>
-            <span className={isAudioWorking ? "text-green-500" : "text-red-500"}>
-              {isAudioWorking ? "正常" : "未开启"}
-            </span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span>麦克风状态：</span>
+              <span className={isAudioWorking ? "text-green-500" : "text-red-500"}>
+                {isAudioWorking ? "正常" : "未开启"}
+              </span>
+            </div>
+            {isAudioWorking && (
+              <div className="w-full">
+                <Progress value={audioLevel} className="h-2" />
+              </div>
+            )}
           </div>
         </div>
 
