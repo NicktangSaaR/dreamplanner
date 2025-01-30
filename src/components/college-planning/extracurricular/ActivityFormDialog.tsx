@@ -9,8 +9,9 @@ interface ActivityFormDialogProps {
     role: string;
     description: string;
     time_commitment: string;
+    grade_levels?: string[];
   };
-  onActivityChange: (field: string, value: string) => void;
+  onActivityChange: (field: string, value: string | string[]) => void;
   onAddActivity: () => Promise<void>;
 }
 
