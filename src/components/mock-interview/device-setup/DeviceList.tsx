@@ -20,8 +20,6 @@ const DeviceList = ({
   selectedAudioDevice,
   onVideoDeviceChange,
   onAudioDeviceChange,
-  isCameraWorking,
-  isAudioWorking,
 }: DeviceListProps) => {
   return (
     <div className="space-y-4">
@@ -38,9 +36,6 @@ const DeviceList = ({
         selectedDevice={selectedAudioDevice}
         onDeviceChange={onAudioDeviceChange}
       />
-
-      <DeviceStatus label="摄像头" isWorking={isCameraWorking} />
-      <DeviceStatus label="麦克风" isWorking={isAudioWorking} />
     </div>
   );
 };
