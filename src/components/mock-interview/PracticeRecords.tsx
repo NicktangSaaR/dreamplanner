@@ -12,6 +12,8 @@ const PracticeRecords = () => {
     return <div className="text-center py-8">加载练习记录中...</div>;
   }
 
+  console.log("Rendering practice records:", records);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -38,7 +40,10 @@ const PracticeRecords = () => {
             title={record.mock_interview_questions?.title}
             date={record.practice_date}
             onPlay={() => setSelectedVideo(record.video_url)}
-            onDelete={() => deleteRecord.mutate(record.id)}
+            onDelete={() => {
+              console.log("Deleting record:", record.id);
+              deleteRecord.mutate(record.id);
+            }}
           />
         ))}
 
