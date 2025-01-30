@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { Question } from "@/components/mock-interview/types";
 import { useState } from "react";
 import BankQuestionDialog from "./BankQuestionDialog";
+import BulkQuestionImportForm from "./BulkQuestionImportForm";
 
 interface QuestionListDialogProps {
   open: boolean;
@@ -76,6 +77,22 @@ const QuestionListDialog = ({
     },
   });
 
+  const bulkImportQuestions = async (questions: { title: string; description?: string }[]) => {
+    const { error } = await supabase
+      .from('mock_interview_bank_questions')
+      .insert(
+        questions.map(q => ({
+          bank_id: bank.id,
+          title: q.title,
+          description: q.description || null
+        }))
+      );
+
+    if (error) throw error;
+    
+    queryClient.invalidateQueries({ queryKey: ['bank-questions', bank.id] });
+  };
+
   const handleEdit = (question: BankQuestion) => {
     setEditingQuestion(question);
     setIsQuestionDialogOpen(true);
@@ -98,46 +115,53 @@ const QuestionListDialog = ({
           <DialogTitle>Questions in {bank.title}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex justify-end mb-4">
-          <Button onClick={() => setIsQuestionDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Question
-          </Button>
-        </div>
+        <div className="space-y-4">
+          <BulkQuestionImportForm 
+            bankId={bank.id}
+            onImport={bulkImportQuestions}
+          />
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {questions.map((question) => (
-              <TableRow key={question.id}>
-                <TableCell>{question.title}</TableCell>
-                <TableCell>{question.description}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(question)}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(question.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </TableCell>
+          <div className="flex justify-end">
+            <Button onClick={() => setIsQuestionDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Question
+            </Button>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {questions.map((question) => (
+                <TableRow key={question.id}>
+                  <TableCell>{question.title}</TableCell>
+                  <TableCell>{question.description}</TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(question)}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(question.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
 
         <BankQuestionDialog
           open={isQuestionDialogOpen}
