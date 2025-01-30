@@ -4,6 +4,7 @@ import { useTodos } from "@/hooks/useTodos";
 import TodoForm from "./todos/TodoForm";
 import BulkImportForm from "./todos/BulkImportForm";
 import TodoItem from "./todos/TodoItem";
+import { useCallback } from "react";
 
 export default function TodoSection() {
   const {
@@ -15,33 +16,33 @@ export default function TodoSection() {
     deleteTodo,
   } = useTodos();
 
-  const handleCreateTodo = async (title: string) => {
+  const handleCreateTodo = useCallback(async (title: string) => {
     await createTodo.mutateAsync(title);
-  };
+  }, [createTodo]);
 
-  const handleBulkImport = async (titles: string[]) => {
+  const handleBulkImport = useCallback(async (titles: string[]) => {
     for (const title of titles) {
       if (title.trim()) {
         await createTodo.mutateAsync(title.trim());
       }
     }
-  };
+  }, [createTodo]);
 
-  const handleToggleStatus = async (id: string, completed: boolean) => {
+  const handleToggleStatus = useCallback(async (id: string, completed: boolean) => {
     await toggleTodoStatus.mutateAsync({ id, completed });
-  };
+  }, [toggleTodoStatus]);
 
-  const handleToggleStarred = async (id: string, starred: boolean) => {
+  const handleToggleStarred = useCallback(async (id: string, starred: boolean) => {
     await toggleStarred.mutateAsync({ id, starred });
-  };
+  }, [toggleStarred]);
 
-  const handleUpdateTodo = async (id: string, title: string) => {
+  const handleUpdateTodo = useCallback(async (id: string, title: string) => {
     await updateTodo.mutateAsync({ id, title });
-  };
+  }, [updateTodo]);
 
-  const handleDeleteTodo = async (id: string) => {
+  const handleDeleteTodo = useCallback(async (id: string) => {
     await deleteTodo.mutateAsync(id);
-  };
+  }, [deleteTodo]);
 
   return (
     <Card>
@@ -51,20 +52,22 @@ export default function TodoSection() {
       <CardContent>
         <TodoForm onSubmit={handleCreateTodo} />
         <BulkImportForm onImport={handleBulkImport} />
-        <ScrollArea className="h-[300px] w-full rounded-md border p-4">
-          <div className="space-y-2">
-            {todos.map((todo) => (
-              <TodoItem
-                key={todo.id}
-                todo={todo}
-                onToggleStatus={handleToggleStatus}
-                onToggleStarred={handleToggleStarred}
-                onUpdate={handleUpdateTodo}
-                onDelete={handleDeleteTodo}
-              />
-            ))}
-          </div>
-        </ScrollArea>
+        <div className="h-[300px] w-full rounded-md border">
+          <ScrollArea className="h-full w-full p-4">
+            <div className="space-y-2">
+              {todos.map((todo) => (
+                <TodoItem
+                  key={todo.id}
+                  todo={todo}
+                  onToggleStatus={handleToggleStatus}
+                  onToggleStarred={handleToggleStarred}
+                  onUpdate={handleUpdateTodo}
+                  onDelete={handleDeleteTodo}
+                />
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
