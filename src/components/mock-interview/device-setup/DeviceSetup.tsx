@@ -1,13 +1,13 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import DeviceSelector from "./DeviceSelector";
-import DeviceStatus from "./DeviceStatus";
-import VideoPreview from "./VideoPreview";
-import DeviceActions from "./DeviceActions";
 import { useDevices } from "@/hooks/useDevices";
+import { useVideoPreview } from "@/hooks/useVideoPreview";
+import VideoPreview from "./VideoPreview";
+import DeviceList from "./DeviceList";
+import DeviceControls from "./DeviceControls";
 
 interface DeviceSetupProps {
   onComplete: () => void;
@@ -26,9 +26,11 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
     isAudioWorking,
     startDeviceTest,
     stopDevices,
+    stream
   } = useDevices();
   
   const videoRef = useRef<HTMLVideoElement>(null);
+  useVideoPreview(videoRef, stream);
 
   const handleComplete = () => {
     if (!isCameraWorking || !isAudioWorking) {
@@ -38,12 +40,6 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
     
     console.log("Stopping devices before completing setup...");
     stopDevices();
-    
-    // Clear video element's source
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    
     toast.success("设备设置完成");
     onComplete();
   };
@@ -55,14 +51,6 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
       onBack();
     }
   };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      console.log("DeviceSetup unmounting, cleaning up devices...");
-      stopDevices();
-    };
-  }, [stopDevices]);
 
   return (
     <Card className="p-6">
@@ -81,30 +69,23 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
       <div className="space-y-6">
         <VideoPreview videoRef={videoRef} />
 
-        <div className="space-y-4">
-          <DeviceSelector
-            label="摄像头"
-            devices={videoDevices}
-            selectedDevice={selectedVideoDevice}
-            onDeviceChange={setSelectedVideoDevice}
-          />
-          
-          <DeviceSelector
-            label="麦克风"
-            devices={audioDevices}
-            selectedDevice={selectedAudioDevice}
-            onDeviceChange={setSelectedAudioDevice}
-          />
+        <DeviceList
+          videoDevices={videoDevices}
+          audioDevices={audioDevices}
+          selectedVideoDevice={selectedVideoDevice}
+          selectedAudioDevice={selectedAudioDevice}
+          onVideoDeviceChange={setSelectedVideoDevice}
+          onAudioDeviceChange={setSelectedAudioDevice}
+          isCameraWorking={isCameraWorking}
+          isAudioWorking={isAudioWorking}
+        />
 
-          <DeviceStatus label="摄像头" isWorking={isCameraWorking} />
-          <DeviceStatus label="麦克风" isWorking={isAudioWorking} />
-        </div>
-
-        <DeviceActions
-          onTest={() => startDeviceTest(videoRef)}
+        <DeviceControls
+          isCameraWorking={isCameraWorking}
+          isAudioWorking={isAudioWorking}
+          onTest={startDeviceTest}
           onComplete={handleComplete}
-          isTestingEnabled={!isCameraWorking || !isAudioWorking}
-          isCompleteEnabled={isCameraWorking && isAudioWorking}
+          videoRef={videoRef}
         />
       </div>
     </Card>
