@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useProfile } from "@/hooks/useProfile";
 import { useInterviewState } from "@/hooks/useInterviewState";
 import { useVideoStream } from "@/hooks/useVideoStream";
+import { useInterviewQuestions } from "@/hooks/useInterviewQuestions";
 import { Question, InterviewSettings } from "@/components/mock-interview/types";
 import { InterviewStage } from "@/components/mock-interview/InterviewStage";
 import InterviewHeader from "@/components/mock-interview/header/InterviewHeader";
@@ -51,7 +52,16 @@ const MockInterview = () => {
     },
   });
 
-  const selectedQuestion = questions.find(q => q.id === settings.selectedQuestionId);
+  const {
+    initializeQuestions,
+    getCurrentQuestion,
+    moveToNextQuestion,
+    hasMoreQuestions,
+    totalQuestions,
+    currentQuestionNumber
+  } = useInterviewQuestions(questions, settings);
+
+  const selectedQuestion = getCurrentQuestion();
 
   const handleLogout = async () => {
     try {
@@ -76,6 +86,7 @@ const MockInterview = () => {
       return;
     }
 
+    initializeQuestions();
     setStage(InterviewStage.PREPARATION);
     
     setTimeout(async () => {
@@ -105,11 +116,21 @@ const MockInterview = () => {
     if (stage === InterviewStage.REVIEW) {
       console.log("Interview stage changed to REVIEW, stopping recording");
       stopRecording();
-      toast.success("面试结束", {
-        description: "您现在可以查看录制的视频。"
-      });
+      
+      // Check if there are more questions
+      if (hasMoreQuestions()) {
+        toast.success("当前问题回答完成", {
+          description: "准备进入下一个问题。"
+        });
+        moveToNextQuestion();
+        setStage(InterviewStage.PREPARATION);
+      } else {
+        toast.success("面试结束", {
+          description: "您现在可以查看录制的视频。"
+        });
+      }
     }
-  }, [stage, stopRecording]);
+  }, [stage, stopRecording, hasMoreQuestions, moveToNextQuestion, setStage]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -136,6 +157,8 @@ const MockInterview = () => {
         onDeviceSetupBack={() => setShowDeviceSetup(false)}
         onStopRecording={() => setStage(InterviewStage.REVIEW)}
         onStartNew={() => setStage(InterviewStage.SETTINGS)}
+        currentQuestionNumber={currentQuestionNumber}
+        totalQuestions={totalQuestions}
       />
     </div>
   );

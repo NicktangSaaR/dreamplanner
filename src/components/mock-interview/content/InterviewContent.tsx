@@ -17,6 +17,8 @@ interface InterviewContentProps {
   countdownTime: number;
   videoRef: React.RefObject<HTMLVideoElement>;
   recordedVideoUrl: string | null;
+  currentQuestionNumber?: number;
+  totalQuestions?: number;
   onSettingsChange: (settings: InterviewSettings) => void;
   onStartInterview: () => void;
   onDeviceSetupComplete: () => void;
@@ -35,6 +37,8 @@ const InterviewContent = ({
   countdownTime,
   videoRef,
   recordedVideoUrl,
+  currentQuestionNumber = 1,
+  totalQuestions = 1,
   onSettingsChange,
   onStartInterview,
   onDeviceSetupComplete,
@@ -53,6 +57,17 @@ const InterviewContent = ({
     );
   }
 
+  const renderQuestionProgress = () => {
+    if (settings.practiceMode === 'multiple' && stage !== InterviewStage.SETTINGS) {
+      return (
+        <p className="text-lg text-gray-600 mb-4">
+          问题 {currentQuestionNumber} / {totalQuestions}
+        </p>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
       {stage === InterviewStage.SETTINGS ? (
@@ -66,6 +81,7 @@ const InterviewContent = ({
       ) : selectedQuestion && (
         <>
           <div className="space-y-6">
+            {renderQuestionProgress()}
             {stage === InterviewStage.PREPARATION && (
               <InterviewPreparation
                 question={selectedQuestion}
@@ -89,7 +105,11 @@ const InterviewContent = ({
             {stage === InterviewStage.REVIEW && (
               <div className="card p-8 bg-white rounded-lg shadow-lg">
                 <h2 className="text-2xl font-bold mb-6">面试完成</h2>
-                <p className="text-xl text-gray-700 mb-6">您现在可以查看录制的回答。</p>
+                <p className="text-xl text-gray-700 mb-6">
+                  {settings.practiceMode === 'multiple' && hasMoreQuestions
+                    ? "准备进入下一个问题"
+                    : "您现在可以查看录制的回答"}
+                </p>
               </div>
             )}
           </div>
