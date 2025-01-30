@@ -7,11 +7,9 @@ import { useInterviewState } from "@/hooks/useInterviewState";
 import { useVideoStream } from "@/hooks/useVideoStream";
 import { useProfile } from "@/hooks/useProfile";
 import { Question, InterviewSettings } from "@/components/mock-interview/types";
+import { InterviewStage } from "@/components/mock-interview/InterviewStage";
 import InterviewHeader from "@/components/mock-interview/header/InterviewHeader";
 import InterviewContent from "@/components/mock-interview/content/InterviewContent";
-
-const DEVICE_SETTINGS_KEY = 'interview-device-settings';
-const SETTINGS_VALIDITY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 const MockInterview = () => {
   const navigate = useNavigate();
