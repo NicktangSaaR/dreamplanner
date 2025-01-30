@@ -4,7 +4,7 @@ import { RefObject } from "react";
 interface DeviceControlsProps {
   isCameraWorking: boolean;
   isAudioWorking: boolean;
-  onTest: (videoRef: RefObject<HTMLVideoElement>) => void;
+  onTest: () => void;
   onComplete: () => void;
   videoRef: RefObject<HTMLVideoElement>;
 }
@@ -19,17 +19,16 @@ const DeviceControls = ({
   return (
     <div className="space-y-4">
       <Button 
-        onClick={() => onTest(videoRef)} 
+        onClick={onTest}
+        variant="outline"
         className="w-full"
         disabled={isCameraWorking && isAudioWorking}
       >
-        开始测试
+        测试设备
       </Button>
-      
       <Button
         onClick={onComplete}
         className="w-full"
-        variant="outline"
         disabled={!isCameraWorking || !isAudioWorking}
       >
         完成设置
