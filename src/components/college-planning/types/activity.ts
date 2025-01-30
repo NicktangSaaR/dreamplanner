@@ -4,4 +4,5 @@ export interface Activity {
   role: string;
   description?: string;
   time_commitment?: string;
+  grade_levels?: string[];
 }
