@@ -4,6 +4,7 @@ import InterviewPreparation from "@/components/mock-interview/InterviewPreparati
 import InterviewCountdown from "@/components/mock-interview/InterviewCountdown";
 import InterviewResponse from "@/components/mock-interview/InterviewResponse";
 import VideoPreview from "@/components/mock-interview/VideoPreview";
+import PracticeRecords from "@/components/mock-interview/PracticeRecords";
 import DeviceSetup from "@/components/mock-interview/device-setup/DeviceSetup";
 import { Question, InterviewSettings } from "@/components/mock-interview/types";
 import { Button } from "@/components/ui/button";
@@ -76,13 +77,18 @@ const InterviewContent = ({
   return (
     <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
       {stage === InterviewStage.SETTINGS ? (
-        <div className="lg:col-span-2">
-          <InterviewSettingsComponent
-            settings={settings}
-            onSettingsChange={onSettingsChange}
-            onStartInterview={onStartInterview}
-          />
-        </div>
+        <>
+          <div className="lg:col-span-2">
+            <InterviewSettingsComponent
+              settings={settings}
+              onSettingsChange={onSettingsChange}
+              onStartInterview={onStartInterview}
+            />
+          </div>
+          <div className="lg:col-span-2">
+            <PracticeRecords />
+          </div>
+        </>
       ) : selectedQuestion && (
         <>
           <div className="space-y-6">
@@ -132,6 +138,7 @@ const InterviewContent = ({
             isReviewStage={stage === InterviewStage.REVIEW}
             onStopRecording={onStopRecording}
             onStartNew={onStartNew}
+            selectedQuestionId={selectedQuestion.id}
           />
         </>
       )}

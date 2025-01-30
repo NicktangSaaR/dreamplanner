@@ -162,6 +162,44 @@ export type Database = {
         }
         Relationships: []
       }
+      interview_practice_records: {
+        Row: {
+          created_at: string | null
+          id: string
+          practice_date: string | null
+          question_id: string
+          updated_at: string | null
+          user_id: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          practice_date?: string | null
+          question_id: string
+          updated_at?: string | null
+          user_id: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          practice_date?: string | null
+          question_id?: string
+          updated_at?: string | null
+          user_id?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_practice_records_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "mock_interview_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mock_interview_bank_questions: {
         Row: {
           bank_id: string

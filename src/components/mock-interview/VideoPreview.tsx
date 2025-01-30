@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StopCircle } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import LiveVideoStream from "./video/LiveVideoStream";
 import RecordedVideoPlayer from "./video/RecordedVideoPlayer";
 
@@ -10,17 +13,42 @@ interface VideoPreviewProps {
   isReviewStage: boolean;
   onStopRecording: () => void;
   onStartNew: () => void;
+  selectedQuestionId?: string;
 }
 
 const VideoPreview = ({
   recordedVideoUrl,
   isReviewStage,
   onStopRecording,
-  onStartNew
+  onStartNew,
+  selectedQuestionId
 }: VideoPreviewProps) => {
-  const handleStopRecording = () => {
+  const queryClient = useQueryClient();
+
+  const handleStopRecording = async () => {
     console.log("Stopping recording and saving video...");
     onStopRecording();
+
+    if (recordedVideoUrl && selectedQuestionId) {
+      try {
+        console.log("Saving practice record to database...");
+        const { error } = await supabase
+          .from("interview_practice_records")
+          .insert({
+            video_url: recordedVideoUrl,
+            question_id: selectedQuestionId
+          });
+
+        if (error) throw error;
+
+        console.log("Practice record saved successfully");
+        queryClient.invalidateQueries({ queryKey: ["practice-records"] });
+        toast.success("练习记录已保存");
+      } catch (error) {
+        console.error("Error saving practice record:", error);
+        toast.error("保存练习记录失败");
+      }
+    }
   };
 
   return (
