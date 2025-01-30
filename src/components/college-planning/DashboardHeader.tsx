@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, MessageSquare, UserRound } from "lucide-react";
+import { ArrowLeft, LogOut, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -23,10 +23,6 @@ export default function DashboardHeader() {
       console.error("Error logging out:", error);
       toast.error("Failed to log out");
     }
-  };
-
-  const handleMockInterview = () => {
-    navigate('/mock-interview');
   };
 
   const handleProfile = () => {
@@ -62,14 +58,6 @@ export default function DashboardHeader() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleMockInterview}
-          className="hover:bg-secondary"
-        >
-          <MessageSquare className="h-5 w-5" />
-        </Button>
         <Button
           variant="ghost"
           size="icon"
