@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import ActivityForm from "../extracurricular/ActivityForm";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
 
 interface Activity {
   id: string;
@@ -28,6 +30,10 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
     description: "",
     timeCommitment: "",
   });
+  const queryClient = useQueryClient();
+  const { studentId } = useParams();
+
+  console.log("ActivitiesSection - Rendering with activities:", activities);
 
   const handleActivityChange = (field: string, value: string) => {
     setNewActivity({ ...newActivity, [field]: value });
@@ -40,6 +46,8 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
         return;
       }
 
+      console.log("Adding new activity for student:", studentId);
+
       const { error } = await supabase
         .from("extracurricular_activities")
         .insert([
@@ -48,13 +56,18 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
             role: newActivity.role,
             description: newActivity.description,
             time_commitment: newActivity.timeCommitment,
-            student_id: window.location.pathname.split('/').pop(),
+            student_id: studentId,
           },
         ]);
 
       if (error) throw error;
 
+      console.log("Activity added successfully");
       toast.success("Activity added successfully");
+      
+      // Invalidate the activities query to trigger a refresh
+      queryClient.invalidateQueries({ queryKey: ["student-activities", studentId] });
+      
       setIsDialogOpen(false);
       setNewActivity({
         name: "",
@@ -62,9 +75,6 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
         description: "",
         timeCommitment: "",
       });
-
-      // Force a page refresh to show the new activity
-      window.location.reload();
     } catch (error) {
       console.error("Error adding activity:", error);
       toast.error("Failed to add activity");
