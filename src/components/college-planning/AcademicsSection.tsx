@@ -3,6 +3,7 @@ import { Course } from "./types/course";
 import { useAcademicData } from "@/hooks/academics/useAcademicData";
 import AcademicsHeader from "./academics/AcademicsHeader";
 import CourseManagement from "./academics/CourseManagement";
+import { useCallback } from "react";
 
 interface AcademicsSectionProps {
   courses?: Course[];
@@ -22,12 +23,13 @@ export default function AcademicsSection({
     deleteCourse,
   } = useAcademicData(externalCourses, onCoursesChange);
 
-  console.log("AcademicsSection - Current courses:", courses);
-  console.log("AcademicsSection - External courses:", externalCourses);
-  console.log("AcademicsSection - Student ID:", studentId);
+  const handleCoursesChange = useCallback((newCourses: Course[]) => {
+    if (onCoursesChange) {
+      onCoursesChange(newCourses);
+    }
+  }, [onCoursesChange]);
 
   if (!studentId) {
-    console.log("No student ID available");
     return <div>Loading...</div>;
   }
 
@@ -41,6 +43,7 @@ export default function AcademicsSection({
         addCourse={addCourse}
         updateCourse={updateCourse}
         deleteCourse={deleteCourse}
+        onCoursesChange={handleCoursesChange}
       />
     </Card>
   );

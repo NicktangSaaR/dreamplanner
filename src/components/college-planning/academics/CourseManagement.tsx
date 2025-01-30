@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import CourseForm from "./CourseForm";
@@ -13,6 +13,7 @@ interface CourseManagementProps {
   addCourse: any;
   updateCourse: any;
   deleteCourse?: (courseId: string) => Promise<void>;
+  onCoursesChange?: (courses: Course[]) => void;
 }
 
 export default function CourseManagement({
@@ -22,6 +23,7 @@ export default function CourseManagement({
   addCourse,
   updateCourse,
   deleteCourse,
+  onCoursesChange,
 }: CourseManagementProps) {
   const { toast } = useToast();
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -37,11 +39,8 @@ export default function CourseManagement({
 
   const academicYears = generateAcademicYears();
 
-  const handleAddCourse = async () => {
-    console.log("Attempting to add course:", newCourse);
-    
+  const handleAddCourse = useCallback(async () => {
     if (!studentId) {
-      console.error("No student ID provided");
       toast({
         title: "Error",
         description: "No student ID found. Please try again.",
@@ -51,7 +50,6 @@ export default function CourseManagement({
     }
 
     if (newCourse.name && newCourse.grade && newCourse.grade_level && newCourse.academic_year) {
-      console.log('Handling add course:', newCourse);
       await addCourse.mutate({ ...newCourse, student_id: studentId });
       setNewCourse({
         name: "",
@@ -69,22 +67,20 @@ export default function CourseManagement({
         variant: "destructive",
       });
     }
-  };
+  }, [newCourse, studentId, addCourse, toast]);
 
-  const handleEditCourse = (course: Course) => {
-    console.log('Handling edit course:', course);
+  const handleEditCourse = useCallback((course: Course) => {
     setEditingCourse(course);
-  };
+  }, []);
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = useCallback(async () => {
     if (editingCourse) {
-      console.log('Saving edited course:', editingCourse);
       await updateCourse.mutate(editingCourse);
       setEditingCourse(null);
     }
-  };
+  }, [editingCourse, updateCourse]);
 
-  const handleDeleteCourse = async (courseId: string) => {
+  const handleDeleteCourse = useCallback(async (courseId: string) => {
     if (deleteCourse) {
       try {
         await deleteCourse(courseId);
@@ -93,7 +89,6 @@ export default function CourseManagement({
           description: "Course deleted successfully",
         });
       } catch (error) {
-        console.error('Error deleting course:', error);
         toast({
           title: "Error",
           description: "Failed to delete course",
@@ -101,17 +96,15 @@ export default function CourseManagement({
         });
       }
     }
-  };
+  }, [deleteCourse, toast]);
 
-  const handleCourseChange = (field: string, value: string) => {
-    setNewCourse({ ...newCourse, [field]: value });
-  };
+  const handleCourseChange = useCallback((field: string, value: string) => {
+    setNewCourse(prev => ({ ...prev, [field]: value }));
+  }, []);
 
-  const handleEditingCourseChange = (field: string, value: string) => {
-    if (editingCourse) {
-      setEditingCourse({ ...editingCourse, [field]: value });
-    }
-  };
+  const handleEditingCourseChange = useCallback((field: string, value: string) => {
+    setEditingCourse(prev => prev ? { ...prev, [field]: value } : null);
+  }, []);
 
   return (
     <CardContent className="space-y-4">

@@ -4,6 +4,7 @@ import CourseTableHeader from "./table/CourseTableHeader";
 import CourseTableRow from "./table/CourseTableRow";
 import EditableCourseRow from "./table/EditableCourseRow";
 import { Skeleton } from "@/components/ui/skeleton";
+import { memo } from "react";
 
 interface CourseTableProps {
   courses: Course[];
@@ -17,7 +18,7 @@ interface CourseTableProps {
   isLoading?: boolean;
 }
 
-export default function CourseTable({
+const CourseTable = memo(function CourseTable({
   courses,
   editingCourse,
   onEditCourse,
@@ -28,9 +29,6 @@ export default function CourseTable({
   academicYears,
   isLoading
 }: CourseTableProps) {
-  console.log("CourseTable - Received courses:", courses);
-  console.log("CourseTable - Loading state:", isLoading);
-
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -42,7 +40,6 @@ export default function CourseTable({
   }
 
   const coursesArray = Array.isArray(courses) ? courses : [];
-  console.log("CourseTable - Processed courses array:", coursesArray);
   
   if (!coursesArray || coursesArray.length === 0) {
     return (
@@ -59,7 +56,6 @@ export default function CourseTable({
         <CourseTableHeader />
         <TableBody>
           {coursesArray.map((course) => {
-            console.log("Rendering course:", course);
             return editingCourse?.id === course.id ? (
               <EditableCourseRow
                 key={course.id}
@@ -82,4 +78,6 @@ export default function CourseTable({
       </Table>
     </div>
   );
-}
+});
+
+export default CourseTable;
