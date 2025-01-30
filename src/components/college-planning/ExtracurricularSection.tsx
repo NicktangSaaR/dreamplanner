@@ -1,17 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Star, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ActivityFormDialog from "./extracurricular/ActivityFormDialog";
-
-interface Activity {
-  id: string;
-  name: string;
-  role: string;
-  description?: string;
-  timeCommitment?: string;
-}
+import ActivityList from "./extracurricular/ActivityList";
+import { Activity } from "./types/activity";
 
 interface ExtracurricularSectionProps {
   onActivitiesChange?: (activities: Activity[]) => void;
@@ -73,28 +66,8 @@ export default function ExtracurricularSection({ onActivitiesChange }: Extracurr
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 gap-4">
-          {activities.map((activity) => (
-            <div key={activity.id} className="flex flex-col p-3 bg-gray-50 rounded-lg">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-medium">{activity.name}</p>
-                  <p className="text-sm text-gray-600">{activity.role}</p>
-                </div>
-                {activity.timeCommitment && (
-                  <Badge variant="secondary">{activity.timeCommitment}</Badge>
-                )}
-              </div>
-              {activity.description && (
-                <p className="text-sm text-gray-600 mt-2">{activity.description}</p>
-              )}
-            </div>
-          ))}
-          {activities.length === 0 && (
-            <p className="text-gray-500 text-center">No extracurricular activities recorded</p>
-          )}
-        </div>
+      <CardContent>
+        <ActivityList activities={activities} />
       </CardContent>
 
       <ActivityFormDialog
