@@ -9,7 +9,6 @@ import RecordedVideoPlayer from "./video/RecordedVideoPlayer";
 import { useEffect, useState } from "react";
 
 interface VideoPreviewProps {
-  videoRef: React.RefObject<HTMLVideoElement>;
   recordedVideoUrl: string | null;
   isReviewStage: boolean;
   onStopRecording: () => void;

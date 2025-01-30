@@ -5,23 +5,31 @@ interface RecordedVideoPlayerProps {
 }
 
 const RecordedVideoPlayer = ({ recordedVideoUrl }: RecordedVideoPlayerProps) => {
-  const recordedVideoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (recordedVideoUrl && recordedVideoRef.current) {
+    if (recordedVideoUrl && videoRef.current) {
       console.log("Setting up recorded video playback:", recordedVideoUrl);
-      recordedVideoRef.current.src = recordedVideoUrl;
-      recordedVideoRef.current.load();
-      recordedVideoRef.current.play().catch(error => {
+      videoRef.current.src = recordedVideoUrl;
+      videoRef.current.load();
+      videoRef.current.play().catch(error => {
         console.error("Error auto-playing recorded video:", error);
       });
     }
+
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.src = "";
+        videoRef.current.load();
+      }
+    };
   }, [recordedVideoUrl]);
 
   return (
     <>
       <video
-        ref={recordedVideoRef}
+        ref={videoRef}
         controls
         playsInline
         className="w-full h-full rounded-lg object-cover"

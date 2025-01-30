@@ -12,66 +12,51 @@ const LiveVideoStream = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const checkPermissions = async () => {
-    try {
-      console.log("Checking device permissions...");
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const hasVideoPermission = devices.some(device => device.kind === 'videoinput' && device.label);
-      const hasAudioPermission = devices.some(device => device.kind === 'audioinput' && device.label);
-      
-      console.log("Current device permissions:", {
-        video: hasVideoPermission,
-        audio: hasAudioPermission
+  const stopStream = () => {
+    console.log("Stopping stream in LiveVideoStream");
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log(`Stopped ${track.kind} track:`, track.label);
       });
-
-      if (!hasVideoPermission || !hasAudioPermission) {
-        console.log("Requesting permissions explicitly...");
-        const tempStream = await navigator.mediaDevices.getUserMedia({ 
-          video: true, 
-          audio: true 
-        });
-        tempStream.getTracks().forEach(track => {
-          track.stop();
-          console.log(`Stopped temporary ${track.kind} track`);
-        });
-      }
-    } catch (error) {
-      console.error("Error checking permissions:", error);
-      throw new Error("请在浏览器设置中允许访问摄像头和麦克风");
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
   };
 
-  const initializeVideoStream = async () => {
+  const initializeStream = async () => {
     try {
-      await checkPermissions();
-      console.log("Starting video stream initialization...");
-      
+      console.log("Initializing video stream...");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
           facingMode: "user",
-          frameRate: { min: 15, ideal: 30 }
+          frameRate: { ideal: 30 }
         },
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 44100
+          autoGainControl: true
         }
       });
 
-      console.log("Media stream obtained successfully");
-      streamRef.current = stream;
+      console.log("Stream obtained successfully:", {
+        videoTracks: stream.getVideoTracks().length,
+        audioTracks: stream.getAudioTracks().length
+      });
 
+      streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
-        console.log("Video playback started successfully");
+        console.log("Video playback started");
         onStreamInitialized?.(stream);
       }
     } catch (error) {
-      console.error("Error in initializeVideoStream:", error);
+      console.error("Error in initializeStream:", error);
       let errorMessage = "无法访问摄像头或麦克风";
       
       if (error instanceof DOMException) {
@@ -85,9 +70,6 @@ const LiveVideoStream = ({
           case 'NotReadableError':
             errorMessage = "无法访问摄像头或麦克风，请确认没有其他应用正在使用这些设备";
             break;
-          case 'OverconstrainedError':
-            errorMessage = "您的设备不支持所需的视频设置，请尝试使用其他设备";
-            break;
           default:
             errorMessage = "设备访问出错，请确保设备正常工作并刷新页面重试";
         }
@@ -99,32 +81,16 @@ const LiveVideoStream = ({
     }
   };
 
-  const cleanup = () => {
-    console.log("Cleaning up video stream...");
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => {
-        track.stop();
-        console.log(`Stopped ${track.kind} track:`, {
-          label: track.label,
-          kind: track.kind
-        });
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-      streamRef.current = null;
-    }
-  };
-
   useEffect(() => {
     console.log("LiveVideoStream component mounted");
-    initializeVideoStream().catch(error => {
-      console.error("Failed to initialize video stream:", error);
-      cleanup();
-      onStreamError?.(error);
+    initializeStream().catch(error => {
+      console.error("Failed to initialize stream:", error);
     });
 
-    return cleanup;
+    return () => {
+      console.log("LiveVideoStream component unmounting");
+      stopStream();
+    };
   }, []);
 
   return (
