@@ -18,7 +18,11 @@ export const useDevices = () => {
   useEffect(() => {
     const loadDevices = async () => {
       try {
-        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        // Request permissions to get device labels
+        const initialStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        // Stop the initial stream immediately after getting permissions
+        initialStream.getTracks().forEach(track => track.stop());
+        
         const devices = await navigator.mediaDevices.enumerateDevices();
         
         const videos = devices.filter(device => device.kind === 'videoinput')
@@ -52,11 +56,15 @@ export const useDevices = () => {
 
   const startDeviceTest = async (videoRef: RefObject<HTMLVideoElement>) => {
     try {
+      // Stop any existing stream
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => {
+          track.stop();
+          console.log(`Stopped existing ${track.kind} track`);
+        });
       }
 
-      console.log("Starting camera with devices:", {
+      console.log("Starting device test with selected devices:", {
         video: selectedVideoDevice,
         audio: selectedAudioDevice
       });
@@ -103,6 +111,7 @@ export const useDevices = () => {
   };
 
   const stopDevices = () => {
+    console.log("Stopping all media tracks...");
     if (stream) {
       stream.getTracks().forEach(track => {
         track.stop();

@@ -35,16 +35,34 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
       toast.error("请先完成设备测试");
       return;
     }
+    
+    console.log("Stopping devices before completing setup...");
     stopDevices();
+    
+    // Clear video element's source
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    
+    toast.success("设备设置完成");
     onComplete();
   };
 
   const handleBack = () => {
+    console.log("Stopping devices before going back...");
     stopDevices();
     if (onBack) {
       onBack();
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      console.log("DeviceSetup unmounting, cleaning up devices...");
+      stopDevices();
+    };
+  }, [stopDevices]);
 
   return (
     <Card className="p-6">
