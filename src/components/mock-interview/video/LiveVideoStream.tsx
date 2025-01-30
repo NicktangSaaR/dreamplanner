@@ -11,11 +11,9 @@ const LiveVideoStream = ({
 }: LiveVideoStreamProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const initializeVideoStream = async () => {
+  const checkPermissions = async () => {
     try {
-      console.log("Starting video stream initialization...");
-      
-      // First check if we already have permissions
+      // First check if permissions are already granted
       const devices = await navigator.mediaDevices.enumerateDevices();
       const hasVideoPermission = devices.some(device => device.kind === 'videoinput' && device.label);
       const hasAudioPermission = devices.some(device => device.kind === 'audioinput' && device.label);
@@ -25,7 +23,31 @@ const LiveVideoStream = ({
         audio: hasAudioPermission
       });
 
-      // Request stream with specific constraints
+      if (!hasVideoPermission || !hasAudioPermission) {
+        console.log("Requesting permissions explicitly...");
+        // Request permissions explicitly if not granted
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: true, 
+          audio: true 
+        });
+        // Stop this temporary stream
+        stream.getTracks().forEach(track => track.stop());
+        console.log("Permissions granted successfully");
+      }
+    } catch (error) {
+      console.error("Error checking permissions:", error);
+      throw new Error("请在浏览器设置中允许访问摄像头和麦克风");
+    }
+  };
+
+  const initializeVideoStream = async () => {
+    try {
+      // First ensure we have permissions
+      await checkPermissions();
+
+      console.log("Starting video stream initialization...");
+      
+      // Now request stream with specific constraints
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
@@ -70,47 +92,31 @@ const LiveVideoStream = ({
           onStreamInitialized?.(stream);
         } catch (playError) {
           console.error("Error starting video playback:", playError);
-          throw new Error("无法开始视频播放，请检查设备权限");
+          throw new Error("无法开始视频播放，请检查设备权限并刷新页面");
         }
       } else {
         throw new Error("视频元素未找到");
       }
     } catch (error) {
       console.error("Error in initializeVideoStream:", error);
-      let errorMessage = "无法访问摄像头或麦克风。";
+      let errorMessage = "无法访问摄像头或麦克风";
       
       if (error instanceof DOMException) {
         switch (error.name) {
           case 'NotAllowedError':
-            errorMessage = "请在浏览器设置中允许访问摄像头和麦克风";
+            errorMessage = "请在浏览器设置中允许访问摄像头和麦克风，然后刷新页面重试";
             break;
           case 'NotFoundError':
-            errorMessage = "未找到摄像头或麦克风设备";
+            errorMessage = "未找到摄像头或麦克风设备，请确保设备已正确连接";
             break;
           case 'NotReadableError':
-            errorMessage = "无法访问摄像头或麦克风，请确认没有其他应用正在使用";
+            errorMessage = "无法访问摄像头或麦克风，请确认没有其他应用正在使用这些设备";
             break;
           case 'OverconstrainedError':
-            errorMessage = "您的设备不支持所需的视频设置，正在尝试使用默认设置";
-            // Retry with default constraints
-            try {
-              const basicStream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
-              });
-              if (videoRef.current) {
-                videoRef.current.srcObject = basicStream;
-                await videoRef.current.play();
-                onStreamInitialized?.(basicStream);
-                return;
-              }
-            } catch (retryError) {
-              console.error("Retry with basic constraints failed:", retryError);
-              errorMessage = "设备初始化失败，请检查设备连接并刷新页面";
-            }
+            errorMessage = "您的设备不支持所需的视频设置，请尝试使用其他设备";
             break;
           default:
-            errorMessage = "设备访问出错，请刷新页面重试";
+            errorMessage = "设备访问出错，请确保设备正常工作并刷新页面重试";
         }
       }
       
