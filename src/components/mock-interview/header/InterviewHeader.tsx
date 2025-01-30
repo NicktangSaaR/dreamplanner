@@ -20,6 +20,14 @@ const InterviewHeader = ({
   onLogout,
   onCleanupMedia,
 }: InterviewHeaderProps) => {
+  const handleBackClick = () => {
+    console.log("Cleaning up media streams before going back to settings");
+    if (onCleanupMedia) {
+      onCleanupMedia();
+    }
+    onBackToSettings();
+  };
+
   const handleHomeClick = () => {
     console.log("Cleaning up media streams before navigating home");
     if (onCleanupMedia) {
@@ -41,7 +49,7 @@ const InterviewHeader = ({
             variant="ghost" 
             size="icon" 
             className="w-10 h-10"
-            onClick={onBackToSettings}
+            onClick={handleBackClick}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
