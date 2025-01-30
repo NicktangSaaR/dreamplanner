@@ -6,6 +6,7 @@ import { useState } from "react";
 import NoteDialog from "@/components/college-planning/NoteDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 interface Note {
   id: string;
@@ -25,6 +26,27 @@ export default function RecentNotes({ notes, studentId, onNotesChange }: RecentN
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  // Fetch notes for the student, including those created by counselors
+  const { data: studentNotes, refetch: refetchNotes } = useQuery({
+    queryKey: ['student-notes', studentId],
+    queryFn: async () => {
+      console.log("Fetching notes for student:", studentId);
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('author_id', studentId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching notes:", error);
+        throw error;
+      }
+
+      console.log("Fetched notes:", data);
+      return data || [];
+    },
+  });
+
   const handleCreateNote = async (data: { title: string; content: string }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -33,13 +55,14 @@ export default function RecentNotes({ notes, studentId, onNotesChange }: RecentN
         throw new Error("Not authenticated");
       }
 
+      console.log("Creating note for student:", studentId);
       const { error } = await supabase
-        .from("notes")
+        .from('notes')
         .insert([{
           title: data.title,
           content: data.content,
-          author_id: user.id,
-          author_name: user.email,
+          author_id: studentId, // Set the student as the author
+          author_name: user.email, // Keep track of who created it
         }]);
 
       if (error) throw error;
@@ -50,6 +73,7 @@ export default function RecentNotes({ notes, studentId, onNotesChange }: RecentN
       });
 
       setIsNoteDialogOpen(false);
+      refetchNotes(); // Refresh the notes list
       onNotesChange?.();
     } catch (error) {
       console.error("Error creating note:", error);
@@ -76,7 +100,7 @@ export default function RecentNotes({ notes, studentId, onNotesChange }: RecentN
         </div>
         <ScrollArea className="h-[400px]">
           <div className="space-y-4">
-            {notes.map((note) => (
+            {(studentNotes || []).map((note) => (
               <div
                 key={note.id}
                 className="p-4 rounded-lg border bg-card"
@@ -89,7 +113,7 @@ export default function RecentNotes({ notes, studentId, onNotesChange }: RecentN
                 </div>
               </div>
             ))}
-            {notes.length === 0 && (
+            {(!studentNotes || studentNotes.length === 0) && (
               <p className="text-center text-muted-foreground">No notes found</p>
             )}
           </div>
