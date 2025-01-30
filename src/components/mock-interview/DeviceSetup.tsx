@@ -27,10 +27,17 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
     const loadDevices = async () => {
       try {
         console.log("Requesting initial device permissions...");
-        // First request permissions
+        // First request permissions with specific constraints
         const initialStream = await navigator.mediaDevices.getUserMedia({ 
-          video: true, 
-          audio: true 
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user"
+          },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true
+          }
         });
         console.log("Initial permissions granted");
 
@@ -67,6 +74,11 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
 
         // Stop the initial stream since we'll create a new one with selected devices
         initialStream.getTracks().forEach(track => track.stop());
+        
+        // Automatically start camera after device enumeration
+        if (videos.length > 0 && audios.length > 0) {
+          setTimeout(startCamera, 500); // Small delay to ensure state is updated
+        }
       } catch (error) {
         console.error("Error loading devices:", error);
         let errorMessage = "无法加载设备列表";
@@ -115,10 +127,15 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          deviceId: selectedVideoDevice ? { exact: selectedVideoDevice } : undefined
+          deviceId: selectedVideoDevice ? { exact: selectedVideoDevice } : undefined,
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user"
         },
         audio: {
-          deviceId: selectedAudioDevice ? { exact: selectedAudioDevice } : undefined
+          deviceId: selectedAudioDevice ? { exact: selectedAudioDevice } : undefined,
+          echoCancellation: true,
+          noiseSuppression: true
         }
       });
 
@@ -126,9 +143,12 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
 
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        await videoRef.current.play();
         setIsCameraWorking(true);
         setIsAudioWorking(true);
         toast.success("设备测试已开始");
+      } else {
+        throw new Error("视频预览元素未找到");
       }
     } catch (error) {
       console.error("Error accessing media devices:", error);
