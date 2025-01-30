@@ -19,6 +19,7 @@ interface InterviewContentProps {
   recordedVideoUrl: string | null;
   currentQuestionNumber?: number;
   totalQuestions?: number;
+  hasMoreQuestions: boolean;
   onSettingsChange: (settings: InterviewSettings) => void;
   onStartInterview: () => void;
   onDeviceSetupComplete: () => void;
@@ -39,6 +40,7 @@ const InterviewContent = ({
   recordedVideoUrl,
   currentQuestionNumber = 1,
   totalQuestions = 1,
+  hasMoreQuestions,
   onSettingsChange,
   onStartInterview,
   onDeviceSetupComplete,

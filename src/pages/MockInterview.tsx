@@ -159,6 +159,7 @@ const MockInterview = () => {
         onStartNew={() => setStage(InterviewStage.SETTINGS)}
         currentQuestionNumber={currentQuestionNumber}
         totalQuestions={totalQuestions}
+        hasMoreQuestions={hasMoreQuestions()}
       />
     </div>
   );
