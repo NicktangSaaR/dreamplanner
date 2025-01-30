@@ -1,5 +1,5 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MediaDevice } from "@/types/device";
-import DeviceList from "./DeviceList";
 import DeviceStatus from "./DeviceStatus";
 
 interface DeviceSelectorsProps {
@@ -24,21 +24,36 @@ const DeviceSelectors = ({
   isAudioWorking,
 }: DeviceSelectorsProps) => {
   return (
-    <div className="space-y-6">
-      <DeviceList
-        videoDevices={videoDevices}
-        audioDevices={audioDevices}
-        selectedVideoDevice={selectedVideoDevice}
-        selectedAudioDevice={selectedAudioDevice}
-        onVideoDeviceChange={onVideoDeviceChange}
-        onAudioDeviceChange={onAudioDeviceChange}
-        isCameraWorking={isCameraWorking}
-        isAudioWorking={isAudioWorking}
-      />
-      
+    <div className="space-y-4">
       <div className="space-y-2">
         <DeviceStatus label="摄像头" isWorking={isCameraWorking} />
-        <DeviceStatus label="麦克风" isWorking={isAudioWorking} />
+        <Select value={selectedVideoDevice} onValueChange={onVideoDeviceChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="选择摄像头" />
+          </SelectTrigger>
+          <SelectContent>
+            {videoDevices.map((device) => (
+              <SelectItem key={device.deviceId} value={device.deviceId}>
+                {device.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Select value={selectedAudioDevice} onValueChange={onAudioDeviceChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="选择麦克风" />
+          </SelectTrigger>
+          <SelectContent>
+            {audioDevices.map((device) => (
+              <SelectItem key={device.deviceId} value={device.deviceId}>
+                {device.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

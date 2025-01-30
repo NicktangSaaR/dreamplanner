@@ -15,18 +15,17 @@ const AudioMeter = ({ stream, isAudioWorking }: AudioMeterProps) => {
   useEffect(() => {
     if (stream && isAudioWorking) {
       try {
-        console.log("Setting up audio meter with stream:", stream);
+        console.log("Setting up audio meter with stream");
         
-        // Create AudioContext if it doesn't exist
-        if (!audioContextRef.current) {
-          audioContextRef.current = new AudioContext();
+        // 创建或重用 AudioContext
+        if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         }
 
-        // Create Analyser if it doesn't exist
-        if (!analyserRef.current) {
-          analyserRef.current = audioContextRef.current.createAnalyser();
-          analyserRef.current.fftSize = 256;
-        }
+        // 创建分析器节点
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        analyserRef.current.fftSize = 1024;
+        analyserRef.current.smoothingTimeConstant = 0.3;
 
         const source = audioContextRef.current.createMediaStreamSource(stream);
         source.connect(analyserRef.current);
@@ -36,8 +35,15 @@ const AudioMeter = ({ stream, isAudioWorking }: AudioMeterProps) => {
         const updateAudioLevel = () => {
           if (analyserRef.current) {
             analyserRef.current.getByteFrequencyData(dataArray);
-            const average = dataArray.reduce((acc, value) => acc + value, 0) / dataArray.length;
+            
+            // 计算音频电平
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              sum += dataArray[i];
+            }
+            const average = sum / dataArray.length;
             const normalizedLevel = Math.min(100, (average / 128) * 100);
+            
             setAudioLevel(normalizedLevel);
             animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
           }
@@ -51,29 +57,26 @@ const AudioMeter = ({ stream, isAudioWorking }: AudioMeterProps) => {
     }
 
     return () => {
-      console.log("Cleaning up audio meter");
-      if (audioContextRef.current?.state !== 'closed') {
-        audioContextRef.current?.close();
-      }
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close().catch(console.error);
+      }
+      console.log("Audio meter cleanup complete");
     };
   }, [stream, isAudioWorking]);
+
+  if (!isAudioWorking) {
+    return null;
+  }
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span>麦克风状态：</span>
-        <span className={isAudioWorking ? "text-green-500" : "text-red-500"}>
-          {isAudioWorking ? "正常" : "未开启"}
-        </span>
+        <span>麦克风音量</span>
       </div>
-      {isAudioWorking && (
-        <div className="w-full">
-          <Progress value={audioLevel} className="h-2" />
-        </div>
-      )}
+      <Progress value={audioLevel} className="h-2" />
     </div>
   );
 };
