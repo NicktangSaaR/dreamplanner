@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import CourseForm from "./CourseForm";
@@ -38,6 +38,14 @@ export default function CourseManagement({
   });
 
   const academicYears = generateAcademicYears();
+
+  // Sort courses by academic year (most recent first)
+  const sortedCourses = useMemo(() => {
+    return [...courses].sort((a, b) => {
+      if (!a.academic_year || !b.academic_year) return 0;
+      return b.academic_year.localeCompare(a.academic_year);
+    });
+  }, [courses]);
 
   const handleAddCourse = useCallback(async () => {
     if (!studentId) {
@@ -118,7 +126,7 @@ export default function CourseManagement({
       </div>
       <div className="mt-2">
         <CourseTable
-          courses={courses}
+          courses={sortedCourses}
           editingCourse={editingCourse}
           onEditCourse={handleEditCourse}
           onSaveEdit={handleSaveEdit}
