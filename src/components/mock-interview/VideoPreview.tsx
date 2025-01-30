@@ -34,7 +34,7 @@ const VideoPreview = ({
       audioTracks: newStream.getAudioTracks().length
     });
     setStream(newStream);
-    setStreamError(null); // Clear any previous errors
+    setStreamError(null);
   };
 
   const handleStreamError = (error: Error) => {
@@ -47,6 +47,13 @@ const VideoPreview = ({
 
   const handleStopRecording = async () => {
     console.log("Stopping recording and saving video...");
+    if (stream) {
+      stream.getTracks().forEach(track => {
+        track.stop();
+        console.log(`Stopped ${track.kind} track`);
+      });
+      setStream(null);
+    }
     onStopRecording();
 
     if (recordedVideoUrl && selectedQuestionId) {
@@ -86,6 +93,7 @@ const VideoPreview = ({
           track.stop();
           console.log(`Stopped ${track.kind} track`);
         });
+        setStream(null);
       }
     };
   }, [stream]);

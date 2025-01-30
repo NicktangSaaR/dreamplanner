@@ -10,10 +10,11 @@ const LiveVideoStream = ({
   onStreamError 
 }: LiveVideoStreamProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const checkPermissions = async () => {
     try {
-      // First check if permissions are already granted
+      console.log("Checking device permissions...");
       const devices = await navigator.mediaDevices.enumerateDevices();
       const hasVideoPermission = devices.some(device => device.kind === 'videoinput' && device.label);
       const hasAudioPermission = devices.some(device => device.kind === 'audioinput' && device.label);
@@ -25,14 +26,14 @@ const LiveVideoStream = ({
 
       if (!hasVideoPermission || !hasAudioPermission) {
         console.log("Requesting permissions explicitly...");
-        // Request permissions explicitly if not granted
-        const stream = await navigator.mediaDevices.getUserMedia({ 
+        const tempStream = await navigator.mediaDevices.getUserMedia({ 
           video: true, 
           audio: true 
         });
-        // Stop this temporary stream
-        stream.getTracks().forEach(track => track.stop());
-        console.log("Permissions granted successfully");
+        tempStream.getTracks().forEach(track => {
+          track.stop();
+          console.log(`Stopped temporary ${track.kind} track`);
+        });
       }
     } catch (error) {
       console.error("Error checking permissions:", error);
@@ -42,12 +43,9 @@ const LiveVideoStream = ({
 
   const initializeVideoStream = async () => {
     try {
-      // First ensure we have permissions
       await checkPermissions();
-
       console.log("Starting video stream initialization...");
       
-      // Now request stream with specific constraints
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
@@ -63,39 +61,14 @@ const LiveVideoStream = ({
         }
       });
 
-      console.log("Media stream obtained:", {
-        videoTracks: stream.getVideoTracks().map(track => ({
-          label: track.label,
-          enabled: track.enabled,
-          muted: track.muted
-        })),
-        audioTracks: stream.getAudioTracks().map(track => ({
-          label: track.label,
-          enabled: track.enabled,
-          muted: track.muted
-        }))
-      });
+      console.log("Media stream obtained successfully");
+      streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        
-        // Wait for video to be ready
-        await new Promise((resolve) => {
-          if (videoRef.current) {
-            videoRef.current.onloadedmetadata = resolve;
-          }
-        });
-
-        try {
-          await videoRef.current.play();
-          console.log("Video playback started successfully");
-          onStreamInitialized?.(stream);
-        } catch (playError) {
-          console.error("Error starting video playback:", playError);
-          throw new Error("无法开始视频播放，请检查设备权限并刷新页面");
-        }
-      } else {
-        throw new Error("视频元素未找到");
+        await videoRef.current.play();
+        console.log("Video playback started successfully");
+        onStreamInitialized?.(stream);
       }
     } catch (error) {
       console.error("Error in initializeVideoStream:", error);
@@ -126,28 +99,33 @@ const LiveVideoStream = ({
     }
   };
 
+  const cleanup = () => {
+    console.log("Cleaning up video stream...");
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log(`Stopped ${track.kind} track:`, {
+          label: track.label,
+          kind: track.kind
+        });
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      streamRef.current = null;
+    }
+  };
+
   useEffect(() => {
     console.log("LiveVideoStream component mounted");
     initializeVideoStream().catch(error => {
       console.error("Failed to initialize video stream:", error);
+      cleanup();
       onStreamError?.(error);
     });
 
-    return () => {
-      console.log("LiveVideoStream component unmounting");
-      if (videoRef.current?.srcObject instanceof MediaStream) {
-        const stream = videoRef.current.srcObject;
-        stream.getTracks().forEach(track => {
-          track.stop();
-          console.log(`Stopped ${track.kind} track:`, {
-            label: track.label,
-            kind: track.kind
-          });
-        });
-        videoRef.current.srcObject = null;
-      }
-    };
-  }, [onStreamError]);
+    return cleanup;
+  }, []);
 
   return (
     <video
