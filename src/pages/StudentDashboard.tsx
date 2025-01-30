@@ -1,113 +1,34 @@
 import { useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useStudentData } from "@/hooks/student/useStudentData";
-import { useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
-import { useEffect, useCallback, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useStudentRealtime } from "@/hooks/student/useStudentRealtime";
+import { useTodos } from "@/hooks/useTodos";
 
 export default function StudentDashboard() {
   const { studentId } = useParams();
   const queryClient = useQueryClient();
-  const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
-
   console.log("StudentDashboard - Student ID:", studentId);
 
-  // Memoize the invalidation callbacks to prevent unnecessary re-renders
-  const invalidateCourses = useCallback(() => {
-    console.log("Courses changed, invalidating query");
-    queryClient.invalidateQueries({ queryKey: ["student-courses", studentId] });
-  }, [studentId, queryClient]);
-
-  const invalidateActivities = useCallback(() => {
-    console.log("Activities changed, invalidating query");
-    queryClient.invalidateQueries({ queryKey: ["student-activities", studentId] });
-  }, [studentId, queryClient]);
-
-  const invalidateNotes = useCallback(() => {
-    console.log("Notes changed, invalidating query");
-    queryClient.invalidateQueries({ queryKey: ["student-notes", studentId] });
-  }, [studentId, queryClient]);
-
-  const invalidateTodos = useCallback(() => {
-    console.log("Todos changed, invalidating query");
-    queryClient.invalidateQueries({ queryKey: ["student-todos", studentId] });
-  }, [studentId, queryClient]);
-
   // Set up real-time subscriptions
-  useEffect(() => {
-    if (!studentId) return;
+  useStudentRealtime(studentId, queryClient);
 
-    console.log("Setting up real-time subscriptions for student:", studentId);
-
-    // Clean up existing channels before creating new ones
-    channelsRef.current.forEach(channel => {
-      console.log("Removing existing channel");
-      supabase.removeChannel(channel);
-    });
-    channelsRef.current = [];
-
-    // Create new channels
-    const channels = [
-      supabase.channel('courses_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'courses',
-          filter: `student_id=eq.${studentId}`
-        }, invalidateCourses),
-
-      supabase.channel('activities_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'extracurricular_activities',
-          filter: `student_id=eq.${studentId}`
-        }, invalidateActivities),
-
-      supabase.channel('notes_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'notes',
-          filter: `author_id=eq.${studentId}`
-        }, invalidateNotes),
-
-      supabase.channel('todos_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'todos',
-          filter: `author_id=eq.${studentId}`
-        }, invalidateTodos)
-    ];
-
-    // Subscribe to all channels
-    Promise.all(channels.map(channel => channel.subscribe())).then(() => {
-      console.log("All channels subscribed successfully");
-      channelsRef.current = channels;
-    });
-
-    // Cleanup function
-    return () => {
-      console.log("Cleaning up real-time subscriptions");
-      channelsRef.current.forEach(channel => supabase.removeChannel(channel));
-      channelsRef.current = [];
-    };
-  }, [studentId, invalidateCourses, invalidateActivities, invalidateNotes, invalidateTodos]);
-
-  // Fetch student data using the same hook as StudentView
+  // Fetch student data
   const {
-    courses = [],
-    activities = [],
-    notes = [],
-    todos = [],
+    profile,
+    courses,
+    activities,
+    notes,
     isLoading,
   } = useStudentData(studentId);
 
-  if (isLoading) {
+  // Use the useTodos hook to get real-time todo data
+  const { todos, isLoading: isTodosLoading } = useTodos();
+
+  if (isLoading || isTodosLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -118,8 +39,10 @@ export default function StudentDashboard() {
   const todoStats = {
     completed: todos.filter(todo => todo.completed).length,
     starred: todos.filter(todo => todo.starred).length,
-    total: todos.length
+    total: todos.length,
   };
+
+  console.log("StudentDashboard - Current todo stats:", todoStats);
 
   const transformedActivities = activities.map(activity => ({
     timeCommitment: activity.time_commitment || "",
