@@ -6,18 +6,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import AddStudentDialog from "./AddStudentDialog";
 import InviteStudentDialog from "./InviteStudentDialog";
 import StudentCard from "./StudentCard";
-import SharedFolderCard from "./SharedFolderCard";
-import SharedFolderDialog from "./SharedFolderDialog";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import ProfileDisplay from "./ProfileDisplay";
 import StatisticsCards from "./StatisticsCards";
 
 export default function CounselorView() {
   const { profile } = useProfile();
   const { data: students, isLoading, refetch } = useCounselorStudents();
-  const [isEditingFolder, setIsEditingFolder] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   console.log("Counselor profile:", profile);
@@ -27,24 +22,6 @@ export default function CounselorView() {
     console.log("Not a counselor or no profile found");
     return null;
   }
-
-  const handleSaveFolder = async (data: { title: string; folder_url: string; description?: string }) => {
-    try {
-      const { error } = await supabase
-        .from("shared_folders")
-        .upsert({
-          created_by: profile.id,
-          ...data,
-        });
-
-      if (error) throw error;
-      toast.success("Folder saved successfully");
-      setIsEditingFolder(false);
-    } catch (error) {
-      console.error("Error saving folder:", error);
-      toast.error("Failed to save folder");
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -59,11 +36,6 @@ export default function CounselorView() {
       <ProfileDisplay 
         profile={profile} 
         onEdit={() => setIsEditingProfile(true)}
-      />
-      
-      <SharedFolderCard
-        folder={null}
-        onEditClick={() => setIsEditingFolder(true)}
       />
       
       <StatisticsCards 
@@ -105,12 +77,6 @@ export default function CounselorView() {
           </div>
         </ScrollArea>
       )}
-
-      <SharedFolderDialog
-        open={isEditingFolder}
-        onOpenChange={setIsEditingFolder}
-        onSubmit={handleSaveFolder}
-      />
     </div>
   );
 }

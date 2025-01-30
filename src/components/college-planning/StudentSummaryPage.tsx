@@ -8,6 +8,7 @@ import ProfileSection from "./student-summary/ProfileSection";
 import AcademicSection from "./student-summary/AcademicSection";
 import ActivitiesSection from "./student-summary/ActivitiesSection";
 import ApplicationsSection from "./student-summary/ApplicationsSection";
+import SharedFolderSection from "./student-summary/SharedFolderSection";
 
 export default function StudentSummaryPage() {
   const navigate = useNavigate();
@@ -150,6 +151,9 @@ export default function StudentSummaryPage() {
               courses={courses} 
               studentId={studentId}
             />
+          </div>
+          <div className="bg-white rounded-lg shadow-sm">
+            <SharedFolderSection studentId={studentId} />
           </div>
         </div>
 
