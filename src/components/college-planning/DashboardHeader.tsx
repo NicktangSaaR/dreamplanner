@@ -5,7 +5,7 @@ import { useProfile } from "@/hooks/useProfile";
 
 export default function DashboardHeader() {
   const navigate = useNavigate();
-  const { data: profile } = useProfile();
+  const { profile } = useProfile();
 
   const handleMockInterview = () => {
     navigate('/mock-interview');
