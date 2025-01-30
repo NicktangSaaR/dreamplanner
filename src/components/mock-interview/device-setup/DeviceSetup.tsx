@@ -31,7 +31,6 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
     getDevices
   } = useDevices();
 
-  // Use the useVideoPreview hook to handle video preview
   useVideoPreview(videoRef, stream);
 
   const handleComplete = () => {
@@ -49,33 +48,39 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
   };
 
   const handleBack = () => {
+    console.log("Navigating back, cleaning up devices...");
     stopDevices();
     onBack();
   };
 
-  // Initialize devices when component mounts
   useEffect(() => {
     console.log("DeviceSetup component mounted");
+    let mounted = true;
+
     const initDevices = async () => {
       try {
         console.log("Initializing devices...");
         const devices = await getDevices();
-        if (devices) {
+        if (devices && mounted) {
+          console.log("Devices found, starting initial test...");
           await startDeviceTest();
         }
       } catch (error) {
         console.error("Error initializing devices:", error);
+        if (mounted) {
+          toast.error("设备初始化失败，请检查设备权限并刷新页面");
+        }
       }
     };
     
     initDevices();
     
-    // Cleanup when component unmounts
     return () => {
       console.log("DeviceSetup component unmounting");
+      mounted = false;
       stopDevices();
     };
-  }, []); // Empty dependency array to run only once on mount
+  }, []);
 
   return (
     <div className="space-y-8">

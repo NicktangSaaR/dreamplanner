@@ -44,8 +44,7 @@ export const useDevices = () => {
           label: device.label || `麦克风 ${audioDevices.length + 1}`
         }));
 
-      console.log("Processed video devices:", videos);
-      console.log("Processed audio devices:", audios);
+      console.log("Processed devices:", { videos, audios });
 
       setVideoDevices(videos);
       setAudioDevices(audios);
@@ -57,7 +56,10 @@ export const useDevices = () => {
         setSelectedAudioDevice(audios[0].deviceId);
       }
 
-      initialStream.getTracks().forEach(track => track.stop());
+      initialStream.getTracks().forEach(track => {
+        track.stop();
+        console.log(`Stopped initial ${track.kind} track`);
+      });
       
       return { videos, audios };
     } catch (error) {
@@ -88,10 +90,13 @@ export const useDevices = () => {
   const startDeviceTest = async () => {
     try {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => {
+          track.stop();
+          console.log(`Stopped existing ${track.kind} track`);
+        });
       }
 
-      console.log("Starting camera with devices:", {
+      console.log("Starting device test with:", {
         video: selectedVideoDevice,
         audio: selectedAudioDevice
       });
@@ -110,13 +115,14 @@ export const useDevices = () => {
         }
       });
 
+      console.log("Media stream obtained successfully");
       setStream(mediaStream);
       setIsCameraWorking(true);
       setIsAudioWorking(true);
       toast.success("设备测试已开始");
       return mediaStream;
     } catch (error) {
-      console.error("Error accessing media devices:", error);
+      console.error("Error starting device test:", error);
       let errorMessage = "无法访问摄像头或麦克风";
       
       if (error instanceof DOMException) {
@@ -135,6 +141,8 @@ export const useDevices = () => {
         }
       }
       
+      setIsCameraWorking(false);
+      setIsAudioWorking(false);
       toast.error(errorMessage);
       return null;
     }
