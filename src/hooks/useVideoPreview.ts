@@ -7,6 +7,9 @@ export const useVideoPreview = (
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
+      videoRef.current.play().catch(error => {
+        console.error("Error playing video:", error);
+      });
     }
     return () => {
       if (videoRef.current) {

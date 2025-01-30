@@ -27,7 +27,8 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
     isAudioWorking,
     startDeviceTest,
     stopDevices,
-    stream
+    stream,
+    getDevices
   } = useDevices();
 
   // Use the useVideoPreview hook to handle video preview
@@ -58,7 +59,10 @@ const DeviceSetup = ({ onComplete, onBack }: DeviceSetupProps) => {
     const initDevices = async () => {
       try {
         console.log("Initializing devices...");
-        await startDeviceTest();
+        const devices = await getDevices();
+        if (devices) {
+          await startDeviceTest();
+        }
       } catch (error) {
         console.error("Error initializing devices:", error);
       }

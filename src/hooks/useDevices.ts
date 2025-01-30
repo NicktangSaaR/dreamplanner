@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { MediaDevice } from "@/types/device";
 
@@ -15,114 +15,65 @@ export const useDevices = () => {
     try {
       console.log("Requesting initial device permissions...");
       const initialStream = await navigator.mediaDevices.getUserMedia({ 
-        video: true, 
-        audio: true 
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user"
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true
+        }
       });
-      console.log("Got initial permission stream");
-      
+      console.log("Initial permissions granted");
+
       const devices = await navigator.mediaDevices.enumerateDevices();
       console.log("Available devices:", devices);
       
-      const videoInputs = devices
-        .filter(device => device.kind === "videoinput")
+      const videos = devices
+        .filter(device => device.kind === 'videoinput')
         .map(device => ({
           deviceId: device.deviceId,
-          label: device.label || `Camera ${device.deviceId.slice(0, 5)}...`
+          label: device.label || `摄像头 ${videoDevices.length + 1}`
         }));
       
-      const audioInputs = devices
-        .filter(device => device.kind === "audioinput")
+      const audios = devices
+        .filter(device => device.kind === 'audioinput')
         .map(device => ({
           deviceId: device.deviceId,
-          label: device.label || `Microphone ${device.deviceId.slice(0, 5)}...`
+          label: device.label || `麦克风 ${audioDevices.length + 1}`
         }));
 
-      console.log("Found video devices:", videoInputs);
-      console.log("Found audio devices:", audioInputs);
+      console.log("Processed video devices:", videos);
+      console.log("Processed audio devices:", audios);
 
-      setVideoDevices(videoInputs);
-      setAudioDevices(audioInputs);
+      setVideoDevices(videos);
+      setAudioDevices(audios);
 
-      if (videoInputs.length > 0 && !selectedVideoDevice) {
-        setSelectedVideoDevice(videoInputs[0].deviceId);
+      if (videos.length > 0) {
+        setSelectedVideoDevice(videos[0].deviceId);
       }
-      if (audioInputs.length > 0 && !selectedAudioDevice) {
-        setSelectedAudioDevice(audioInputs[0].deviceId);
+      if (audios.length > 0) {
+        setSelectedAudioDevice(audios[0].deviceId);
       }
 
-      // Stop the initial permission stream
       initialStream.getTracks().forEach(track => track.stop());
+      
+      return { videos, audios };
     } catch (error) {
       console.error("Error getting devices:", error);
-      toast.error("获取设备列表失败，请确保允许浏览器访问摄像头和麦克风");
-    }
-  }, [selectedVideoDevice, selectedAudioDevice]);
-
-  const stopDevices = useCallback(() => {
-    console.log("Stopping all media tracks...");
-    if (stream) {
-      stream.getTracks().forEach(track => {
-        track.stop();
-        console.log(`Stopped ${track.kind} track`);
-      });
-      setStream(null);
-    }
-    setIsCameraWorking(false);
-    setIsAudioWorking(false);
-  }, [stream]);
-
-  const startDeviceTest = useCallback(async () => {
-    console.log("Starting device test with selected devices:", {
-      video: selectedVideoDevice,
-      audio: selectedAudioDevice
-    });
-
-    try {
-      // Stop any existing streams
-      stopDevices();
-
-      const constraints = {
-        video: selectedVideoDevice ? { deviceId: { exact: selectedVideoDevice } } : true,
-        audio: selectedAudioDevice ? { deviceId: { exact: selectedAudioDevice } } : true
-      };
-
-      console.log("Requesting media with constraints:", constraints);
-      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log("Got new media stream:", newStream);
-
-      // Check video tracks
-      const videoTrack = newStream.getVideoTracks()[0];
-      if (videoTrack) {
-        console.log("Video track obtained:", videoTrack.label);
-        console.log("Video settings:", videoTrack.getSettings());
-        setIsCameraWorking(true);
-      }
-
-      // Check audio tracks
-      const audioTrack = newStream.getAudioTracks()[0];
-      if (audioTrack) {
-        console.log("Audio track obtained:", audioTrack.label);
-        console.log("Audio settings:", audioTrack.getSettings());
-        setIsAudioWorking(true);
-      }
-
-      setStream(newStream);
-      toast.success("设备测试成功，摄像头和麦克风已就绪");
-      return newStream;
-    } catch (error) {
-      console.error("Error testing devices:", error);
-      let errorMessage = "设备测试失败，请检查设备权限设置";
+      let errorMessage = "无法加载设备列表";
       
       if (error instanceof DOMException) {
         switch (error.name) {
           case 'NotAllowedError':
-            errorMessage = "请允许浏览器访问摄像头和麦克风";
+            errorMessage = "请在浏览器设置中允许访问摄像头和麦克风";
             break;
           case 'NotFoundError':
             errorMessage = "未找到摄像头或麦克风设备";
             break;
           case 'NotReadableError':
-            errorMessage = "无法访问摄像头或麦克风，可能被其他应用程序占用";
+            errorMessage = "无法访问摄像头或麦克风，请确认没有其他应用正在使用";
             break;
           default:
             errorMessage = "设备访问出错，请确保设备正常工作并重试";
@@ -130,23 +81,76 @@ export const useDevices = () => {
       }
       
       toast.error(errorMessage);
-      setIsCameraWorking(false);
-      setIsAudioWorking(false);
       return null;
     }
-  }, [selectedVideoDevice, selectedAudioDevice, stopDevices]);
+  }, [videoDevices.length, audioDevices.length]);
 
-  useEffect(() => {
-    getDevices();
-    
-    // Listen for device changes
-    navigator.mediaDevices.addEventListener('devicechange', getDevices);
-    
-    return () => {
-      navigator.mediaDevices.removeEventListener('devicechange', getDevices);
-      stopDevices();
-    };
-  }, [getDevices, stopDevices]);
+  const startDeviceTest = async () => {
+    try {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+
+      console.log("Starting camera with devices:", {
+        video: selectedVideoDevice,
+        audio: selectedAudioDevice
+      });
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          deviceId: selectedVideoDevice ? { exact: selectedVideoDevice } : undefined,
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user"
+        },
+        audio: {
+          deviceId: selectedAudioDevice ? { exact: selectedAudioDevice } : undefined,
+          echoCancellation: true,
+          noiseSuppression: true
+        }
+      });
+
+      setStream(mediaStream);
+      setIsCameraWorking(true);
+      setIsAudioWorking(true);
+      toast.success("设备测试已开始");
+      return mediaStream;
+    } catch (error) {
+      console.error("Error accessing media devices:", error);
+      let errorMessage = "无法访问摄像头或麦克风";
+      
+      if (error instanceof DOMException) {
+        switch (error.name) {
+          case 'NotAllowedError':
+            errorMessage = "请在浏览器设置中允许访问摄像头和麦克风";
+            break;
+          case 'NotFoundError':
+            errorMessage = "未找到摄像头或麦克风设备";
+            break;
+          case 'NotReadableError':
+            errorMessage = "无法访问摄像头或麦克风，请确认没有其他应用正在使用";
+            break;
+          default:
+            errorMessage = "设备访问出错，请确保设备正常工作并重试";
+        }
+      }
+      
+      toast.error(errorMessage);
+      return null;
+    }
+  };
+
+  const stopDevices = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => {
+        track.stop();
+        console.log(`Stopped ${track.kind} track`);
+      });
+      setStream(null);
+      setIsCameraWorking(false);
+      setIsAudioWorking(false);
+    }
+  };
 
   return {
     videoDevices,
@@ -160,5 +164,6 @@ export const useDevices = () => {
     startDeviceTest,
     stopDevices,
     stream,
+    getDevices
   };
 };
