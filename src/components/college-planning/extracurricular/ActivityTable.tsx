@@ -22,7 +22,7 @@ interface ActivityTableProps {
   onEditActivity: (activity: Activity) => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
-  onEditingActivityChange: (field: string, value: string) => void;
+  onEditingActivityChange: (field: string, value: string | string[]) => void;
   onDeleteActivity: (activityId: string) => void;
 }
 
@@ -35,6 +35,8 @@ export default function ActivityTable({
   onEditingActivityChange,
   onDeleteActivity,
 }: ActivityTableProps) {
+  const GRADE_LEVELS = ["Prior to G9", "G9", "G10", "G11", "G12"];
+
   return (
     <Table>
       <TableHeader>
@@ -43,6 +45,7 @@ export default function ActivityTable({
           <TableHead>Role</TableHead>
           <TableHead>Description</TableHead>
           <TableHead>Time Commitment</TableHead>
+          <TableHead>Grade Levels</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -74,6 +77,30 @@ export default function ActivityTable({
                   onChange={(e) => onEditingActivityChange("time_commitment", e.target.value)}
                 />
               </TableCell>
+              <TableCell>
+                <div className="space-y-2">
+                  {GRADE_LEVELS.map((level) => (
+                    <div key={level} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`grade-${level}`}
+                        checked={(editingActivity.grade_levels || []).includes(level)}
+                        onChange={(e) => {
+                          const currentLevels = editingActivity.grade_levels || [];
+                          const updatedLevels = e.target.checked
+                            ? [...currentLevels, level]
+                            : currentLevels.filter((l) => l !== level);
+                          onEditingActivityChange("grade_levels", updatedLevels);
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <label htmlFor={`grade-${level}`} className="text-sm">
+                        {level}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </TableCell>
               <TableCell className="space-x-2">
                 <Button variant="ghost" size="icon" onClick={onSaveEdit}>
                   <Save className="h-4 w-4" />
@@ -89,6 +116,18 @@ export default function ActivityTable({
               <TableCell>{activity.role}</TableCell>
               <TableCell>{activity.description}</TableCell>
               <TableCell>{activity.time_commitment}</TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  {(activity.grade_levels || []).map((level) => (
+                    <span
+                      key={level}
+                      className="inline-block bg-gray-100 rounded-full px-2 py-1 text-xs mr-1 mb-1"
+                    >
+                      {level}
+                    </span>
+                  ))}
+                </div>
+              </TableCell>
               <TableCell className="space-x-2">
                 <Button variant="ghost" size="icon" onClick={() => onEditActivity(activity)}>
                   <Pencil className="h-4 w-4" />
