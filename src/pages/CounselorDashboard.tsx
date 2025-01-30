@@ -53,7 +53,7 @@ export default function CounselorDashboard() {
           </Button>
           <Button 
             variant="outline"
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/counselor-profile')}
           >
             <User className="mr-2 h-4 w-4" />
             My Profile
