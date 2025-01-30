@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormEvent } from "react";
+import { toast } from "sonner";
 
 interface ActivityFormProps {
   newActivity: {
@@ -22,6 +23,18 @@ export default function ActivityForm({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     await onAddActivity();
+  };
+
+  const handleTimeCommitmentChange = (value: string) => {
+    // Only allow numbers
+    const numericValue = value.replace(/[^0-9]/g, '');
+    
+    if (numericValue === '') {
+      onActivityChange("time_commitment", '');
+    } else {
+      // Append "Hours" to the numeric value
+      onActivityChange("time_commitment", `${numericValue} Hours`);
+    }
   };
 
   return (
@@ -60,12 +73,14 @@ export default function ActivityForm({
       </div>
       <div>
         <label htmlFor="time_commitment" className="block text-sm font-medium mb-1">
-          Time Commitment
+          Time Commitment (Hours)
         </label>
         <Input
           id="time_commitment"
-          value={newActivity.time_commitment}
-          onChange={(e) => onActivityChange("time_commitment", e.target.value)}
+          type="text"
+          value={newActivity.time_commitment.replace(" Hours", "")}
+          onChange={(e) => handleTimeCommitmentChange(e.target.value)}
+          placeholder="Enter number of hours"
         />
       </div>
       <Button type="submit" className="w-full">
