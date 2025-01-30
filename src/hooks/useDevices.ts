@@ -14,14 +14,12 @@ export const useDevices = () => {
   const getDevices = useCallback(async () => {
     try {
       console.log("Requesting initial device permissions...");
-      // First request permissions to ensure we get labeled devices
       const initialStream = await navigator.mediaDevices.getUserMedia({ 
         video: true, 
         audio: true 
       });
       console.log("Got initial permission stream");
       
-      // Enumerate devices after getting permissions
       const devices = await navigator.mediaDevices.enumerateDevices();
       console.log("Available devices:", devices);
       
@@ -90,16 +88,15 @@ export const useDevices = () => {
 
       console.log("Requesting media with constraints:", constraints);
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-
       console.log("Got new media stream:", newStream);
-      setStream(newStream);
-      
+
       // Check video tracks
       const videoTrack = newStream.getVideoTracks()[0];
       if (videoTrack) {
         console.log("Video track obtained:", videoTrack.label);
         const videoSettings = videoTrack.getSettings();
         console.log("Video settings:", videoSettings);
+        // Immediately set camera as working if we got a video track
         setIsCameraWorking(true);
       }
 
@@ -109,9 +106,11 @@ export const useDevices = () => {
         console.log("Audio track obtained:", audioTrack.label);
         const audioSettings = audioTrack.getSettings();
         console.log("Audio settings:", audioSettings);
+        // Immediately set audio as working if we got an audio track
         setIsAudioWorking(true);
       }
 
+      setStream(newStream);
       toast.success("设备测试成功，摄像头和麦克风已就绪");
       return newStream;
     } catch (error) {
