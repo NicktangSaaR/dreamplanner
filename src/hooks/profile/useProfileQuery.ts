@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/profile";
+import { Json } from "@/integrations/supabase/types";
 
 export const useProfileQuery = () => {
   return useQuery({
@@ -25,17 +26,28 @@ export const useProfileQuery = () => {
         throw error;
       }
 
+      // Type assertion for social_media as it comes from JSON column
+      const socialMedia = data.social_media as { 
+        linkedin?: string; 
+        twitter?: string; 
+        instagram?: string; 
+      } | null;
+
       // Transform the social_media field to ensure type safety
       const transformedData: Profile = {
         ...data,
-        social_media: data.social_media ? {
-          linkedin: data.social_media.linkedin || "",
-          twitter: data.social_media.twitter || "",
-          instagram: data.social_media.instagram || "",
+        social_media: socialMedia ? {
+          linkedin: socialMedia.linkedin || "",
+          twitter: socialMedia.twitter || "",
+          instagram: socialMedia.instagram || "",
         } : null,
-        interested_majors: Array.isArray(data.interested_majors) 
-          ? data.interested_majors 
-          : data.interested_majors?.split(',').map(m => m.trim()) || null
+        interested_majors: data.interested_majors 
+          ? Array.isArray(data.interested_majors)
+            ? data.interested_majors
+            : typeof data.interested_majors === 'string'
+              ? data.interested_majors.split(',').map(m => m.trim())
+              : []
+          : null
       };
 
       console.log("Profile data fetched:", transformedData);
