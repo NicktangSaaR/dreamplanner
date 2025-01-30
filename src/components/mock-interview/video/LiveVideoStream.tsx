@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useVideoStreamSetup } from "@/hooks/useVideoStreamSetup";
 
 interface LiveVideoStreamProps {
@@ -11,10 +12,22 @@ const LiveVideoStream = ({
   onStreamError,
   isRecording = false
 }: LiveVideoStreamProps) => {
-  const { videoRef, isInitialized } = useVideoStreamSetup({
+  const { videoRef, isInitialized, initializeStream } = useVideoStreamSetup({
     onStreamInitialized,
     onStreamError
   });
+
+  useEffect(() => {
+    // 组件挂载时尝试初始化流
+    const init = async () => {
+      try {
+        await initializeStream();
+      } catch (error) {
+        console.error("Error initializing stream in LiveVideoStream:", error);
+      }
+    };
+    init();
+  }, []); // 仅在组件挂载时执行
 
   return (
     <div className="relative w-full h-full">

@@ -30,6 +30,9 @@ export const useVideoStreamSetup = ({
 
   const initializeStream = async () => {
     try {
+      // 先停止任何现有的流
+      stopStream();
+
       console.log("Requesting media stream...");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -98,9 +101,11 @@ export const useVideoStreamSetup = ({
 
     const init = async () => {
       if (mounted) {
-        await initializeStream().catch(error => {
+        try {
+          await initializeStream();
+        } catch (error) {
           console.error("Failed to initialize stream:", error);
-        });
+        }
       }
     };
 
@@ -116,6 +121,7 @@ export const useVideoStreamSetup = ({
   return {
     videoRef,
     isInitialized,
-    stopStream
+    stopStream,
+    initializeStream // 导出初始化方法以便需要时重新初始化
   };
 };
