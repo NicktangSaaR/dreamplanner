@@ -1,42 +1,50 @@
 import { useState, useCallback } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 import { Question, InterviewSettings } from '@/components/mock-interview/types';
 
 export const useInterviewQuestions = (
-  questions: Question[],
   settings: InterviewSettings
 ) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [questionSequence, setQuestionSequence] = useState<Question[]>([]);
+  const [questionSequence, setQuestionSequence] = useState<any[]>([]);
 
-  const initializeQuestions = useCallback(() => {
+  const initializeQuestions = useCallback(async () => {
     console.log('Initializing questions with settings:', settings);
-    if (!questions.length) return;
+    if (!settings.selectedQuestionId) return;
 
-    let selectedQuestions: Question[] = [];
-    
-    if (settings.practiceMode === 'single') {
-      const question = questions.find(q => q.id === settings.selectedQuestionId);
-      if (question) {
-        selectedQuestions = [question];
-      }
-    } else {
-      // For multiple questions mode
-      let availableQuestions = [...questions];
+    try {
+      const { data: bankQuestions, error } = await supabase
+        .from('mock_interview_bank_questions')
+        .select('*')
+        .eq('bank_id', settings.selectedQuestionId);
+
+      if (error) throw error;
+
+      console.log('Fetched bank questions:', bankQuestions);
+
+      if (!bankQuestions.length) return;
+
+      let selectedQuestions = [...bankQuestions];
       
-      // If random order is selected, shuffle the questions
-      if (settings.questionOrder === 'random') {
-        availableQuestions = availableQuestions
-          .sort(() => Math.random() - 0.5);
+      if (settings.practiceMode === 'multiple') {
+        // For multiple questions mode
+        if (settings.questionOrder === 'random') {
+          selectedQuestions = selectedQuestions.sort(() => Math.random() - 0.5);
+        }
+        
+        selectedQuestions = selectedQuestions.slice(0, settings.numberOfQuestions);
+      } else {
+        // For single question mode, just take the first question
+        selectedQuestions = [selectedQuestions[0]];
       }
-      
-      selectedQuestions = availableQuestions
-        .slice(0, settings.numberOfQuestions);
+
+      console.log('Selected questions sequence:', selectedQuestions);
+      setQuestionSequence(selectedQuestions);
+      setCurrentQuestionIndex(0);
+    } catch (error) {
+      console.error('Error initializing questions:', error);
     }
-
-    console.log('Selected questions sequence:', selectedQuestions);
-    setQuestionSequence(selectedQuestions);
-    setCurrentQuestionIndex(0);
-  }, [questions, settings]);
+  }, [settings]);
 
   const getCurrentQuestion = useCallback(() => {
     return questionSequence[currentQuestionIndex];

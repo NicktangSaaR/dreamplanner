@@ -5,6 +5,11 @@ export interface Question {
   preparation_time: number;
   response_time: number;
   is_system: boolean;
+  mock_interview_bank_questions?: {
+    id: string;
+    title: string;
+    description: string | null;
+  }[];
 }
 
 export interface InterviewSettings {
