@@ -105,15 +105,41 @@ const VideoPreview = ({
     }
   };
 
-  // Cleanup media stream when component unmounts or when moving to review stage
+  // Cleanup media stream when component unmounts, when moving to review stage,
+  // or when the window/tab is about to be closed
   useEffect(() => {
     if (isReviewStage) {
       cleanupMediaStream();
     }
+
+    // Cleanup when component unmounts
     return () => {
       cleanupMediaStream();
     };
   }, [isReviewStage]);
+
+  // Add cleanup on page unload/visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        console.log("Page visibility changed to hidden, cleaning up media stream...");
+        cleanupMediaStream();
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      console.log("Page is being unloaded, cleaning up media stream...");
+      cleanupMediaStream();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   return (
     <Card className="p-6">
