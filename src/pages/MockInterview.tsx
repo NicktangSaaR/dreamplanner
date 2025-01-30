@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { useProfile } from "@/hooks/useProfile";
 import { useInterviewState } from "@/hooks/useInterviewState";
 import { useVideoStream } from "@/hooks/useVideoStream";
-import { useProfile } from "@/hooks/useProfile";
 import { Question, InterviewSettings } from "@/components/mock-interview/types";
 import { InterviewStage } from "@/components/mock-interview/InterviewStage";
 import InterviewHeader from "@/components/mock-interview/header/InterviewHeader";
@@ -93,6 +93,9 @@ const MockInterview = () => {
   const handleDeviceSetupComplete = () => {
     setDeviceSetupComplete(true);
     setShowDeviceSetup(false);
+    localStorage.setItem(DEVICE_SETTINGS_KEY, JSON.stringify({
+      lastUpdated: Date.now()
+    }));
     toast.success("设备设置完成", {
       description: "您现在可以开始设置面试参数。"
     });
