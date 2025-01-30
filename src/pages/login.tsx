@@ -20,7 +20,7 @@ export default function Login() {
 
     try {
       console.log("Attempting login with email:", email);
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -28,29 +28,26 @@ export default function Login() {
       if (signInError) {
         console.error("Login error:", signInError);
         
-        // Handle specific error cases
-        if (signInError.message.includes("Invalid login credentials")) {
-          toast.error("Invalid email or password. Please try again.");
-        } else if (signInError.message.includes("Email not confirmed")) {
-          toast.error("Please verify your email before logging in.");
+        if (signInError.message.includes("Email not confirmed")) {
+          toast.error("Please verify your email before logging in. Check your inbox for the verification link.");
+        } else if (signInError.message.includes("Invalid login credentials")) {
+          toast.error("The email or password you entered is incorrect. Please try again or sign up if you don't have an account.");
         } else {
           toast.error(signInError.message);
         }
         return;
       }
 
-      // Get user profile to check user type
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Failed to get user information");
+      if (!data.user) {
+        toast.error("No user data received");
         return;
       }
 
-      console.log("Fetching user profile for:", user.id);
+      // Get user profile to check user type
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type, is_admin")
-        .eq("id", user.id)
+        .eq("id", data.user.id)
         .single();
 
       if (profileError) {
@@ -63,16 +60,12 @@ export default function Login() {
 
       // Redirect based on user type
       if (profile.is_admin) {
-        console.log("Redirecting to admin dashboard");
         navigate("/admin-dashboard");
       } else if (profile.user_type === "counselor") {
-        console.log("Redirecting to counselor dashboard");
         navigate("/counselor-dashboard");
       } else if (profile.user_type === "student") {
-        console.log("Redirecting to student dashboard");
-        navigate(`/student-dashboard/${user.id}`);
+        navigate(`/student-dashboard/${data.user.id}`);
       } else {
-        console.log("Redirecting to college planning");
         navigate("/college-planning");
       }
 
