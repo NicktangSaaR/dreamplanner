@@ -39,11 +39,11 @@ export default function ActivityTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>活动名称</TableHead>
-          <TableHead>角色</TableHead>
-          <TableHead>描述</TableHead>
-          <TableHead>时间投入</TableHead>
-          <TableHead>操作</TableHead>
+          <TableHead>Activity Name</TableHead>
+          <TableHead>Role</TableHead>
+          <TableHead>Description</TableHead>
+          <TableHead>Time Commitment</TableHead>
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -101,18 +101,18 @@ export default function ActivityTable({
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>确认删除</AlertDialogTitle>
+                      <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                       <AlertDialogDescription>
-                        您确定要删除这个活动吗？此操作无法撤销。
+                        Are you sure you want to delete this activity? This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>取消</AlertDialogCancel>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() => onDeleteActivity(activity.id)}
                         className="bg-red-500 hover:bg-red-600"
                       >
-                        删除
+                        Delete
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
