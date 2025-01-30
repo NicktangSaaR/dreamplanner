@@ -28,7 +28,7 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
     name: "",
     role: "",
     description: "",
-    timeCommitment: "",
+    time_commitment: "",
   });
   const queryClient = useQueryClient();
   const { studentId } = useParams();
@@ -60,7 +60,7 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
             name: newActivity.name,
             role: newActivity.role,
             description: newActivity.description,
-            time_commitment: newActivity.timeCommitment,
+            time_commitment: newActivity.time_commitment,
             student_id: studentId,
           },
         ]);
@@ -80,7 +80,7 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
         name: "",
         role: "",
         description: "",
-        timeCommitment: "",
+        time_commitment: "",
       });
     } catch (error) {
       console.error("Error adding activity:", error);

@@ -57,8 +57,8 @@ export default function ActivityTable({
               </TableCell>
               <TableCell>
                 <Input
-                  value={editingActivity.timeCommitment}
-                  onChange={(e) => onEditingActivityChange("timeCommitment", e.target.value)}
+                  value={editingActivity.time_commitment}
+                  onChange={(e) => onEditingActivityChange("time_commitment", e.target.value)}
                 />
               </TableCell>
               <TableCell>
@@ -75,7 +75,7 @@ export default function ActivityTable({
               <TableCell>{activity.name}</TableCell>
               <TableCell>{activity.role}</TableCell>
               <TableCell>{activity.description}</TableCell>
-              <TableCell>{activity.timeCommitment}</TableCell>
+              <TableCell>{activity.time_commitment}</TableCell>
               <TableCell>
                 <Button variant="ghost" size="icon" onClick={() => onEditActivity(activity)}>
                   <Pencil className="h-4 w-4" />
