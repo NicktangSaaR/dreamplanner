@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AddCollegeDialog from "./college-list/AddCollegeDialog";
 import CollegeCard from "./college-list/CollegeCard";
 import { getCollegeUrl } from "./college-list/useCollegeUrl";
-import * as z from "zod";
+import { CollegeFormValues } from "./college-list/collegeSchema";
 
 export default function CollegeListSection() {
   const { toast } = useToast();
@@ -37,7 +37,7 @@ export default function CollegeListSection() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: CollegeFormValues) => {
     try {
       console.log("Submitting application:", values);
       const { data: { user } } = await supabase.auth.getUser();

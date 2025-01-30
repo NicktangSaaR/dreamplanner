@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,25 +26,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-
-const formSchema = z.object({
-  college_name: z.string().min(1, "College name is required"),
-  major: z.string().min(1, "Major is required"),
-  degree: z.enum(["Bachelor", "Master"], {
-    required_error: "Please select a degree type",
-  }),
-  category: z.enum(["Hard Reach", "Reach", "Hard Target", "Target", "Safety"], {
-    required_error: "Please select a category",
-  }),
-});
+import { formSchema, CollegeFormValues } from "./collegeSchema";
 
 interface AddCollegeDialogProps {
-  onSubmit: (values: z.infer<typeof formSchema>) => Promise<void>;
+  onSubmit: (values: CollegeFormValues) => Promise<void>;
 }
 
 export default function AddCollegeDialog({ onSubmit }: AddCollegeDialogProps) {
   const [open, setOpen] = useState(false);
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<CollegeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       college_name: "",
@@ -55,7 +44,7 @@ export default function AddCollegeDialog({ onSubmit }: AddCollegeDialogProps) {
     },
   });
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (values: CollegeFormValues) => {
     await onSubmit(values);
     setOpen(false);
     form.reset();
