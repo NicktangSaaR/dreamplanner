@@ -3,6 +3,7 @@ import InterviewSettingsComponent from "@/components/mock-interview/InterviewSet
 import InterviewPreparation from "@/components/mock-interview/InterviewPreparation";
 import InterviewCountdown from "@/components/mock-interview/InterviewCountdown";
 import InterviewResponse from "@/components/mock-interview/InterviewResponse";
+import ReadyPrompt from "@/components/mock-interview/ReadyPrompt";
 import VideoPreview from "@/components/mock-interview/VideoPreview";
 import PracticeRecords from "@/components/mock-interview/PracticeRecords";
 import DeviceSetup from "@/components/mock-interview/device-setup/DeviceSetup";
@@ -28,6 +29,7 @@ interface InterviewContentProps {
   onStopRecording: () => void;
   onStartNew: () => void;
   onNextQuestion: () => void;
+  onStartQuestion: () => void;
 }
 
 const InterviewContent = ({
@@ -49,6 +51,7 @@ const InterviewContent = ({
   onStopRecording,
   onStartNew,
   onNextQuestion,
+  onStartQuestion,
 }: InterviewContentProps) => {
   if (showDeviceSetup || !deviceSetupComplete) {
     return (
@@ -72,6 +75,8 @@ const InterviewContent = ({
     return null;
   };
 
+  const isRecording = stage === InterviewStage.RESPONSE;
+
   return (
     <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
       {stage === InterviewStage.SETTINGS ? (
@@ -91,6 +96,13 @@ const InterviewContent = ({
         <>
           <div className="space-y-6">
             {renderQuestionProgress()}
+            {stage === InterviewStage.READY && (
+              <ReadyPrompt
+                questionNumber={currentQuestionNumber}
+                totalQuestions={totalQuestions}
+                onStart={onStartQuestion}
+              />
+            )}
             {stage === InterviewStage.PREPARATION && (
               <InterviewPreparation
                 question={selectedQuestion}
@@ -136,6 +148,7 @@ const InterviewContent = ({
             onStopRecording={onStopRecording}
             onStartNew={onStartNew}
             selectedQuestionId={selectedQuestion.id}
+            isRecording={isRecording}
           />
         </>
       )}

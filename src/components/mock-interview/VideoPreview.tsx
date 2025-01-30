@@ -13,6 +13,7 @@ interface VideoPreviewProps {
   onStopRecording: () => void;
   onStartNew: () => void;
   selectedQuestionId?: string;
+  isRecording: boolean;
 }
 
 const VideoPreview = ({
@@ -20,7 +21,8 @@ const VideoPreview = ({
   isReviewStage,
   onStopRecording,
   onStartNew,
-  selectedQuestionId
+  selectedQuestionId,
+  isRecording
 }: VideoPreviewProps) => {
   const { isSaving, saveRecording } = useVideoRecording(selectedQuestionId);
   const {
@@ -76,12 +78,21 @@ const VideoPreview = ({
             <LiveVideoStream 
               onStreamInitialized={handleStreamInitialized} 
               onStreamError={handleStreamError}
+              isRecording={isRecording}
             />
             {streamError && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-100/90">
                 <p className="text-red-500 text-center p-4">
                   {streamError}
                 </p>
+              </div>
+            )}
+            {isRecording && (
+              <div className="absolute top-4 left-4">
+                <div className="flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  <span className="text-sm font-medium">录制中</span>
+                </div>
               </div>
             )}
           </>
@@ -93,16 +104,18 @@ const VideoPreview = ({
             开始新的面试
           </Button>
         ) : (
-          <Button
-            onClick={handleStopRecording}
-            variant="destructive"
-            size="lg"
-            className="flex items-center gap-2 text-lg"
-            disabled={!!streamError || isSaving}
-          >
-            <StopCircle className="w-5 h-5" />
-            {isSaving ? "保存中..." : "结束面试"}
-          </Button>
+          isRecording && (
+            <Button
+              onClick={handleStopRecording}
+              variant="destructive"
+              size="lg"
+              className="flex items-center gap-2 text-lg"
+              disabled={!!streamError || isSaving}
+            >
+              <StopCircle className="w-5 h-5" />
+              {isSaving ? "保存中..." : "结束面试"}
+            </Button>
+          )
         )}
       </div>
     </Card>
