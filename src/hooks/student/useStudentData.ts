@@ -1,5 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Profile } from "@/hooks/useProfile";
+
+interface RawProfile extends Omit<Profile, 'social_media'> {
+  social_media: any;
+}
+
+const transformProfile = (rawProfile: RawProfile): Profile => {
+  return {
+    ...rawProfile,
+    social_media: rawProfile.social_media ? JSON.parse(JSON.stringify(rawProfile.social_media)) : null
+  };
+};
 
 export const useStudentData = (studentId: string | undefined) => {
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
@@ -14,8 +26,9 @@ export const useStudentData = (studentId: string | undefined) => {
         .single();
 
       if (error) throw error;
-      return data;
+      return transformProfile(data as RawProfile);
     },
+    enabled: !!studentId,
   });
 
   const { data: courses = [], isLoading: isLoadingCourses } = useQuery({
@@ -31,6 +44,7 @@ export const useStudentData = (studentId: string | undefined) => {
       if (error) throw error;
       return data;
     },
+    enabled: !!studentId,
   });
 
   const { data: activities = [], isLoading: isLoadingActivities } = useQuery({
@@ -46,6 +60,7 @@ export const useStudentData = (studentId: string | undefined) => {
       if (error) throw error;
       return data;
     },
+    enabled: !!studentId,
   });
 
   const { data: notes = [], isLoading: isLoadingNotes } = useQuery({
@@ -62,6 +77,7 @@ export const useStudentData = (studentId: string | undefined) => {
       if (error) throw error;
       return data;
     },
+    enabled: !!studentId,
   });
 
   const { data: todos = [], isLoading: isLoadingTodos } = useQuery({
@@ -77,6 +93,7 @@ export const useStudentData = (studentId: string | undefined) => {
       if (error) throw error;
       return data;
     },
+    enabled: !!studentId,
   });
 
   const isLoading = isLoadingProfile || isLoadingCourses || isLoadingActivities || isLoadingNotes || isLoadingTodos;

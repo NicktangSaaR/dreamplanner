@@ -21,6 +21,17 @@ export interface Profile {
   is_admin: boolean | null;
 }
 
+interface RawProfile extends Omit<Profile, 'social_media'> {
+  social_media: any;
+}
+
+const transformProfile = (rawProfile: RawProfile): Profile => {
+  return {
+    ...rawProfile,
+    social_media: rawProfile.social_media ? JSON.parse(JSON.stringify(rawProfile.social_media)) : null
+  };
+};
+
 export function useProfile() {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +57,7 @@ export function useProfile() {
       }
 
       console.log("Profile data:", data);
-      return data as Profile | null;
+      return data ? transformProfile(data as RawProfile) : null;
     },
   });
 
@@ -73,7 +84,7 @@ export function useProfile() {
       }
       
       console.log("Profile updated successfully:", data);
-      return data;
+      return transformProfile(data as RawProfile);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
