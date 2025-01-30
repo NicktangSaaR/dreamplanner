@@ -6,6 +6,27 @@ import BulkImportForm from "./todos/BulkImportForm";
 import TodoItem from "./todos/TodoItem";
 import { useCallback, memo } from "react";
 
+// Define the Todo type interface
+interface Todo {
+  id: string;
+  title: string;
+  completed: boolean;
+  starred: boolean;
+  author_id: string;
+  created_at: string;
+  updated_at: string;
+  due_date: string;
+}
+
+// Define props interface for TodoList
+interface TodoListProps {
+  todos: Todo[];
+  onToggleStatus: (id: string, completed: boolean) => Promise<void>;
+  onToggleStarred: (id: string, starred: boolean) => Promise<void>;
+  onUpdate: (id: string, title: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}
+
 // Memoize TodoList component to prevent unnecessary re-renders
 const TodoList = memo(({ 
   todos, 
@@ -13,7 +34,7 @@ const TodoList = memo(({
   onToggleStarred, 
   onUpdate, 
   onDelete 
-}) => (
+}: TodoListProps) => (
   <div className="space-y-2">
     {todos.map((todo) => (
       <TodoItem
