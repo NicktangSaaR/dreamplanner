@@ -23,11 +23,16 @@ export default function ConfigurationForm({ formUrl, sheetUrl, onUpdate }: Confi
     };
 
     try {
+      console.log('Saving configuration:', updates);
+      
       const { error } = await supabase
         .from('client_sheets_config')
         .upsert(updates);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
       toast.success("配置更新成功");
       onUpdate();
