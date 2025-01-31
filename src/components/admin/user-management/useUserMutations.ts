@@ -50,41 +50,41 @@ export const useUserMutations = () => {
       const updates: Promise<void>[] = [];
 
       if (data.full_name) {
-        updates.push(
-          supabase
-            .from('profiles')
-            .update({ full_name: data.full_name })
-            .eq('id', userId)
-            .then(({ error }) => {
-              if (error) throw error;
-            })
-        );
+        const profileUpdate = supabase
+          .from('profiles')
+          .update({ full_name: data.full_name })
+          .eq('id', userId)
+          .then(({ error }) => {
+            if (error) throw error;
+          });
+        updates.push(profileUpdate);
       }
 
       if (data.email) {
         const session = await supabase.auth.getSession();
-        updates.push(
-          new Promise<void>(async (resolve, reject) => {
-            try {
-              const response = await fetch('/functions/v1/update-user-email', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session.data.session?.access_token}`,
-                },
-                body: JSON.stringify({
-                  userId,
-                  newEmail: data.email,
-                }),
-              });
-              const result = await response.json();
-              if (!response.ok) throw new Error(result.error);
+        const emailUpdate = new Promise<void>((resolve, reject) => {
+          fetch('/functions/v1/update-user-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.data.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              userId,
+              newEmail: data.email,
+            }),
+          })
+          .then(async (response) => {
+            const result = await response.json();
+            if (!response.ok) {
+              reject(new Error(result.error));
+            } else {
               resolve();
-            } catch (error) {
-              reject(error);
             }
           })
-        );
+          .catch(reject);
+        });
+        updates.push(emailUpdate);
       }
 
       await Promise.all(updates);
