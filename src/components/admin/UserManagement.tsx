@@ -25,15 +25,13 @@ import { useState } from "react";
 interface EditableUser {
   id: string;
   full_name: string | null;
-  email: string;
 }
 
 const UserManagement = () => {
   const queryClient = useQueryClient();
   const [editingUser, setEditingUser] = useState<EditableUser | null>(null);
-  const [editForm, setEditForm] = useState<{ full_name: string; email: string }>({
+  const [editForm, setEditForm] = useState<{ full_name: string }>({
     full_name: "",
-    email: "",
   });
 
   const { data: users = [], isLoading } = useQuery({
@@ -96,7 +94,6 @@ const UserManagement = () => {
     mutationFn: async ({ userId, data }: { userId: string; data: { full_name?: string } }) => {
       console.log("Updating user details:", userId, data);
       
-      // Update full_name in profiles if provided
       if (data.full_name) {
         const { error: profileError } = await supabase
           .from('profiles')
@@ -130,17 +127,15 @@ const UserManagement = () => {
     setEditingUser({
       id: user.id,
       full_name: user.full_name,
-      email: user.email || "",
     });
     setEditForm({
       full_name: user.full_name || "",
-      email: user.email || "",
     });
   };
 
   const cancelEditing = () => {
     setEditingUser(null);
-    setEditForm({ full_name: "", email: "" });
+    setEditForm({ full_name: "" });
   };
 
   const saveUserDetails = async () => {
