@@ -174,6 +174,8 @@ export type Database = {
           updated_at: string | null
           user_id: string
           video_url: string
+          youtube_video_id: string | null
+          youtube_video_url: string | null
         }
         Insert: {
           created_at?: string | null
@@ -183,6 +185,8 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           video_url: string
+          youtube_video_id?: string | null
+          youtube_video_url?: string | null
         }
         Update: {
           created_at?: string | null
@@ -192,6 +196,8 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           video_url?: string
+          youtube_video_id?: string | null
+          youtube_video_url?: string | null
         }
         Relationships: [
           {
@@ -451,6 +457,39 @@ export type Database = {
           starred?: boolean | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      youtube_credentials: {
+        Row: {
+          access_token: string
+          channel_id: string | null
+          created_at: string | null
+          id: string
+          playlist_id: string | null
+          refresh_token: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          channel_id?: string | null
+          created_at?: string | null
+          id?: string
+          playlist_id?: string | null
+          refresh_token: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          channel_id?: string | null
+          created_at?: string | null
+          id?: string
+          playlist_id?: string | null
+          refresh_token?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
