@@ -18,27 +18,55 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { MoreHorizontal, Trash2 } from "lucide-react";
+import { MoreHorizontal, Trash2, Edit2, Save, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+
+interface EditableUser {
+  id: string;
+  full_name: string | null;
+  email: string;
+}
 
 const UserManagement = () => {
   const queryClient = useQueryClient();
+  const [editingUser, setEditingUser] = useState<EditableUser | null>(null);
+  const [editForm, setEditForm] = useState<{ full_name: string; email: string }>({
+    full_name: "",
+    email: "",
+  });
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
       console.log("Fetching all users...");
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error("Error fetching users:", error);
-        throw error;
+      const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (authError) {
+        console.error("Error fetching auth users:", authError);
+        throw authError;
       }
 
-      console.log("Fetched users:", profiles);
-      return profiles;
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*');
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        throw profilesError;
+      }
+
+      // Combine auth users with profiles
+      const combinedUsers = authUsers.map(authUser => {
+        const profile = profiles.find(p => p.id === authUser.id);
+        return {
+          ...profile,
+          email: authUser.email,
+        };
+      });
+
+      console.log("Fetched users:", combinedUsers);
+      return combinedUsers;
     },
   });
 
@@ -58,7 +86,7 @@ const UserManagement = () => {
     },
   });
 
-  const updateUserTypeMutation = useMutation({
+  const updateUserMutation = useMutation({
     mutationFn: async ({ userId, newType }: { userId: string; newType: string }) => {
       console.log("Updating user type:", userId, newType);
       const { error } = await supabase
@@ -77,6 +105,39 @@ const UserManagement = () => {
     },
   });
 
+  const updateUserDetailsMutation = useMutation({
+    mutationFn: async ({ userId, data }: { userId: string; data: { full_name?: string; email?: string } }) => {
+      console.log("Updating user details:", userId, data);
+      
+      // Update email in auth.users if email is provided
+      if (data.email) {
+        const { error: authError } = await supabase.auth.admin.updateUserById(
+          userId,
+          { email: data.email }
+        );
+        if (authError) throw authError;
+      }
+
+      // Update full_name in profiles if provided
+      if (data.full_name) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ full_name: data.full_name })
+          .eq('id', userId);
+        if (profileError) throw profileError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setEditingUser(null);
+      toast.success("用户信息已更新");
+    },
+    onError: (error) => {
+      console.error("Error updating user details:", error);
+      toast.error("更新用户信息失败");
+    },
+  });
+
   const handleDeleteUser = async (userId: string) => {
     if (window.confirm("确定要删除这个用户吗？此操作不可撤销。")) {
       await deleteUserMutation.mutateAsync(userId);
@@ -84,7 +145,45 @@ const UserManagement = () => {
   };
 
   const handleUpdateUserType = async (userId: string, newType: string) => {
-    await updateUserTypeMutation.mutateAsync({ userId, newType });
+    await updateUserMutation.mutateAsync({ userId, newType });
+  };
+
+  const startEditing = (user: any) => {
+    setEditingUser({
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+    });
+    setEditForm({
+      full_name: user.full_name || "",
+      email: user.email || "",
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingUser(null);
+    setEditForm({ full_name: "", email: "" });
+  };
+
+  const saveUserDetails = async () => {
+    if (!editingUser) return;
+
+    const updates: { full_name?: string; email?: string } = {};
+    if (editForm.full_name !== editingUser.full_name) {
+      updates.full_name = editForm.full_name;
+    }
+    if (editForm.email !== editingUser.email) {
+      updates.email = editForm.email;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await updateUserDetailsMutation.mutateAsync({
+        userId: editingUser.id,
+        data: updates,
+      });
+    } else {
+      cancelEditing();
+    }
   };
 
   if (isLoading) {
@@ -102,6 +201,7 @@ const UserManagement = () => {
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>School</TableHead>
             <TableHead>Joined</TableHead>
@@ -111,7 +211,29 @@ const UserManagement = () => {
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id}>
-              <TableCell>{user.full_name || 'N/A'}</TableCell>
+              <TableCell>
+                {editingUser?.id === user.id ? (
+                  <Input
+                    value={editForm.full_name}
+                    onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                    className="w-full"
+                  />
+                ) : (
+                  user.full_name || 'N/A'
+                )}
+              </TableCell>
+              <TableCell>
+                {editingUser?.id === user.id ? (
+                  <Input
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    className="w-full"
+                    type="email"
+                  />
+                ) : (
+                  user.email
+                )}
+              </TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -137,13 +259,43 @@ const UserManagement = () => {
                 {format(new Date(user.created_at), 'MMM d, yyyy')}
               </TableCell>
               <TableCell>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteUser(user.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  {editingUser?.id === user.id ? (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={saveUserDetails}
+                      >
+                        <Save className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={cancelEditing}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => startEditing(user)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteUser(user.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}
