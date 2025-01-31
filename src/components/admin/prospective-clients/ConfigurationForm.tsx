@@ -3,6 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface ConfigurationFormProps {
   formUrl: string;
@@ -15,10 +17,9 @@ export default function ConfigurationForm({ formUrl, sheetUrl, onUpdate }: Confi
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    // Explicitly cast FormDataEntryValue to string since we know these are text inputs
     const updates = {
-      form_url: formData.get('form_url') as string,
-      sheet_url: formData.get('sheet_url') as string,
+      form_url: (formData.get('form_url') as string) || '',
+      sheet_url: (formData.get('sheet_url') as string) || '',
     };
 
     try {
@@ -28,37 +29,48 @@ export default function ConfigurationForm({ formUrl, sheetUrl, onUpdate }: Confi
 
       if (error) throw error;
       
-      toast.success("Configuration updated successfully");
+      toast.success("配置更新成功");
       onUpdate();
     } catch (error) {
       console.error('Error updating configuration:', error);
-      toast.error("Failed to update configuration");
+      toast.error("配置更新失败");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="form_url">Form URL</Label>
-        <Input
-          id="form_url"
-          name="form_url"
-          defaultValue={formUrl}
-          placeholder="Enter the form URL"
-        />
-      </div>
+    <div className="space-y-6">
+      {!formUrl && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            请先设置表单链接，然后才能生成分享链接
+          </AlertDescription>
+        </Alert>
+      )}
       
-      <div className="space-y-2">
-        <Label htmlFor="sheet_url">Sheet URL</Label>
-        <Input
-          id="sheet_url"
-          name="sheet_url"
-          defaultValue={sheetUrl}
-          placeholder="Enter the sheet URL"
-        />
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="form_url">表单链接</Label>
+          <Input
+            id="form_url"
+            name="form_url"
+            defaultValue={formUrl}
+            placeholder="请输入 Google 表单链接"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="sheet_url">表格链接</Label>
+          <Input
+            id="sheet_url"
+            name="sheet_url"
+            defaultValue={sheetUrl}
+            placeholder="请输入 Google 表格链接"
+          />
+        </div>
 
-      <Button type="submit">Save Configuration</Button>
-    </form>
+        <Button type="submit">保存配置</Button>
+      </form>
+    </div>
   );
 }
