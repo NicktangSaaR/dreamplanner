@@ -394,60 +394,6 @@ export type Database = {
         }
         Relationships: []
       }
-      prospective_leads: {
-        Row: {
-          awards: string[] | null
-          class_rank: string | null
-          created_at: string | null
-          current_courses: string[] | null
-          extracurricular_activities: string[] | null
-          gpa: number | null
-          grade: string
-          id: string
-          interested_colleges: string[] | null
-          interested_majors: string[] | null
-          questions: string | null
-          school: string
-          student_name: string
-          transcript_url: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          awards?: string[] | null
-          class_rank?: string | null
-          created_at?: string | null
-          current_courses?: string[] | null
-          extracurricular_activities?: string[] | null
-          gpa?: number | null
-          grade: string
-          id?: string
-          interested_colleges?: string[] | null
-          interested_majors?: string[] | null
-          questions?: string | null
-          school: string
-          student_name: string
-          transcript_url?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          awards?: string[] | null
-          class_rank?: string | null
-          created_at?: string | null
-          current_courses?: string[] | null
-          extracurricular_activities?: string[] | null
-          gpa?: number | null
-          grade?: string
-          id?: string
-          interested_colleges?: string[] | null
-          interested_majors?: string[] | null
-          questions?: string | null
-          school?: string
-          student_name?: string
-          transcript_url?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       shared_folders: {
         Row: {
           created_at: string | null

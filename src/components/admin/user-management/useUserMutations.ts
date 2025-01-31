@@ -51,23 +51,20 @@ export const useUserMutations = () => {
 
       if (data.full_name) {
         updates.push(
-          new Promise<void>((resolve, reject) => {
-            supabase
-              .from('profiles')
-              .update({ full_name: data.full_name })
-              .eq('id', userId)
-              .then(({ error }) => {
-                if (error) reject(error);
-                else resolve();
-              });
-          })
+          supabase
+            .from('profiles')
+            .update({ full_name: data.full_name })
+            .eq('id', userId)
+            .then(({ error }) => {
+              if (error) throw error;
+            })
         );
       }
 
       if (data.email) {
         const session = await supabase.auth.getSession();
         updates.push(
-          new Promise<void>((resolve, reject) => {
+          Promise.resolve(
             fetch('/functions/v1/update-user-email', {
               method: 'POST',
               headers: {
@@ -78,14 +75,12 @@ export const useUserMutations = () => {
                 userId,
                 newEmail: data.email,
               }),
-            })
-            .then(async (response) => {
+            }).then(async (response) => {
               const result = await response.json();
-              if (!response.ok) reject(new Error(result.error));
-              else resolve();
+              if (!response.ok) throw new Error(result.error);
+              return result;
             })
-            .catch(reject);
-          })
+          )
         );
       }
 

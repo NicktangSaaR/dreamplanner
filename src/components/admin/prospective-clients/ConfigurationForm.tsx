@@ -1,91 +1,112 @@
+import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { SheetsConfig } from "../types";
 
 interface ConfigurationFormProps {
-  formUrl: string;
-  sheetUrl: string;
-  onUpdate: () => void;
+  config: SheetsConfig | null;
 }
 
-export default function ConfigurationForm({ formUrl, sheetUrl, onUpdate }: ConfigurationFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function ConfigurationForm({ config }: ConfigurationFormProps) {
+  const [sheetUrl, setSheetUrl] = useState("");
+  const [formUrl, setFormUrl] = useState("");
+  const queryClient = useQueryClient();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const formData = new FormData(e.currentTarget);
-      const updates = {
-        form_url: (formData.get('form_url') as string)?.trim() || '',
-        sheet_url: (formData.get('sheet_url') as string)?.trim() || '',
-      };
-
-      console.log('Saving configuration:', updates);
-      
-      const { error } = await supabase
-        .from('client_sheets_config')
-        .upsert(updates);
+  const updateConfig = useMutation({
+    mutationFn: async (newConfig: { sheet_url: string; form_url: string }) => {
+      console.log("Updating sheets configuration...", newConfig);
+      const { data, error } = await supabase
+        .from("client_sheets_config")
+        .upsert(
+          {
+            sheet_url: newConfig.sheet_url,
+            form_url: newConfig.form_url,
+            ...(config?.id ? { id: config.id } : {}),
+          },
+          { onConflict: "id" }
+        )
+        .select()
+        .single();
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error("Error updating config:", error);
         throw error;
       }
-      
-      toast.success("配置更新成功");
-      onUpdate();
-    } catch (error) {
-      console.error('Error updating configuration:', error);
-      toast.error("配置更新失败");
-    } finally {
-      setIsSubmitting(false);
+
+      console.log("Config updated successfully:", data);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("配置已更新");
+      queryClient.invalidateQueries({ queryKey: ["sheetsConfig"] });
+    },
+    onError: (error) => {
+      console.error("Mutation error:", error);
+      toast.error("更新配置失败");
+    },
+  });
+
+  useEffect(() => {
+    if (config) {
+      setSheetUrl(config.sheet_url);
+      setFormUrl(config.form_url);
     }
+  }, [config]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateConfig.mutate({ sheet_url: sheetUrl, form_url: formUrl });
   };
 
   return (
-    <div className="space-y-6">
-      {!formUrl && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            请先设置表单链接，然后才能生成分享链接
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="form_url">表单链接</Label>
-          <Input
-            id="form_url"
-            name="form_url"
-            defaultValue={formUrl}
-            placeholder="请输入 Google 表单链接"
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="sheet_url">表格链接</Label>
-          <Input
-            id="sheet_url"
-            name="sheet_url"
-            defaultValue={sheetUrl}
-            placeholder="请输入 Google 表格链接"
-            required
-          />
-        </div>
-
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "保存中..." : "保存配置"}
-        </Button>
-      </form>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Prospective Client Management</CardTitle>
+        <CardDescription>
+          Configure Google Sheets integration for prospective client management
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="sheet-url" className="text-sm font-medium">
+              Google Sheet URL
+            </label>
+            <Input
+              id="sheet-url"
+              value={sheetUrl}
+              onChange={(e) => setSheetUrl(e.target.value)}
+              placeholder="Enter Google Sheet URL"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="form-url" className="text-sm font-medium">
+              Google Form URL
+            </label>
+            <Input
+              id="form-url"
+              value={formUrl}
+              onChange={(e) => setFormUrl(e.target.value)}
+              placeholder="Enter Google Form URL"
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full">
+            Save Configuration
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
