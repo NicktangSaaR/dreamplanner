@@ -3,14 +3,20 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export const useVideoRecording = (selectedQuestionId?: string) => {
+export const useVideoRecording = (
+  selectedQuestionId?: string,
+  questionTitle?: string,
+  bankTitle?: string
+) => {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
 
   const saveRecording = async (recordedVideoUrl: string) => {
     console.log("Starting to save recording...", {
       videoUrl: recordedVideoUrl,
-      questionId: selectedQuestionId
+      questionId: selectedQuestionId,
+      questionTitle,
+      bankTitle
     });
     
     setIsSaving(true);

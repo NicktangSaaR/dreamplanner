@@ -78,6 +78,13 @@ const InterviewContent = ({
   const isRecording = stage === InterviewStage.RESPONSE;
   const showVideoPreview = stage !== InterviewStage.SETTINGS && stage !== InterviewStage.READY;
 
+  // Get the bank title from the selected question
+  const getBankTitle = () => {
+    if (!selectedQuestion) return undefined;
+    const bankQuestion = selectedQuestion.mock_interview_bank_questions?.[0];
+    return bankQuestion ? bankQuestion.title : selectedQuestion.title;
+  };
+
   return (
     <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
       {stage === InterviewStage.SETTINGS ? (
@@ -151,6 +158,8 @@ const InterviewContent = ({
               onStartNew={onStartNew}
               selectedQuestionId={selectedQuestion.id}
               isRecording={isRecording}
+              questionTitle={selectedQuestion.title}
+              bankTitle={getBankTitle()}
             />
           )}
         </>

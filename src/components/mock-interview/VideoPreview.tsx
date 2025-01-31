@@ -14,6 +14,8 @@ interface VideoPreviewProps {
   onStartNew: () => void;
   selectedQuestionId?: string;
   isRecording: boolean;
+  questionTitle?: string;
+  bankTitle?: string;
 }
 
 const VideoPreview = ({
@@ -22,9 +24,11 @@ const VideoPreview = ({
   onStopRecording,
   onStartNew,
   selectedQuestionId,
-  isRecording
+  isRecording,
+  questionTitle,
+  bankTitle
 }: VideoPreviewProps) => {
-  const { isSaving, saveRecording } = useVideoRecording(selectedQuestionId);
+  const { isSaving, saveRecording } = useVideoRecording(selectedQuestionId, questionTitle, bankTitle);
   const {
     stream,
     setStream,
@@ -48,7 +52,10 @@ const VideoPreview = ({
   };
 
   const handleStopRecording = async () => {
-    console.log("Stopping recording and saving video...");
+    console.log("Stopping recording and saving video...", {
+      questionTitle,
+      bankTitle
+    });
     
     try {
       cleanupMediaStream();
