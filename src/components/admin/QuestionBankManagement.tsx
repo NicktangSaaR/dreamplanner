@@ -45,12 +45,31 @@ const QuestionBankManagement = () => {
 
   const deleteQuestion = useMutation({
     mutationFn: async (questionId: string) => {
+      console.log("Attempting to delete question bank:", questionId);
+      
+      // First delete all bank questions
+      const { error: bankQuestionsError } = await supabase
+        .from('mock_interview_bank_questions')
+        .delete()
+        .eq('bank_id', questionId);
+
+      if (bankQuestionsError) {
+        console.error("Error deleting bank questions:", bankQuestionsError);
+        throw bankQuestionsError;
+      }
+
+      // Then delete the question bank
       const { error } = await supabase
         .from('mock_interview_questions')
         .delete()
         .eq('id', questionId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting question bank:", error);
+        throw error;
+      }
+
+      console.log("Successfully deleted question bank and its questions");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-question-banks'] });
@@ -68,7 +87,7 @@ const QuestionBankManagement = () => {
   };
 
   const handleDelete = async (questionId: string) => {
-    if (window.confirm("Are you sure you want to delete this question bank?")) {
+    if (window.confirm("Are you sure you want to delete this question bank? This will also delete all questions in this bank.")) {
       deleteQuestion.mutate(questionId);
     }
   };
