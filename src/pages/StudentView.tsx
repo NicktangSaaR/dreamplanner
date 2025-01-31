@@ -7,6 +7,7 @@ import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StudentViewContent from "@/components/college-planning/student-view/StudentViewContent";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import { useStudentRealtime } from "@/hooks/student/useStudentRealtime";
+import { toast } from "sonner";
 
 export default function StudentView() {
   const { studentId } = useParams();
@@ -18,9 +19,32 @@ export default function StudentView() {
   // Check authentication state
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log("No active session, redirecting to login");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.log("No active session, redirecting to login");
+          toast.error("Please log in to continue");
+          navigate('/login');
+          return;
+        }
+
+        // Set up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          console.log("Auth state changed:", event);
+          if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
+            console.log("User signed out or token refresh failed");
+            toast.error("Session expired. Please log in again");
+            navigate('/login');
+          }
+        });
+
+        // Cleanup subscription
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        toast.error("Authentication error. Please try logging in again");
         navigate('/login');
       }
     };

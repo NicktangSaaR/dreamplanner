@@ -6,30 +6,63 @@ import StudentCard from "@/components/college-planning/StudentCard";
 import InviteStudentDialog from "@/components/college-planning/InviteStudentDialog";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function CounselorDashboard() {
   const navigate = useNavigate();
   const { data: students = [], isLoading, refetch } = useCounselorStudents();
   const [counselorId, setCounselorId] = useState('');
-  const [showInviteStudent, setShowInviteStudent] = useState(false);
 
   useEffect(() => {
-    const fetchCounselorId = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCounselorId(user.id);
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.log("No active session, redirecting to login");
+          toast.error("Please log in to continue");
+          navigate('/login');
+          return;
+        }
+
+        setCounselorId(session.user.id);
+
+        // Set up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          console.log("Auth state changed:", event);
+          if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
+            console.log("User signed out or token refresh failed");
+            toast.error("Session expired. Please log in again");
+            navigate('/login');
+          }
+        });
+
+        // Cleanup subscription
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        toast.error("Authentication error. Please try logging in again");
+        navigate('/login');
       }
     };
-    fetchCounselorId();
-  }, []);
+    
+    checkAuth();
+  }, [navigate]);
 
   const handleStudentClick = (studentId: string) => {
     navigate(`/counselor-dashboard/student/${studentId}`);
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+      navigate('/');
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast.error("Failed to log out");
+    }
   };
 
   if (isLoading) {
