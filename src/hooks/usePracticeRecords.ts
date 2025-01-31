@@ -8,7 +8,10 @@ interface PracticeRecord {
   practice_date: string;
   mock_interview_questions: {
     title: string;
-  };
+    mock_interview_bank_questions?: {
+      title: string;
+    }[];
+  } | null;
 }
 
 export const usePracticeRecords = () => {
@@ -32,7 +35,10 @@ export const usePracticeRecords = () => {
           video_url,
           practice_date,
           mock_interview_questions (
-            title
+            title,
+            mock_interview_bank_questions (
+              title
+            )
           )
         `)
         .eq('user_id', session.user.id)

@@ -37,7 +37,7 @@ const PracticeRecords = () => {
         {records?.map((record) => (
           <RecordItem
             key={record.id}
-            title={record.mock_interview_questions?.title}
+            title={record.mock_interview_questions?.title || "未知题目"}
             date={record.practice_date}
             onPlay={() => setSelectedVideo(record.video_url)}
             onDelete={() => {
