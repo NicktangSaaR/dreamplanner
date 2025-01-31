@@ -6,7 +6,6 @@ import QuestionBankSelect from "./question-bank/QuestionBankSelect";
 import PracticeModeSettings from "./settings/PracticeModeSettings";
 import { DEVICE_SETTINGS_KEY } from "./constants";
 import { toast } from "sonner";
-import BulkQuestionImport from "./question-bank/BulkQuestionImport";
 
 interface InterviewSettingsProps {
   settings: Settings;
@@ -78,7 +77,6 @@ const InterviewSettings = ({
             numberOfQuestions: num
           })}
         />
-        <BulkQuestionImport />
         <Button
           onClick={handleStartInterview}
           className="w-full"
