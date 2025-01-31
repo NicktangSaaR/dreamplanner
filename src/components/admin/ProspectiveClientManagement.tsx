@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import QuickAccessCards from "./prospective-clients/QuickAccessCards";
 import ConfigurationForm from "./prospective-clients/ConfigurationForm";
+import GenerateFormLinkDialog from "./prospective-clients/GenerateFormLinkDialog";
 import { Button } from "@/components/ui/button";
 import { Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -124,10 +125,13 @@ export default function ProspectiveClientManagement() {
 
   return (
     <div className="space-y-6">
-      <QuickAccessCards
-        totalLeads={leads.length}
-        totalDownloads={leads.filter(l => l.transcript_url).length}
-      />
+      <div className="flex justify-between items-center">
+        <QuickAccessCards
+          totalLeads={leads.length}
+          totalDownloads={leads.filter(l => l.transcript_url).length}
+        />
+        <GenerateFormLinkDialog formUrl={config.form_url} />
+      </div>
 
       <Card>
         <CardHeader>
