@@ -12,7 +12,8 @@ export default function ProspectiveClientManagement() {
       const { data, error } = await supabase
         .from("client_sheets_config")
         .select("*")
-        .maybeSingle();
+        .limit(1)
+        .single();
 
       if (error) {
         console.error("Error fetching config:", error);
@@ -20,7 +21,7 @@ export default function ProspectiveClientManagement() {
       }
 
       console.log("Fetched config:", data);
-      return data as SheetsConfig | null;
+      return data as SheetsConfig;
     },
   });
 

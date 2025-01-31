@@ -20,31 +20,37 @@ interface ConfigurationFormProps {
 export default function ConfigurationForm({ config }: ConfigurationFormProps) {
   const [sheetUrl, setSheetUrl] = useState("");
   const [formUrl, setFormUrl] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
   const updateConfig = useMutation({
     mutationFn: async (newConfig: { sheet_url: string; form_url: string }) => {
       console.log("Updating sheets configuration...", newConfig);
-      const { data, error } = await supabase
-        .from("client_sheets_config")
-        .upsert(
-          {
-            sheet_url: newConfig.sheet_url,
-            form_url: newConfig.form_url,
-            ...(config?.id ? { id: config.id } : {}),
-          },
-          { onConflict: "id" }
-        )
-        .select()
-        .single();
+      setIsSubmitting(true);
+      try {
+        const { data, error } = await supabase
+          .from("client_sheets_config")
+          .upsert(
+            {
+              sheet_url: newConfig.sheet_url.trim(),
+              form_url: newConfig.form_url.trim(),
+              ...(config?.id ? { id: config.id } : {}),
+            },
+            { onConflict: "id" }
+          )
+          .select()
+          .single();
 
-      if (error) {
-        console.error("Error updating config:", error);
-        throw error;
+        if (error) {
+          console.error("Error updating config:", error);
+          throw error;
+        }
+
+        console.log("Config updated successfully:", data);
+        return data;
+      } finally {
+        setIsSubmitting(false);
       }
-
-      console.log("Config updated successfully:", data);
-      return data;
     },
     onSuccess: () => {
       toast.success("配置已更新");
@@ -65,6 +71,10 @@ export default function ConfigurationForm({ config }: ConfigurationFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!sheetUrl.trim() || !formUrl.trim()) {
+      toast.error("请填写所有必填字段");
+      return;
+    }
     updateConfig.mutate({ sheet_url: sheetUrl, form_url: formUrl });
   };
 
@@ -88,6 +98,7 @@ export default function ConfigurationForm({ config }: ConfigurationFormProps) {
               onChange={(e) => setSheetUrl(e.target.value)}
               placeholder="Enter Google Sheet URL"
               required
+              disabled={isSubmitting}
             />
           </div>
           <div className="space-y-2">
@@ -100,10 +111,11 @@ export default function ConfigurationForm({ config }: ConfigurationFormProps) {
               onChange={(e) => setFormUrl(e.target.value)}
               placeholder="Enter Google Form URL"
               required
+              disabled={isSubmitting}
             />
           </div>
-          <Button type="submit" className="w-full">
-            Save Configuration
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save Configuration"}
           </Button>
         </form>
       </CardContent>
