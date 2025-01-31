@@ -47,7 +47,7 @@ export const useUserMutations = () => {
     mutationFn: async ({ userId, data }: { userId: string; data: { full_name?: string; email?: string } }) => {
       console.log("Updating user details:", userId, data);
       
-      const updates: Promise<any>[] = [];
+      const updates: Promise<void>[] = [];
 
       if (data.full_name) {
         updates.push(
@@ -64,23 +64,26 @@ export const useUserMutations = () => {
       if (data.email) {
         const session = await supabase.auth.getSession();
         updates.push(
-          Promise.resolve(
-            fetch('/functions/v1/update-user-email', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.data.session?.access_token}`,
-              },
-              body: JSON.stringify({
-                userId,
-                newEmail: data.email,
-              }),
-            }).then(async (response) => {
+          new Promise<void>(async (resolve, reject) => {
+            try {
+              const response = await fetch('/functions/v1/update-user-email', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.data.session?.access_token}`,
+                },
+                body: JSON.stringify({
+                  userId,
+                  newEmail: data.email,
+                }),
+              });
               const result = await response.json();
               if (!response.ok) throw new Error(result.error);
-              return result;
-            })
-          )
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          })
         );
       }
 
