@@ -50,13 +50,17 @@ export const useUserMutations = () => {
       const updates: Promise<void>[] = [];
 
       if (data.full_name) {
-        const profileUpdate = supabase
-          .from('profiles')
-          .update({ full_name: data.full_name })
-          .eq('id', userId)
-          .then(({ error }) => {
-            if (error) throw error;
-          });
+        const profileUpdate = new Promise<void>((resolve, reject) => {
+          supabase
+            .from('profiles')
+            .update({ full_name: data.full_name })
+            .eq('id', userId)
+            .then(({ error }) => {
+              if (error) reject(error);
+              else resolve();
+            })
+            .catch(reject);
+        });
         updates.push(profileUpdate);
       }
 
