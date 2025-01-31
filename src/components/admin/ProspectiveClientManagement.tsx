@@ -13,7 +13,7 @@ export default function ProspectiveClientManagement() {
         .from("client_sheets_config")
         .select("*")
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching config:", error);
@@ -21,7 +21,7 @@ export default function ProspectiveClientManagement() {
       }
 
       console.log("Fetched config:", data);
-      return data as SheetsConfig;
+      return data as SheetsConfig | null;
     },
   });
 
