@@ -1,37 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { MoreHorizontal, Trash2, Edit2, Save, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { UserTable } from "./user-management/UserTable";
 
 interface EditableUser {
   id: string;
   full_name: string | null;
+  email: string;
 }
 
 const UserManagement = () => {
   const queryClient = useQueryClient();
   const [editingUser, setEditingUser] = useState<EditableUser | null>(null);
-  const [editForm, setEditForm] = useState<{ full_name: string }>({
+  const [editForm, setEditForm] = useState<{ full_name: string; email: string }>({
     full_name: "",
+    email: "",
   });
 
   const { data: users = [], isLoading } = useQuery({
@@ -91,16 +76,44 @@ const UserManagement = () => {
   });
 
   const updateUserDetailsMutation = useMutation({
-    mutationFn: async ({ userId, data }: { userId: string; data: { full_name?: string } }) => {
+    mutationFn: async ({ userId, data }: { userId: string; data: { full_name?: string; email?: string } }) => {
       console.log("Updating user details:", userId, data);
       
+      const updates: Promise<any>[] = [];
+
       if (data.full_name) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ full_name: data.full_name })
-          .eq('id', userId);
-        if (profileError) throw profileError;
+        updates.push(
+          supabase
+            .from('profiles')
+            .update({ full_name: data.full_name })
+            .eq('id', userId)
+            .then(({ error }) => {
+              if (error) throw error;
+            })
+        );
       }
+
+      if (data.email) {
+        updates.push(
+          fetch('/functions/v1/update-user-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              userId,
+              newEmail: data.email,
+            }),
+          }).then(async (response) => {
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error);
+            return result;
+          })
+        );
+      }
+
+      await Promise.all(updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
@@ -127,23 +140,28 @@ const UserManagement = () => {
     setEditingUser({
       id: user.id,
       full_name: user.full_name,
+      email: user.email || "",
     });
     setEditForm({
       full_name: user.full_name || "",
+      email: user.email || "",
     });
   };
 
   const cancelEditing = () => {
     setEditingUser(null);
-    setEditForm({ full_name: "" });
+    setEditForm({ full_name: "", email: "" });
   };
 
   const saveUserDetails = async () => {
     if (!editingUser) return;
 
-    const updates: { full_name?: string } = {};
+    const updates: { full_name?: string; email?: string } = {};
     if (editForm.full_name !== editingUser.full_name) {
       updates.full_name = editForm.full_name;
+    }
+    if (editForm.email !== editingUser.email) {
+      updates.email = editForm.email;
     }
 
     if (Object.keys(updates).length > 0) {
@@ -154,6 +172,10 @@ const UserManagement = () => {
     } else {
       cancelEditing();
     }
+  };
+
+  const handleFormChange = (field: string, value: string) => {
+    setEditForm(prev => ({ ...prev, [field]: value }));
   };
 
   if (isLoading) {
@@ -167,97 +189,17 @@ const UserManagement = () => {
         <Badge variant="secondary">{users.length} Users</Badge>
       </div>
       
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>School</TableHead>
-            <TableHead>Joined</TableHead>
-            <TableHead className="w-[100px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>
-                {editingUser?.id === user.id ? (
-                  <Input
-                    value={editForm.full_name}
-                    onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                    className="w-full"
-                  />
-                ) : (
-                  user.full_name || 'N/A'
-                )}
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      {user.user_type}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => handleUpdateUserType(user.id, 'student')}>
-                      student
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleUpdateUserType(user.id, 'counselor')}>
-                      counselor
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleUpdateUserType(user.id, 'admin')}>
-                      admin
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              <TableCell>{user.school || 'N/A'}</TableCell>
-              <TableCell>
-                {format(new Date(user.created_at), 'MMM d, yyyy')}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {editingUser?.id === user.id ? (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={saveUserDetails}
-                      >
-                        <Save className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={cancelEditing}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => startEditing(user)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteUser(user.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <UserTable
+        users={users}
+        editingUser={editingUser}
+        editForm={editForm}
+        onEdit={startEditing}
+        onSave={saveUserDetails}
+        onCancel={cancelEditing}
+        onDelete={handleDeleteUser}
+        onUpdateType={handleUpdateUserType}
+        onFormChange={handleFormChange}
+      />
     </div>
   );
 };
