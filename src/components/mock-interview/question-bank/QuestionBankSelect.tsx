@@ -10,6 +10,10 @@ import {
 } from "@/components/ui/select";
 import { Question } from "../types";
 import QuestionBankDialog from "./QuestionBankDialog";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface QuestionBankSelectProps {
   selectedQuestionId: string | null;
@@ -20,7 +24,10 @@ const QuestionBankSelect = ({
   selectedQuestionId,
   onQuestionSelect,
 }: QuestionBankSelectProps) => {
-  const { data: questions = [], isLoading } = useQuery({
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [questionToEdit, setQuestionToEdit] = useState<Question | null>(null);
+
+  const { data: questions = [], isLoading, refetch } = useQuery({
     queryKey: ['interview-questions'],
     queryFn: async () => {
       console.log("Fetching question banks...");
@@ -33,6 +40,7 @@ const QuestionBankSelect = ({
           preparation_time,
           response_time,
           is_system,
+          created_by,
           mock_interview_bank_questions (
             id,
             title,
@@ -51,12 +59,45 @@ const QuestionBankSelect = ({
     },
   });
 
+  const handleEdit = (question: Question) => {
+    setQuestionToEdit(question);
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (questionId: string) => {
+    if (!window.confirm("Are you sure you want to delete this question bank?")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('mock_interview_questions')
+        .delete()
+        .eq('id', questionId);
+
+      if (error) throw error;
+
+      toast.success("Question bank deleted successfully");
+      refetch();
+      
+      // If the deleted question was selected, clear the selection
+      if (selectedQuestionId === questionId) {
+        onQuestionSelect('');
+      }
+    } catch (error) {
+      console.error("Error deleting question bank:", error);
+      toast.error("Failed to delete question bank");
+    }
+  };
+
   const systemQuestions = questions.filter(q => q.is_system);
   const customQuestions = questions.filter(q => !q.is_system);
 
   if (isLoading) {
     return <div>Loading question banks...</div>;
   }
+
+  const currentUser = supabase.auth.getUser();
 
   return (
     <div className="space-y-4">
@@ -88,16 +129,51 @@ const QuestionBankSelect = ({
                   Custom Questions
                 </div>
                 {customQuestions.map((question) => (
-                  <SelectItem key={question.id} value={question.id}>
-                    {question.title} ({question.mock_interview_bank_questions?.length || 0} questions)
-                  </SelectItem>
+                  <div key={question.id} className="flex items-center justify-between px-2">
+                    <SelectItem value={question.id}>
+                      {question.title} ({question.mock_interview_bank_questions?.length || 0} questions)
+                    </SelectItem>
+                    {question.created_by === currentUser.data.user?.id && (
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleEdit(question);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleDelete(question.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
           </div>
         </SelectContent>
       </Select>
-      <QuestionBankDialog />
+      <QuestionBankDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        questionToEdit={questionToEdit}
+        onClose={() => {
+          setIsDialogOpen(false);
+          setQuestionToEdit(null);
+          refetch();
+        }}
+      />
     </div>
   );
 };

@@ -1,28 +1,32 @@
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Question } from "../types";
 import QuestionBankForm from "./QuestionBankForm";
 
-const QuestionBankDialog = () => {
+interface QuestionBankDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  questionToEdit: Question | null;
+  onClose: () => void;
+}
+
+const QuestionBankDialog = ({
+  open,
+  onOpenChange,
+  questionToEdit,
+  onClose,
+}: QuestionBankDialogProps) => {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="w-full">
-          <Plus className="w-4 h-4 mr-2" />
-          Create Question Bank
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Question Bank</DialogTitle>
+          <DialogTitle>
+            {questionToEdit ? "Edit Question Bank" : "Create Question Bank"}
+          </DialogTitle>
         </DialogHeader>
-        <QuestionBankForm />
+        <QuestionBankForm
+          questionToEdit={questionToEdit}
+          onClose={onClose}
+        />
       </DialogContent>
     </Dialog>
   );
