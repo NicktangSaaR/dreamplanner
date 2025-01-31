@@ -96,7 +96,7 @@ const UserManagement = () => {
       if (data.email) {
         const session = await supabase.auth.getSession();
         updates.push(
-          new Promise((resolve, reject) => {
+          new Promise<any>((resolve, reject) => {
             fetch('/functions/v1/update-user-email', {
               method: 'POST',
               headers: {
