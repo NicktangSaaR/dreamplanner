@@ -12,7 +12,7 @@ import {
 import QuickAccessCards from "./prospective-clients/QuickAccessCards";
 import ConfigurationForm from "./prospective-clients/ConfigurationForm";
 import { Button } from "@/components/ui/button";
-import { Download, Eye, Trash2 } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Lead {
@@ -55,10 +55,15 @@ export default function ProspectiveClientManagement() {
       const { data, error } = await supabase
         .from('client_sheets_config')
         .select('*')
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
-      if (data) setConfig(data);
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+      
+      if (data) {
+        setConfig(data);
+      }
     } catch (error) {
       console.error('Error fetching config:', error);
       toast.error("Failed to fetch configuration");
