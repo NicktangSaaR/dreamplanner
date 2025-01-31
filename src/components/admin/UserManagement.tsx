@@ -94,12 +94,13 @@ const UserManagement = () => {
       }
 
       if (data.email) {
+        const session = await supabase.auth.getSession();
         updates.push(
           fetch('/functions/v1/update-user-email', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+              'Authorization': `Bearer ${session.data.session?.access_token}`,
             },
             body: JSON.stringify({
               userId,
