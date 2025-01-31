@@ -1,33 +1,16 @@
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Question } from "../types";
+import { Question } from "./types";
 import { useEffect } from "react";
-import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-const formSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  questions: z.string().min(1, "At least one question is required"),
-  preparation_time: z.number().min(30, "Minimum preparation time is 30 seconds"),
-  response_time: z.number().min(60, "Minimum response time is 60 seconds"),
-});
-
-type FormData = z.infer<typeof formSchema>;
+import { formSchema, FormData } from "./types";
+import BasicInfoTab from "./form/BasicInfoTab";
+import QuestionsTab from "./form/QuestionsTab";
 
 interface QuestionBankFormProps {
   questionToEdit: Question | null;
@@ -66,7 +49,6 @@ const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) =>
       console.log("Submitting question bank with values:", values);
       
       if (questionToEdit) {
-        // Update existing question bank
         const { error: updateError } = await supabase
           .from('mock_interview_questions')
           .update({
@@ -79,7 +61,6 @@ const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) =>
 
         if (updateError) throw updateError;
 
-        // Delete existing questions
         const { error: deleteError } = await supabase
           .from('mock_interview_bank_questions')
           .delete()
@@ -88,7 +69,6 @@ const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) =>
         if (deleteError) throw deleteError;
       }
 
-      // Create new question bank or add questions to edited bank
       const bankId = questionToEdit?.id;
       
       if (!bankId) {
@@ -107,7 +87,6 @@ const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) =>
         if (bankError) throw bankError;
         
         if (bankData) {
-          // Add questions
           const questionList = values.questions
             .split("\n")
             .map(q => q.trim())
@@ -125,7 +104,6 @@ const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) =>
           if (questionsError) throw questionsError;
         }
       } else {
-        // Add new questions to edited bank
         const questionList = values.questions
           .split("\n")
           .map(q => q.trim())
@@ -168,87 +146,12 @@ const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) =>
             <TabsTrigger value="questions">Questions</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="basic" className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Question Bank Title</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="preparation_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preparation Time (seconds)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      {...field} 
-                      onChange={e => field.onChange(parseInt(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="response_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Response Time (seconds)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      {...field}
-                      onChange={e => field.onChange(parseInt(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <TabsContent value="basic">
+            <BasicInfoTab form={form} />
           </TabsContent>
           
-          <TabsContent value="questions" className="space-y-4">
-            <FormField
-              control={form.control}
-              name="questions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Questions (One per line)</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      {...field} 
-                      placeholder="Enter questions here..."
-                      rows={10}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <TabsContent value="questions">
+            <QuestionsTab form={form} />
           </TabsContent>
         </Tabs>
         

@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -12,8 +11,9 @@ import { Question } from "../types";
 import QuestionBankDialog from "./QuestionBankDialog";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import QuestionBankItem from "./list/QuestionBankItem";
 
 interface QuestionBankSelectProps {
   selectedQuestionId: string | null;
@@ -73,11 +73,10 @@ const QuestionBankSelect = ({
         throw error;
       }
 
-      // Filter out non-system questions that weren't created by the current user
       const filteredData = data.filter(q => 
         q.is_system || 
         q.created_by === currentUserId ||
-        (isAdmin && !q.is_system)
+        isAdmin
       );
 
       console.log("Fetched question banks:", filteredData);
@@ -154,9 +153,14 @@ const QuestionBankSelect = ({
                   System Question Banks
                 </div>
                 {systemQuestions.map((question) => (
-                  <SelectItem key={question.id} value={question.id}>
-                    {question.title} ({question.mock_interview_bank_questions?.length || 0} questions)
-                  </SelectItem>
+                  <QuestionBankItem
+                    key={question.id}
+                    question={question}
+                    currentUserId={currentUserId}
+                    isAdmin={isAdmin}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
                 ))}
               </div>
             )}
@@ -166,35 +170,14 @@ const QuestionBankSelect = ({
                   Custom Questions
                 </div>
                 {customQuestions.map((question) => (
-                  <div key={question.id} className="flex items-center justify-between px-2">
-                    <SelectItem value={question.id}>
-                      {question.title} ({question.mock_interview_bank_questions?.length || 0} questions)
-                    </SelectItem>
-                    {currentUserId && question.created_by === currentUserId && (
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleEdit(question);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleDelete(question.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+                  <QuestionBankItem
+                    key={question.id}
+                    question={question}
+                    currentUserId={currentUserId}
+                    isAdmin={isAdmin}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
                 ))}
               </div>
             )}
