@@ -8,7 +8,11 @@ export const useVideoRecording = (selectedQuestionId?: string) => {
   const [isSaving, setIsSaving] = useState(false);
 
   const saveRecording = async (recordedVideoUrl: string) => {
-    console.log("Starting to save recording...");
+    console.log("Starting to save recording...", {
+      videoUrl: recordedVideoUrl,
+      questionId: selectedQuestionId
+    });
+    
     setIsSaving(true);
     
     try {
@@ -26,27 +30,27 @@ export const useVideoRecording = (selectedQuestionId?: string) => {
         throw new Error("No authenticated user found");
       }
 
-      console.log("Saving practice record to database...", {
-        videoUrl: recordedVideoUrl,
-        questionId: selectedQuestionId,
-        userId: session.user.id
-      });
+      const practiceRecord = {
+        video_url: recordedVideoUrl,
+        question_id: selectedQuestionId,
+        user_id: session.user.id,
+        practice_date: new Date().toISOString()
+      };
 
-      const { error } = await supabase
+      console.log("Saving practice record to database:", practiceRecord);
+
+      const { data, error } = await supabase
         .from("interview_practice_records")
-        .insert({
-          video_url: recordedVideoUrl,
-          question_id: selectedQuestionId,
-          user_id: session.user.id,
-          practice_date: new Date().toISOString()
-        });
+        .insert(practiceRecord)
+        .select()
+        .single();
 
       if (error) {
         console.error("Database error while saving practice record:", error);
         throw error;
       }
 
-      console.log("Practice record saved successfully");
+      console.log("Practice record saved successfully:", data);
       await queryClient.invalidateQueries({ queryKey: ["practice-records"] });
       toast.success("练习记录已保存");
     } catch (error) {

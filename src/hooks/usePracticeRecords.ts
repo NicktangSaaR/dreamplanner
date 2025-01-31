@@ -36,7 +36,7 @@ export const usePracticeRecords = () => {
           )
         `)
         .eq('user_id', session.user.id)
-        .order("practice_date", { ascending: false });
+        .order('practice_date', { ascending: false });
 
       if (error) {
         console.error("Error fetching practice records:", error);
@@ -46,10 +46,9 @@ export const usePracticeRecords = () => {
       console.log("Fetched practice records:", data);
       return data as PracticeRecord[];
     },
-    staleTime: 0, // Always fetch fresh data
+    staleTime: 1000 * 60, // Cache for 1 minute
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    refetchInterval: 3000 // Refetch every 3 seconds to catch new records
+    refetchOnWindowFocus: true
   });
 
   const deleteRecord = useMutation({
