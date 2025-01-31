@@ -27,6 +27,17 @@ interface AcademicSectionProps {
 export default function AcademicSection({ courses, studentId }: AcademicSectionProps) {
   console.log("Academic Section - Courses:", courses);
 
+  const groupCoursesByYear = (courses: Course[]) => {
+    return courses.reduce((acc: { [key: string]: Course[] }, course) => {
+      const year = course.academic_year || 'Unspecified';
+      if (!acc[year]) {
+        acc[year] = [];
+      }
+      acc[year].push(course);
+      return acc;
+    }, {});
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -80,15 +91,4 @@ export default function AcademicSection({ courses, studentId }: AcademicSectionP
       </CardContent>
     </Card>
   );
-}
-
-function groupCoursesByYear(courses: Course[]) {
-  return courses.reduce((acc: { [key: string]: Course[] }, course) => {
-    const year = course.academic_year || 'Unspecified';
-    if (!acc[year]) {
-      acc[year] = [];
-    }
-    acc[year].push(course);
-    return acc;
-  }, {});
 }
