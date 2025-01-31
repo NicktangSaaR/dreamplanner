@@ -96,7 +96,7 @@ const UserManagement = () => {
       if (data.email) {
         const session = await supabase.auth.getSession();
         updates.push(
-          Promise.resolve(
+          new Promise((resolve, reject) => {
             fetch('/functions/v1/update-user-email', {
               method: 'POST',
               headers: {
@@ -107,12 +107,14 @@ const UserManagement = () => {
                 userId,
                 newEmail: data.email,
               }),
-            }).then(async (response) => {
-              const result = await response.json();
-              if (!response.ok) throw new Error(result.error);
-              return result;
             })
-          )
+            .then(async (response) => {
+              const result = await response.json();
+              if (!response.ok) reject(new Error(result.error));
+              resolve(result);
+            })
+            .catch(reject);
+          })
         );
       }
 
