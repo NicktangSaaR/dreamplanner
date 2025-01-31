@@ -40,40 +40,27 @@ const UserManagement = () => {
     queryKey: ['admin-users'],
     queryFn: async () => {
       console.log("Fetching all users...");
-      const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) {
-        console.error("Error fetching auth users:", authError);
-        throw authError;
-      }
-
-      const { data: profiles, error: profilesError } = await supabase
+      const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*');
 
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        throw profilesError;
+      if (error) {
+        console.error("Error fetching profiles:", error);
+        throw error;
       }
 
-      // Combine auth users with profiles
-      const combinedUsers = authUsers.map(authUser => {
-        const profile = profiles.find(p => p.id === authUser.id);
-        return {
-          ...profile,
-          email: authUser.email,
-        };
-      });
-
-      console.log("Fetched users:", combinedUsers);
-      return combinedUsers;
+      console.log("Fetched profiles:", profiles);
+      return profiles;
     },
   });
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
       console.log("Deleting user:", userId);
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -106,18 +93,9 @@ const UserManagement = () => {
   });
 
   const updateUserDetailsMutation = useMutation({
-    mutationFn: async ({ userId, data }: { userId: string; data: { full_name?: string; email?: string } }) => {
+    mutationFn: async ({ userId, data }: { userId: string; data: { full_name?: string } }) => {
       console.log("Updating user details:", userId, data);
       
-      // Update email in auth.users if email is provided
-      if (data.email) {
-        const { error: authError } = await supabase.auth.admin.updateUserById(
-          userId,
-          { email: data.email }
-        );
-        if (authError) throw authError;
-      }
-
       // Update full_name in profiles if provided
       if (data.full_name) {
         const { error: profileError } = await supabase
@@ -152,7 +130,7 @@ const UserManagement = () => {
     setEditingUser({
       id: user.id,
       full_name: user.full_name,
-      email: user.email,
+      email: user.email || "",
     });
     setEditForm({
       full_name: user.full_name || "",
@@ -168,12 +146,9 @@ const UserManagement = () => {
   const saveUserDetails = async () => {
     if (!editingUser) return;
 
-    const updates: { full_name?: string; email?: string } = {};
+    const updates: { full_name?: string } = {};
     if (editForm.full_name !== editingUser.full_name) {
       updates.full_name = editForm.full_name;
-    }
-    if (editForm.email !== editingUser.email) {
-      updates.email = editForm.email;
     }
 
     if (Object.keys(updates).length > 0) {
@@ -201,7 +176,6 @@ const UserManagement = () => {
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>School</TableHead>
             <TableHead>Joined</TableHead>
@@ -220,18 +194,6 @@ const UserManagement = () => {
                   />
                 ) : (
                   user.full_name || 'N/A'
-                )}
-              </TableCell>
-              <TableCell>
-                {editingUser?.id === user.id ? (
-                  <Input
-                    value={editForm.email}
-                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    className="w-full"
-                    type="email"
-                  />
-                ) : (
-                  user.email
                 )}
               </TableCell>
               <TableCell>
