@@ -14,9 +14,11 @@ export default function ConfigurationForm({ formUrl, sheetUrl, onUpdate }: Confi
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    
+    // Explicitly cast FormDataEntryValue to string since we know these are text inputs
     const updates = {
-      form_url: formData.get('form_url'),
-      sheet_url: formData.get('sheet_url'),
+      form_url: formData.get('form_url') as string,
+      sheet_url: formData.get('sheet_url') as string,
     };
 
     try {
