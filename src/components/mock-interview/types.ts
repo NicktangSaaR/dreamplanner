@@ -5,6 +5,7 @@ export interface Question {
   preparation_time: number;
   response_time: number;
   is_system: boolean;
+  created_by: string | null;
   mock_interview_bank_questions?: {
     id: string;
     title: string;

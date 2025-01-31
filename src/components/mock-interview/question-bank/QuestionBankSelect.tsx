@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Question } from "../types";
 import QuestionBankDialog from "./QuestionBankDialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -26,6 +26,15 @@ const QuestionBankSelect = ({
 }: QuestionBankSelectProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [questionToEdit, setQuestionToEdit] = useState<Question | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getCurrentUser();
+  }, []);
 
   const { data: questions = [], isLoading, refetch } = useQuery({
     queryKey: ['interview-questions'],
@@ -97,8 +106,6 @@ const QuestionBankSelect = ({
     return <div>Loading question banks...</div>;
   }
 
-  const currentUser = supabase.auth.getUser();
-
   return (
     <div className="space-y-4">
       <Label className="mb-2 block">Select Question Bank</Label>
@@ -133,7 +140,7 @@ const QuestionBankSelect = ({
                     <SelectItem value={question.id}>
                       {question.title} ({question.mock_interview_bank_questions?.length || 0} questions)
                     </SelectItem>
-                    {question.created_by === currentUser.data.user?.id && (
+                    {currentUserId && question.created_by === currentUserId && (
                       <div className="flex space-x-2">
                         <Button
                           variant="ghost"
