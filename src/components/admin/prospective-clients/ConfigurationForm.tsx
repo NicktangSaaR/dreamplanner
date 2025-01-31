@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useState } from "react";
 
 interface ConfigurationFormProps {
   formUrl: string;
@@ -13,16 +14,19 @@ interface ConfigurationFormProps {
 }
 
 export default function ConfigurationForm({ formUrl, sheetUrl, onUpdate }: ConfigurationFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    const updates = {
-      form_url: (formData.get('form_url') as string) || '',
-      sheet_url: (formData.get('sheet_url') as string) || '',
-    };
+    setIsSubmitting(true);
 
     try {
+      const formData = new FormData(e.currentTarget);
+      const updates = {
+        form_url: (formData.get('form_url') as string)?.trim() || '',
+        sheet_url: (formData.get('sheet_url') as string)?.trim() || '',
+      };
+
       console.log('Saving configuration:', updates);
       
       const { error } = await supabase
@@ -39,6 +43,8 @@ export default function ConfigurationForm({ formUrl, sheetUrl, onUpdate }: Confi
     } catch (error) {
       console.error('Error updating configuration:', error);
       toast.error("配置更新失败");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -61,6 +67,7 @@ export default function ConfigurationForm({ formUrl, sheetUrl, onUpdate }: Confi
             name="form_url"
             defaultValue={formUrl}
             placeholder="请输入 Google 表单链接"
+            required
           />
         </div>
         
@@ -71,10 +78,13 @@ export default function ConfigurationForm({ formUrl, sheetUrl, onUpdate }: Confi
             name="sheet_url"
             defaultValue={sheetUrl}
             placeholder="请输入 Google 表格链接"
+            required
           />
         </div>
 
-        <Button type="submit">保存配置</Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "保存中..." : "保存配置"}
+        </Button>
       </form>
     </div>
   );
