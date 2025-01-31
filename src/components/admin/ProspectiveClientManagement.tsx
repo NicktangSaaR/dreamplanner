@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ export default function ProspectiveClientManagement() {
       const { data, error } = await supabase
         .from("client_sheets_config")
         .select("*")
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching config:", error);
@@ -40,7 +40,7 @@ export default function ProspectiveClientManagement() {
       }
 
       console.log("Fetched config:", data);
-      return data as SheetsConfig;
+      return data as SheetsConfig | null;
     },
   });
 
@@ -80,12 +80,12 @@ export default function ProspectiveClientManagement() {
   });
 
   // Set initial form values when config is loaded
-  useState(() => {
+  useEffect(() => {
     if (config) {
       setSheetUrl(config.sheet_url);
       setFormUrl(config.form_url);
     }
-  });
+  }, [config]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
