@@ -96,21 +96,23 @@ const UserManagement = () => {
       if (data.email) {
         const session = await supabase.auth.getSession();
         updates.push(
-          fetch('/functions/v1/update-user-email', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.data.session?.access_token}`,
-            },
-            body: JSON.stringify({
-              userId,
-              newEmail: data.email,
-            }),
-          }).then(async (response) => {
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error);
-            return result;
-          })
+          Promise.resolve(
+            fetch('/functions/v1/update-user-email', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.data.session?.access_token}`,
+              },
+              body: JSON.stringify({
+                userId,
+                newEmail: data.email,
+              }),
+            }).then(async (response) => {
+              const result = await response.json();
+              if (!response.ok) throw new Error(result.error);
+              return result;
+            })
+          )
         );
       }
 
