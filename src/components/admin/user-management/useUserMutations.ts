@@ -47,48 +47,51 @@ export const useUserMutations = () => {
     mutationFn: async ({ userId, data }: { userId: string; data: { full_name?: string; email?: string } }) => {
       console.log("Updating user details:", userId, data);
       
-      const updates: Promise<void>[] = [];
+      const updates: Array<Promise<void>> = [];
 
       if (data.full_name) {
-        const profileUpdate = new Promise<void>((resolve, reject) => {
-          supabase
-            .from('profiles')
-            .update({ full_name: data.full_name })
-            .eq('id', userId)
-            .then(({ error }) => {
-              if (error) reject(error);
-              else resolve();
-            })
-            .catch(reject);
-        });
-        updates.push(profileUpdate);
+        updates.push(
+          new Promise<void>((resolve, reject) => {
+            supabase
+              .from('profiles')
+              .update({ full_name: data.full_name })
+              .eq('id', userId)
+              .then(({ error }) => {
+                if (error) reject(error);
+                else resolve();
+              });
+          })
+        );
       }
 
       if (data.email) {
-        const session = await supabase.auth.getSession();
-        const emailUpdate = new Promise<void>((resolve, reject) => {
-          fetch('/functions/v1/update-user-email', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.data.session?.access_token}`,
-            },
-            body: JSON.stringify({
-              userId,
-              newEmail: data.email,
-            }),
-          })
-          .then(async (response) => {
-            const result = await response.json();
-            if (!response.ok) {
-              reject(new Error(result.error));
-            } else {
-              resolve();
+        updates.push(
+          new Promise<void>(async (resolve, reject) => {
+            try {
+              const session = await supabase.auth.getSession();
+              const response = await fetch('/functions/v1/update-user-email', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.data.session?.access_token}`,
+                },
+                body: JSON.stringify({
+                  userId,
+                  newEmail: data.email,
+                }),
+              });
+              
+              const result = await response.json();
+              if (!response.ok) {
+                reject(new Error(result.error));
+              } else {
+                resolve();
+              }
+            } catch (error) {
+              reject(error);
             }
           })
-          .catch(reject);
-        });
-        updates.push(emailUpdate);
+        );
       }
 
       await Promise.all(updates);
