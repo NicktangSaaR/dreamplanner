@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      client_sheets_config: {
+        Row: {
+          created_at: string | null
+          form_url: string
+          id: string
+          sheet_url: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          form_url: string
+          id?: string
+          sheet_url: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          form_url?: string
+          id?: string
+          sheet_url?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       college_applications: {
         Row: {
           category: string | null

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import UserManagement from "@/components/admin/UserManagement";
 import QuestionBankManagement from "@/components/admin/QuestionBankManagement";
+import ProspectiveClientManagement from "@/components/admin/ProspectiveClientManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -56,6 +57,7 @@ export default function AdminDashboard() {
         <TabsList>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="question-banks">Question Banks</TabsTrigger>
+          <TabsTrigger value="prospective-clients">Prospective Clients</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
@@ -64,6 +66,10 @@ export default function AdminDashboard() {
 
         <TabsContent value="question-banks" className="space-y-4">
           <QuestionBankManagement />
+        </TabsContent>
+
+        <TabsContent value="prospective-clients" className="space-y-4">
+          <ProspectiveClientManagement />
         </TabsContent>
       </Tabs>
     </div>
