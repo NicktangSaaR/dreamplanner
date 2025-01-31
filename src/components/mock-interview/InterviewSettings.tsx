@@ -2,11 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Question, InterviewSettings as Settings } from "./types";
 import TimeSettings from "./settings/TimeSettings";
-import QuestionBankSelect from "./settings/QuestionBankSelect";
-import AddQuestionDialog from "./settings/AddQuestionDialog";
+import QuestionBankSelect from "./question-bank/QuestionBankSelect";
 import PracticeModeSettings from "./settings/PracticeModeSettings";
 import { DEVICE_SETTINGS_KEY } from "./constants";
 import { toast } from "sonner";
+import BulkQuestionImport from "./question-bank/BulkQuestionImport";
 
 interface InterviewSettingsProps {
   settings: Settings;
@@ -20,7 +20,6 @@ const InterviewSettings = ({
   onStartInterview 
 }: InterviewSettingsProps) => {
   const handleStartInterview = () => {
-    // 验证设备设置
     const storedSettings = localStorage.getItem(DEVICE_SETTINGS_KEY);
     if (!storedSettings) {
       toast.error("请先完成设备设置", {
@@ -29,7 +28,6 @@ const InterviewSettings = ({
       return;
     }
 
-    // 验证是否选择了题目
     if (!settings.selectedQuestionId) {
       toast.error("请选择面试题目", {
         description: "开始面试前需要选择一个题目"
@@ -80,7 +78,7 @@ const InterviewSettings = ({
             numberOfQuestions: num
           })}
         />
-        <AddQuestionDialog />
+        <BulkQuestionImport />
         <Button
           onClick={handleStartInterview}
           className="w-full"
