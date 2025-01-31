@@ -2,6 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import GradeCalculator from "../academics/GradeCalculator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface Course {
   id: string;
@@ -35,33 +41,41 @@ export default function AcademicSection({ courses, studentId }: AcademicSectionP
 
         {/* Course List */}
         <ScrollArea className="h-[600px]">
-          <div className="space-y-4">
+          <Accordion type="multiple" className="space-y-4">
             {Object.entries(groupCoursesByYear(courses))
               .sort(([yearA], [yearB]) => yearB.localeCompare(yearA))
               .map(([year, yearCourses]) => (
-                <div key={year} className="space-y-2">
-                  <h3 className="font-semibold text-lg">{year}</h3>
-                  <div className="grid grid-cols-1 gap-2">
-                    {yearCourses.map((course) => (
-                      <div 
-                        key={course.id} 
-                        className="flex justify-between items-center bg-muted/50 p-3 rounded-lg"
-                      >
-                        <div className="space-y-1">
-                          <p className="font-medium">{course.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {course.course_type} • {course.semester}
-                          </p>
+                <AccordionItem 
+                  key={year} 
+                  value={year}
+                  className="border rounded-lg px-4"
+                >
+                  <AccordionTrigger className="hover:no-underline">
+                    <h3 className="font-semibold text-lg">{year}</h3>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid grid-cols-1 gap-2 pt-2">
+                      {yearCourses.map((course) => (
+                        <div 
+                          key={course.id} 
+                          className="flex justify-between items-center bg-muted/50 p-3 rounded-lg"
+                        >
+                          <div className="space-y-1">
+                            <p className="font-medium">{course.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {course.course_type} • {course.semester}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">{course.grade}</p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-semibold">{course.grade}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               ))}
-          </div>
+          </Accordion>
         </ScrollArea>
       </CardContent>
     </Card>
