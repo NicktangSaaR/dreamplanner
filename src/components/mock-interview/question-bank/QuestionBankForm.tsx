@@ -16,14 +16,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Question } from "../types";
 import { useEffect } from "react";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-interface QuestionBankFormData {
-  title: string;
-  description: string;
-  questions?: string;
-  preparation_time: number;
-  response_time: number;
-}
+const formSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  questions: z.string().min(1, "At least one question is required"),
+  preparation_time: z.number().min(30, "Minimum preparation time is 30 seconds"),
+  response_time: z.number().min(60, "Minimum response time is 60 seconds"),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 interface QuestionBankFormProps {
   questionToEdit: Question | null;
@@ -32,7 +36,8 @@ interface QuestionBankFormProps {
 
 const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) => {
   const queryClient = useQueryClient();
-  const form = useForm<QuestionBankFormData>({
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -56,7 +61,7 @@ const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) =>
     }
   }, [questionToEdit, form]);
 
-  const onSubmit = async (values: QuestionBankFormData) => {
+  const onSubmit = async (values: FormData) => {
     try {
       console.log("Submitting question bank with values:", values);
       
@@ -102,37 +107,14 @@ const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) =>
         if (bankError) throw bankError;
         
         if (bankData) {
-          // If there are questions to import
-          if (values.questions) {
-            const questionList = values.questions
-              .split("\n")
-              .map(q => q.trim())
-              .filter(q => q.length > 0);
+          // Add questions
+          const questionList = values.questions
+            .split("\n")
+            .map(q => q.trim())
+            .filter(q => q.length > 0);
 
-            if (questionList.length > 0) {
-              const bankQuestions = questionList.map(title => ({
-                bank_id: bankData.id,
-                title,
-              }));
-
-              const { error: questionsError } = await supabase
-                .from('mock_interview_bank_questions')
-                .insert(bankQuestions);
-
-              if (questionsError) throw questionsError;
-            }
-          }
-        }
-      } else if (values.questions) {
-        // Add new questions to edited bank
-        const questionList = values.questions
-          .split("\n")
-          .map(q => q.trim())
-          .filter(q => q.length > 0);
-
-        if (questionList.length > 0) {
           const bankQuestions = questionList.map(title => ({
-            bank_id: bankId,
+            bank_id: bankData.id,
             title,
           }));
 
@@ -142,6 +124,23 @@ const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) =>
 
           if (questionsError) throw questionsError;
         }
+      } else {
+        // Add new questions to edited bank
+        const questionList = values.questions
+          .split("\n")
+          .map(q => q.trim())
+          .filter(q => q.length > 0);
+
+        const bankQuestions = questionList.map(title => ({
+          bank_id: bankId,
+          title,
+        }));
+
+        const { error: questionsError } = await supabase
+          .from('mock_interview_bank_questions')
+          .insert(bankQuestions);
+
+        if (questionsError) throw questionsError;
       }
 
       await queryClient.invalidateQueries({ queryKey: ['interview-questions'] });
@@ -203,7 +202,11 @@ const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) =>
                 <FormItem>
                   <FormLabel>Preparation Time (seconds)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input 
+                      type="number" 
+                      {...field} 
+                      onChange={e => field.onChange(parseInt(e.target.value))}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -216,7 +219,11 @@ const QuestionBankForm = ({ questionToEdit, onClose }: QuestionBankFormProps) =>
                 <FormItem>
                   <FormLabel>Response Time (seconds)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input 
+                      type="number" 
+                      {...field}
+                      onChange={e => field.onChange(parseInt(e.target.value))}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

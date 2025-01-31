@@ -12,7 +12,7 @@ import { Question } from "../types";
 import QuestionBankDialog from "./QuestionBankDialog";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface QuestionBankSelectProps {
@@ -27,11 +27,21 @@ const QuestionBankSelect = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [questionToEdit, setQuestionToEdit] = useState<Question | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id || null);
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single();
+        setIsAdmin(profile?.is_admin || false);
+      }
     };
     getCurrentUser();
   }, []);
@@ -63,9 +73,17 @@ const QuestionBankSelect = ({
         throw error;
       }
 
-      console.log("Fetched question banks:", data);
-      return data as Question[];
+      // Filter out non-system questions that weren't created by the current user
+      const filteredData = data.filter(q => 
+        q.is_system || 
+        q.created_by === currentUserId ||
+        (isAdmin && !q.is_system)
+      );
+
+      console.log("Fetched question banks:", filteredData);
+      return filteredData as Question[];
     },
+    enabled: !!currentUserId,
   });
 
   const handleEdit = (question: Question) => {
@@ -89,7 +107,6 @@ const QuestionBankSelect = ({
       toast.success("Question bank deleted successfully");
       refetch();
       
-      // If the deleted question was selected, clear the selection
       if (selectedQuestionId === questionId) {
         onQuestionSelect('');
       }
@@ -108,7 +125,20 @@ const QuestionBankSelect = ({
 
   return (
     <div className="space-y-4">
-      <Label className="mb-2 block">Select Question Bank</Label>
+      <div className="flex justify-between items-center">
+        <Label className="mb-2 block">Select Question Bank</Label>
+        <Button
+          onClick={() => {
+            setQuestionToEdit(null);
+            setIsDialogOpen(true);
+          }}
+          size="sm"
+          className="gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Create Bank
+        </Button>
+      </div>
       <Select
         value={selectedQuestionId || ""}
         onValueChange={onQuestionSelect}
