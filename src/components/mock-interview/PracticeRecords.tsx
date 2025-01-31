@@ -1,12 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Video } from "lucide-react";
 import VideoPlayer from "./practice-records/VideoPlayer";
 import RecordItem from "./practice-records/RecordItem";
 import { usePracticeRecords } from "@/hooks/usePracticeRecords";
+import { supabase } from "@/integrations/supabase/client";
 
 const PracticeRecords = () => {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  const { records, isLoading, deleteRecord } = usePracticeRecords();
+  const { records, isLoading, deleteRecord, refetchRecords } = usePracticeRecords();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setUserId(session.user.id);
+        console.log("Current user ID:", session.user.id);
+        refetchRecords();
+      }
+    };
+
+    checkAuth();
+  }, [refetchRecords]);
 
   if (isLoading) {
     return <div className="text-center py-8">加载练习记录中...</div>;

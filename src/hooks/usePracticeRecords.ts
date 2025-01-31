@@ -17,7 +17,7 @@ interface PracticeRecord {
 export const usePracticeRecords = () => {
   const queryClient = useQueryClient();
 
-  const { data: records, isLoading } = useQuery({
+  const { data: records, isLoading, refetch: refetchRecords } = useQuery({
     queryKey: ["practice-records"],
     queryFn: async () => {
       console.log("Fetching practice records...");
@@ -83,6 +83,7 @@ export const usePracticeRecords = () => {
   return {
     records,
     isLoading,
-    deleteRecord
+    deleteRecord,
+    refetchRecords
   };
 };
