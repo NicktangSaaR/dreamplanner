@@ -52,9 +52,10 @@ export const usePracticeRecords = () => {
       console.log("Fetched practice records:", data);
       return data as PracticeRecord[];
     },
-    staleTime: 1000 * 60, // Cache for 1 minute
+    staleTime: 0, // Disable cache to always fetch fresh data
     refetchOnMount: true,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000 // Refetch every 5 seconds
   });
 
   const deleteRecord = useMutation({

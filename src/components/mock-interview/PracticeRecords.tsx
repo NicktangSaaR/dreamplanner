@@ -23,6 +23,29 @@ const PracticeRecords = () => {
     checkAuth();
   }, [refetchRecords]);
 
+  // Subscribe to realtime changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('practice-records')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'interview_practice_records'
+        },
+        (payload) => {
+          console.log('Realtime update received:', payload);
+          refetchRecords();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetchRecords]);
+
   if (isLoading) {
     return <div className="text-center py-8">加载练习记录中...</div>;
   }
