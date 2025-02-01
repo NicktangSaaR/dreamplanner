@@ -46,6 +46,9 @@ export const usePracticeRecords = () => {
 
       if (error) {
         console.error("Error fetching practice records:", error);
+        toast.error("获取练习记录失败", {
+          description: "请刷新页面重试"
+        });
         throw error;
       }
 
@@ -55,7 +58,7 @@ export const usePracticeRecords = () => {
     staleTime: 0, // Disable cache to always fetch fresh data
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchInterval: 5000 // Refetch every 5 seconds
+    refetchInterval: 3000 // Refetch every 3 seconds to catch new records faster
   });
 
   const deleteRecord = useMutation({
@@ -68,6 +71,9 @@ export const usePracticeRecords = () => {
 
       if (error) {
         console.error("Error deleting practice record:", error);
+        toast.error("删除记录失败", {
+          description: "请稍后重试"
+        });
         throw error;
       }
     },
@@ -77,7 +83,9 @@ export const usePracticeRecords = () => {
     },
     onError: (error) => {
       console.error("Error in deleteRecord mutation:", error);
-      toast.error("删除记录失败");
+      toast.error("删除记录失败", {
+        description: "请稍后重试"
+      });
     },
   });
 

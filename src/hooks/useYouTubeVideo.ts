@@ -16,10 +16,11 @@ export const useYouTubeVideo = () => {
       console.log("Fetching practice record for user:", session.user.id);
       const { data: practiceRecords, error: recordError } = await supabase
         .from('interview_practice_records')
-        .select('youtube_video_url')
+        .select('youtube_video_url, practice_date')
         .eq('question_id', questionId)
         .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
+        .order('practice_date', { ascending: false })
+        .limit(1);
 
       if (recordError) {
         console.error("Error fetching YouTube URL:", recordError);
@@ -37,7 +38,9 @@ export const useYouTubeVideo = () => {
       
       if (!latestRecord.youtube_video_url) {
         console.log("YouTube video still processing");
-        toast.info("视频正在处理中，请稍后再试");
+        toast.info("视频正在处理中，请稍后再试", {
+          description: "上传和处理可能需要几分钟时间"
+        });
         return;
       }
 
