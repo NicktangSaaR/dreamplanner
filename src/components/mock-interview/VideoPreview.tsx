@@ -53,16 +53,24 @@ const VideoPreview = ({
 
   const handleStopRecording = async () => {
     console.log("Stopping recording and saving video...", {
+      questionId: selectedQuestionId,
       questionTitle,
-      bankTitle
+      bankTitle,
+      recordedVideoUrl
     });
     
     try {
       cleanupMediaStream();
       onStopRecording();
 
-      if (recordedVideoUrl) {
+      if (recordedVideoUrl && selectedQuestionId) {
+        console.log("Starting to save recording with URL:", recordedVideoUrl);
         await saveRecording(recordedVideoUrl);
+      } else {
+        console.error("Missing required data for saving:", {
+          hasUrl: !!recordedVideoUrl,
+          hasQuestionId: !!selectedQuestionId
+        });
       }
     } catch (error) {
       console.error("Error in handleStopRecording:", error);
