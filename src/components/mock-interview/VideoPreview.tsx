@@ -1,13 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { StopCircle, Youtube } from "lucide-react";
+import { StopCircle } from "lucide-react";
 import LiveVideoStream from "./video/LiveVideoStream";
 import RecordedVideoPlayer from "./video/RecordedVideoPlayer";
+import YouTubeButton from "./video/YouTubeButton";
 import { useEffect } from "react";
 import { useVideoRecording } from "@/hooks/useVideoRecording";
 import { useMediaStreamCleanup } from "@/hooks/useMediaStreamCleanup";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 interface VideoPreviewProps {
   recordedVideoUrl: string | null;
@@ -79,41 +78,6 @@ const VideoPreview = ({
     }
   };
 
-  const handleViewOnYoutube = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
-        toast.error("请先登录");
-        return;
-      }
-
-      const { data: practiceRecord, error: recordError } = await supabase
-        .from('interview_practice_records')
-        .select('youtube_video_url')
-        .eq('question_id', selectedQuestionId)
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (recordError) {
-        console.error("Error fetching YouTube URL:", recordError);
-        toast.error("获取YouTube链接失败");
-        return;
-      }
-
-      if (!practiceRecord?.youtube_video_url) {
-        toast.info("视频正在处理中，请稍后再试");
-        return;
-      }
-
-      window.open(practiceRecord.youtube_video_url, '_blank');
-    } catch (error) {
-      console.error("Error viewing YouTube video:", error);
-      toast.error("打开YouTube视频失败");
-    }
-  };
-
   useEffect(() => {
     if (isReviewStage) {
       cleanupMediaStream();
@@ -156,15 +120,9 @@ const VideoPreview = ({
             <Button onClick={onStartNew} size="lg" className="text-lg">
               开始新的面试
             </Button>
-            <Button 
-              onClick={handleViewOnYoutube} 
-              size="lg" 
-              className="flex items-center gap-2 text-lg"
-              variant="outline"
-            >
-              <Youtube className="w-5 h-5" />
-              在YouTube上查看
-            </Button>
+            {selectedQuestionId && (
+              <YouTubeButton questionId={selectedQuestionId} />
+            )}
           </>
         ) : (
           isRecording && (
