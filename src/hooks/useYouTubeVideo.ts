@@ -21,7 +21,7 @@ export const useYouTubeVideo = () => {
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (recordError) {
         console.error("Error fetching YouTube URL:", recordError);
@@ -29,7 +29,13 @@ export const useYouTubeVideo = () => {
         return;
       }
 
-      if (!practiceRecord?.youtube_video_url) {
+      if (!practiceRecord) {
+        console.log("No practice record found for this question");
+        toast.info("未找到该问题的练习记录");
+        return;
+      }
+
+      if (!practiceRecord.youtube_video_url) {
         console.log("YouTube video still processing");
         toast.info("视频正在处理中，请稍后再试");
         return;
