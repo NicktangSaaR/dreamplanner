@@ -30,11 +30,19 @@ export const useVideoRecording = (
         throw new Error("No question selected");
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
+      // 获取当前用户会话
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Error getting session:", sessionError);
+        throw new Error("Failed to get user session");
+      }
       
       if (!session?.user?.id) {
         throw new Error("No authenticated user found");
       }
+
+      console.log("Current user session:", session.user.id);
 
       const practiceRecord = {
         video_url: recordedVideoUrl,
@@ -43,7 +51,7 @@ export const useVideoRecording = (
         practice_date: new Date().toISOString()
       };
 
-      console.log("Saving practice record to database:", practiceRecord);
+      console.log("Attempting to save practice record:", practiceRecord);
 
       const { data, error } = await supabase
         .from("interview_practice_records")
@@ -57,7 +65,10 @@ export const useVideoRecording = (
       }
 
       console.log("Practice record saved successfully:", data);
+      
+      // 刷新练习记录列表
       await queryClient.invalidateQueries({ queryKey: ["practice-records"] });
+      
       toast.success("练习记录已保存");
     } catch (error) {
       console.error("Error saving practice record:", error);
