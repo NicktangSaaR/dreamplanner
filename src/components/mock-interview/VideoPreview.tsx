@@ -7,6 +7,7 @@ import YouTubeButton from "./video/YouTubeButton";
 import { useEffect } from "react";
 import { useVideoRecording } from "@/hooks/useVideoRecording";
 import { useMediaStreamCleanup } from "@/hooks/useMediaStreamCleanup";
+import { toast } from "sonner";
 
 interface VideoPreviewProps {
   recordedVideoUrl: string | null;
@@ -43,13 +44,35 @@ const VideoPreview = ({
       videoTracks: newStream.getVideoTracks().length,
       audioTracks: newStream.getAudioTracks().length
     });
+
+    // Verify both video and audio tracks are present
+    if (newStream.getVideoTracks().length === 0 || newStream.getAudioTracks().length === 0) {
+      const error = new Error("摄像头或麦克风未正确初始化");
+      setStreamError(error.message);
+      toast.error("设备初始化失败", {
+        description: "请确保摄像头和麦克风都已正确连接并授权使用"
+      });
+      return;
+    }
+
     setStream(newStream);
     setStreamError(null);
+    
+    // Verify tracks are active
+    newStream.getTracks().forEach(track => {
+      if (!track.enabled) {
+        console.warn(`${track.kind} track is disabled`);
+        track.enabled = true;
+      }
+    });
   };
 
   const handleStreamError = (error: Error) => {
     console.error("Stream initialization error:", error);
     setStreamError(error.message);
+    toast.error("设备访问错误", {
+      description: error.message
+    });
   };
 
   const handleStopRecording = async () => {
@@ -61,20 +84,36 @@ const VideoPreview = ({
     });
     
     try {
+      if (!stream || stream.getTracks().some(track => !track.enabled)) {
+        toast.error("录制失败", {
+          description: "视频或音频轨道未正确录制"
+        });
+        return;
+      }
+
       cleanupMediaStream();
       onStopRecording();
 
       if (recordedVideoUrl && selectedQuestionId) {
         console.log("Starting to save recording with URL:", recordedVideoUrl);
         await saveRecording(recordedVideoUrl);
+        toast.success("录制完成", {
+          description: "视频正在上传至YouTube，请稍后查看"
+        });
       } else {
         console.error("Missing required data for saving:", {
           hasUrl: !!recordedVideoUrl,
           hasQuestionId: !!selectedQuestionId
         });
+        toast.error("保存失败", {
+          description: "无法保存录制内容，请重试"
+        });
       }
     } catch (error) {
       console.error("Error in handleStopRecording:", error);
+      toast.error("保存失败", {
+        description: "保存录制内容时发生错误，请重试"
+      });
     }
   };
 
