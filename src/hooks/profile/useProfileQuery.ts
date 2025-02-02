@@ -45,6 +45,13 @@ export const useProfileQuery = () => {
         }
       }
 
+      // Handle career_interest_test with proper type checking
+      const careerInterestTest = data.career_interest_test as {
+        completedAt: string;
+        scores: Record<string, number>;
+        primaryType: string;
+      } | null;
+
       // Transform the data with proper type handling
       const transformedData: Profile = {
         ...data,
@@ -53,7 +60,8 @@ export const useProfileQuery = () => {
           twitter: socialMedia.twitter || "",
           instagram: socialMedia.instagram || "",
         } : null,
-        interested_majors: interestedMajors
+        interested_majors: interestedMajors,
+        career_interest_test: careerInterestTest
       };
 
       console.log("Profile data fetched:", transformedData);
