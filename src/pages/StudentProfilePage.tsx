@@ -10,13 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 export default function StudentProfilePage() {
   const navigate = useNavigate();
   const { profile } = useProfile();
-
-  if (!profile || profile.user_type !== 'student') {
-    navigate('/counselor-profile');
-    return null;
-  }
-
-  const { data: relationship, refetch: refetchRelationship } = useQuery({
+  
+  // Move the relationship query outside of any conditions
+  const relationshipQuery = useQuery({
     queryKey: ["counselor-relationship", profile?.id],
     enabled: !!profile?.id,
     queryFn: async () => {
@@ -42,6 +38,11 @@ export default function StudentProfilePage() {
     },
   });
 
+  if (!profile || profile.user_type !== 'student') {
+    navigate('/counselor-profile');
+    return null;
+  }
+
   const handleBack = () => {
     navigate(`/student-dashboard/${profile?.id}`);
   };
@@ -64,14 +65,14 @@ export default function StudentProfilePage() {
       </div>
 
       <div className="space-y-4">
-        {relationship ? (
+        {relationshipQuery.data ? (
           <div className="space-y-2">
             <p className="text-muted-foreground">
-              Your current counselor is: <span className="font-medium text-foreground">{relationship.counselor?.full_name}</span>
+              Your current counselor is: <span className="font-medium text-foreground">{relationshipQuery.data.counselor?.full_name}</span>
             </p>
             <SelectCounselorDialog 
               studentId={profile.id} 
-              onCounselorSelected={refetchRelationship}
+              onCounselorSelected={relationshipQuery.refetch}
             />
           </div>
         ) : (
@@ -79,7 +80,7 @@ export default function StudentProfilePage() {
             <p className="text-muted-foreground">You haven't selected a counselor yet.</p>
             <SelectCounselorDialog 
               studentId={profile.id} 
-              onCounselorSelected={refetchRelationship}
+              onCounselorSelected={relationshipQuery.refetch}
             />
           </div>
         )}
