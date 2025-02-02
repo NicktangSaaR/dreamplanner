@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
@@ -6,7 +7,6 @@ import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import { useStudentRealtime } from "@/hooks/student/useStudentRealtime";
 import { useTodos } from "@/hooks/useTodos";
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function StudentDashboard() {
   const { studentId } = useParams();
@@ -18,6 +18,7 @@ export default function StudentDashboard() {
 
   // Fetch student data
   const {
+    profile,
     courses,
     activities,
     notes,
@@ -47,8 +48,6 @@ export default function StudentDashboard() {
     timeCommitment: activity.time_commitment || "",
   }));
 
-  if (!studentId) return null;
-
   return (
     <div className="container mx-auto px-4 py-6 space-y-8">
       <div className="max-w-7xl mx-auto">
@@ -62,7 +61,18 @@ export default function StudentDashboard() {
           />
         </div>
         <div className="mt-8">
-          <DashboardTabs studentId={studentId} />
+          <DashboardTabs
+            courses={courses}
+            onCoursesChange={(newCourses) => {
+              queryClient.setQueryData(["student-courses", studentId], newCourses);
+            }}
+            onActivitiesChange={(newActivities) => {
+              queryClient.setQueryData(["student-activities", studentId], newActivities);
+            }}
+            onNotesChange={(newNotes) => {
+              queryClient.setQueryData(["student-notes", studentId], newNotes);
+            }}
+          />
         </div>
       </div>
     </div>
