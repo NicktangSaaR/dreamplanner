@@ -45,19 +45,6 @@ export const useProfileQuery = () => {
         }
       }
 
-      // Handle career_interest_test data
-      let careerInterestTest = null;
-      if (data.career_interest_test) {
-        const rawTest = data.career_interest_test as Json;
-        if (typeof rawTest === 'object' && rawTest !== null) {
-          careerInterestTest = {
-            completedAt: (rawTest as any).completedAt,
-            scores: (rawTest as any).scores,
-            primaryType: (rawTest as any).primaryType,
-          };
-        }
-      }
-
       // Transform the data with proper type handling
       const transformedData: Profile = {
         ...data,
@@ -66,8 +53,7 @@ export const useProfileQuery = () => {
           twitter: socialMedia.twitter || "",
           instagram: socialMedia.instagram || "",
         } : null,
-        interested_majors: interestedMajors,
-        career_interest_test: careerInterestTest
+        interested_majors: interestedMajors
       };
 
       console.log("Profile data fetched:", transformedData);

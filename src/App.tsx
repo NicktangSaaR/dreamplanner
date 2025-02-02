@@ -1,33 +1,44 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import LoginPage from "@/pages/LoginPage";
-import StudentDashboardPage from "@/pages/StudentDashboardPage";
-import CounselorDashboardPage from "@/pages/CounselorDashboardPage";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import AuthLayout from "@/components/auth/AuthLayout";
+import Login from "@/pages/login";
+import Signup from "@/pages/signup";
 import StudentProfilePage from "@/pages/StudentProfilePage";
 import CounselorProfilePage from "@/pages/CounselorProfilePage";
-import CareerInterestTestPage from "@/pages/CareerInterestTestPage";
-import AuthGuard from "@/components/auth/AuthGuard";
-
-const queryClient = new QueryClient();
+import CounselorDashboard from "@/pages/CounselorDashboard";
+import StudentDashboard from "@/pages/StudentDashboard";
+import StudentView from "@/pages/StudentView";
+import MockInterview from "@/pages/MockInterview";
+import NotFound from "@/pages/NotFound";
+import About from "@/pages/About";
+import Index from "@/pages/Index";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<AuthGuard><StudentDashboardPage /></AuthGuard>} />
-          <Route path="/student-dashboard/:id" element={<AuthGuard><StudentDashboardPage /></AuthGuard>} />
-          <Route path="/counselor-dashboard/:id" element={<AuthGuard><CounselorDashboardPage /></AuthGuard>} />
-          <Route path="/student-profile" element={<AuthGuard><StudentProfilePage /></AuthGuard>} />
-          <Route path="/counselor-profile" element={<AuthGuard><CounselorProfilePage /></AuthGuard>} />
-          <Route path="/career-interest-test" element={<AuthGuard><CareerInterestTestPage /></AuthGuard>} />
-        </Routes>
-        <Toaster />
-      </Router>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route element={<AuthLayout />}>
+          <Route path="/mock-interview" element={<MockInterview />} />
+          <Route path="/student-profile" element={<StudentProfilePage />} />
+          <Route path="/counselor-profile" element={<CounselorProfilePage />} />
+          <Route path="/counselor-dashboard" element={<CounselorDashboard />} />
+          <Route
+            path="/counselor-dashboard/student/:studentId"
+            element={<StudentView />}
+          />
+          <Route path="/student-dashboard/:studentId" element={<StudentDashboard />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+      <Sonner />
+    </BrowserRouter>
   );
 }

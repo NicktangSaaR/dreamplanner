@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Edit, Globe } from "lucide-react";
 import { Profile } from "@/types/profile";
-import { useNavigate } from "react-router-dom";
 import CareerInterestTest from "./CareerInterestTest";
 
 interface ProfileDisplayProps {
@@ -12,7 +11,6 @@ interface ProfileDisplayProps {
 }
 
 export default function ProfileDisplay({ profile, onEdit }: ProfileDisplayProps) {
-  const navigate = useNavigate();
   const isCounselor = profile?.user_type === 'counselor';
 
   return (
@@ -91,27 +89,7 @@ export default function ProfileDisplay({ profile, onEdit }: ProfileDisplayProps)
         </CardContent>
       </Card>
 
-      {!isCounselor && (
-        <div className="space-y-4">
-          {profile?.career_interest_test ? (
-            <CareerInterestTest />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Career Interest Test</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Take the Holland Career Interest Test to discover your career interests and preferences.
-                </p>
-                <Button onClick={() => navigate("/career-interest-test")}>
-                  Take Test
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+      {!isCounselor && <CareerInterestTest />}
     </div>
   );
 }
