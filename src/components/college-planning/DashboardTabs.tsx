@@ -5,21 +5,31 @@ import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
 import CollegeListSection from "./CollegeListSection";
 import { Course } from "./types/course";
+import { useStudentData } from "@/hooks/student/useStudentData";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface DashboardTabsProps {
-  courses: Course[];
-  onCoursesChange: (courses: Course[]) => void;
-  onActivitiesChange: (activities: any[]) => void;
-  onNotesChange: (notes: any[]) => void;
+  studentId: string;
 }
 
-export default function DashboardTabs({
-  courses,
-  onCoursesChange,
-  onActivitiesChange,
-  onNotesChange,
-}: DashboardTabsProps) {
+export default function DashboardTabs({ studentId }: DashboardTabsProps) {
+  const queryClient = useQueryClient();
+  const { courses, activities, notes } = useStudentData(studentId);
+
+  console.log("DashboardTabs - Student ID:", studentId);
   console.log("DashboardTabs - Received courses:", courses);
+
+  const handleCoursesChange = (newCourses: Course[]) => {
+    queryClient.setQueryData(["student-courses", studentId], newCourses);
+  };
+
+  const handleActivitiesChange = (newActivities: any[]) => {
+    queryClient.setQueryData(["student-activities", studentId], newActivities);
+  };
+
+  const handleNotesChange = (newNotes: any[]) => {
+    queryClient.setQueryData(["student-notes", studentId], newNotes);
+  };
 
   return (
     <Tabs defaultValue="academics" className="w-full">
@@ -58,14 +68,14 @@ export default function DashboardTabs({
       <TabsContent value="academics" className="mt-6">
         <AcademicsSection 
           courses={courses}
-          onCoursesChange={onCoursesChange}
+          onCoursesChange={handleCoursesChange}
         />
       </TabsContent>
       <TabsContent value="extracurricular">
-        <ExtracurricularSection onActivitiesChange={onActivitiesChange} />
+        <ExtracurricularSection onActivitiesChange={handleActivitiesChange} />
       </TabsContent>
       <TabsContent value="notes">
-        <NotesSection onNotesChange={onNotesChange} />
+        <NotesSection onNotesChange={handleNotesChange} />
       </TabsContent>
       <TabsContent value="todos">
         <TodoSection />

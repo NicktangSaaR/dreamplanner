@@ -10,7 +10,11 @@ import { useState } from "react";
 import ProfileDisplay from "./ProfileDisplay";
 import StatisticsCards from "./StatisticsCards";
 
-export default function CounselorView() {
+interface CounselorViewProps {
+  counselorId: string;
+}
+
+export default function CounselorView({ counselorId }: CounselorViewProps) {
   const { profile } = useProfile();
   const { data: students, isLoading, refetch } = useCounselorStudents();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -28,8 +32,8 @@ export default function CounselorView() {
       <div className="flex justify-between items-center gap-4">
         <h2 className="text-2xl font-bold">My Students</h2>
         <div className="flex gap-2">
-          <InviteStudentDialog counselorId={profile.id} />
-          <AddStudentDialog counselorId={profile.id} onStudentAdded={refetch} />
+          <InviteStudentDialog counselorId={counselorId} />
+          <AddStudentDialog counselorId={counselorId} onStudentAdded={refetch} />
         </div>
       </div>
 
