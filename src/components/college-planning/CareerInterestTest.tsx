@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -6,6 +7,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Book, ChartBar, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useProfile } from "@/hooks/useProfile";
+import { ChartContainer, ChartLegend, ChartTooltip } from "@/components/ui/chart";
+import { Bar, BarChart, XAxis, YAxis } from "recharts";
 
 const HOLLAND_QUESTIONS = [
   {
@@ -44,6 +47,7 @@ const CATEGORIES = {
 };
 
 export default function CareerInterestTest() {
+  const navigate = useNavigate();
   const { profile, updateProfile } = useProfile();
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,6 +72,7 @@ export default function CareerInterestTest() {
       });
 
       toast.success("Career Interest Test completed!");
+      navigate("/student-profile");
     } catch (error) {
       console.error("Error saving test results:", error);
       toast.error("Failed to save test results");
@@ -75,6 +80,14 @@ export default function CareerInterestTest() {
       setIsSubmitting(false);
     }
   };
+
+  const chartData = Object.entries(profile?.career_interest_test?.scores || {}).map(
+    ([category, score]) => ({
+      category: CATEGORIES[category as keyof typeof CATEGORIES],
+      score,
+      fill: "#4F46E5",
+    })
+  );
 
   if (profile?.career_interest_test) {
     const { completedAt, scores, primaryType } = profile.career_interest_test;
@@ -92,25 +105,34 @@ export default function CareerInterestTest() {
             Retake Test
           </Button>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div className="flex items-center gap-2">
             <Info className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
               Completed on {new Date(completedAt).toLocaleDateString()}
             </span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-4">
             <Label>Your Primary Type: {CATEGORIES[primaryType as keyof typeof CATEGORIES]}</Label>
-            <div className="grid gap-4">
-              {Object.entries(scores).map(([category, score]) => (
-                <div key={category} className="flex items-center justify-between">
-                  <span className="text-sm">{CATEGORIES[category as keyof typeof CATEGORIES]}</span>
-                  <div className="flex items-center gap-2">
-                    <ChartBar className="h-4 w-4" />
-                    <span className="text-sm font-medium">{score}/5</span>
-                  </div>
-                </div>
-              ))}
+            <div className="h-[300px] w-full">
+              <ChartContainer
+                className="w-full"
+                config={{
+                  score: {
+                    theme: {
+                      light: "#4F46E5",
+                      dark: "#818CF8",
+                    },
+                  },
+                }}
+              >
+                <BarChart data={chartData}>
+                  <XAxis dataKey="category" />
+                  <YAxis domain={[0, 5]} />
+                  <Bar dataKey="score" />
+                  <ChartTooltip />
+                </BarChart>
+              </ChartContainer>
             </div>
           </div>
         </CardContent>
