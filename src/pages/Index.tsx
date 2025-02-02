@@ -85,7 +85,7 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="font-bold text-xl">
-              CollegePlan
+              DreamPlanner
             </Link>
             <div className="flex items-center gap-4">
               {isAuthenticated ? (
