@@ -347,6 +347,7 @@ export type Database = {
         Row: {
           application_year: string | null
           background_intro: string | null
+          career_interest_test: Json | null
           created_at: string
           full_name: string | null
           grade: string | null
@@ -363,6 +364,7 @@ export type Database = {
         Insert: {
           application_year?: string | null
           background_intro?: string | null
+          career_interest_test?: Json | null
           created_at?: string
           full_name?: string | null
           grade?: string | null
@@ -379,6 +381,7 @@ export type Database = {
         Update: {
           application_year?: string | null
           background_intro?: string | null
+          career_interest_test?: Json | null
           created_at?: string
           full_name?: string | null
           grade?: string | null

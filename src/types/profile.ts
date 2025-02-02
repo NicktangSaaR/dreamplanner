@@ -17,6 +17,11 @@ export interface Profile {
   application_year: string | null;
   created_at?: string;
   updated_at?: string;
+  career_interest_test?: {
+    completedAt: string;
+    scores: Record<string, number>;
+    primaryType: string;
+  } | null;
 }
 
 export interface ProfileError {
