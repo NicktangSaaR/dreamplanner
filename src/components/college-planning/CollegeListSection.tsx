@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { FileDown, FilePdf, FileSpreadsheet } from "lucide-react";
+import { FileDown, FileText, FileSpreadsheet } from "lucide-react";
 import * as XLSX from 'xlsx';
 import AddCollegeDialog from "./college-list/AddCollegeDialog";
 import { getCollegeUrl } from "./college-list/useCollegeUrl";
@@ -152,7 +152,7 @@ export default function CollegeListSection() {
             Export Excel
           </Button>
           <Button variant="outline" size="sm" onClick={printAsPDF}>
-            <FilePdf className="h-4 w-4 mr-2" />
+            <FileText className="h-4 w-4 mr-2" />
             Export PDF
           </Button>
           <AddCollegeDialog onSubmit={onSubmit} />
@@ -208,28 +208,30 @@ export default function CollegeListSection() {
         </Table>
       </div>
 
-      <style jsx global>{`
-        @media print {
-          @page {
-            size: landscape;
+      <style>
+        {`
+          @media print {
+            @page {
+              size: landscape;
+            }
+            body * {
+              visibility: hidden;
+            }
+            .print-section,
+            .print-section * {
+              visibility: visible;
+            }
+            .print-section {
+              position: absolute;
+              left: 0;
+              top: 0;
+            }
+            .print\\:hidden {
+              display: none;
+            }
           }
-          body * {
-            visibility: hidden;
-          }
-          .print-section,
-          .print-section * {
-            visibility: visible;
-          }
-          .print-section {
-            position: absolute;
-            left: 0;
-            top: 0;
-          }
-          .print:hidden {
-            display: none;
-          }
-        }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 }
