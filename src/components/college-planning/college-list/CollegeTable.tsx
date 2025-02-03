@@ -25,7 +25,7 @@ interface CollegeTableProps {
 
 export default function CollegeTable({ applications, onDelete }: CollegeTableProps) {
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border print-section">
       <Table>
         <TableHeader>
           <TableRow>
