@@ -59,41 +59,32 @@ export function useCollegeForm(
     }
   }, [applicationData, form]);
 
-  useEffect(() => {
-    const subscription = form.watch(async (value, { name }) => {
-      if (name === 'college_name' && value.college_name && value.college_name.length >= 3 && !applicationData) {
-        setIsLoadingCollegeInfo(true);
-        try {
-          console.log('Fetching college info for:', value.college_name);
-          const collegeInfo = await getCollegeInfo(value.college_name);
-          if (collegeInfo) {
-            console.log('Setting college info:', collegeInfo);
-            form.setValue('test_optional', collegeInfo.test_optional || null);
-            form.setValue('avg_gpa', collegeInfo.avg_gpa || null);
-            form.setValue('avg_sat', collegeInfo.avg_sat || null);
-            form.setValue('avg_act', collegeInfo.avg_act || null);
-            form.setValue('sat_75th', collegeInfo.sat_75th || null);
-            form.setValue('act_75th', collegeInfo.act_75th || null);
-            form.setValue('institution_type', collegeInfo.institution_type || null);
-            form.setValue('state', collegeInfo.state || null);
-            form.setValue('city', collegeInfo.city || null);
-            form.setValue('college_url', collegeInfo.website_url || '');
-          }
-        } catch (error) {
-          console.error('Error fetching college info:', error);
-        } finally {
-          setIsLoadingCollegeInfo(false);
-          setHasCollegeInfo(true);
-        }
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form, applicationData]);
-
   const handleSubmit = async (values: CollegeFormValues) => {
     if (onSubmit) {
       setIsSubmitting(true);
+      setIsLoadingCollegeInfo(true);
       try {
+        // If this is a new application (no applicationData), fetch college info
+        if (!applicationData) {
+          const collegeInfo = await getCollegeInfo(values.college_name);
+          if (collegeInfo) {
+            // Merge college info with form values
+            values = {
+              ...values,
+              avg_gpa: collegeInfo.avg_gpa || null,
+              avg_sat: collegeInfo.avg_sat || null,
+              avg_act: collegeInfo.avg_act || null,
+              sat_75th: collegeInfo.sat_75th || null,
+              act_75th: collegeInfo.act_75th || null,
+              institution_type: collegeInfo.institution_type || null,
+              state: collegeInfo.state || null,
+              city: collegeInfo.city || null,
+              test_optional: collegeInfo.test_optional || null,
+              college_url: collegeInfo.website_url || values.college_url,
+            };
+          }
+        }
+        
         await onSubmit(values, applicationData?.id);
         form.reset();
         if (onSuccess) {
@@ -101,6 +92,8 @@ export function useCollegeForm(
         }
       } finally {
         setIsSubmitting(false);
+        setIsLoadingCollegeInfo(false);
+        setHasCollegeInfo(true);
       }
     }
   };
