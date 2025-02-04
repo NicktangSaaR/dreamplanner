@@ -1,10 +1,9 @@
-```typescript
+
 import { useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import AddCollegeDialog from "./college-list/AddCollegeDialog";
-import { getCollegeUrl } from "./college-list/useCollegeUrl";
 import { getCollegeInfo } from "./college-list/useCollegeInfo";
 import { CollegeFormValues } from "./college-list/collegeSchema";
 import ExportButtons from "./college-list/ExportButtons";
@@ -180,4 +179,3 @@ export default function CollegeListSection() {
     </div>
   );
 }
-```

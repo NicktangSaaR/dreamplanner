@@ -39,6 +39,7 @@ export type Database = {
           avg_gpa: number | null
           avg_sat: number | null
           category: string | null
+          city: string | null
           college_name: string
           college_url: string
           created_at: string | null
@@ -55,6 +56,7 @@ export type Database = {
           avg_gpa?: number | null
           avg_sat?: number | null
           category?: string | null
+          city?: string | null
           college_name: string
           college_url: string
           created_at?: string | null
@@ -71,6 +73,7 @@ export type Database = {
           avg_gpa?: number | null
           avg_sat?: number | null
           category?: string | null
+          city?: string | null
           college_name?: string
           college_url?: string
           created_at?: string | null
