@@ -33,10 +33,8 @@ export function ExportButtons({ applications, profile }: ExportButtonsProps) {
       'Institution Type': app.institution_type || 'Not specified',
       'Location': app.city && app.state ? `${app.city}, ${app.state}` : (app.state || 'Not specified'),
       'Average GPA': app.avg_gpa || 'Not available',
-      'Average SAT': app.avg_sat || 'Not available',
-      'SAT (75th percentile)': app.sat_75th || 'Not available',
-      'Average ACT': app.avg_act || 'Not available',
-      'ACT (75th percentile)': app.act_75th || 'Not available',
+      'SAT (75th Percentile)': app.sat_75th || 'Not available',
+      'ACT (75th Percentile)': app.act_75th || 'Not available',
       'Test Optional': app.test_optional ? 'Yes' : 'No',
       'College Website': app.college_url || 'Not available',
       'Additional Notes': app.notes || ''
@@ -60,9 +58,7 @@ export function ExportButtons({ applications, profile }: ExportButtonsProps) {
       { wch: 15 }, // Institution Type
       { wch: 25 }, // Location
       { wch: 12 }, // GPA
-      { wch: 12 }, // SAT
       { wch: 12 }, // SAT 75th
-      { wch: 12 }, // ACT
       { wch: 12 }, // ACT 75th
       { wch: 12 }, // Test Optional
       { wch: 30 }, // Website
@@ -71,7 +67,7 @@ export function ExportButtons({ applications, profile }: ExportButtonsProps) {
     XLSX.utils.book_append_sheet(wb, wsApplications, 'College List');
     
     // Apply some basic styling
-    ['A1:N1'].forEach(range => {
+    ['A1:K1'].forEach(range => {
       const range_addr = XLSX.utils.decode_range(range);
       for(let R = range_addr.s.r; R <= range_addr.e.r; ++R) {
         for(let C = range_addr.s.c; C <= range_addr.e.c; ++C) {
