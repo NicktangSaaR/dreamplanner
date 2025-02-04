@@ -24,15 +24,15 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4',
+          model: 'gpt-4o-mini',
           messages: [
             {
               role: 'system',
-              content: 'You are a helper that returns college information in JSON format. Include these fields: avg_gpa (number 0-5), avg_sat (number 0-1600), avg_act (number 0-36), institution_type ("Public" or "Private"), state (US state name), website_url (string), city (string). Return ONLY valid JSON, no other text.'
+              content: 'You are a helper that returns college information in JSON format. For academic metrics, provide ONLY the average/mean values, not ranges or minimum/maximum scores. Include these fields: avg_gpa (average GPA as number 0-5), avg_sat (average SAT score as number 0-1600), avg_act (average ACT score as number 0-36), institution_type ("Public" or "Private"), state (US state name), website_url (string), city (string). Return ONLY valid JSON, no other text.'
             },
             {
               role: 'user',
-              content: `What are the average GPA, SAT, ACT scores, institution type (public/private), state, official website URL, and city for ${collegeName}?`
+              content: `What are the average (mean) GPA, SAT, and ACT scores, institution type (public/private), state, official website URL, and city for ${collegeName}? Please provide only average/mean values for GPA, SAT, and ACT scores.`
             }
           ],
           temperature: 0.7
@@ -65,3 +65,4 @@ serve(async (req) => {
     );
   }
 });
+
