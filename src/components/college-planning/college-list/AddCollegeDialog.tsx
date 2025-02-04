@@ -37,7 +37,7 @@ interface AddCollegeDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export default function AddCollegeDialog({ 
+export function AddCollegeDialog({ 
   onSubmit, 
   applicationData,
   open,
