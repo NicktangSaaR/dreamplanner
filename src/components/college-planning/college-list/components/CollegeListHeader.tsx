@@ -1,6 +1,6 @@
 
-import ExportButtons from "../ExportButtons";
-import AddCollegeDialog from "../AddCollegeDialog";
+import { ExportButtons } from "../ExportButtons";
+import { AddCollegeDialog } from "../AddCollegeDialog";
 import { CollegeFormValues } from "../collegeSchema";
 import { CollegeApplication, StudentProfile } from "../types";
 
