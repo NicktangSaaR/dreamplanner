@@ -62,79 +62,82 @@ serve(async (req) => {
     const content = data.choices[0].message.content.trim();
     console.log("Content to parse:", content);
     
+    let parsedContent;
     try {
-      const collegeInfo = JSON.parse(content);
-      
-      // Validate the response format
-      const requiredFields = ['avg_gpa', 'avg_sat', 'avg_act', 'max_sat', 'max_act', 
-                            'institution_type', 'state', 'website_url', 'city', 'test_optional',
-                            'country', 'gpa_scale_type'];
-      
-      for (const field of requiredFields) {
-        if (!(field in collegeInfo)) {
-          console.error(`Missing required field: ${field}`);
-          collegeInfo[field] = null;
-        }
-      }
-
-      // Set defaults for required fields
-      if (!collegeInfo.country) {
-        collegeInfo.country = 'United States';
-      }
-      if (!collegeInfo.gpa_scale_type) {
-        collegeInfo.gpa_scale_type = collegeInfo.country === 'United States' ? 'US_4.0' : '100_POINT';
-      }
-
-      // Validate numeric ranges based on GPA scale type
-      const validateGPA = (value: number | null, scaleType: string) => {
-        if (value === null) return null;
-        if (scaleType === 'US_4.0' && (value < 0 || value > 4.0)) {
-          console.warn(`Invalid US GPA value ${value}, setting to null`);
-          return null;
-        }
-        if (scaleType === '100_POINT' && (value < 0 || value > 100)) {
-          console.warn(`Invalid 100-point GPA value ${value}, setting to null`);
-          return null;
-        }
-        return value;
-      };
-
-      const validateRange = (value: number | null, min: number, max: number, fieldName: string) => {
-        if (value !== null && (value < min || value > max)) {
-          console.warn(`Invalid ${fieldName} value ${value}, setting to null`);
-          return null;
-        }
-        return value;
-      };
-
-      collegeInfo.avg_gpa = validateGPA(collegeInfo.avg_gpa, collegeInfo.gpa_scale_type);
-      collegeInfo.avg_sat = validateRange(collegeInfo.avg_sat, 400, 1600, 'SAT');
-      collegeInfo.max_sat = validateRange(collegeInfo.max_sat, 400, 1600, 'Max SAT');
-      collegeInfo.avg_act = validateRange(collegeInfo.avg_act, 1, 36, 'ACT');
-      collegeInfo.max_act = validateRange(collegeInfo.max_act, 1, 36, 'Max ACT');
-
-      // Ensure institution_type is valid
-      if (collegeInfo.institution_type && !['Public', 'Private'].includes(collegeInfo.institution_type)) {
-        collegeInfo.institution_type = null;
-      }
-
-      // Ensure test_optional is boolean
-      if (typeof collegeInfo.test_optional !== 'boolean') {
-        collegeInfo.test_optional = null;
-      }
-
-      return new Response(
-        JSON.stringify(collegeInfo),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      );
+      // First try to remove any potential markdown code block markers
+      const cleanContent = content.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      parsedContent = JSON.parse(cleanContent);
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);
       console.error('Raw content that failed to parse:', content);
       throw new Error('Failed to parse OpenAI response as JSON');
     }
+      
+    // Validate the response format
+    const requiredFields = ['avg_gpa', 'avg_sat', 'avg_act', 'max_sat', 'max_act', 
+                          'institution_type', 'state', 'website_url', 'city', 'test_optional',
+                          'country', 'gpa_scale_type'];
+    
+    for (const field of requiredFields) {
+      if (!(field in parsedContent)) {
+        console.error(`Missing required field: ${field}`);
+        parsedContent[field] = null;
+      }
+    }
+
+    // Set defaults for required fields
+    if (!parsedContent.country) {
+      parsedContent.country = 'United States';
+    }
+    if (!parsedContent.gpa_scale_type) {
+      parsedContent.gpa_scale_type = parsedContent.country === 'United States' ? 'US_4.0' : '100_POINT';
+    }
+
+    // Validate numeric ranges based on GPA scale type
+    const validateGPA = (value: number | null, scaleType: string) => {
+      if (value === null) return null;
+      if (scaleType === 'US_4.0' && (value < 0 || value > 4.0)) {
+        console.warn(`Invalid US GPA value ${value}, setting to null`);
+        return null;
+      }
+      if (scaleType === '100_POINT' && (value < 0 || value > 100)) {
+        console.warn(`Invalid 100-point GPA value ${value}, setting to null`);
+        return null;
+      }
+      return value;
+    };
+
+    const validateRange = (value: number | null, min: number, max: number, fieldName: string) => {
+      if (value !== null && (value < min || value > max)) {
+        console.warn(`Invalid ${fieldName} value ${value}, setting to null`);
+        return null;
+      }
+      return value;
+    };
+
+    parsedContent.avg_gpa = validateGPA(parsedContent.avg_gpa, parsedContent.gpa_scale_type);
+    parsedContent.avg_sat = validateRange(parsedContent.avg_sat, 400, 1600, 'SAT');
+    parsedContent.max_sat = validateRange(parsedContent.max_sat, 400, 1600, 'Max SAT');
+    parsedContent.avg_act = validateRange(parsedContent.avg_act, 1, 36, 'ACT');
+    parsedContent.max_act = validateRange(parsedContent.max_act, 1, 36, 'Max ACT');
+
+    // Ensure institution_type is valid
+    if (parsedContent.institution_type && !['Public', 'Private'].includes(parsedContent.institution_type)) {
+      parsedContent.institution_type = null;
+    }
+
+    // Ensure test_optional is boolean
+    if (typeof parsedContent.test_optional !== 'boolean') {
+      parsedContent.test_optional = null;
+    }
+
+    return new Response(
+      JSON.stringify(parsedContent),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      },
+    );
   } catch (error) {
     console.error('Error in get-college-info function:', error);
     return new Response(
