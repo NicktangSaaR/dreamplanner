@@ -30,13 +30,13 @@ serve(async (req) => {
               role: 'system',
               content: `You are a JSON-only response system that provides college information. You must ONLY return a valid JSON object with no additional text or explanations. For US colleges, use GPA on 4.0 scale; for non-US colleges, use 100-point scale.
 
-Required fields (all must be included):
+IMPORTANT: Return ONLY these exact fields in a JSON object - no other text or fields allowed:
 {
-  "avg_gpa": number,
-  "avg_sat": number,
-  "avg_act": number,
-  "sat_75th": number,
-  "act_75th": number,
+  "avg_gpa": number (e.g., 3.8) or null,
+  "avg_sat": number (e.g., 1400) or null,
+  "avg_act": number (e.g., 32) or null,
+  "sat_75th": number (e.g., 1500) or null,
+  "act_75th": number (e.g., 35) or null,
   "institution_type": "Public" or "Private",
   "state": string or null,
   "website_url": string,
@@ -44,14 +44,21 @@ Required fields (all must be included):
   "test_optional": boolean
 }
 
-For SAT and ACT scores, use actual admission data to provide real 75th percentile scores when available. Look for score ranges from actual admitted students and use those numbers. If ANY value is unknown, use null instead of omitting the field. Numbers must be numeric values, not strings.`
+For SAT and ACT scores:
+- Use actual admission data for 75th percentile scores
+- avg_sat and sat_75th must be between 400 and 1600
+- avg_act and act_75th must be between 1 and 36
+- avg_gpa must be between 0 and 4.0 for US schools
+- Do not omit any fields - use null for unknown values
+- Numbers must be numeric values, not strings
+- Do not include any explanations or additional text`
             },
             {
               role: 'user',
-              content: `Return ONLY a JSON object with the average GPA, SAT, and ACT scores (including 75th percentile scores for SAT and ACT), institution type, state, website URL, city, and test-optional status for ${collegeName}.`
+              content: `Return ONLY a JSON object with the college information for ${collegeName}. No other text.`
             }
           ],
-          temperature: 0.7
+          temperature: 0.3
         })
       }
     );
@@ -68,6 +75,34 @@ For SAT and ACT scores, use actual admission data to provide real 75th percentil
     
     try {
       const collegeInfo = JSON.parse(content);
+      
+      // Validate the response format
+      const requiredFields = ['avg_gpa', 'avg_sat', 'avg_act', 'sat_75th', 'act_75th', 
+                            'institution_type', 'state', 'website_url', 'city', 'test_optional'];
+      const missingFields = requiredFields.filter(field => !(field in collegeInfo));
+      
+      if (missingFields.length > 0) {
+        console.error('Missing required fields:', missingFields);
+        throw new Error('Invalid response format: missing required fields');
+      }
+
+      // Validate numeric ranges
+      if (collegeInfo.avg_sat !== null && (collegeInfo.avg_sat < 400 || collegeInfo.avg_sat > 1600)) {
+        throw new Error('Invalid SAT score range');
+      }
+      if (collegeInfo.sat_75th !== null && (collegeInfo.sat_75th < 400 || collegeInfo.sat_75th > 1600)) {
+        throw new Error('Invalid SAT 75th percentile score range');
+      }
+      if (collegeInfo.avg_act !== null && (collegeInfo.avg_act < 1 || collegeInfo.avg_act > 36)) {
+        throw new Error('Invalid ACT score range');
+      }
+      if (collegeInfo.act_75th !== null && (collegeInfo.act_75th < 1 || collegeInfo.act_75th > 36)) {
+        throw new Error('Invalid ACT 75th percentile score range');
+      }
+      if (collegeInfo.avg_gpa !== null && (collegeInfo.avg_gpa < 0 || collegeInfo.avg_gpa > 4.0)) {
+        throw new Error('Invalid GPA range');
+      }
+
       return new Response(
         JSON.stringify(collegeInfo),
         { 
@@ -76,7 +111,7 @@ For SAT and ACT scores, use actual admission data to provide real 75th percentil
         },
       );
     } catch (parseError) {
-      console.error('Error parsing OpenAI response as JSON:', parseError);
+      console.error('Error parsing or validating OpenAI response:', parseError);
       console.error('Raw content that failed to parse:', content);
       return new Response(
         JSON.stringify({ error: 'Invalid response format from OpenAI' }),
