@@ -13,6 +13,8 @@ export interface CollegeApplication {
   institution_type?: 'Public' | 'Private';
   state?: string;
   city?: string;
+  test_optional?: boolean;
+  notes?: string;
 }
 
 export interface StudentProfile {

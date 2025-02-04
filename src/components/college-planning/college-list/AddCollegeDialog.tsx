@@ -1,4 +1,4 @@
-
+```typescript
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
@@ -57,6 +57,8 @@ export default function AddCollegeDialog({
       institution_type: null,
       state: null,
       city: null,
+      test_optional: null,
+      notes: null,
     },
   });
 
@@ -74,6 +76,8 @@ export default function AddCollegeDialog({
         institution_type: applicationData.institution_type as "Public" | "Private" || null,
         state: applicationData.state || null,
         city: applicationData.city || null,
+        test_optional: applicationData.test_optional || null,
+        notes: applicationData.notes || null,
       });
     } else {
       form.reset({
@@ -88,6 +92,8 @@ export default function AddCollegeDialog({
         institution_type: null,
         state: null,
         city: null,
+        test_optional: null,
+        notes: null,
       });
     }
   }, [applicationData, form]);
@@ -313,6 +319,49 @@ export default function AddCollegeDialog({
                   />
                 </>
               )}
+              
+              <FormField
+                control={form.control}
+                name="test_optional"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Test Optional</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value === 'true')}
+                      value={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select test optional status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="true">Yes</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <textarea 
+                        {...field} 
+                        className="w-full min-h-[100px] p-2 border rounded-md" 
+                        placeholder="Add any notes about this college..."
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             <Button type="submit" className="w-full">
               {applicationData ? 'Save Changes' : 'Add College'}
@@ -323,3 +372,4 @@ export default function AddCollegeDialog({
     </Dialog>
   );
 }
+```

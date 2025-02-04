@@ -47,8 +47,10 @@ export type Database = {
           id: string
           institution_type: string | null
           major: string
+          notes: string | null
           state: string | null
           student_id: string
+          test_optional: boolean | null
           updated_at: string | null
         }
         Insert: {
@@ -64,8 +66,10 @@ export type Database = {
           id?: string
           institution_type?: string | null
           major: string
+          notes?: string | null
           state?: string | null
           student_id: string
+          test_optional?: boolean | null
           updated_at?: string | null
         }
         Update: {
@@ -81,8 +85,10 @@ export type Database = {
           id?: string
           institution_type?: string | null
           major?: string
+          notes?: string | null
           state?: string | null
           student_id?: string
+          test_optional?: boolean | null
           updated_at?: string | null
         }
         Relationships: []

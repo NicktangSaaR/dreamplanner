@@ -17,6 +17,8 @@ export const formSchema = z.object({
   institution_type: z.enum(["Public", "Private"]).nullable().optional(),
   state: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
+  test_optional: z.boolean().nullable().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 export type CollegeFormValues = z.infer<typeof formSchema>;

@@ -101,7 +101,9 @@ export default function CollegeListSection() {
           avg_act: collegeInfo.avg_act,
           institution_type: collegeInfo.institution_type,
           state: collegeInfo.state,
-          city: collegeInfo.city
+          city: collegeInfo.city,
+          test_optional: values.test_optional,
+          notes: values.notes
         };
       } else {
         // For editing, just use the values directly
@@ -117,7 +119,9 @@ export default function CollegeListSection() {
           avg_act: values.avg_act,
           institution_type: values.institution_type,
           state: values.state,
-          city: values.city
+          city: values.city,
+          test_optional: values.test_optional,
+          notes: values.notes
         };
       }
 
