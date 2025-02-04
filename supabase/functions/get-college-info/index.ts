@@ -1,4 +1,4 @@
-
+```typescript
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -17,7 +17,7 @@ serve(async (req) => {
     console.log("Fetching info for college:", collegeName);
 
     const openAIRequestBody = {
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: [
         {
           role: 'system',
@@ -172,3 +172,4 @@ Rules:
     );
   }
 });
+```
