@@ -63,8 +63,8 @@ export default function CollegeTable({ applications, profile, onDelete, onEdit }
             <TableHead>Type</TableHead>
             <TableHead>State</TableHead>
             <TableHead>GPA</TableHead>
-            <TableHead>SAT (Avg/75th)</TableHead>
-            <TableHead>ACT (Avg/75th)</TableHead>
+            <TableHead>SAT (75th)</TableHead>
+            <TableHead>ACT (75th)</TableHead>
             <TableHead>Test Optional</TableHead>
             <TableHead>Notes</TableHead>
             <TableHead className="print:hidden">Actions</TableHead>
@@ -97,10 +97,10 @@ export default function CollegeTable({ applications, profile, onDelete, onEdit }
                 {app.avg_gpa?.toFixed(2) || '-'}
               </TableCell>
               <TableCell>
-                {app.avg_sat || '-'} / {app.sat_75th || '-'}
+                {app.sat_75th || '-'}
               </TableCell>
               <TableCell>
-                {app.avg_act || '-'} / {app.act_75th || '-'}
+                {app.act_75th || '-'}
               </TableCell>
               <TableCell>{app.test_optional === true ? 'Yes' : app.test_optional === false ? 'No' : '-'}</TableCell>
               <TableCell>
@@ -137,3 +137,4 @@ export default function CollegeTable({ applications, profile, onDelete, onEdit }
     </div>
   );
 }
+
