@@ -67,6 +67,22 @@ export default function CollegeListSection() {
       if (!user) throw new Error("No user found");
 
       const targetStudentId = studentId || user.id;
+
+      // Check for duplicate college when adding new application
+      if (!applicationId) {
+        const isDuplicate = applications.some(
+          app => app.college_name.toLowerCase() === values.college_name.toLowerCase()
+        );
+
+        if (isDuplicate) {
+          toast({
+            title: "Error",
+            description: "This college has already been added to your list",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
       
       // Get college info from AI
       const collegeInfo = await getCollegeInfo(values.college_name);
