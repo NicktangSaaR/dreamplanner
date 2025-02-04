@@ -12,7 +12,7 @@ export async function getCollegeInfo(collegeName: string): Promise<{
   website_url?: string;
   city?: string;
   test_optional?: boolean;
-}> {
+} | null> {
   try {
     const { data, error } = await supabase.functions.invoke('get-college-info', {
       body: { collegeName }
@@ -20,28 +20,32 @@ export async function getCollegeInfo(collegeName: string): Promise<{
 
     if (error) {
       console.error('Error invoking get-college-info function:', error);
-      return {};
+      return null;
     }
 
-    const collegeInfo = data;
-    console.log('Parsed college info:', collegeInfo);
+    if (!data) {
+      console.log('No data returned from get-college-info function');
+      return null;
+    }
+
+    console.log('Parsed college info:', data);
     
     return {
-      avg_gpa: typeof collegeInfo.avg_gpa === 'number' ? collegeInfo.avg_gpa : undefined,
-      avg_sat: typeof collegeInfo.avg_sat === 'number' ? collegeInfo.avg_sat : undefined,
-      avg_act: typeof collegeInfo.avg_act === 'number' ? collegeInfo.avg_act : undefined,
-      sat_75th: typeof collegeInfo.sat_75th === 'number' ? collegeInfo.sat_75th : undefined,
-      act_75th: typeof collegeInfo.act_75th === 'number' ? collegeInfo.act_75th : undefined,
-      institution_type: collegeInfo.institution_type === 'Public' || collegeInfo.institution_type === 'Private' 
-        ? collegeInfo.institution_type 
+      avg_gpa: typeof data.avg_gpa === 'number' ? data.avg_gpa : undefined,
+      avg_sat: typeof data.avg_sat === 'number' ? data.avg_sat : undefined,
+      avg_act: typeof data.avg_act === 'number' ? data.avg_act : undefined,
+      sat_75th: typeof data.sat_75th === 'number' ? data.sat_75th : undefined,
+      act_75th: typeof data.act_75th === 'number' ? data.act_75th : undefined,
+      institution_type: data.institution_type === 'Public' || data.institution_type === 'Private' 
+        ? data.institution_type 
         : undefined,
-      state: typeof collegeInfo.state === 'string' ? collegeInfo.state : undefined,
-      website_url: typeof collegeInfo.website_url === 'string' ? collegeInfo.website_url : undefined,
-      city: typeof collegeInfo.city === 'string' ? collegeInfo.city : undefined,
-      test_optional: typeof collegeInfo.test_optional === 'boolean' ? collegeInfo.test_optional : undefined,
+      state: typeof data.state === 'string' ? data.state : undefined,
+      website_url: typeof data.website_url === 'string' ? data.website_url : undefined,
+      city: typeof data.city === 'string' ? data.city : undefined,
+      test_optional: typeof data.test_optional === 'boolean' ? data.test_optional : undefined,
     };
   } catch (error) {
     console.error('Error getting college info:', error);
-    return {};
+    return null;
   }
 }

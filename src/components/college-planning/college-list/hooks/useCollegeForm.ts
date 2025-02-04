@@ -77,11 +77,11 @@ export function useCollegeForm(
             form.setValue('state', collegeInfo.state || null);
             form.setValue('city', collegeInfo.city || null);
             form.setValue('college_url', collegeInfo.website_url || null);
-            setHasCollegeInfo(true);
           }
+          // Set hasCollegeInfo to true regardless of whether we got data or not
+          setHasCollegeInfo(true);
         } catch (error) {
           console.error('Error fetching college info:', error);
-          // Even if there's an error fetching additional info, we should still allow form submission
           setHasCollegeInfo(true);
         } finally {
           setIsLoadingCollegeInfo(false);
