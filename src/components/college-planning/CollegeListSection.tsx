@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import AddCollegeDialog from "./college-list/AddCollegeDialog";
 import { getCollegeUrl } from "./college-list/useCollegeUrl";
+import { getCollegeInfo } from "./college-list/useCollegeInfo";
 import { CollegeFormValues } from "./college-list/collegeSchema";
 import ExportButtons from "./college-list/ExportButtons";
 import CollegeTable from "./college-list/CollegeTable";
@@ -67,7 +68,12 @@ export default function CollegeListSection() {
       if (!user) throw new Error("No user found");
 
       const targetStudentId = studentId || user.id;
-      const collegeUrl = await getCollegeUrl(values.college_name);
+      
+      // Get college URL and additional info in parallel
+      const [collegeUrl, collegeInfo] = await Promise.all([
+        getCollegeUrl(values.college_name),
+        getCollegeInfo(values.college_name)
+      ]);
       
       const applicationData = {
         college_name: values.college_name,
@@ -76,11 +82,11 @@ export default function CollegeListSection() {
         category: values.category,
         college_url: collegeUrl,
         student_id: targetStudentId,
-        avg_gpa: values.avg_gpa,
-        avg_sat: values.avg_sat,
-        avg_act: values.avg_act,
-        institution_type: values.institution_type,
-        state: values.state
+        avg_gpa: values.avg_gpa || collegeInfo.avg_gpa,
+        avg_sat: values.avg_sat || collegeInfo.avg_sat,
+        avg_act: values.avg_act || collegeInfo.avg_act,
+        institution_type: values.institution_type || collegeInfo.institution_type,
+        state: values.state || collegeInfo.state
       };
 
       let error;
