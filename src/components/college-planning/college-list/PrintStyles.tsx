@@ -1,3 +1,4 @@
+
 export default function PrintStyles() {
   return (
     <style>
@@ -44,15 +45,27 @@ export default function PrintStyles() {
           table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 11px;
           }
           
           th, td {
-            padding: 8px;
+            padding: 6px;
             border: 1px solid #ddd;
+            white-space: normal;
+            word-break: break-word;
+          }
+
+          td a {
+            word-break: break-all;
           }
           
           .print\\:hidden {
             display: none !important;
+          }
+
+          /* Ensure table cells don't overflow */
+          td > div.max-w-[200px] {
+            max-width: none !important;
           }
         }
       `}
