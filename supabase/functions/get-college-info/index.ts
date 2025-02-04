@@ -41,15 +41,21 @@ serve(async (req) => {
   "state": string or null,
   "website_url": string or null,
   "city": string or null,
-  "test_optional": boolean or null
+  "test_optional": boolean or null,
+  "country": string,
+  "gpa_scale_type": "US_4.0" or "100_POINT"
 }
 
 Rules:
-- Use 4.0 scale for US college GPA
+- Use 4.0 scale for US colleges (gpa_scale_type: "US_4.0")
+- Use 100 point scale for non-US colleges (gpa_scale_type: "100_POINT")
 - SAT scores must be between 400-1600
 - ACT scores must be between 1-36
 - Return null for unknown values
-- All numbers must be numeric values, not strings`
+- All numbers must be numeric values, not strings
+- Country must always be provided
+- For US colleges, state must be a US state name
+- For non-US colleges, state can represent a province, region, or state`
             },
             {
               role: 'user',
@@ -80,7 +86,8 @@ Rules:
       
       // Validate the response format
       const requiredFields = ['avg_gpa', 'avg_sat', 'avg_act', 'sat_75th', 'act_75th', 
-                            'institution_type', 'state', 'website_url', 'city', 'test_optional'];
+                            'institution_type', 'state', 'website_url', 'city', 'test_optional',
+                            'country', 'gpa_scale_type'];
       
       for (const field of requiredFields) {
         if (!(field in collegeInfo)) {
@@ -89,7 +96,28 @@ Rules:
         }
       }
 
-      // Validate numeric ranges
+      // Set defaults for required fields
+      if (!collegeInfo.country) {
+        collegeInfo.country = 'United States';
+      }
+      if (!collegeInfo.gpa_scale_type) {
+        collegeInfo.gpa_scale_type = collegeInfo.country === 'United States' ? 'US_4.0' : '100_POINT';
+      }
+
+      // Validate numeric ranges based on GPA scale type
+      const validateGPA = (value: number | null, scaleType: string) => {
+        if (value === null) return null;
+        if (scaleType === 'US_4.0' && (value < 0 || value > 4.0)) {
+          console.warn(`Invalid US GPA value ${value}, setting to null`);
+          return null;
+        }
+        if (scaleType === '100_POINT' && (value < 0 || value > 100)) {
+          console.warn(`Invalid 100-point GPA value ${value}, setting to null`);
+          return null;
+        }
+        return value;
+      };
+
       const validateRange = (value: number | null, min: number, max: number, fieldName: string) => {
         if (value !== null && (value < min || value > max)) {
           console.warn(`Invalid ${fieldName} value ${value}, setting to null`);
@@ -98,11 +126,11 @@ Rules:
         return value;
       };
 
+      collegeInfo.avg_gpa = validateGPA(collegeInfo.avg_gpa, collegeInfo.gpa_scale_type);
       collegeInfo.avg_sat = validateRange(collegeInfo.avg_sat, 400, 1600, 'SAT');
       collegeInfo.sat_75th = validateRange(collegeInfo.sat_75th, 400, 1600, 'SAT 75th');
       collegeInfo.avg_act = validateRange(collegeInfo.avg_act, 1, 36, 'ACT');
       collegeInfo.act_75th = validateRange(collegeInfo.act_75th, 1, 36, 'ACT 75th');
-      collegeInfo.avg_gpa = validateRange(collegeInfo.avg_gpa, 0, 4.0, 'GPA');
 
       // Ensure institution_type is valid
       if (collegeInfo.institution_type && !['Public', 'Private'].includes(collegeInfo.institution_type)) {

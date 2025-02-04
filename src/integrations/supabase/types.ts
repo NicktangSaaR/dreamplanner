@@ -43,9 +43,11 @@ export type Database = {
           city: string | null
           college_name: string
           college_url: string
+          country: string | null
           created_at: string | null
           degree: string
           gpa_75th: number | null
+          gpa_scale_type: string | null
           id: string
           institution_type: string | null
           major: string
@@ -65,9 +67,11 @@ export type Database = {
           city?: string | null
           college_name: string
           college_url: string
+          country?: string | null
           created_at?: string | null
           degree: string
           gpa_75th?: number | null
+          gpa_scale_type?: string | null
           id?: string
           institution_type?: string | null
           major: string
@@ -87,9 +91,11 @@ export type Database = {
           city?: string | null
           college_name?: string
           college_url?: string
+          country?: string | null
           created_at?: string | null
           degree?: string
           gpa_75th?: number | null
+          gpa_scale_type?: string | null
           id?: string
           institution_type?: string | null
           major?: string
