@@ -8,12 +8,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage, Form } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { CollegeFormValues } from "./collegeSchema";
 import { CollegeApplication } from "./types";
 import { BasicCollegeInfo } from "./components/BasicCollegeInfo";
-import { DetailedCollegeInfo } from "./components/DetailedCollegeInfo";
-import { LocationInfo } from "./components/LocationInfo";
 import { useCollegeForm } from "./hooks/useCollegeForm";
 
 interface AddCollegeDialogProps {
@@ -29,7 +27,7 @@ export function AddCollegeDialog({
   open,
   onOpenChange
 }: AddCollegeDialogProps) {
-  const { form, isLoadingCollegeInfo, handleSubmit } = useCollegeForm(applicationData, onSubmit);
+  const { form, handleSubmit } = useCollegeForm(applicationData, onSubmit);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -45,36 +43,7 @@ export function AddCollegeDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <BasicCollegeInfo form={form} />
-              
-              {(applicationData || isLoadingCollegeInfo) && (
-                <>
-                  <DetailedCollegeInfo form={form} />
-                  <LocationInfo form={form} />
-                </>
-              )}
-              
-              <div className="col-span-2">
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <textarea 
-                          {...field} 
-                          className="w-full min-h-[100px] p-2 border rounded-md" 
-                          placeholder="Add any notes about this college..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+            <BasicCollegeInfo form={form} />
             <Button type="submit" className="w-full">
               {applicationData ? 'Save Changes' : 'Add College'}
             </Button>
