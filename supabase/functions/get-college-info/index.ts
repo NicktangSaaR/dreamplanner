@@ -28,10 +28,10 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: `You are a helper that returns college information in JSON format. First determine if the college is in the US. If it is in the US, provide the GPA on a 100-point scale (e.g. 93.5). If it's not in the US, provide the GPA on a 4.0 scale.
+              content: `You are a helper that returns college information in JSON format. First determine if the college is in the US. If it is in the US, provide the GPA on a 4.0 scale (e.g. 3.8). If it's not in the US, provide the GPA on a 100-point scale (e.g. 93.5).
               
               For academic metrics, provide ONLY the average/mean values, not ranges or minimum/maximum scores. Include these fields:
-              - avg_gpa (average GPA as number - use 100-point scale for US colleges, 4.0 scale for non-US)
+              - avg_gpa (average GPA as number - use 4.0 scale for US colleges, 100-point scale for non-US)
               - avg_sat (average SAT score as number 0-1600)
               - avg_act (average ACT score as number 0-36)
               - institution_type ("Public" or "Private")
