@@ -6,7 +6,7 @@ export default function PrintStyles() {
         @media print {
           @page {
             size: landscape;
-            margin: 20mm;
+            margin: 10mm;
           }
           
           body * {
@@ -26,46 +26,60 @@ export default function PrintStyles() {
           }
 
           .profile-section {
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             border-bottom: 1px solid #ddd;
-            padding-bottom: 1rem;
+            padding: 0.5rem;
           }
 
           .profile-section h3 {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
           }
 
           .profile-section dl {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            font-size: 0.75rem;
+          }
+
+          .profile-section dt {
+            font-size: 0.7rem;
+          }
+
+          .profile-section dd {
+            font-size: 0.7rem;
           }
           
           table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11px;
+            font-size: 9px;
           }
           
           th, td {
-            padding: 6px;
+            padding: 4px;
             border: 1px solid #ddd;
-            white-space: normal;
-            word-break: break-word;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
           }
 
           td a {
             word-break: break-all;
+            font-size: 9px;
           }
           
           .print\\:hidden {
             display: none !important;
           }
 
-          /* Ensure table cells don't overflow */
           td > div.max-w-[200px] {
-            max-width: none !important;
+            max-width: 150px !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
         }
       `}
