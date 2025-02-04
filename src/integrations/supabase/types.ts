@@ -35,7 +35,6 @@ export type Database = {
       }
       college_applications: {
         Row: {
-          act_75th: number | null
           avg_act: number | null
           avg_gpa: number | null
           avg_sat: number | null
@@ -51,15 +50,15 @@ export type Database = {
           id: string
           institution_type: string | null
           major: string
+          max_act: number | null
+          max_sat: number | null
           notes: string | null
-          sat_75th: number | null
           state: string | null
           student_id: string
           test_optional: boolean | null
           updated_at: string | null
         }
         Insert: {
-          act_75th?: number | null
           avg_act?: number | null
           avg_gpa?: number | null
           avg_sat?: number | null
@@ -75,15 +74,15 @@ export type Database = {
           id?: string
           institution_type?: string | null
           major: string
+          max_act?: number | null
+          max_sat?: number | null
           notes?: string | null
-          sat_75th?: number | null
           state?: string | null
           student_id: string
           test_optional?: boolean | null
           updated_at?: string | null
         }
         Update: {
-          act_75th?: number | null
           avg_act?: number | null
           avg_gpa?: number | null
           avg_sat?: number | null
@@ -99,8 +98,9 @@ export type Database = {
           id?: string
           institution_type?: string | null
           major?: string
+          max_act?: number | null
+          max_sat?: number | null
           notes?: string | null
-          sat_75th?: number | null
           state?: string | null
           student_id?: string
           test_optional?: boolean | null

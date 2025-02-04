@@ -33,8 +33,8 @@ export function ExportButtons({ applications, profile }: ExportButtonsProps) {
       'Institution Type': app.institution_type || 'Not specified',
       'Location': app.city && app.state ? `${app.city}, ${app.state}` : (app.state || 'Not specified'),
       'Average GPA': app.avg_gpa || 'Not available',
-      'SAT (75th Percentile)': app.sat_75th || 'Not available',
-      'ACT (75th Percentile)': app.act_75th || 'Not available',
+      'SAT (Max)': app.max_sat || 'Not available',
+      'ACT (Max)': app.max_act || 'Not available',
       'Test Optional': app.test_optional ? 'Yes' : 'No',
       'College Website': app.college_url || 'Not available',
       'Additional Notes': app.notes || ''
@@ -58,8 +58,8 @@ export function ExportButtons({ applications, profile }: ExportButtonsProps) {
       { wch: 15 }, // Institution Type
       { wch: 25 }, // Location
       { wch: 12 }, // GPA
-      { wch: 12 }, // SAT 75th
-      { wch: 12 }, // ACT 75th
+      { wch: 12 }, // SAT Max
+      { wch: 12 }, // ACT Max
       { wch: 12 }, // Test Optional
       { wch: 30 }, // Website
       { wch: 50 }  // Notes
