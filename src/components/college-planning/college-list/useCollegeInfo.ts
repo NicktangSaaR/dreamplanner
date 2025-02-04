@@ -14,6 +14,7 @@ export async function getCollegeInfo(collegeName: string): Promise<{
   test_optional?: boolean;
 } | null> {
   try {
+    console.log('Fetching college info for:', collegeName);
     const { data, error } = await supabase.functions.invoke('get-college-info', {
       body: { collegeName }
     });
@@ -28,9 +29,10 @@ export async function getCollegeInfo(collegeName: string): Promise<{
       return null;
     }
 
-    console.log('Parsed college info:', data);
+    console.log('Received college info:', data);
     
-    return {
+    // Process and validate each field
+    const processedData = {
       avg_gpa: typeof data.avg_gpa === 'number' ? data.avg_gpa : undefined,
       avg_sat: typeof data.avg_sat === 'number' ? data.avg_sat : undefined,
       avg_act: typeof data.avg_act === 'number' ? data.avg_act : undefined,
@@ -44,6 +46,9 @@ export async function getCollegeInfo(collegeName: string): Promise<{
       city: typeof data.city === 'string' ? data.city : undefined,
       test_optional: typeof data.test_optional === 'boolean' ? data.test_optional : undefined,
     };
+
+    console.log('Processed college info:', processedData);
+    return processedData;
   } catch (error) {
     console.error('Error getting college info:', error);
     return null;

@@ -61,12 +61,13 @@ export function useCollegeForm(
 
   useEffect(() => {
     const subscription = form.watch(async (value, { name }) => {
-      if (name === 'college_name' && value.college_name && !applicationData) {
+      if (name === 'college_name' && value.college_name && value.college_name.length >= 3 && !applicationData) {
         setIsLoadingCollegeInfo(true);
-        setHasCollegeInfo(false);
         try {
+          console.log('Fetching college info for:', value.college_name);
           const collegeInfo = await getCollegeInfo(value.college_name);
           if (collegeInfo) {
+            console.log('Setting college info:', collegeInfo);
             form.setValue('test_optional', collegeInfo.test_optional || null);
             form.setValue('avg_gpa', collegeInfo.avg_gpa || null);
             form.setValue('avg_sat', collegeInfo.avg_sat || null);
@@ -76,15 +77,13 @@ export function useCollegeForm(
             form.setValue('institution_type', collegeInfo.institution_type || null);
             form.setValue('state', collegeInfo.state || null);
             form.setValue('city', collegeInfo.city || null);
-            form.setValue('college_url', collegeInfo.website_url || null);
+            form.setValue('college_url', collegeInfo.website_url || '');
           }
-          // Set hasCollegeInfo to true regardless of whether we got data or not
-          setHasCollegeInfo(true);
         } catch (error) {
           console.error('Error fetching college info:', error);
-          setHasCollegeInfo(true);
         } finally {
           setIsLoadingCollegeInfo(false);
+          setHasCollegeInfo(true);
         }
       }
     });
