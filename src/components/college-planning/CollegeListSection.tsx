@@ -84,23 +84,42 @@ export default function CollegeListSection() {
         }
       }
       
-      // Get college info from AI
-      const collegeInfo = await getCollegeInfo(values.college_name);
+      let applicationData;
       
-      const applicationData = {
-        college_name: values.college_name,
-        major: values.major,
-        degree: values.degree,
-        category: values.category,
-        college_url: collegeInfo.website_url || `https://www.${values.college_name.toLowerCase().replace(/ /g, '')}.edu`,
-        student_id: targetStudentId,
-        avg_gpa: collegeInfo.avg_gpa,
-        avg_sat: collegeInfo.avg_sat,
-        avg_act: collegeInfo.avg_act,
-        institution_type: collegeInfo.institution_type,
-        state: collegeInfo.state,
-        city: collegeInfo.city
-      };
+      // Only get college info from AI when adding a new college
+      if (!applicationId) {
+        const collegeInfo = await getCollegeInfo(values.college_name);
+        applicationData = {
+          college_name: values.college_name,
+          major: values.major,
+          degree: values.degree,
+          category: values.category,
+          college_url: collegeInfo.website_url || `https://www.${values.college_name.toLowerCase().replace(/ /g, '')}.edu`,
+          student_id: targetStudentId,
+          avg_gpa: collegeInfo.avg_gpa,
+          avg_sat: collegeInfo.avg_sat,
+          avg_act: collegeInfo.avg_act,
+          institution_type: collegeInfo.institution_type,
+          state: collegeInfo.state,
+          city: collegeInfo.city
+        };
+      } else {
+        // For editing, just use the values directly
+        applicationData = {
+          college_name: values.college_name,
+          major: values.major,
+          degree: values.degree,
+          category: values.category,
+          college_url: values.college_url,
+          student_id: targetStudentId,
+          avg_gpa: values.avg_gpa,
+          avg_sat: values.avg_sat,
+          avg_act: values.avg_act,
+          institution_type: values.institution_type,
+          state: values.state,
+          city: values.city
+        };
+      }
 
       let error;
       if (applicationId) {

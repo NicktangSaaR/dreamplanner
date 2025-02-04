@@ -50,6 +50,13 @@ export default function AddCollegeDialog({
       major: "",
       degree: undefined,
       category: undefined,
+      college_url: "",
+      avg_gpa: null,
+      avg_sat: null,
+      avg_act: null,
+      institution_type: null,
+      state: null,
+      city: null,
     },
   });
 
@@ -60,6 +67,13 @@ export default function AddCollegeDialog({
         major: applicationData.major,
         degree: applicationData.degree as "Bachelor" | "Master",
         category: applicationData.category as any,
+        college_url: applicationData.college_url,
+        avg_gpa: applicationData.avg_gpa || null,
+        avg_sat: applicationData.avg_sat || null,
+        avg_act: applicationData.avg_act || null,
+        institution_type: applicationData.institution_type as "Public" | "Private" || null,
+        state: applicationData.state || null,
+        city: applicationData.city || null,
       });
     } else {
       form.reset({
@@ -67,6 +81,13 @@ export default function AddCollegeDialog({
         major: "",
         degree: undefined,
         category: undefined,
+        college_url: "",
+        avg_gpa: null,
+        avg_sat: null,
+        avg_act: null,
+        institution_type: null,
+        state: null,
+        city: null,
       });
     }
   }, [applicationData, form]);
@@ -90,7 +111,7 @@ export default function AddCollegeDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="college_name"
@@ -170,6 +191,128 @@ export default function AddCollegeDialog({
                   </FormItem>
                 )}
               />
+              {applicationData && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="college_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>College URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter college URL" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="avg_gpa"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Average GPA</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            placeholder="Enter average GPA" 
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="avg_sat"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Average SAT</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="Enter average SAT" 
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="avg_act"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Average ACT</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="Enter average ACT" 
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="institution_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Institution Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select institution type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Public">Public</SelectItem>
+                            <SelectItem value="Private">Private</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter state" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter city" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
             </div>
             <Button type="submit" className="w-full">
               {applicationData ? 'Save Changes' : 'Add College'}

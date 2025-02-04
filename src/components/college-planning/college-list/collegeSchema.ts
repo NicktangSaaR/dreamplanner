@@ -10,6 +10,13 @@ export const formSchema = z.object({
   category: z.enum(["Hard Reach", "Reach", "Hard Target", "Target", "Safety"], {
     required_error: "Please select a category",
   }),
+  college_url: z.string().optional(),
+  avg_gpa: z.number().nullable().optional(),
+  avg_sat: z.number().nullable().optional(),
+  avg_act: z.number().nullable().optional(),
+  institution_type: z.enum(["Public", "Private"]).nullable().optional(),
+  state: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
 });
 
 export type CollegeFormValues = z.infer<typeof formSchema>;
