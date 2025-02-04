@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet, FileText } from "lucide-react";
 import * as XLSX from 'xlsx';
@@ -8,7 +9,7 @@ interface ExportButtonsProps {
   profile: StudentProfile | null;
 }
 
-export default function ExportButtons({ applications, profile }: ExportButtonsProps) {
+export function ExportButtons({ applications, profile }: ExportButtonsProps) {
   const exportToExcel = () => {
     if (!applications?.length) return;
 
