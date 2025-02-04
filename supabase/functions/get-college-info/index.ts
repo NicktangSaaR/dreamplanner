@@ -64,22 +64,22 @@ Rules:
             }
           ],
           temperature: 0.3,
-          tools: [
-            {
-              type: "web_search",
-              config: {
-                top_k: 5,
-                domain_filter: ["*.edu", "collegedata.com", "niche.com", "collegeconfidential.com"]
-              }
+          tools: [{
+            type: "web_search",
+            config: {
+              top_k: 5,
+              domain_filter: ["*.edu", "collegedata.com", "niche.com", "collegeconfidential.com", "bigfuture.collegeboard.org"]
             }
-          ]
+          }],
+          tool_choice: "auto"
         })
       }
     );
 
     if (!response.ok) {
-      console.error(`OpenAI API error: ${response.status}`);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`OpenAI API error: ${response.status}`, errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
