@@ -15,15 +15,15 @@ serve(async (req) => {
     const { collegeName } = await req.json();
 
     const response = await fetch(
-      `https://api.perplexity.ai/chat/completions`,
+      'https://api.openai.com/v1/chat/completions',
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${Deno.env.get('PERPLEXITY_API_KEY')}`,
+          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'llama-3.1-sonar-small-128k-online',
+          model: 'gpt-4o-mini',
           messages: [
             {
               role: 'system',
@@ -34,7 +34,6 @@ serve(async (req) => {
               content: `What are the average GPA, SAT, ACT scores, institution type (public/private), and state for ${collegeName}?`
             }
           ],
-          max_tokens: 200,
         })
       }
     );
@@ -49,6 +48,7 @@ serve(async (req) => {
       },
     );
   } catch (error) {
+    console.error('Error in get-college-info function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
