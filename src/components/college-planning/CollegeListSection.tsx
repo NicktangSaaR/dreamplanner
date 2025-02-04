@@ -10,10 +10,13 @@ import ExportButtons from "./college-list/ExportButtons";
 import CollegeTable from "./college-list/CollegeTable";
 import PrintStyles from "./college-list/PrintStyles";
 import { CollegeApplication } from "./college-list/types";
+import { useState } from "react";
 
 export default function CollegeListSection() {
   const { toast } = useToast();
   const { studentId } = useParams();
+  const [editApplication, setEditApplication] = useState<CollegeApplication | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ["student-profile", studentId],
@@ -96,6 +99,8 @@ export default function CollegeListSection() {
         description: `College application ${applicationId ? 'updated' : 'added'} successfully`,
       });
       
+      setEditApplication(null);
+      setIsDialogOpen(false);
       refetch();
     } catch (error) {
       console.error("Error saving application:", error);
@@ -142,7 +147,15 @@ export default function CollegeListSection() {
             applications={applications} 
             profile={profile}
           />
-          <AddCollegeDialog onSubmit={onSubmit} />
+          <AddCollegeDialog 
+            onSubmit={onSubmit} 
+            applicationData={editApplication} 
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open) setEditApplication(null);
+            }}
+          />
         </div>
       </div>
 
@@ -151,17 +164,8 @@ export default function CollegeListSection() {
         profile={profile}
         onDelete={handleDelete}
         onEdit={(application) => {
-          const dialog = document.createElement('dialog');
-          dialog.innerHTML = `<add-college-dialog></add-college-dialog>`;
-          document.body.appendChild(dialog);
-          const addCollegeDialog = dialog.querySelector('add-college-dialog');
-          if (addCollegeDialog) {
-            // Pass the application data to initialize the form
-            (addCollegeDialog as any).applicationData = application;
-            (addCollegeDialog as any).onSubmit = (values: CollegeFormValues) => 
-              onSubmit(values, application.id);
-          }
-          dialog.showModal();
+          setEditApplication(application);
+          setIsDialogOpen(true);
         }}
       />
 

@@ -1,8 +1,7 @@
 
-import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,21 +28,28 @@ import {
 import { Input } from "@/components/ui/input";
 import { formSchema, CollegeFormValues } from "./collegeSchema";
 import { CollegeApplication } from "./types";
+import { useEffect } from "react";
 
 interface AddCollegeDialogProps {
   onSubmit: (values: CollegeFormValues, applicationId?: string) => Promise<void>;
-  applicationData?: CollegeApplication;
+  applicationData?: CollegeApplication | null;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export default function AddCollegeDialog({ onSubmit, applicationData }: AddCollegeDialogProps) {
-  const [open, setOpen] = useState(false);
+export default function AddCollegeDialog({ 
+  onSubmit, 
+  applicationData,
+  open,
+  onOpenChange
+}: AddCollegeDialogProps) {
   const form = useForm<CollegeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      college_name: applicationData?.college_name || "",
-      major: applicationData?.major || "",
-      degree: (applicationData?.degree as "Bachelor" | "Master") || undefined,
-      category: applicationData?.category as any || undefined,
+      college_name: "",
+      major: "",
+      degree: undefined,
+      category: undefined,
     },
   });
 
@@ -55,21 +61,27 @@ export default function AddCollegeDialog({ onSubmit, applicationData }: AddColle
         degree: applicationData.degree as "Bachelor" | "Master",
         category: applicationData.category as any,
       });
+    } else {
+      form.reset({
+        college_name: "",
+        major: "",
+        degree: undefined,
+        category: undefined,
+      });
     }
   }, [applicationData, form]);
 
   const handleSubmit = async (values: CollegeFormValues) => {
     await onSubmit(values, applicationData?.id);
-    setOpen(false);
     form.reset();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          {applicationData ? 'Edit College' : 'Add College'}
+          Add College
         </Button>
       </DialogTrigger>
       <DialogContent>
