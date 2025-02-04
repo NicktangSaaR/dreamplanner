@@ -64,14 +64,25 @@ Rules:
             }
           ],
           temperature: 0.3,
-          tools: [{
-            type: "web_search",
-            config: {
-              top_k: 5,
-              domain_filter: ["*.edu", "collegedata.com", "niche.com", "collegeconfidential.com", "bigfuture.collegeboard.org"]
+          tools: [
+            {
+              "type": "function",
+              "function": {
+                "name": "web_search",
+                "description": "Search the web for college information",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "query": {
+                      "type": "string",
+                      "description": "The search query"
+                    }
+                  },
+                  "required": ["query"]
+                }
+              }
             }
-          }],
-          tool_choice: "auto"
+          ]
         })
       }
     );
