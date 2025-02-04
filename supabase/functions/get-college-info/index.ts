@@ -24,7 +24,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4',
           messages: [
             {
               role: 'system',
@@ -38,12 +38,13 @@ serve(async (req) => {
               - state (US state name or null if not in US)
               - website_url (string)
               - city (string)
+              - test_optional (boolean - whether the college is test-optional for admissions)
               
               Return ONLY valid JSON, no other text.`
             },
             {
               role: 'user',
-              content: `What are the average (mean) GPA, SAT, and ACT scores, institution type (public/private), state, official website URL, and city for ${collegeName}? Please provide only average/mean values for GPA, SAT, and ACT scores.`
+              content: `What are the average (mean) GPA, SAT, and ACT scores, institution type (public/private), state, official website URL, city, and test-optional status for ${collegeName}? Please provide only average/mean values for GPA, SAT, and ACT scores.`
             }
           ],
           temperature: 0.7

@@ -9,6 +9,7 @@ export async function getCollegeInfo(collegeName: string): Promise<{
   state?: string;
   website_url?: string;
   city?: string;
+  test_optional?: boolean;
 }> {
   try {
     const { data, error } = await supabase.functions.invoke('get-college-info', {
@@ -38,9 +39,11 @@ export async function getCollegeInfo(collegeName: string): Promise<{
       state: typeof collegeInfo.state === 'string' ? collegeInfo.state : undefined,
       website_url: typeof collegeInfo.website_url === 'string' ? collegeInfo.website_url : undefined,
       city: typeof collegeInfo.city === 'string' ? collegeInfo.city : undefined,
+      test_optional: typeof collegeInfo.test_optional === 'boolean' ? collegeInfo.test_optional : undefined,
     };
   } catch (error) {
     console.error('Error getting college info:', error);
     return {};
   }
 }
+
