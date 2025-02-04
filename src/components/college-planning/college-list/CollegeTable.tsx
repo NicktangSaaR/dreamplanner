@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Pencil } from "lucide-react";
 import { CollegeApplication, StudentProfile } from "./types";
 
 const categoryColors: Record<string, string> = {
@@ -22,9 +24,10 @@ interface CollegeTableProps {
   applications: CollegeApplication[];
   profile: StudentProfile | null;
   onDelete: (id: string) => Promise<void>;
+  onEdit: (application: CollegeApplication) => void;
 }
 
-export default function CollegeTable({ applications, profile, onDelete }: CollegeTableProps) {
+export default function CollegeTable({ applications, profile, onDelete, onEdit }: CollegeTableProps) {
   return (
     <div className="rounded-md border print-section">
       <div className="profile-section p-6">
@@ -82,14 +85,24 @@ export default function CollegeTable({ applications, profile, onDelete }: Colleg
                 </a>
               </TableCell>
               <TableCell className="print:hidden">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete(app.id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  Delete
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit(app)}
+                    className="text-blue-500 hover:text-blue-700"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(app.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Delete
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}

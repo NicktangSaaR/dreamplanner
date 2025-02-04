@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
@@ -27,25 +28,38 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { formSchema, CollegeFormValues } from "./collegeSchema";
+import { CollegeApplication } from "./types";
 
 interface AddCollegeDialogProps {
-  onSubmit: (values: CollegeFormValues) => Promise<void>;
+  onSubmit: (values: CollegeFormValues, applicationId?: string) => Promise<void>;
+  applicationData?: CollegeApplication;
 }
 
-export default function AddCollegeDialog({ onSubmit }: AddCollegeDialogProps) {
+export default function AddCollegeDialog({ onSubmit, applicationData }: AddCollegeDialogProps) {
   const [open, setOpen] = useState(false);
   const form = useForm<CollegeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      college_name: "",
-      major: "",
-      degree: undefined,
-      category: undefined,
+      college_name: applicationData?.college_name || "",
+      major: applicationData?.major || "",
+      degree: (applicationData?.degree as "Bachelor" | "Master") || undefined,
+      category: applicationData?.category as any || undefined,
     },
   });
 
+  useEffect(() => {
+    if (applicationData) {
+      form.reset({
+        college_name: applicationData.college_name,
+        major: applicationData.major,
+        degree: applicationData.degree as "Bachelor" | "Master",
+        category: applicationData.category as any,
+      });
+    }
+  }, [applicationData, form]);
+
   const handleSubmit = async (values: CollegeFormValues) => {
-    await onSubmit(values);
+    await onSubmit(values, applicationData?.id);
     setOpen(false);
     form.reset();
   };
@@ -55,12 +69,12 @@ export default function AddCollegeDialog({ onSubmit }: AddCollegeDialogProps) {
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Add College
+          {applicationData ? 'Edit College' : 'Add College'}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add College Application</DialogTitle>
+          <DialogTitle>{applicationData ? 'Edit College Application' : 'Add College Application'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -99,6 +113,7 @@ export default function AddCollegeDialog({ onSubmit }: AddCollegeDialogProps) {
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -123,6 +138,7 @@ export default function AddCollegeDialog({ onSubmit }: AddCollegeDialogProps) {
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -142,7 +158,7 @@ export default function AddCollegeDialog({ onSubmit }: AddCollegeDialogProps) {
               )}
             />
             <Button type="submit" className="w-full">
-              Add College
+              {applicationData ? 'Save Changes' : 'Add College'}
             </Button>
           </form>
         </Form>

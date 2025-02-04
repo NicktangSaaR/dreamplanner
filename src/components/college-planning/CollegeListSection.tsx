@@ -1,3 +1,4 @@
+
 import { useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,9 +57,9 @@ export default function CollegeListSection() {
     },
   });
 
-  const onSubmit = async (values: CollegeFormValues) => {
+  const onSubmit = async (values: CollegeFormValues, applicationId?: string) => {
     try {
-      console.log("Submitting application:", values);
+      console.log("Submitting application:", values, "ID:", applicationId);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
@@ -74,23 +75,33 @@ export default function CollegeListSection() {
         student_id: targetStudentId
       };
 
-      const { error } = await supabase
-        .from("college_applications")
-        .insert(applicationData);
+      let error;
+      if (applicationId) {
+        // Update existing application
+        ({ error } = await supabase
+          .from("college_applications")
+          .update(applicationData)
+          .eq("id", applicationId));
+      } else {
+        // Insert new application
+        ({ error } = await supabase
+          .from("college_applications")
+          .insert(applicationData));
+      }
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "College application added successfully",
+        description: `College application ${applicationId ? 'updated' : 'added'} successfully`,
       });
       
       refetch();
     } catch (error) {
-      console.error("Error adding application:", error);
+      console.error("Error saving application:", error);
       toast({
         title: "Error",
-        description: "Failed to add college application",
+        description: `Failed to ${applicationId ? 'update' : 'add'} college application`,
         variant: "destructive",
       });
     }
@@ -139,6 +150,19 @@ export default function CollegeListSection() {
         applications={applications}
         profile={profile}
         onDelete={handleDelete}
+        onEdit={(application) => {
+          const dialog = document.createElement('dialog');
+          dialog.innerHTML = `<add-college-dialog></add-college-dialog>`;
+          document.body.appendChild(dialog);
+          const addCollegeDialog = dialog.querySelector('add-college-dialog');
+          if (addCollegeDialog) {
+            // Pass the application data to initialize the form
+            (addCollegeDialog as any).applicationData = application;
+            (addCollegeDialog as any).onSubmit = (values: CollegeFormValues) => 
+              onSubmit(values, application.id);
+          }
+          dialog.showModal();
+        }}
       />
 
       <PrintStyles />
