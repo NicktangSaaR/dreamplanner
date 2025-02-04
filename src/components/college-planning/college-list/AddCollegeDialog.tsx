@@ -16,7 +16,7 @@ import { DetailedCollegeInfo } from "./components/DetailedCollegeInfo";
 import { LocationInfo } from "./components/LocationInfo";
 import { useCollegeForm } from "./hooks/useCollegeForm";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
@@ -40,6 +40,14 @@ export function AddCollegeDialog({
     }
   });
   const [isManualMode, setIsManualMode] = useState(false);
+
+  // Reset form when dialog is closed
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+      setIsManualMode(false);
+    }
+  }, [open, form]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -91,7 +99,6 @@ export function AddCollegeDialog({
               )}
             </div>
 
-            {/* Notes Section */}
             <FormField
               control={form.control}
               name="notes"
@@ -119,3 +126,4 @@ export function AddCollegeDialog({
     </Dialog>
   );
 }
+
