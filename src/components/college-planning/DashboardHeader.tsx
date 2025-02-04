@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -53,9 +54,10 @@ export default function DashboardHeader() {
           {profile?.user_type === 'counselor' ? 'Student Profile Summary' : 'Student Dashboard'}
         </h1>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         {profile?.user_type === 'student' && (
           <>
+            <span className="text-lg">Hello, {profile?.full_name || 'Student'}</span>
             <Button onClick={handleProfile} variant="outline">
               My Profile
             </Button>
