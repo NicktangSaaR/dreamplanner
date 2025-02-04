@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CollegeApplication } from "./types";
+import { CollegeApplication, StudentProfile } from "./types";
 
 const categoryColors: Record<string, string> = {
   "Hard Reach": "bg-red-500",
@@ -20,12 +20,35 @@ const categoryColors: Record<string, string> = {
 
 interface CollegeTableProps {
   applications: CollegeApplication[];
+  profile: StudentProfile | null;
   onDelete: (id: string) => Promise<void>;
 }
 
-export default function CollegeTable({ applications, onDelete }: CollegeTableProps) {
+export default function CollegeTable({ applications, profile, onDelete }: CollegeTableProps) {
   return (
     <div className="rounded-md border print-section">
+      <div className="profile-section p-6">
+        <h3 className="font-semibold">Student Profile</h3>
+        <dl className="grid grid-cols-2 gap-4">
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Name</dt>
+            <dd className="text-sm">{profile?.full_name || 'Not set'}</dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Grade</dt>
+            <dd className="text-sm">{profile?.grade || 'Not set'}</dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">School</dt>
+            <dd className="text-sm">{profile?.school || 'Not set'}</dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Interested Majors</dt>
+            <dd className="text-sm">{profile?.interested_majors?.join(', ') || 'Not set'}</dd>
+          </div>
+        </dl>
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>

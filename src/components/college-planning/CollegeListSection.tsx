@@ -14,6 +14,23 @@ export default function CollegeListSection() {
   const { toast } = useToast();
   const { studentId } = useParams();
 
+  const { data: profile } = useQuery({
+    queryKey: ["student-profile", studentId],
+    queryFn: async () => {
+      if (!studentId) return null;
+      
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, grade, school, interested_majors")
+        .eq("id", studentId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!studentId,
+  });
+
   const { data: applications = [], refetch } = useQuery({
     queryKey: ["college-applications", studentId],
     queryFn: async () => {
@@ -110,13 +127,17 @@ export default function CollegeListSection() {
       <div className="flex justify-between items-center print:hidden">
         <h2 className="text-2xl font-bold">College List</h2>
         <div className="flex items-center gap-2">
-          <ExportButtons applications={applications} />
+          <ExportButtons 
+            applications={applications} 
+            profile={profile}
+          />
           <AddCollegeDialog onSubmit={onSubmit} />
         </div>
       </div>
 
       <CollegeTable 
         applications={applications}
+        profile={profile}
         onDelete={handleDelete}
       />
 
