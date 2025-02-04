@@ -18,7 +18,7 @@ export function DetailedCollegeInfo({ form }: DetailedCollegeInfoProps) {
           <FormItem>
             <FormLabel>College URL</FormLabel>
             <FormControl>
-              <Input placeholder="Enter college URL" {...field} />
+              <Input placeholder="Enter college URL" {...field} value={field.value || ''} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -38,6 +38,7 @@ export function DetailedCollegeInfo({ form }: DetailedCollegeInfoProps) {
                 step="0.01" 
                 placeholder="Enter average GPA" 
                 {...field}
+                value={field.value || ''}
                 onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
               />
             </FormControl>
@@ -46,10 +47,10 @@ export function DetailedCollegeInfo({ form }: DetailedCollegeInfoProps) {
         )}
       />
 
-      {/* SAT 75th Percentile */}
+      {/* Max SAT Score */}
       <FormField
         control={form.control}
-        name="sat_75th"
+        name="max_sat"
         render={({ field }) => (
           <FormItem>
             <FormLabel>SAT (75th Percentile)</FormLabel>
@@ -58,6 +59,7 @@ export function DetailedCollegeInfo({ form }: DetailedCollegeInfoProps) {
                 type="number" 
                 placeholder="Enter 75th percentile SAT" 
                 {...field}
+                value={field.value || ''}
                 onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
               />
             </FormControl>
@@ -66,10 +68,10 @@ export function DetailedCollegeInfo({ form }: DetailedCollegeInfoProps) {
         )}
       />
 
-      {/* ACT 75th Percentile */}
+      {/* Max ACT Score */}
       <FormField
         control={form.control}
-        name="act_75th"
+        name="max_act"
         render={({ field }) => (
           <FormItem>
             <FormLabel>ACT (75th Percentile)</FormLabel>
@@ -78,6 +80,7 @@ export function DetailedCollegeInfo({ form }: DetailedCollegeInfoProps) {
                 type="number" 
                 placeholder="Enter 75th percentile ACT" 
                 {...field}
+                value={field.value || ''}
                 onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
               />
             </FormControl>
