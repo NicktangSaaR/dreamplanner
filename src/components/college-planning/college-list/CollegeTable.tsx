@@ -57,9 +57,9 @@ export default function CollegeTable({ applications, profile, onDelete, onEdit }
           <TableRow>
             <TableHead>College Name</TableHead>
             <TableHead>Major</TableHead>
-            <TableHead>Degree</TableHead>
+            <TableHead className="print:hidden">Degree</TableHead>
             <TableHead>Category</TableHead>
-            <TableHead>College URL</TableHead>
+            <TableHead className="print:hidden">College URL</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>State</TableHead>
             <TableHead>GPA</TableHead>
@@ -75,13 +75,13 @@ export default function CollegeTable({ applications, profile, onDelete, onEdit }
             <TableRow key={app.id}>
               <TableCell className="font-medium">{app.college_name}</TableCell>
               <TableCell>{app.major}</TableCell>
-              <TableCell>{app.degree}</TableCell>
+              <TableCell className="print:hidden">{app.degree}</TableCell>
               <TableCell>
                 <Badge className={`${categoryColors[app.category]} text-white`}>
                   {app.category}
                 </Badge>
               </TableCell>
-              <TableCell>
+              <TableCell className="print:hidden">
                 <a
                   href={app.college_url}
                   target="_blank"

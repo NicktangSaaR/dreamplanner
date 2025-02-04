@@ -72,29 +72,16 @@ export default function PrintStyles() {
             font-weight: bold;
           }
 
-          th:nth-child(1), td:nth-child(1) { width: 12%; } /* College Name */
-          th:nth-child(2), td:nth-child(2) { width: 10%; } /* Major */
-          th:nth-child(3), td:nth-child(3) { width: 5%; }  /* Degree */
-          th:nth-child(4), td:nth-child(4) { width: 6%; }  /* Category */
-          th:nth-child(5), td:nth-child(5) { width: 13%; } /* College URL */
-          th:nth-child(6), td:nth-child(6) { width: 6%; }  /* Type */
-          th:nth-child(7), td:nth-child(7) { width: 5%; }  /* State */
-          th:nth-child(8), td:nth-child(8) { width: 5%; }  /* GPA */
-          th:nth-child(9), td:nth-child(9) { width: 5%; }  /* SAT */
-          th:nth-child(10), td:nth-child(10) { width: 5%; } /* ACT */
+          th:nth-child(1), td:nth-child(1) { width: 15%; } /* College Name */
+          th:nth-child(2), td:nth-child(2) { width: 15%; } /* Major */
+          th:nth-child(4), td:nth-child(4) { width: 8%; }  /* Category */
+          th:nth-child(6), td:nth-child(6) { width: 8%; }  /* Type */
+          th:nth-child(7), td:nth-child(7) { width: 8%; }  /* State */
+          th:nth-child(8), td:nth-child(8) { width: 7%; }  /* GPA */
+          th:nth-child(9), td:nth-child(9) { width: 7%; }  /* SAT */
+          th:nth-child(10), td:nth-child(10) { width: 7%; } /* ACT */
           th:nth-child(11), td:nth-child(11) { width: 8%; } /* Test Optional */
-          th:nth-child(12), td:nth-child(12) { width: 20%; } /* Notes */
-
-          td a {
-            word-break: break-all;
-            font-size: 7px;
-            color: #0066cc !important;
-            text-decoration: none;
-          }
-          
-          .print\\:hidden {
-            display: none !important;
-          }
+          th:nth-child(12), td:nth-child(12) { width: 17%; } /* Notes */
 
           td > div.max-w-[200px] {
             max-width: none !important;
@@ -109,8 +96,13 @@ export default function PrintStyles() {
             border: 1px solid #666;
             padding: 1px 2px;
           }
+
+          .print:hidden {
+            display: none !important;
+          }
         }
       `}
     </style>
   );
 }
+
