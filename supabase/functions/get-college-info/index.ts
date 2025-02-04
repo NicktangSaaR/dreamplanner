@@ -28,7 +28,18 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: 'You are a helper that returns college information in JSON format. For academic metrics, provide ONLY the average/mean values, not ranges or minimum/maximum scores. Include these fields: avg_gpa (average GPA as number 0-5), avg_sat (average SAT score as number 0-1600), avg_act (average ACT score as number 0-36), institution_type ("Public" or "Private"), state (US state name), website_url (string), city (string). Return ONLY valid JSON, no other text.'
+              content: `You are a helper that returns college information in JSON format. First determine if the college is in the US. If it is in the US, provide the GPA on a 100-point scale (e.g. 93.5). If it's not in the US, provide the GPA on a 4.0 scale.
+              
+              For academic metrics, provide ONLY the average/mean values, not ranges or minimum/maximum scores. Include these fields:
+              - avg_gpa (average GPA as number - use 100-point scale for US colleges, 4.0 scale for non-US)
+              - avg_sat (average SAT score as number 0-1600)
+              - avg_act (average ACT score as number 0-36)
+              - institution_type ("Public" or "Private")
+              - state (US state name or null if not in US)
+              - website_url (string)
+              - city (string)
+              
+              Return ONLY valid JSON, no other text.`
             },
             {
               role: 'user',
