@@ -1,4 +1,6 @@
 
+import { supabase } from "@/integrations/supabase/client";
+
 export async function getCollegeInfo(collegeName: string): Promise<{
   avg_gpa?: number;
   avg_sat?: number;
@@ -8,27 +10,14 @@ export async function getCollegeInfo(collegeName: string): Promise<{
 }> {
   try {
     const response = await fetch(
-      `https://api.perplexity.ai/chat/completions`,
+      `${process.env.SUPABASE_URL}/functions/v1/get-college-info`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model: 'llama-3.1-sonar-small-128k-online',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a helper that returns college information in JSON format. Include only these fields: avg_gpa (number 0-5), avg_sat (number 0-1600), avg_act (number 0-36), institution_type ("Public" or "Private"), state (US state name). Return ONLY valid JSON, no other text.'
-            },
-            {
-              role: 'user',
-              content: `What are the average GPA, SAT, ACT scores, institution type (public/private), and state for ${collegeName}?`
-            }
-          ],
-          max_tokens: 200,
-        })
+        body: JSON.stringify({ collegeName })
       }
     );
 
