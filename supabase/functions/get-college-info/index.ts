@@ -25,7 +25,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4o',
           messages: [
             {
               role: 'system',
@@ -55,34 +55,14 @@ Rules:
 - All numbers must be numeric values, not strings
 - Country must always be provided
 - For US colleges, state must be a US state name
-- For non-US colleges, state can represent a province, region, or state
-- Use web search to find the most accurate and up-to-date information`
+- For non-US colleges, state can represent a province, region, or state`
             },
             {
               role: 'user',
-              content: `Search the web and return college information for ${collegeName} as a JSON object. No other text.`
+              content: `Return college information for ${collegeName} as a JSON object. No other text.`
             }
           ],
           temperature: 0.3,
-          tools: [
-            {
-              "type": "function",
-              "function": {
-                "name": "web_search",
-                "description": "Search the web for college information",
-                "parameters": {
-                  "type": "object",
-                  "properties": {
-                    "query": {
-                      "type": "string",
-                      "description": "The search query"
-                    }
-                  },
-                  "required": ["query"]
-                }
-              }
-            }
-          ]
         })
       }
     );
