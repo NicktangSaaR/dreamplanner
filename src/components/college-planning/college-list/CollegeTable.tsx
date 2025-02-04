@@ -62,9 +62,9 @@ export default function CollegeTable({ applications, profile, onDelete, onEdit }
             <TableHead>College URL</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>State</TableHead>
-            <TableHead>Avg. GPA</TableHead>
-            <TableHead>Avg. SAT</TableHead>
-            <TableHead>Avg. ACT</TableHead>
+            <TableHead>GPA (Avg/75th)</TableHead>
+            <TableHead>SAT (Avg/75th)</TableHead>
+            <TableHead>ACT (Avg/75th)</TableHead>
             <TableHead>Test Optional</TableHead>
             <TableHead>Notes</TableHead>
             <TableHead className="print:hidden">Actions</TableHead>
@@ -93,9 +93,15 @@ export default function CollegeTable({ applications, profile, onDelete, onEdit }
               </TableCell>
               <TableCell>{app.institution_type || '-'}</TableCell>
               <TableCell>{app.state || '-'}</TableCell>
-              <TableCell>{app.avg_gpa?.toFixed(2) || '-'}</TableCell>
-              <TableCell>{app.avg_sat || '-'}</TableCell>
-              <TableCell>{app.avg_act || '-'}</TableCell>
+              <TableCell>
+                {app.avg_gpa?.toFixed(2) || '-'} / {app.gpa_75th?.toFixed(2) || '-'}
+              </TableCell>
+              <TableCell>
+                {app.avg_sat || '-'} / {app.sat_75th || '-'}
+              </TableCell>
+              <TableCell>
+                {app.avg_act || '-'} / {app.act_75th || '-'}
+              </TableCell>
               <TableCell>{app.test_optional === true ? 'Yes' : app.test_optional === false ? 'No' : '-'}</TableCell>
               <TableCell>
                 {app.notes ? (

@@ -23,6 +23,9 @@ export function useCollegeForm(
       avg_gpa: null,
       avg_sat: null,
       avg_act: null,
+      gpa_75th: null,
+      sat_75th: null,
+      act_75th: null,
       institution_type: null,
       state: null,
       city: null,
@@ -42,6 +45,9 @@ export function useCollegeForm(
         avg_gpa: applicationData.avg_gpa || null,
         avg_sat: applicationData.avg_sat || null,
         avg_act: applicationData.avg_act || null,
+        gpa_75th: applicationData.gpa_75th || null,
+        sat_75th: applicationData.sat_75th || null,
+        act_75th: applicationData.act_75th || null,
         institution_type: applicationData.institution_type as "Public" | "Private" || null,
         state: applicationData.state || null,
         city: applicationData.city || null,
@@ -61,6 +67,9 @@ export function useCollegeForm(
           form.setValue('avg_gpa', collegeInfo.avg_gpa || null);
           form.setValue('avg_sat', collegeInfo.avg_sat || null);
           form.setValue('avg_act', collegeInfo.avg_act || null);
+          form.setValue('gpa_75th', collegeInfo.gpa_75th || null);
+          form.setValue('sat_75th', collegeInfo.sat_75th || null);
+          form.setValue('act_75th', collegeInfo.act_75th || null);
           form.setValue('institution_type', collegeInfo.institution_type || null);
           form.setValue('state', collegeInfo.state || null);
           form.setValue('city', collegeInfo.city || null);
