@@ -13,6 +13,7 @@ serve(async (req) => {
 
   try {
     const { collegeName } = await req.json();
+    console.log("Fetching info for college:", collegeName);
 
     const response = await fetch(
       'https://api.openai.com/v1/chat/completions',
@@ -23,7 +24,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4',
           messages: [
             {
               role: 'system',
@@ -34,11 +35,17 @@ serve(async (req) => {
               content: `What are the average GPA, SAT, ACT scores, institution type (public/private), state, official website URL, and city for ${collegeName}?`
             }
           ],
+          temperature: 0.7
         })
       }
     );
 
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
     const data = await response.json();
+    console.log("OpenAI response:", data);
     
     return new Response(
       JSON.stringify(data),
