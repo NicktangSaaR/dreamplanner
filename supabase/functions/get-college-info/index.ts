@@ -1,4 +1,4 @@
-```typescript
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -21,33 +21,7 @@ serve(async (req) => {
       messages: [
         {
           role: 'system',
-          content: `You are a JSON-only response system that provides college information. Return ONLY a valid JSON object with these exact fields - no other text or explanations:
-
-{
-  "avg_gpa": number or null,
-  "avg_sat": number or null,
-  "avg_act": number or null,
-  "max_sat": number or null,
-  "max_act": number or null,
-  "institution_type": "Public" or "Private" or null,
-  "state": string or null,
-  "website_url": string or null,
-  "city": string or null,
-  "test_optional": boolean or null,
-  "country": string,
-  "gpa_scale_type": "US_4.0" or "100_POINT"
-}
-
-Rules:
-- Use 4.0 scale for US colleges (gpa_scale_type: "US_4.0")
-- Use 100 point scale for non-US colleges (gpa_scale_type: "100_POINT")
-- SAT scores must be between 400-1600
-- ACT scores must be between 1-36
-- Return null for unknown values
-- All numbers must be numeric values, not strings
-- Country must always be provided
-- For US colleges, state must be a US state name
-- For non-US colleges, state can represent a province, region, or state`
+          content: 'You are a JSON-only response system that provides college information. Return ONLY a valid JSON object with these exact fields - no other text or explanations:\n\n{\n  "avg_gpa": number or null,\n  "avg_sat": number or null,\n  "avg_act": number or null,\n  "max_sat": number or null,\n  "max_act": number or null,\n  "institution_type": "Public" or "Private" or null,\n  "state": string or null,\n  "website_url": string or null,\n  "city": string or null,\n  "test_optional": boolean or null,\n  "country": string,\n  "gpa_scale_type": "US_4.0" or "100_POINT"\n}\n\nRules:\n- Use 4.0 scale for US colleges (gpa_scale_type: "US_4.0")\n- Use 100 point scale for non-US colleges (gpa_scale_type: "100_POINT")\n- SAT scores must be between 400-1600\n- ACT scores must be between 1-36\n- Return null for unknown values\n- All numbers must be numeric values, not strings\n- Country must always be provided\n- For US colleges, state must be a US state name\n- For non-US colleges, state can represent a province, region, or state'
         },
         {
           role: 'user',
@@ -172,4 +146,3 @@ Rules:
     );
   }
 });
-```
