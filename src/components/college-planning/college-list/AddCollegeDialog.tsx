@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, Form } from "@/components/ui/form";
 import { CollegeFormValues } from "./collegeSchema";
 import { CollegeApplication } from "./types";
 import { BasicCollegeInfo } from "./components/BasicCollegeInfo";
@@ -56,21 +56,21 @@ export function AddCollegeDialog({
               )}
               
               <div className="col-span-2">
-                <Form.Field
+                <FormField
                   control={form.control}
                   name="notes"
                   render={({ field }) => (
-                    <Form.Item>
-                      <Form.Label>Notes</Form.Label>
-                      <Form.Control>
+                    <FormItem>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl>
                         <textarea 
                           {...field} 
                           className="w-full min-h-[100px] p-2 border rounded-md" 
                           placeholder="Add any notes about this college..."
                         />
-                      </Form.Control>
-                      <Form.Message />
-                    </Form.Item>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
               </div>
