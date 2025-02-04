@@ -83,8 +83,7 @@ export function AddCollegeDialog({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <BasicCollegeInfo form={form} />
               
-              {/* Only show detailed info when in edit mode, manual mode, or when we have successfully fetched college info */}
-              {(applicationData || isManualMode || (!isLoadingCollegeInfo && hasCollegeInfo)) && (
+              {(applicationData || isManualMode || hasCollegeInfo) && (
                 <>
                   <DetailedCollegeInfo form={form} />
                   <LocationInfo form={form} />
@@ -111,7 +110,7 @@ export function AddCollegeDialog({
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={isSubmitting || isLoadingCollegeInfo}>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Saving...' : (applicationData ? 'Save Changes' : 'Add College')}
             </Button>
           </form>

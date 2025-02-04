@@ -66,19 +66,23 @@ export function useCollegeForm(
         setHasCollegeInfo(false);
         try {
           const collegeInfo = await getCollegeInfo(value.college_name);
-          form.setValue('test_optional', collegeInfo.test_optional || null);
-          form.setValue('avg_gpa', collegeInfo.avg_gpa || null);
-          form.setValue('avg_sat', collegeInfo.avg_sat || null);
-          form.setValue('avg_act', collegeInfo.avg_act || null);
-          form.setValue('sat_75th', collegeInfo.sat_75th || null);
-          form.setValue('act_75th', collegeInfo.act_75th || null);
-          form.setValue('institution_type', collegeInfo.institution_type || null);
-          form.setValue('state', collegeInfo.state || null);
-          form.setValue('city', collegeInfo.city || null);
-          form.setValue('college_url', collegeInfo.website_url || null);
-          setHasCollegeInfo(true);
+          if (collegeInfo) {
+            form.setValue('test_optional', collegeInfo.test_optional || null);
+            form.setValue('avg_gpa', collegeInfo.avg_gpa || null);
+            form.setValue('avg_sat', collegeInfo.avg_sat || null);
+            form.setValue('avg_act', collegeInfo.avg_act || null);
+            form.setValue('sat_75th', collegeInfo.sat_75th || null);
+            form.setValue('act_75th', collegeInfo.act_75th || null);
+            form.setValue('institution_type', collegeInfo.institution_type || null);
+            form.setValue('state', collegeInfo.state || null);
+            form.setValue('city', collegeInfo.city || null);
+            form.setValue('college_url', collegeInfo.website_url || null);
+            setHasCollegeInfo(true);
+          }
         } catch (error) {
           console.error('Error fetching college info:', error);
+          // Even if there's an error fetching additional info, we should still allow form submission
+          setHasCollegeInfo(true);
         } finally {
           setIsLoadingCollegeInfo(false);
         }
