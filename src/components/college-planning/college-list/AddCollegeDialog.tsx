@@ -89,9 +89,82 @@ export function AddCollegeDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <BasicCollegeInfo form={form} />
+              {/* Essential fields always shown */}
+              <div className="col-span-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="college_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>College Name</FormLabel>
+                        <FormControl>
+                          <input {...field} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Enter college name" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="degree"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Degree</FormLabel>
+                        <FormControl>
+                          <select 
+                            {...field} 
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <option value="">Select degree type</option>
+                            <option value="Bachelor">Bachelor</option>
+                            <option value="Master">Master</option>
+                          </select>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="major"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Major</FormLabel>
+                        <FormControl>
+                          <input {...field} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Enter major" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <FormControl>
+                          <select 
+                            {...field} 
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <option value="">Select category</option>
+                            <option value="Hard Reach">Hard Reach</option>
+                            <option value="Reach">Reach</option>
+                            <option value="Hard Target">Hard Target</option>
+                            <option value="Target">Target</option>
+                            <option value="Safety">Safety</option>
+                          </select>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
               
-              {(applicationData || isManualMode || hasCollegeInfo) && (
+              {/* Additional fields only shown in manual mode or when editing */}
+              {(isManualMode || applicationData) && (
                 <>
                   <DetailedCollegeInfo form={form} />
                   <LocationInfo form={form} />
@@ -126,4 +199,3 @@ export function AddCollegeDialog({
     </Dialog>
   );
 }
-
