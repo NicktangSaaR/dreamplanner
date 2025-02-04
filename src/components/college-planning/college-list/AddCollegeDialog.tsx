@@ -34,7 +34,7 @@ export function AddCollegeDialog({
   open,
   onOpenChange
 }: AddCollegeDialogProps) {
-  const { form, isLoadingCollegeInfo, handleSubmit, isSubmitting } = useCollegeForm(applicationData, onSubmit, () => {
+  const { form, isLoadingCollegeInfo, handleSubmit, isSubmitting, hasCollegeInfo } = useCollegeForm(applicationData, onSubmit, () => {
     if (onOpenChange) {
       onOpenChange(false);
     }
@@ -83,8 +83,8 @@ export function AddCollegeDialog({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <BasicCollegeInfo form={form} />
               
-              {/* 在编辑模式下或手动模式下显示详细信息 */}
-              {(applicationData || isManualMode || isLoadingCollegeInfo) && (
+              {/* Only show detailed info when in edit mode, manual mode, or when we have successfully fetched college info */}
+              {(applicationData || isManualMode || (!isLoadingCollegeInfo && hasCollegeInfo)) && (
                 <>
                   <DetailedCollegeInfo form={form} />
                   <LocationInfo form={form} />

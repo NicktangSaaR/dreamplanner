@@ -13,6 +13,7 @@ export function useCollegeForm(
 ) {
   const [isLoadingCollegeInfo, setIsLoadingCollegeInfo] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasCollegeInfo, setHasCollegeInfo] = useState(false);
   
   const form = useForm<CollegeFormValues>({
     resolver: zodResolver(formSchema),
@@ -54,6 +55,7 @@ export function useCollegeForm(
         test_optional: applicationData.test_optional || null,
         notes: applicationData.notes || null,
       });
+      setHasCollegeInfo(true);
     }
   }, [applicationData, form]);
 
@@ -61,6 +63,7 @@ export function useCollegeForm(
     const subscription = form.watch(async (value, { name }) => {
       if (name === 'college_name' && value.college_name && !applicationData) {
         setIsLoadingCollegeInfo(true);
+        setHasCollegeInfo(false);
         try {
           const collegeInfo = await getCollegeInfo(value.college_name);
           form.setValue('test_optional', collegeInfo.test_optional || null);
@@ -73,6 +76,7 @@ export function useCollegeForm(
           form.setValue('state', collegeInfo.state || null);
           form.setValue('city', collegeInfo.city || null);
           form.setValue('college_url', collegeInfo.website_url || null);
+          setHasCollegeInfo(true);
         } catch (error) {
           console.error('Error fetching college info:', error);
         } finally {
@@ -102,6 +106,7 @@ export function useCollegeForm(
     form,
     isLoadingCollegeInfo,
     isSubmitting,
+    hasCollegeInfo,
     handleSubmit
   };
 }
