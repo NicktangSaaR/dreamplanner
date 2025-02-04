@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
@@ -27,7 +28,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { formSchema, CollegeFormValues } from "./collegeSchema";
 import { CollegeApplication } from "./types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { getCollegeInfo } from "./useCollegeInfo";
 
 interface AddCollegeDialogProps {
   onSubmit: (values: CollegeFormValues, applicationId?: string) => Promise<void>;
@@ -42,6 +44,8 @@ export function AddCollegeDialog({
   open,
   onOpenChange
 }: AddCollegeDialogProps) {
+  const [isLoadingCollegeInfo, setIsLoadingCollegeInfo] = useState(false);
+  
   const form = useForm<CollegeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -96,6 +100,31 @@ export function AddCollegeDialog({
       });
     }
   }, [applicationData, form]);
+
+  // Add watcher for college name changes
+  useEffect(() => {
+    const subscription = form.watch(async (value, { name }) => {
+      if (name === 'college_name' && value.college_name && !applicationData) {
+        setIsLoadingCollegeInfo(true);
+        try {
+          const collegeInfo = await getCollegeInfo(value.college_name);
+          form.setValue('test_optional', collegeInfo.test_optional || null);
+          form.setValue('avg_gpa', collegeInfo.avg_gpa || null);
+          form.setValue('avg_sat', collegeInfo.avg_sat || null);
+          form.setValue('avg_act', collegeInfo.avg_act || null);
+          form.setValue('institution_type', collegeInfo.institution_type || null);
+          form.setValue('state', collegeInfo.state || null);
+          form.setValue('city', collegeInfo.city || null);
+          form.setValue('college_url', collegeInfo.website_url || null);
+        } catch (error) {
+          console.error('Error fetching college info:', error);
+        } finally {
+          setIsLoadingCollegeInfo(false);
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form, applicationData]);
 
   const handleSubmit = async (values: CollegeFormValues) => {
     await onSubmit(values, applicationData?.id);
@@ -196,7 +225,7 @@ export function AddCollegeDialog({
                   </FormItem>
                 )}
               />
-              {applicationData && (
+              {(applicationData || isLoadingCollegeInfo) && (
                 <>
                   <FormField
                     control={form.control}
@@ -316,34 +345,33 @@ export function AddCollegeDialog({
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="test_optional"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Test Optional</FormLabel>
+                        <Select
+                          onValueChange={(value) => field.onChange(value === 'true')}
+                          value={field.value?.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select test optional status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="true">Yes</SelectItem>
+                            <SelectItem value="false">No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </>
               )}
               
-              <FormField
-                control={form.control}
-                name="test_optional"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Test Optional</FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(value === 'true')}
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select test optional status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="true">Yes</SelectItem>
-                        <SelectItem value="false">No</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="notes"
