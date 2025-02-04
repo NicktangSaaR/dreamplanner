@@ -35,8 +35,8 @@ serve(async (req) => {
   "avg_gpa": number or null,
   "avg_sat": number or null,
   "avg_act": number or null,
-  "sat_75th": number or null,
-  "act_75th": number or null,
+  "max_sat": number or null,
+  "max_act": number or null,
   "institution_type": "Public" or "Private" or null,
   "state": string or null,
   "website_url": string or null,
@@ -85,7 +85,7 @@ Rules:
       const collegeInfo = JSON.parse(content);
       
       // Validate the response format
-      const requiredFields = ['avg_gpa', 'avg_sat', 'avg_act', 'sat_75th', 'act_75th', 
+      const requiredFields = ['avg_gpa', 'avg_sat', 'avg_act', 'max_sat', 'max_act', 
                             'institution_type', 'state', 'website_url', 'city', 'test_optional',
                             'country', 'gpa_scale_type'];
       
@@ -128,9 +128,9 @@ Rules:
 
       collegeInfo.avg_gpa = validateGPA(collegeInfo.avg_gpa, collegeInfo.gpa_scale_type);
       collegeInfo.avg_sat = validateRange(collegeInfo.avg_sat, 400, 1600, 'SAT');
-      collegeInfo.sat_75th = validateRange(collegeInfo.sat_75th, 400, 1600, 'SAT 75th');
+      collegeInfo.max_sat = validateRange(collegeInfo.max_sat, 400, 1600, 'Max SAT');
       collegeInfo.avg_act = validateRange(collegeInfo.avg_act, 1, 36, 'ACT');
-      collegeInfo.act_75th = validateRange(collegeInfo.act_75th, 1, 36, 'ACT 75th');
+      collegeInfo.max_act = validateRange(collegeInfo.max_act, 1, 36, 'Max ACT');
 
       // Ensure institution_type is valid
       if (collegeInfo.institution_type && !['Public', 'Private'].includes(collegeInfo.institution_type)) {

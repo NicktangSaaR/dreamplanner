@@ -10,8 +10,8 @@ export interface CollegeApplication {
   avg_gpa?: number;
   avg_sat?: number;
   avg_act?: number;
-  sat_75th?: number;
-  act_75th?: number;
+  max_sat?: number;
+  max_act?: number;
   institution_type?: 'Public' | 'Private';
   state?: string;
   city?: string;
