@@ -6,7 +6,7 @@ export default function PrintStyles() {
         @media print {
           @page {
             size: landscape;
-            margin: 5mm;
+            margin: 3mm;
           }
           
           body * {
@@ -26,13 +26,13 @@ export default function PrintStyles() {
           }
 
           .profile-section {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
             border-bottom: 1px solid #ddd;
             padding: 0.25rem;
           }
 
           .profile-section h3 {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             margin-bottom: 0.25rem;
           }
 
@@ -40,52 +40,54 @@ export default function PrintStyles() {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 0.25rem;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
           }
 
           .profile-section dt {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
           }
 
           .profile-section dd {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
           }
           
           table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8px;
+            font-size: 7px;
             table-layout: fixed;
           }
           
           th, td {
-            padding: 2px;
+            padding: 1px;
             border: 1px solid #ddd;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            line-height: 1.1;
           }
 
           th {
-            font-size: 7.5px;
+            font-size: 7px;
+            font-weight: bold;
           }
 
-          th:nth-child(1), td:nth-child(1) { width: 10%; } /* College Name */
-          th:nth-child(2), td:nth-child(2) { width: 8%; }  /* Major */
-          th:nth-child(3), td:nth-child(3) { width: 6%; }  /* Degree */
-          th:nth-child(4), td:nth-child(4) { width: 7%; }  /* Category */
-          th:nth-child(5), td:nth-child(5) { width: 15%; } /* College URL */
-          th:nth-child(6), td:nth-child(6) { width: 7%; }  /* Type */
-          th:nth-child(7), td:nth-child(7) { width: 6%; }  /* State */
+          th:nth-child(1), td:nth-child(1) { width: 12%; } /* College Name */
+          th:nth-child(2), td:nth-child(2) { width: 10%; } /* Major */
+          th:nth-child(3), td:nth-child(3) { width: 5%; }  /* Degree */
+          th:nth-child(4), td:nth-child(4) { width: 6%; }  /* Category */
+          th:nth-child(5), td:nth-child(5) { width: 13%; } /* College URL */
+          th:nth-child(6), td:nth-child(6) { width: 6%; }  /* Type */
+          th:nth-child(7), td:nth-child(7) { width: 5%; }  /* State */
           th:nth-child(8), td:nth-child(8) { width: 5%; }  /* GPA */
-          th:nth-child(9), td:nth-child(9) { width: 6%; }  /* SAT */
-          th:nth-child(10), td:nth-child(10) { width: 6%; } /* ACT */
-          th:nth-child(11), td:nth-child(11) { width: 7%; } /* Test Optional */
-          th:nth-child(12), td:nth-child(12) { width: 17%; } /* Notes */
+          th:nth-child(9), td:nth-child(9) { width: 5%; }  /* SAT */
+          th:nth-child(10), td:nth-child(10) { width: 5%; } /* ACT */
+          th:nth-child(11), td:nth-child(11) { width: 8%; } /* Test Optional */
+          th:nth-child(12), td:nth-child(12) { width: 20%; } /* Notes */
 
           td a {
             word-break: break-all;
-            font-size: 8px;
+            font-size: 7px;
             color: #0066cc !important;
             text-decoration: none;
           }
