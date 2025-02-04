@@ -27,11 +27,11 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: 'You are a helper that returns college information in JSON format. Include only these fields: avg_gpa (number 0-5), avg_sat (number 0-1600), avg_act (number 0-36), institution_type ("Public" or "Private"), state (US state name). Return ONLY valid JSON, no other text.'
+              content: 'You are a helper that returns college information in JSON format. Include these fields: avg_gpa (number 0-5), avg_sat (number 0-1600), avg_act (number 0-36), institution_type ("Public" or "Private"), state (US state name), website_url (string), city (string). Return ONLY valid JSON, no other text.'
             },
             {
               role: 'user',
-              content: `What are the average GPA, SAT, ACT scores, institution type (public/private), and state for ${collegeName}?`
+              content: `What are the average GPA, SAT, ACT scores, institution type (public/private), state, official website URL, and city for ${collegeName}?`
             }
           ],
         })
@@ -39,7 +39,7 @@ serve(async (req) => {
     );
 
     const data = await response.json();
-
+    
     return new Response(
       JSON.stringify(data),
       { 

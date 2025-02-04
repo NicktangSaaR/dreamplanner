@@ -7,6 +7,8 @@ export async function getCollegeInfo(collegeName: string): Promise<{
   avg_act?: number;
   institution_type?: 'Public' | 'Private';
   state?: string;
+  website_url?: string;
+  city?: string;
 }> {
   try {
     const response = await fetch(
@@ -37,6 +39,8 @@ export async function getCollegeInfo(collegeName: string): Promise<{
         ? collegeInfo.institution_type 
         : undefined,
       state: typeof collegeInfo.state === 'string' ? collegeInfo.state : undefined,
+      website_url: typeof collegeInfo.website_url === 'string' ? collegeInfo.website_url : undefined,
+      city: typeof collegeInfo.city === 'string' ? collegeInfo.city : undefined,
     };
   } catch (error) {
     console.error('Error getting college info:', error);

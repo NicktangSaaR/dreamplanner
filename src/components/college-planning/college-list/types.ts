@@ -12,6 +12,7 @@ export interface CollegeApplication {
   avg_act?: number;
   institution_type?: 'Public' | 'Private';
   state?: string;
+  city?: string;
 }
 
 export interface StudentProfile {

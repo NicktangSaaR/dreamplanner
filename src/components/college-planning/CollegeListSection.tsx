@@ -1,4 +1,4 @@
-
+```typescript
 import { useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,24 +69,22 @@ export default function CollegeListSection() {
 
       const targetStudentId = studentId || user.id;
       
-      // Get college URL and additional info in parallel
-      const [collegeUrl, collegeInfo] = await Promise.all([
-        getCollegeUrl(values.college_name),
-        getCollegeInfo(values.college_name)
-      ]);
+      // Get college info from AI
+      const collegeInfo = await getCollegeInfo(values.college_name);
       
       const applicationData = {
         college_name: values.college_name,
         major: values.major,
         degree: values.degree,
         category: values.category,
-        college_url: collegeUrl,
+        college_url: collegeInfo.website_url || `https://www.${values.college_name.toLowerCase().replace(/ /g, '')}.edu`,
         student_id: targetStudentId,
-        avg_gpa: values.avg_gpa || collegeInfo.avg_gpa,
-        avg_sat: values.avg_sat || collegeInfo.avg_sat,
-        avg_act: values.avg_act || collegeInfo.avg_act,
-        institution_type: values.institution_type || collegeInfo.institution_type,
-        state: values.state || collegeInfo.state
+        avg_gpa: collegeInfo.avg_gpa,
+        avg_sat: collegeInfo.avg_sat,
+        avg_act: collegeInfo.avg_act,
+        institution_type: collegeInfo.institution_type,
+        state: collegeInfo.state,
+        city: collegeInfo.city
       };
 
       let error;
@@ -182,3 +180,4 @@ export default function CollegeListSection() {
     </div>
   );
 }
+```

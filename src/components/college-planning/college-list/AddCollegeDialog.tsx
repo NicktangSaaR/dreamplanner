@@ -1,7 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -50,11 +50,6 @@ export default function AddCollegeDialog({
       major: "",
       degree: undefined,
       category: undefined,
-      avg_gpa: undefined,
-      avg_sat: undefined,
-      avg_act: undefined,
-      institution_type: undefined,
-      state: undefined,
     },
   });
 
@@ -65,11 +60,6 @@ export default function AddCollegeDialog({
         major: applicationData.major,
         degree: applicationData.degree as "Bachelor" | "Master",
         category: applicationData.category as any,
-        avg_gpa: applicationData.avg_gpa,
-        avg_sat: applicationData.avg_sat,
-        avg_act: applicationData.avg_act,
-        institution_type: applicationData.institution_type,
-        state: applicationData.state,
       });
     } else {
       form.reset({
@@ -77,11 +67,6 @@ export default function AddCollegeDialog({
         major: "",
         degree: undefined,
         category: undefined,
-        avg_gpa: undefined,
-        avg_sat: undefined,
-        avg_act: undefined,
-        institution_type: undefined,
-        state: undefined,
       });
     }
   }, [applicationData, form]);
@@ -105,7 +90,7 @@ export default function AddCollegeDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
                 name="college_name"
@@ -181,98 +166,6 @@ export default function AddCollegeDialog({
                         <SelectItem value="Safety">Safety</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="avg_gpa"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Average GPA</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01"
-                        placeholder="Enter average GPA" 
-                        {...field}
-                        onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="avg_sat"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Average SAT Score</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="Enter average SAT score" 
-                        {...field}
-                        onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="avg_act"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Average ACT Score</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="Enter average ACT score" 
-                        {...field}
-                        onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="institution_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Institution Type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select institution type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Public">Public</SelectItem>
-                        <SelectItem value="Private">Private</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="state"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>State</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter state" {...field} />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
