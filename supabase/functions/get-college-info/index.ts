@@ -25,7 +25,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'gpt-4',
           messages: [
             {
               role: 'system',
@@ -68,6 +68,7 @@ Rules:
     );
 
     if (!response.ok) {
+      console.error(`OpenAI API error: ${response.status}`);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
@@ -75,6 +76,7 @@ Rules:
     console.log("OpenAI raw response:", data);
     
     if (!data.choices?.[0]?.message?.content) {
+      console.error('Invalid response structure from OpenAI:', data);
       throw new Error('Invalid response structure from OpenAI');
     }
     
