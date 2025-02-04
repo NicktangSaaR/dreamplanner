@@ -1,3 +1,4 @@
+
 import * as z from "zod";
 
 export const formSchema = z.object({
@@ -9,6 +10,11 @@ export const formSchema = z.object({
   category: z.enum(["Hard Reach", "Reach", "Hard Target", "Target", "Safety"], {
     required_error: "Please select a category",
   }),
+  avg_gpa: z.number().min(0).max(5).optional(),
+  avg_sat: z.number().min(0).max(1600).optional(),
+  avg_act: z.number().min(0).max(36).optional(),
+  institution_type: z.enum(["Public", "Private"]).optional(),
+  state: z.string().optional(),
 });
 
 export type CollegeFormValues = z.infer<typeof formSchema>;

@@ -1,3 +1,4 @@
+
 export interface CollegeApplication {
   id: string;
   college_name: string;
@@ -6,6 +7,11 @@ export interface CollegeApplication {
   category: string;
   college_url: string;
   student_id: string;
+  avg_gpa?: number;
+  avg_sat?: number;
+  avg_act?: number;
+  institution_type?: 'Public' | 'Private';
+  state?: string;
 }
 
 export interface StudentProfile {

@@ -75,18 +75,21 @@ export default function CollegeListSection() {
         degree: values.degree,
         category: values.category,
         college_url: collegeUrl,
-        student_id: targetStudentId
+        student_id: targetStudentId,
+        avg_gpa: values.avg_gpa,
+        avg_sat: values.avg_sat,
+        avg_act: values.avg_act,
+        institution_type: values.institution_type,
+        state: values.state
       };
 
       let error;
       if (applicationId) {
-        // Update existing application
         ({ error } = await supabase
           .from("college_applications")
           .update(applicationData)
           .eq("id", applicationId));
       } else {
-        // Insert new application
         ({ error } = await supabase
           .from("college_applications")
           .insert(applicationData));

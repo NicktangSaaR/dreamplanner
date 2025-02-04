@@ -35,35 +35,50 @@ export type Database = {
       }
       college_applications: {
         Row: {
+          avg_act: number | null
+          avg_gpa: number | null
+          avg_sat: number | null
           category: string | null
           college_name: string
           college_url: string
           created_at: string | null
           degree: string
           id: string
+          institution_type: string | null
           major: string
+          state: string | null
           student_id: string
           updated_at: string | null
         }
         Insert: {
+          avg_act?: number | null
+          avg_gpa?: number | null
+          avg_sat?: number | null
           category?: string | null
           college_name: string
           college_url: string
           created_at?: string | null
           degree: string
           id?: string
+          institution_type?: string | null
           major: string
+          state?: string | null
           student_id: string
           updated_at?: string | null
         }
         Update: {
+          avg_act?: number | null
+          avg_gpa?: number | null
+          avg_sat?: number | null
           category?: string | null
           college_name?: string
           college_url?: string
           created_at?: string | null
           degree?: string
           id?: string
+          institution_type?: string | null
           major?: string
+          state?: string | null
           student_id?: string
           updated_at?: string | null
         }
