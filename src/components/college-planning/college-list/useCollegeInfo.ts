@@ -11,25 +11,22 @@ export async function getCollegeInfo(collegeName: string): Promise<{
   city?: string;
 }> {
   try {
-    const response = await fetch(
-      `${process.env.SUPABASE_URL}/functions/v1/get-college-info`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ collegeName })
-      }
-    );
+    const { data, error } = await supabase.functions.invoke('get-college-info', {
+      body: { collegeName }
+    });
 
-    if (!response.ok) {
-      console.error('Failed to fetch college info:', await response.text());
+    if (error) {
+      console.error('Error invoking get-college-info function:', error);
       return {};
     }
 
-    const data = await response.json();
+    if (!data || !data.choices || !data.choices[0]?.message?.content) {
+      console.error('Invalid response format from OpenAI:', data);
+      return {};
+    }
+
     const collegeInfo = JSON.parse(data.choices[0].message.content);
+    console.log('Parsed college info:', collegeInfo);
     
     return {
       avg_gpa: typeof collegeInfo.avg_gpa === 'number' ? collegeInfo.avg_gpa : undefined,
