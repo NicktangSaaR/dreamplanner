@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 
 interface AddCollegeDialogProps {
   onSubmit: (values: CollegeFormValues, applicationId?: string) => Promise<void>;
@@ -33,7 +34,11 @@ export function AddCollegeDialog({
   open,
   onOpenChange
 }: AddCollegeDialogProps) {
-  const { form, isLoadingCollegeInfo, handleSubmit } = useCollegeForm(applicationData, onSubmit);
+  const { form, isLoadingCollegeInfo, handleSubmit, isSubmitting } = useCollegeForm(applicationData, onSubmit, () => {
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
+  });
   const [isManualMode, setIsManualMode] = useState(false);
 
   return (
@@ -60,6 +65,16 @@ export function AddCollegeDialog({
                 onCheckedChange={setIsManualMode}
               />
             </div>
+          </div>
+        )}
+
+        {isLoadingCollegeInfo && (
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span>正在获取大学信息...</span>
+              <span>50%</span>
+            </div>
+            <Progress value={50} />
           </div>
         )}
 
@@ -96,8 +111,8 @@ export function AddCollegeDialog({
               )}
             />
 
-            <Button type="submit" className="w-full">
-              {applicationData ? 'Save Changes' : 'Add College'}
+            <Button type="submit" className="w-full" disabled={isSubmitting || isLoadingCollegeInfo}>
+              {isSubmitting ? 'Saving...' : (applicationData ? 'Save Changes' : 'Add College')}
             </Button>
           </form>
         </Form>

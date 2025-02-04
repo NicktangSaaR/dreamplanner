@@ -8,9 +8,11 @@ import { getCollegeInfo } from "../useCollegeInfo";
 
 export function useCollegeForm(
   applicationData?: CollegeApplication | null,
-  onSubmit?: (values: CollegeFormValues, applicationId?: string) => Promise<void>
+  onSubmit?: (values: CollegeFormValues, applicationId?: string) => Promise<void>,
+  onSuccess?: () => void
 ) {
   const [isLoadingCollegeInfo, setIsLoadingCollegeInfo] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<CollegeFormValues>({
     resolver: zodResolver(formSchema),
@@ -83,14 +85,23 @@ export function useCollegeForm(
 
   const handleSubmit = async (values: CollegeFormValues) => {
     if (onSubmit) {
-      await onSubmit(values, applicationData?.id);
-      form.reset();
+      setIsSubmitting(true);
+      try {
+        await onSubmit(values, applicationData?.id);
+        form.reset();
+        if (onSuccess) {
+          onSuccess();
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
   return {
     form,
     isLoadingCollegeInfo,
+    isSubmitting,
     handleSubmit
   };
 }
