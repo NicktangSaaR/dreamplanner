@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,38 +25,35 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4',
+          model: 'gpt-4o-mini',
           messages: [
             {
               role: 'system',
-              content: `You are a JSON-only response system that provides college information. You must ONLY return a valid JSON object with no additional text or explanations. For US colleges, use GPA on 4.0 scale; for non-US colleges, use 100-point scale.
+              content: `You are a JSON-only response system that provides college information. Return ONLY a valid JSON object with these exact fields - no other text or explanations:
 
-IMPORTANT: Return ONLY these exact fields in a JSON object - no other text or fields allowed:
 {
-  "avg_gpa": number (e.g., 3.8) or null,
-  "avg_sat": number (e.g., 1400) or null,
-  "avg_act": number (e.g., 32) or null,
-  "sat_75th": number (e.g., 1500) or null,
-  "act_75th": number (e.g., 35) or null,
-  "institution_type": "Public" or "Private",
+  "avg_gpa": number or null,
+  "avg_sat": number or null,
+  "avg_act": number or null,
+  "sat_75th": number or null,
+  "act_75th": number or null,
+  "institution_type": "Public" or "Private" or null,
   "state": string or null,
-  "website_url": string,
-  "city": string,
-  "test_optional": boolean
+  "website_url": string or null,
+  "city": string or null,
+  "test_optional": boolean or null
 }
 
-For SAT and ACT scores:
-- Use actual admission data for 75th percentile scores
-- avg_sat and sat_75th must be between 400 and 1600
-- avg_act and act_75th must be between 1 and 36
-- avg_gpa must be between 0 and 4.0 for US schools
-- Do not omit any fields - use null for unknown values
-- Numbers must be numeric values, not strings
-- Do not include any explanations or additional text`
+Rules:
+- Use 4.0 scale for US college GPA
+- SAT scores must be between 400-1600
+- ACT scores must be between 1-36
+- Return null for unknown values
+- All numbers must be numeric values, not strings`
             },
             {
               role: 'user',
-              content: `Return ONLY a JSON object with the college information for ${collegeName}. No other text.`
+              content: `Return college information for ${collegeName} as a JSON object. No other text.`
             }
           ],
           temperature: 0.3
@@ -68,7 +66,11 @@ For SAT and ACT scores:
     }
 
     const data = await response.json();
-    console.log("Raw OpenAI response:", data);
+    console.log("OpenAI raw response:", data);
+    
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response structure from OpenAI');
+    }
     
     const content = data.choices[0].message.content.trim();
     console.log("Content to parse:", content);
@@ -79,28 +81,37 @@ For SAT and ACT scores:
       // Validate the response format
       const requiredFields = ['avg_gpa', 'avg_sat', 'avg_act', 'sat_75th', 'act_75th', 
                             'institution_type', 'state', 'website_url', 'city', 'test_optional'];
-      const missingFields = requiredFields.filter(field => !(field in collegeInfo));
       
-      if (missingFields.length > 0) {
-        console.error('Missing required fields:', missingFields);
-        throw new Error('Invalid response format: missing required fields');
+      for (const field of requiredFields) {
+        if (!(field in collegeInfo)) {
+          console.error(`Missing required field: ${field}`);
+          collegeInfo[field] = null;
+        }
       }
 
       // Validate numeric ranges
-      if (collegeInfo.avg_sat !== null && (collegeInfo.avg_sat < 400 || collegeInfo.avg_sat > 1600)) {
-        throw new Error('Invalid SAT score range');
+      const validateRange = (value: number | null, min: number, max: number, fieldName: string) => {
+        if (value !== null && (value < min || value > max)) {
+          console.warn(`Invalid ${fieldName} value ${value}, setting to null`);
+          return null;
+        }
+        return value;
+      };
+
+      collegeInfo.avg_sat = validateRange(collegeInfo.avg_sat, 400, 1600, 'SAT');
+      collegeInfo.sat_75th = validateRange(collegeInfo.sat_75th, 400, 1600, 'SAT 75th');
+      collegeInfo.avg_act = validateRange(collegeInfo.avg_act, 1, 36, 'ACT');
+      collegeInfo.act_75th = validateRange(collegeInfo.act_75th, 1, 36, 'ACT 75th');
+      collegeInfo.avg_gpa = validateRange(collegeInfo.avg_gpa, 0, 4.0, 'GPA');
+
+      // Ensure institution_type is valid
+      if (collegeInfo.institution_type && !['Public', 'Private'].includes(collegeInfo.institution_type)) {
+        collegeInfo.institution_type = null;
       }
-      if (collegeInfo.sat_75th !== null && (collegeInfo.sat_75th < 400 || collegeInfo.sat_75th > 1600)) {
-        throw new Error('Invalid SAT 75th percentile score range');
-      }
-      if (collegeInfo.avg_act !== null && (collegeInfo.avg_act < 1 || collegeInfo.avg_act > 36)) {
-        throw new Error('Invalid ACT score range');
-      }
-      if (collegeInfo.act_75th !== null && (collegeInfo.act_75th < 1 || collegeInfo.act_75th > 36)) {
-        throw new Error('Invalid ACT 75th percentile score range');
-      }
-      if (collegeInfo.avg_gpa !== null && (collegeInfo.avg_gpa < 0 || collegeInfo.avg_gpa > 4.0)) {
-        throw new Error('Invalid GPA range');
+
+      // Ensure test_optional is boolean
+      if (typeof collegeInfo.test_optional !== 'boolean') {
+        collegeInfo.test_optional = null;
       }
 
       return new Response(
@@ -111,15 +122,9 @@ For SAT and ACT scores:
         },
       );
     } catch (parseError) {
-      console.error('Error parsing or validating OpenAI response:', parseError);
+      console.error('Error parsing OpenAI response:', parseError);
       console.error('Raw content that failed to parse:', content);
-      return new Response(
-        JSON.stringify({ error: 'Invalid response format from OpenAI' }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        },
-      );
+      throw new Error('Failed to parse OpenAI response as JSON');
     }
   } catch (error) {
     console.error('Error in get-college-info function:', error);
