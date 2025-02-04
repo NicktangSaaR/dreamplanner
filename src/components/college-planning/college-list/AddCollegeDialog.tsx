@@ -17,6 +17,8 @@ import { LocationInfo } from "./components/LocationInfo";
 import { useCollegeForm } from "./hooks/useCollegeForm";
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
+import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
 
 interface AddCollegeDialogProps {
   onSubmit: (values: CollegeFormValues, applicationId?: string) => Promise<void>;
@@ -74,6 +76,26 @@ export function AddCollegeDialog({
                 </>
               )}
             </div>
+
+            {/* Notes Section */}
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      value={field.value || ''}
+                      placeholder="Add any additional notes or important information about this college application..."
+                      className="min-h-[100px]"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             <Button type="submit" className="w-full">
               {applicationData ? 'Save Changes' : 'Add College'}
             </Button>
