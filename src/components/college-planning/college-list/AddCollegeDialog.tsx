@@ -12,7 +12,11 @@ import { Form } from "@/components/ui/form";
 import { CollegeFormValues } from "./collegeSchema";
 import { CollegeApplication } from "./types";
 import { BasicCollegeInfo } from "./components/BasicCollegeInfo";
+import { DetailedCollegeInfo } from "./components/DetailedCollegeInfo";
+import { LocationInfo } from "./components/LocationInfo";
 import { useCollegeForm } from "./hooks/useCollegeForm";
+import { Switch } from "@/components/ui/switch";
+import { useState } from "react";
 
 interface AddCollegeDialogProps {
   onSubmit: (values: CollegeFormValues, applicationId?: string) => Promise<void>;
@@ -27,7 +31,8 @@ export function AddCollegeDialog({
   open,
   onOpenChange
 }: AddCollegeDialogProps) {
-  const { form, handleSubmit } = useCollegeForm(applicationData, onSubmit);
+  const { form, isLoadingCollegeInfo, handleSubmit } = useCollegeForm(applicationData, onSubmit);
+  const [isManualMode, setIsManualMode] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -41,9 +46,34 @@ export function AddCollegeDialog({
         <DialogHeader>
           <DialogTitle>{applicationData ? 'Edit College Application' : 'Add College Application'}</DialogTitle>
         </DialogHeader>
+        
+        {!applicationData && (
+          <div className="flex items-center justify-between mb-4 p-2 bg-gray-50 rounded">
+            <span className="text-sm text-gray-700">
+              {isManualMode ? '手动模式：自行填写所有信息' : '自动模式：AI自动获取大学信息'}
+            </span>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={isManualMode}
+                onCheckedChange={setIsManualMode}
+              />
+            </div>
+          </div>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <BasicCollegeInfo form={form} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <BasicCollegeInfo form={form} />
+              
+              {/* 在编辑模式下或手动模式下显示详细信息 */}
+              {(applicationData || isManualMode || isLoadingCollegeInfo) && (
+                <>
+                  <DetailedCollegeInfo form={form} />
+                  <LocationInfo form={form} />
+                </>
+              )}
+            </div>
             <Button type="submit" className="w-full">
               {applicationData ? 'Save Changes' : 'Add College'}
             </Button>
