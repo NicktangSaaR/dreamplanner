@@ -35,7 +35,6 @@ Required fields (all must be included):
   "avg_gpa": number,
   "avg_sat": number,
   "avg_act": number,
-  "gpa_75th": number,
   "sat_75th": number,
   "act_75th": number,
   "institution_type": "Public" or "Private",
@@ -45,11 +44,11 @@ Required fields (all must be included):
   "test_optional": boolean
 }
 
-If ANY value is unknown, use null instead of omitting the field. Numbers must be numeric values, not strings.`
+For SAT and ACT scores, use actual admission data to provide real 75th percentile scores when available. Look for score ranges from actual admitted students and use those numbers. If ANY value is unknown, use null instead of omitting the field. Numbers must be numeric values, not strings.`
             },
             {
               role: 'user',
-              content: `Return ONLY a JSON object with the average and 75th percentile GPA, SAT, and ACT scores, institution type, state, website URL, city, and test-optional status for ${collegeName}.`
+              content: `Return ONLY a JSON object with the average GPA, SAT, and ACT scores (including 75th percentile scores for SAT and ACT), institution type, state, website URL, city, and test-optional status for ${collegeName}.`
             }
           ],
           temperature: 0.7
@@ -64,7 +63,6 @@ If ANY value is unknown, use null instead of omitting the field. Numbers must be
     const data = await response.json();
     console.log("Raw OpenAI response:", data);
     
-    // Extract the content and ensure it's valid JSON
     const content = data.choices[0].message.content.trim();
     console.log("Content to parse:", content);
     

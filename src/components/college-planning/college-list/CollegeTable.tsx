@@ -62,7 +62,7 @@ export default function CollegeTable({ applications, profile, onDelete, onEdit }
             <TableHead>College URL</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>State</TableHead>
-            <TableHead>GPA (Avg/75th)</TableHead>
+            <TableHead>GPA</TableHead>
             <TableHead>SAT (Avg/75th)</TableHead>
             <TableHead>ACT (Avg/75th)</TableHead>
             <TableHead>Test Optional</TableHead>
@@ -94,7 +94,7 @@ export default function CollegeTable({ applications, profile, onDelete, onEdit }
               <TableCell>{app.institution_type || '-'}</TableCell>
               <TableCell>{app.state || '-'}</TableCell>
               <TableCell>
-                {app.avg_gpa?.toFixed(2) || '-'} / {app.gpa_75th?.toFixed(2) || '-'}
+                {app.avg_gpa?.toFixed(2) || '-'}
               </TableCell>
               <TableCell>
                 {app.avg_sat || '-'} / {app.sat_75th || '-'}

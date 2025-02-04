@@ -5,6 +5,8 @@ export async function getCollegeInfo(collegeName: string): Promise<{
   avg_gpa?: number;
   avg_sat?: number;
   avg_act?: number;
+  sat_75th?: number;
+  act_75th?: number;
   institution_type?: 'Public' | 'Private';
   state?: string;
   website_url?: string;
@@ -21,18 +23,15 @@ export async function getCollegeInfo(collegeName: string): Promise<{
       return {};
     }
 
-    if (!data || !data.choices || !data.choices[0]?.message?.content) {
-      console.error('Invalid response format from OpenAI:', data);
-      return {};
-    }
-
-    const collegeInfo = JSON.parse(data.choices[0].message.content);
+    const collegeInfo = data;
     console.log('Parsed college info:', collegeInfo);
     
     return {
       avg_gpa: typeof collegeInfo.avg_gpa === 'number' ? collegeInfo.avg_gpa : undefined,
       avg_sat: typeof collegeInfo.avg_sat === 'number' ? collegeInfo.avg_sat : undefined,
       avg_act: typeof collegeInfo.avg_act === 'number' ? collegeInfo.avg_act : undefined,
+      sat_75th: typeof collegeInfo.sat_75th === 'number' ? collegeInfo.sat_75th : undefined,
+      act_75th: typeof collegeInfo.act_75th === 'number' ? collegeInfo.act_75th : undefined,
       institution_type: collegeInfo.institution_type === 'Public' || collegeInfo.institution_type === 'Private' 
         ? collegeInfo.institution_type 
         : undefined,
@@ -46,4 +45,3 @@ export async function getCollegeInfo(collegeName: string): Promise<{
     return {};
   }
 }
-

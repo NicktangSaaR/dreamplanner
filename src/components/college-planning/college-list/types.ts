@@ -10,7 +10,6 @@ export interface CollegeApplication {
   avg_gpa?: number;
   avg_sat?: number;
   avg_act?: number;
-  gpa_75th?: number;
   sat_75th?: number;
   act_75th?: number;
   institution_type?: 'Public' | 'Private';

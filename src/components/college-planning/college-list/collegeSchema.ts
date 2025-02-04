@@ -14,7 +14,6 @@ export const formSchema = z.object({
   avg_gpa: z.number().nullable().optional(),
   avg_sat: z.number().nullable().optional(),
   avg_act: z.number().nullable().optional(),
-  gpa_75th: z.number().nullable().optional(),
   sat_75th: z.number().nullable().optional(),
   act_75th: z.number().nullable().optional(),
   institution_type: z.enum(["Public", "Private"]).nullable().optional(),
