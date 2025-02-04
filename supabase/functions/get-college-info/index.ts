@@ -16,20 +16,12 @@ serve(async (req) => {
     const { collegeName } = await req.json();
     console.log("Fetching info for college:", collegeName);
 
-    const response = await fetch(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a JSON-only response system that provides college information. Return ONLY a valid JSON object with these exact fields - no other text or explanations:
+    const openAIRequestBody = {
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a JSON-only response system that provides college information. Return ONLY a valid JSON object with these exact fields - no other text or explanations:
 
 {
   "avg_gpa": number or null,
@@ -56,14 +48,26 @@ Rules:
 - Country must always be provided
 - For US colleges, state must be a US state name
 - For non-US colleges, state can represent a province, region, or state`
-            },
-            {
-              role: 'user',
-              content: `Return college information for ${collegeName} as a JSON object. No other text.`
-            }
-          ],
-          temperature: 0.3,
-        })
+        },
+        {
+          role: 'user',
+          content: `Return college information for ${collegeName} as a JSON object. No other text.`
+        }
+      ],
+      temperature: 0.3,
+    };
+
+    console.log("OpenAI request body:", JSON.stringify(openAIRequestBody, null, 2));
+
+    const response = await fetch(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(openAIRequestBody)
       }
     );
 
@@ -74,7 +78,7 @@ Rules:
     }
 
     const data = await response.json();
-    console.log("OpenAI raw response:", data);
+    console.log("OpenAI raw response:", JSON.stringify(data, null, 2));
     
     if (!data.choices?.[0]?.message?.content) {
       console.error('Invalid response structure from OpenAI:', data);
