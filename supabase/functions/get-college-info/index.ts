@@ -28,26 +28,28 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: `You are a helper that returns college information in JSON format. First determine if the college is in the US. If it is in the US, provide the GPA on a 4.0 scale (e.g. 3.8). If it's not in the US, provide the GPA on a 100-point scale (e.g. 93.5).
-              
-              For academic metrics, provide averages and 75th percentile values. Include these fields:
-              - avg_gpa (average GPA as number - use 4.0 scale for US colleges, 100-point scale for non-US)
-              - avg_sat (average SAT score as number 0-1600)
-              - avg_act (average ACT score as number 0-36)
-              - gpa_75th (75th percentile GPA, same scale as avg_gpa)
-              - sat_75th (75th percentile SAT score as number 0-1600)
-              - act_75th (75th percentile ACT score as number 0-36)
-              - institution_type ("Public" or "Private")
-              - state (US state name or null if not in US)
-              - website_url (string)
-              - city (string)
-              - test_optional (boolean - whether the college is test-optional for admissions)
-              
-              Return ONLY valid JSON, no other text.`
+              content: `You are a JSON-only response system that provides college information. You must ONLY return a valid JSON object with no additional text or explanations. For US colleges, use GPA on 4.0 scale; for non-US colleges, use 100-point scale.
+
+Required fields (all must be included):
+{
+  "avg_gpa": number,
+  "avg_sat": number,
+  "avg_act": number,
+  "gpa_75th": number,
+  "sat_75th": number,
+  "act_75th": number,
+  "institution_type": "Public" or "Private",
+  "state": string or null,
+  "website_url": string,
+  "city": string,
+  "test_optional": boolean
+}
+
+If ANY value is unknown, use null instead of omitting the field. Numbers must be numeric values, not strings.`
             },
             {
               role: 'user',
-              content: `What are the average and 75th percentile GPA, SAT, and ACT scores, institution type (public/private), state, official website URL, city, and test-optional status for ${collegeName}?`
+              content: `Return ONLY a JSON object with the average and 75th percentile GPA, SAT, and ACT scores, institution type, state, website URL, city, and test-optional status for ${collegeName}.`
             }
           ],
           temperature: 0.7
@@ -60,19 +62,32 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("OpenAI response:", data);
+    console.log("Raw OpenAI response:", data);
     
-    // Extract the content from the OpenAI response and parse it as JSON
-    const content = data.choices[0].message.content;
-    const collegeInfo = JSON.parse(content);
+    // Extract the content and ensure it's valid JSON
+    const content = data.choices[0].message.content.trim();
+    console.log("Content to parse:", content);
     
-    return new Response(
-      JSON.stringify(collegeInfo),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    );
+    try {
+      const collegeInfo = JSON.parse(content);
+      return new Response(
+        JSON.stringify(collegeInfo),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      );
+    } catch (parseError) {
+      console.error('Error parsing OpenAI response as JSON:', parseError);
+      console.error('Raw content that failed to parse:', content);
+      return new Response(
+        JSON.stringify({ error: 'Invalid response format from OpenAI' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        },
+      );
+    }
   } catch (error) {
     console.error('Error in get-college-info function:', error);
     return new Response(
