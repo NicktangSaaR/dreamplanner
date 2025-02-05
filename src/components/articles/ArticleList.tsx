@@ -14,12 +14,18 @@ export default function ArticleList() {
         .from('articles')
         .select(`
           *,
-          article_categories(name)
+          article_categories (
+            id,
+            name
+          )
         `)
         .eq('published', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching articles:', error);
+        throw error;
+      }
       return data;
     }
   });

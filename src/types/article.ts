@@ -9,6 +9,7 @@ export interface Article {
   publish_date: string | null;
   created_at: string;
   updated_at: string;
+  article_categories?: ArticleCategory;
 }
 
 export interface ArticleCategory {
