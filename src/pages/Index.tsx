@@ -90,7 +90,7 @@ export default function Index() {
               <Link to="/" className="font-bold text-xl">
                 DreamPlanner
               </Link>
-              <Link to="/" className="text-muted-foreground hover:text-primary transition-colors">
+              <Link to="/articles" className="text-muted-foreground hover:text-primary transition-colors">
                 Free Resources
               </Link>
             </div>
