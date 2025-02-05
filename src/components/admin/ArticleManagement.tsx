@@ -15,10 +15,12 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Article } from "@/types/article";
+import ArticleEditor from "./ArticleEditor";
 
 export default function ArticleManagement() {
   const queryClient = useQueryClient();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ['admin-articles'],
@@ -72,6 +74,21 @@ export default function ArticleManagement() {
     },
   });
 
+  const handleEdit = (article: Article) => {
+    setSelectedArticle(article);
+    setIsEditorOpen(true);
+  };
+
+  const handleNew = () => {
+    setSelectedArticle(null);
+    setIsEditorOpen(true);
+  };
+
+  const handleCloseEditor = () => {
+    setIsEditorOpen(false);
+    setSelectedArticle(null);
+  };
+
   if (isLoading) {
     return <div>Loading articles...</div>;
   }
@@ -80,7 +97,7 @@ export default function ArticleManagement() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">文章管理</h2>
-        <Button>
+        <Button onClick={handleNew}>
           <Plus className="h-4 w-4 mr-2" />
           新建文章
         </Button>
@@ -116,7 +133,11 @@ export default function ArticleManagement() {
                 {new Date(article.created_at).toLocaleDateString()}
               </TableCell>
               <TableCell className="space-x-2">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEdit(article)}
+                >
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button 
@@ -135,6 +156,12 @@ export default function ArticleManagement() {
           ))}
         </TableBody>
       </Table>
+
+      <ArticleEditor
+        article={selectedArticle || undefined}
+        isOpen={isEditorOpen}
+        onClose={handleCloseEditor}
+      />
     </div>
   );
 }
