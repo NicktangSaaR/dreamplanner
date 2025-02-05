@@ -1,43 +1,14 @@
+
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, User, Star, ChevronDown } from "lucide-react";
+import MainNav from "@/components/layout/MainNav";
+import Hero from "@/components/home/Hero";
+import Features from "@/components/home/Features";
 import ArticleList from "@/components/articles/ArticleList";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useQuery } from "@tanstack/react-query";
-
-interface Feature {
-  title: string;
-  description: string;
-  icon: JSX.Element;
-}
 
 export default function Index() {
-  const [features] = useState<Feature[]>([
-    {
-      title: "Track Your Progress",
-      description: "Keep an eye on your college applications and deadlines.",
-      icon: <Check className="h-6 w-6 text-green-500" />,
-    },
-    {
-      title: "Collaborate with Counselors",
-      description: "Get guidance and support from experienced counselors.",
-      icon: <User className="h-6 w-6 text-blue-500" />,
-    },
-    {
-      title: "Prepare for Success",
-      description: "Access resources and tools to help you succeed.",
-      icon: <Star className="h-6 w-6 text-yellow-500" />,
-    },
-  ]);
-
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -83,128 +54,16 @@ export default function Index() {
     }
   };
 
-  const getDashboardLink = () => {
-    return isAuthenticated && userId ? `/student-dashboard/${userId}` : "/login";
-  };
-
-  const { data: categories } = useQuery({
-    queryKey: ['article-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('article_categories')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-6">
-              <Link to="/" className="font-bold text-xl">
-                DreamPlanner
-              </Link>
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center text-muted-foreground hover:text-primary transition-colors">
-                  Free Resources
-                  <ChevronDown className="ml-1 h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link to="/articles" className="w-full">
-                      All Resources
-                    </Link>
-                  </DropdownMenuItem>
-                  {categories?.map((category) => (
-                    <DropdownMenuItem key={category.id} asChild>
-                      <Link 
-                        to={`/articles?category=${category.id}`} 
-                        className="w-full"
-                      >
-                        {category.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className="flex items-center gap-4">
-              {isAuthenticated ? (
-                <>
-                  <Link to={getDashboardLink()}>
-                    <Button>
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Link to="/mock-interview">
-                    <Button>
-                      Mock Interview
-                    </Button>
-                  </Link>
-                  <Button variant="outline" onClick={handleLogout}>
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login">
-                    <Button variant="outline">Login</Button>
-                  </Link>
-                  <Link to="/signup">
-                    <Button>Sign Up</Button>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
+      <MainNav 
+        isAuthenticated={isAuthenticated} 
+        userId={userId}
+        onLogout={handleLogout}
+      />
       <main className="container mx-auto px-4 pt-32">
-        <section className="max-w-4xl mx-auto text-center">
-          <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            Your Future Starts Here
-          </span>
-          <h1 className="mt-6 text-4xl sm:text-6xl font-bold">
-            Plan Your College Journey
-          </h1>
-          <p className="mt-4 text-xl text-muted-foreground">
-            Collaborate with counselors, track your progress, and prepare for success
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link to="/signup">
-              <Button size="lg" className="text-lg">
-                Get Started
-              </Button>
-            </Link>
-            <Link to="/about">
-              <Button size="lg" variant="outline" className="text-lg">
-                Learn More
-              </Button>
-            </Link>
-          </div>
-        </section>
-
-        <section className="mt-24 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="p-6 rounded-2xl bg-white shadow-sm border"
-            >
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                {feature.icon}
-              </div>
-              <h3 className="text-xl font-semibold">{feature.title}</h3>
-              <p className="mt-2 text-muted-foreground">{feature.description}</p>
-            </div>
-          ))}
-        </section>
-
+        <Hero />
+        <Features />
         <section className="mt-24 mb-16">
           <ArticleList />
         </section>
