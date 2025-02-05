@@ -28,7 +28,15 @@ export default function ArticleManagement() {
       const { data, error } = await supabase
         .from('articles')
         .select(`
-          *,
+          id,
+          title,
+          content,
+          category_id,
+          author_id,
+          published,
+          publish_date,
+          created_at,
+          updated_at,
           article_categories (
             id,
             name,
@@ -39,7 +47,10 @@ export default function ArticleManagement() {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching articles:', error);
+        throw error;
+      }
       return data as Article[];
     }
   });
@@ -171,4 +182,3 @@ export default function ArticleManagement() {
     </div>
   );
 }
-
