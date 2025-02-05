@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,19 +27,9 @@ export default function ArticleManagement() {
       const { data, error } = await supabase
         .from('articles')
         .select(`
-          id,
-          title,
-          content,
-          category_id,
-          author_id,
-          published,
-          publish_date,
-          created_at,
-          updated_at,
+          *,
           article_categories (
-            id,
-            name,
-            description
+            *
           )
         `)
         .order('created_at', { ascending: false });
@@ -53,10 +42,10 @@ export default function ArticleManagement() {
       // Transform the data to match the Article type
       const transformedData = data.map(article => ({
         ...article,
-        category: article.article_categories
-      }));
+        category: article.article_categories,
+      })) as Article[];
       
-      return transformedData as Article[];
+      return transformedData;
     }
   });
 

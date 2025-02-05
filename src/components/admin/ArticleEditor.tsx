@@ -1,6 +1,6 @@
 
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Article, ArticleCategory } from "@/types/article";
@@ -37,7 +37,7 @@ export default function ArticleEditor({ article, isOpen, onClose }: ArticleEdito
   });
 
   // Reset form when article changes
-  useState(() => {
+  useEffect(() => {
     if (article) {
       reset({
         title: article.title,
