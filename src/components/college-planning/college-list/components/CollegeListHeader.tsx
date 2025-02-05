@@ -44,7 +44,7 @@ export function CollegeListHeader({
         </div>
       </div>
       <p className="text-sm text-muted-foreground italic">
-        * The College Application may only reflect the average admission requirements that may vary among different groups and every year. Given the increasingly competitive landscape in top university application, most the students admitted to the schools have academic profiles higher than the average.
+        * College application requirements vary by year and applicant pool. Given the increasing competitiveness of top university admissions, most admitted students exceed the published average academic criteria.
       </p>
     </div>
   );
