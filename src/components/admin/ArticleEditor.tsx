@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 interface ArticleEditorProps {
-  article?: Article;
+  article?: Article | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -28,13 +28,30 @@ export default function ArticleEditor({ article, isOpen, onClose }: ArticleEdito
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<ArticleFormData>({
+  const { register, handleSubmit, formState: { errors }, setValue, reset } = useForm<ArticleFormData>({
     defaultValues: {
       title: article?.title || "",
       content: article?.content || "",
       category_id: article?.category_id || ""
     }
   });
+
+  // Reset form when article changes
+  useState(() => {
+    if (article) {
+      reset({
+        title: article.title,
+        content: article.content,
+        category_id: article.category_id || ""
+      });
+    } else {
+      reset({
+        title: "",
+        content: "",
+        category_id: ""
+      });
+    }
+  }, [article, reset]);
 
   const { data: categories } = useQuery({
     queryKey: ['article-categories'],

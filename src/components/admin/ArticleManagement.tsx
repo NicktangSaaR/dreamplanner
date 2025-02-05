@@ -40,9 +40,7 @@ export default function ArticleManagement() {
           article_categories (
             id,
             name,
-            description,
-            created_at,
-            updated_at
+            description
           )
         `)
         .order('created_at', { ascending: false });
@@ -51,7 +49,14 @@ export default function ArticleManagement() {
         console.error('Error fetching articles:', error);
         throw error;
       }
-      return data as Article[];
+      
+      // Transform the data to match the Article type
+      const transformedData = data.map(article => ({
+        ...article,
+        category: article.article_categories
+      }));
+      
+      return transformedData as Article[];
     }
   });
 
@@ -134,7 +139,7 @@ export default function ArticleManagement() {
           {articles?.map((article) => (
             <TableRow key={article.id}>
               <TableCell>{article.title}</TableCell>
-              <TableCell>{article.article_categories?.name}</TableCell>
+              <TableCell>{article.category?.name}</TableCell>
               <TableCell>
                 <Switch
                   checked={article.published}
@@ -175,7 +180,7 @@ export default function ArticleManagement() {
       </Table>
 
       <ArticleEditor
-        article={selectedArticle || undefined}
+        article={selectedArticle}
         isOpen={isEditorOpen}
         onClose={handleCloseEditor}
       />
