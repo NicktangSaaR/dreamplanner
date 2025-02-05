@@ -24,3 +24,4 @@ export const formSchema = z.object({
 });
 
 export type CollegeFormValues = z.infer<typeof formSchema>;
+

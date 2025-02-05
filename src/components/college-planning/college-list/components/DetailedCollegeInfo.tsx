@@ -47,6 +47,48 @@ export function DetailedCollegeInfo({ form }: DetailedCollegeInfoProps) {
         )}
       />
 
+      {/* Average SAT Score */}
+      <FormField
+        control={form.control}
+        name="avg_sat"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Average SAT Score</FormLabel>
+            <FormControl>
+              <Input 
+                type="number" 
+                placeholder="Enter average SAT" 
+                {...field}
+                value={field.value || ''}
+                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Average ACT Score */}
+      <FormField
+        control={form.control}
+        name="avg_act"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Average ACT Score</FormLabel>
+            <FormControl>
+              <Input 
+                type="number" 
+                placeholder="Enter average ACT" 
+                {...field}
+                value={field.value || ''}
+                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       {/* Max SAT Score */}
       <FormField
         control={form.control}
