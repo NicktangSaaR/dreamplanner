@@ -5,11 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { useQuery } from "@tanstack/react-query";
 import { ArticleCategory } from "@/types/article";
 
@@ -47,29 +46,31 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
             <Link to="/" className="font-bold text-xl">
               DreamPlanner
             </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center text-muted-foreground hover:text-primary transition-colors">
+            <HoverCard openDelay={0} closeDelay={100}>
+              <HoverCardTrigger className="flex items-center text-muted-foreground hover:text-primary transition-colors">
                 Free Resources
                 <ChevronDown className="ml-1 h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link to="/articles" className="w-full">
+              </HoverCardTrigger>
+              <HoverCardContent align="start" className="w-48">
+                <div className="flex flex-col space-y-1">
+                  <Link 
+                    to="/articles" 
+                    className="px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground rounded-md"
+                  >
                     All Resources
                   </Link>
-                </DropdownMenuItem>
-                {categories?.map((category) => (
-                  <DropdownMenuItem key={category.id} asChild>
+                  {categories?.map((category) => (
                     <Link 
-                      to={`/articles?category=${category.id}`} 
-                      className="w-full"
+                      key={category.id}
+                      to={`/articles?category=${category.id}`}
+                      className="px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground rounded-md"
                     >
                       {category.name}
                     </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  ))}
+                </div>
+              </HoverCardContent>
+            </HoverCard>
           </div>
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
