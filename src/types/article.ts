@@ -18,4 +18,3 @@ export interface ArticleCategory {
   created_at: string;
   updated_at: string;
 }
-

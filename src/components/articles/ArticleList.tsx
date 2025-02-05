@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Article, ArticleCategory } from "@/types/article";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 export default function ArticleList() {
   const { data: articles, isLoading } = useQuery({
@@ -16,7 +17,7 @@ export default function ArticleList() {
           article_categories(name)
         `)
         .eq('published', true)
-        .order('publish_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
@@ -33,22 +34,27 @@ export default function ArticleList() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {articles?.map((article) => (
           <Card key={article.id} className={cn(
-            "overflow-hidden",
+            "overflow-hidden cursor-pointer",
             "transition-all duration-200 hover:shadow-lg"
           )}>
-            <CardHeader>
-              <CardTitle className="line-clamp-2">{article.title}</CardTitle>
-              {article.article_categories && (
-                <div className="text-sm text-muted-foreground">
-                  {article.article_categories.name}
+            <Link to={`/articles/${article.id}`}>
+              <CardHeader>
+                <CardTitle className="line-clamp-2">{article.title}</CardTitle>
+                {article.article_categories && (
+                  <div className="text-sm text-muted-foreground">
+                    {article.article_categories.name}
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent>
+                <p className="line-clamp-3 text-muted-foreground">
+                  {article.content}
+                </p>
+                <div className="mt-2 text-sm text-muted-foreground">
+                  {new Date(article.created_at).toLocaleDateString()}
                 </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              <p className="line-clamp-3 text-muted-foreground">
-                {article.content}
-              </p>
-            </CardContent>
+              </CardContent>
+            </Link>
           </Card>
         ))}
       </div>
