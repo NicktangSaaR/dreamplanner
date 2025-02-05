@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -13,6 +14,7 @@ import MockInterview from "@/pages/MockInterview";
 import NotFound from "@/pages/NotFound";
 import About from "@/pages/About";
 import Index from "@/pages/Index";
+import Articles from "@/pages/Articles";
 import AdminDashboard from "@/pages/AdminDashboard";
 
 export default function App() {
@@ -21,6 +23,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/about" element={<About />} />
+        <Route path="/articles" element={<Articles />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route element={<AuthLayout />}>
