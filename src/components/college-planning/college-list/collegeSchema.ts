@@ -14,8 +14,6 @@ export const formSchema = z.object({
   avg_gpa: z.number().nullable().optional(),
   avg_sat: z.number().nullable().optional(),
   avg_act: z.number().nullable().optional(),
-  max_sat: z.number().nullable().optional(),
-  max_act: z.number().nullable().optional(),
   institution_type: z.enum(["Public", "Private"]).nullable().optional(),
   state: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
@@ -24,4 +22,3 @@ export const formSchema = z.object({
 });
 
 export type CollegeFormValues = z.infer<typeof formSchema>;
-
