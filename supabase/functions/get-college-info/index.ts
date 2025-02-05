@@ -21,7 +21,7 @@ serve(async (req) => {
       messages: [
         {
           role: 'system',
-          content: 'You are a JSON-only response system that provides college information. Return ONLY a valid JSON object with these exact fields - no other text or explanations:\n\n{\n  "avg_gpa": number or null,\n  "avg_sat": number or null,\n  "avg_act": number or null,\n  "max_sat": number or null,\n  "max_act": number or null,\n  "institution_type": "Public" or "Private" or null,\n  "state": string or null,\n  "website_url": string or null,\n  "city": string or null,\n  "test_optional": boolean or null,\n  "country": string,\n  "gpa_scale_type": "US_4.0" or "100_POINT"\n}\n\nRules:\n- Use 4.0 scale for US colleges (gpa_scale_type: "US_4.0")\n- Use 100 point scale for non-US colleges (gpa_scale_type: "100_POINT")\n- SAT scores must be between 400-1600\n- ACT scores must be between 1-36\n- Return null for unknown values\n- All numbers must be numeric values, not strings\n- Country must always be provided\n- For US colleges, state must be a US state name\n- For non-US colleges, state can represent a province, region, or state'
+          content: 'You are a JSON-only response system that provides college information. Return ONLY a valid JSON object with these exact fields - no other text or explanations:\n\n{\n  "avg_gpa": number or null,\n  "avg_sat": number or null,\n  "avg_act": number or null,\n  "max_sat": number or null,\n  "max_act": number or null,\n  "institution_type": "Public" or "Private" or null,\n  "state": string or null,\n  "website_url": string or null,\n  "city": string or null,\n  "test_optional": boolean or null,\n  "country": string,\n  "gpa_scale_type": "US_4.0" or "100_POINT"\n}\n\nRules:\n- For US colleges, use 4.0 scale (gpa_scale_type: "US_4.0")\n- For non-US colleges:\n  - Use 100 point scale (gpa_scale_type: "100_POINT")\n  - For UK universities, avg_gpa represents the typical entry requirement on a 100-point scale\n  - For Canadian universities, avg_gpa represents the minimum admission average percentage\n  - For Australian universities, avg_gpa represents the minimum ATAR score (out of 100)\n  - For other countries, convert the local grading scale to a 100-point scale\n- SAT/ACT scores must be included if the university accepts them from international students\n- Return null for unknown values\n- All numbers must be numeric values, not strings\n- Country must always be provided\n- For US colleges, state must be a US state name\n- For non-US colleges, state can represent a province, region, or state'
         },
         {
           role: 'user',
@@ -149,4 +149,3 @@ serve(async (req) => {
     );
   }
 });
-
