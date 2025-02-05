@@ -29,12 +29,18 @@ export default function ArticleManagement() {
         .from('articles')
         .select(`
           *,
-          article_categories(name)
+          article_categories (
+            id,
+            name,
+            description,
+            created_at,
+            updated_at
+          )
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Article[];
     }
   });
 
@@ -165,3 +171,4 @@ export default function ArticleManagement() {
     </div>
   );
 }
+
