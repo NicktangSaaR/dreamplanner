@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useProfile } from "@/hooks/useProfile";
@@ -7,6 +8,7 @@ import { LogOut } from "lucide-react";
 import UserManagement from "@/components/admin/UserManagement";
 import QuestionBankManagement from "@/components/admin/QuestionBankManagement";
 import ProspectiveClientManagement from "@/components/admin/ProspectiveClientManagement";
+import ArticleManagement from "@/components/admin/ArticleManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -58,6 +60,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="question-banks">Question Banks</TabsTrigger>
           <TabsTrigger value="prospective-clients">Prospective Clients</TabsTrigger>
+          <TabsTrigger value="articles">Articles</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
@@ -70,6 +73,10 @@ export default function AdminDashboard() {
 
         <TabsContent value="prospective-clients" className="space-y-4">
           <ProspectiveClientManagement />
+        </TabsContent>
+
+        <TabsContent value="articles" className="space-y-4">
+          <ArticleManagement />
         </TabsContent>
       </Tabs>
     </div>

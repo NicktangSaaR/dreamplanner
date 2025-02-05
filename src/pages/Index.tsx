@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Check, User, Star } from "lucide-react";
+import ArticleList from "@/components/articles/ArticleList";
 
 interface Feature {
   title: string;
@@ -157,6 +159,10 @@ export default function Index() {
               <p className="mt-2 text-muted-foreground">{feature.description}</p>
             </div>
           ))}
+        </section>
+
+        <section className="mt-24 mb-16">
+          <ArticleList />
         </section>
       </main>
     </div>
