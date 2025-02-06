@@ -15,11 +15,13 @@ export default function ArticleList({ categoryId, limit }: ArticleListProps) {
   const { data: articles, isLoading } = useQuery({
     queryKey: ['published-articles', categoryId, limit],
     queryFn: async () => {
+      console.log("Fetching articles with categoryId:", categoryId);
+      
       let query = supabase
         .from('articles')
         .select(`
           *,
-          article_categories (
+          article_categories!inner (
             id,
             name
           )
@@ -42,6 +44,8 @@ export default function ArticleList({ categoryId, limit }: ArticleListProps) {
         console.error('Error fetching articles:', error);
         throw error;
       }
+
+      console.log("Fetched articles:", data);
       return data;
     }
   });
