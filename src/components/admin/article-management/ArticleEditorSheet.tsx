@@ -24,18 +24,25 @@ export default function ArticleEditorSheet({
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent 
-        className="w-[80%] sm:max-w-[600px] overflow-y-auto"
-        style={{ maxHeight: '100vh' }}
+        className="w-[80%] sm:max-w-[600px]"
+        style={{ 
+          maxHeight: '100vh',
+          overflowY: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
         <SheetHeader>
           <SheetTitle>{selectedArticle ? '编辑文章' : '新建文章'}</SheetTitle>
         </SheetHeader>
-        <div className="mt-6 pb-20">
-          <ArticleEditor
-            articleId={selectedArticle?.id}
-            onSave={onClose}
-            onCancel={onClose}
-          />
+        <div className="flex-1 overflow-y-auto mt-6">
+          <div className="pb-20">
+            <ArticleEditor
+              articleId={selectedArticle?.id}
+              onSave={onClose}
+              onCancel={onClose}
+            />
+          </div>
         </div>
       </SheetContent>
     </Sheet>
