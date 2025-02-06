@@ -25,7 +25,7 @@ export default function Index() {
   const [userId, setUserId] = useState<string | null>(null);
 
   const { data: articles } = useQuery({
-    queryKey: ['published-articles', null, 3],
+    queryKey: ['published-articles', null, 5], // Changed to fetch 5 articles
     queryFn: async () => {
       const { data, error } = await supabase
         .from('articles')
@@ -38,7 +38,7 @@ export default function Index() {
         `)
         .eq('published', true)
         .order('created_at', { ascending: false })
-        .limit(3);
+        .limit(5); // Changed to limit 5
 
       if (error) {
         console.error('Error fetching articles:', error);
@@ -106,12 +106,23 @@ export default function Index() {
               View all resources →
             </Link>
           </div>
-          <Carousel className="w-full max-w-5xl mx-auto">
-            <CarouselContent>
+          <Carousel 
+            className="w-full max-w-5xl mx-auto"
+            opts={{
+              align: "start",
+              loop: true,
+              skipSnaps: false,
+              startIndex: 0,
+              slidesToScroll: 3,
+              autoplay: true,
+              interval: 5000 // Auto slide every 5 seconds
+            }}
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
               {articles?.map((article) => (
-                <CarouselItem key={article.id}>
+                <CarouselItem key={article.id} className="pl-2 md:pl-4 basis-1/3">
                   <Card className={cn(
-                    "overflow-hidden cursor-pointer mx-4",
+                    "overflow-hidden cursor-pointer h-full",
                     "transition-all duration-200 hover:shadow-lg"
                   )}>
                     <Link to={`/articles/${article.id}`}>
