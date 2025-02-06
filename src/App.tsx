@@ -15,6 +15,7 @@ import NotFound from "@/pages/NotFound";
 import About from "@/pages/About";
 import Index from "@/pages/Index";
 import Articles from "@/pages/Articles";
+import ArticleDetail from "@/pages/ArticleDetail";
 import AdminDashboard from "@/pages/AdminDashboard";
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/" element={<Index />} />
         <Route path="/about" element={<About />} />
         <Route path="/articles" element={<Articles />} />
+        <Route path="/articles/:id" element={<ArticleDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route element={<AuthLayout />}>
