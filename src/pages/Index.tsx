@@ -20,13 +20,23 @@ import { useQuery } from "@tanstack/react-query";
 import { Article, ArticleCategory } from "@/types/article";
 import { cn } from "@/lib/utils";
 
+// Category color mapping
+const categoryColors: { [key: string]: string } = {
+  "学术资源": "bg-[#F2FCE2]", // Soft Green
+  "升学指导": "bg-[#E5DEFF]", // Soft Purple
+  "职业发展": "bg-[#FEC6A1]", // Soft Orange
+  "校园生活": "bg-[#D3E4FD]", // Soft Blue
+  "留学申请": "bg-[#FFDEE2]", // Soft Pink
+  "default": "bg-[#F1F0FB]", // Soft Gray
+};
+
 export default function Index() {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
   const { data: articles } = useQuery({
-    queryKey: ['published-articles', null, 5], // Changed to fetch 5 articles
+    queryKey: ['published-articles', null, 5],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('articles')
@@ -39,7 +49,7 @@ export default function Index() {
         `)
         .eq('published', true)
         .order('created_at', { ascending: false })
-        .limit(5); // Changed to limit 5
+        .limit(5);
 
       if (error) {
         console.error('Error fetching articles:', error);
@@ -128,13 +138,14 @@ export default function Index() {
                 <CarouselItem key={article.id} className="pl-2 md:pl-4 basis-1/3">
                   <Card className={cn(
                     "overflow-hidden cursor-pointer h-full",
-                    "transition-all duration-200 hover:shadow-lg"
+                    "transition-all duration-200 hover:shadow-lg",
+                    categoryColors[article.article_categories?.name || "default"]
                   )}>
                     <Link to={`/articles/${article.id}`}>
                       <CardHeader>
                         <CardTitle className="line-clamp-2">{article.title}</CardTitle>
                         {article.article_categories && (
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-sm text-muted-foreground font-medium">
                             {article.article_categories.name}
                           </div>
                         )}
