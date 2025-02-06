@@ -12,19 +12,15 @@ export default function ContentEditor({ content, onChange }: ContentEditorProps)
 
   useEffect(() => {
     if (contentRef.current) {
-      // Decode HTML entities before setting innerHTML
-      const decodedContent = new DOMParser().parseFromString(content, 'text/html').body.textContent || '';
+      // Simply set the HTML content directly
       contentRef.current.innerHTML = content || '';
     }
   }, [content]);
 
   const handleContentChange = () => {
     if (contentRef.current) {
-      const rawContent = contentRef.current.innerHTML;
-      // Ensure we're getting clean HTML
-      const cleanContent = new DOMParser()
-        .parseFromString(rawContent, 'text/html')
-        .body.innerHTML;
+      // Get the HTML content and clean it
+      const cleanContent = contentRef.current.innerHTML;
       onChange(cleanContent);
     }
   };
@@ -35,8 +31,9 @@ export default function ContentEditor({ content, onChange }: ContentEditorProps)
       <div
         ref={contentRef}
         contentEditable
-        className="min-h-[200px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring prose max-w-none"
+        className="min-h-[200px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring prose max-w-none whitespace-pre-wrap"
         onInput={handleContentChange}
+        suppressContentEditableWarning
       />
     </div>
   );
