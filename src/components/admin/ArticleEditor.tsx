@@ -22,7 +22,7 @@ import { loadArticle, saveArticle } from './article-editor/articleService';
 export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEditorProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [categoryId, setCategoryId] = useState<string>("");
+  const [categoryId, setCategoryId] = useState<string>("none");
 
   const { data: categories } = useQuery({
     queryKey: ['article-categories'],
@@ -45,7 +45,7 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
           if (data) {
             setTitle(data.title);
             setContent(data.content);
-            setCategoryId(data.category_id || "");
+            setCategoryId(data.category_id || "none");
           }
         } catch (error) {
           toast.error("Error loading article");
@@ -71,7 +71,7 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
     const articleData: ArticleData = {
       title,
       content,
-      category_id: categoryId || undefined,
+      category_id: categoryId === "none" ? undefined : categoryId,
       updated_at: new Date().toISOString()
     };
 
@@ -112,7 +112,7 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
                 <SelectValue placeholder="选择分类" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">无分类</SelectItem>
+                <SelectItem value="none">无分类</SelectItem>
                 {categories?.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
