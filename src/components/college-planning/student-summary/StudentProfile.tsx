@@ -1,4 +1,8 @@
+
 import { Card, CardContent } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import AddCounselorDialog from "./AddCounselorDialog";
 
 interface StudentProfileProps {
   profile: {
@@ -9,9 +13,46 @@ interface StudentProfileProps {
     graduation_school: string | null;
     background_intro: string | null;
   };
+  studentId: string;
 }
 
-export default function StudentProfile({ profile }: StudentProfileProps) {
+interface Counselor {
+  id: string;
+  full_name: string | null;
+  is_primary: boolean;
+}
+
+export default function StudentProfile({ profile, studentId }: StudentProfileProps) {
+  const { data: counselors, refetch: refetchCounselors } = useQuery({
+    queryKey: ["student-counselors", studentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("counselor_student_relationships")
+        .select(`
+          counselor_id,
+          is_primary,
+          counselor:profiles!counselor_student_relationships_counselor_profiles_fkey(
+            id,
+            full_name
+          )
+        `)
+        .eq("student_id", studentId)
+        .order("is_primary", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching counselors:", error);
+        throw error;
+      }
+
+      return data.map(row => ({
+        id: row.counselor.id,
+        full_name: row.counselor.full_name,
+        is_primary: row.is_primary
+      })) as Counselor[];
+    },
+    enabled: !!studentId
+  });
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -28,7 +69,30 @@ export default function StudentProfile({ profile }: StudentProfileProps) {
                 <p><span className="font-medium">Graduation School:</span> {profile.graduation_school}</p>
               )}
             </div>
+
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium">Counselors</h3>
+                <AddCounselorDialog 
+                  studentId={studentId}
+                  onCounselorAdded={refetchCounselors}
+                />
+              </div>
+              <div className="space-y-1">
+                {counselors?.map((counselor) => (
+                  <div key={counselor.id} className="flex items-center text-sm">
+                    <span>{counselor.full_name}</span>
+                    {counselor.is_primary && (
+                      <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                        Primary
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
+          
           <div>
             {profile.background_intro && (
               <div>

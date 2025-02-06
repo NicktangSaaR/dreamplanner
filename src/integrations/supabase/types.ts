@@ -178,23 +178,29 @@ export type Database = {
       }
       counselor_student_relationships: {
         Row: {
+          added_by: string | null
           counselor_id: string
           created_at: string | null
           id: string
+          is_primary: boolean | null
           student_id: string
           updated_at: string | null
         }
         Insert: {
+          added_by?: string | null
           counselor_id: string
           created_at?: string | null
           id?: string
+          is_primary?: boolean | null
           student_id: string
           updated_at?: string | null
         }
         Update: {
+          added_by?: string | null
           counselor_id?: string
           created_at?: string | null
           id?: string
+          is_primary?: boolean | null
           student_id?: string
           updated_at?: string | null
         }
