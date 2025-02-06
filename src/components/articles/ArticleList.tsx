@@ -8,11 +8,12 @@ import { Link } from "react-router-dom";
 
 interface ArticleListProps {
   categoryId?: string | null;
+  limit?: number;
 }
 
-export default function ArticleList({ categoryId }: ArticleListProps) {
+export default function ArticleList({ categoryId, limit }: ArticleListProps) {
   const { data: articles, isLoading } = useQuery({
-    queryKey: ['published-articles', categoryId],
+    queryKey: ['published-articles', categoryId, limit],
     queryFn: async () => {
       let query = supabase
         .from('articles')
@@ -29,7 +30,13 @@ export default function ArticleList({ categoryId }: ArticleListProps) {
         query = query.eq('category_id', categoryId);
       }
       
-      const { data, error } = await query.order('created_at', { ascending: false });
+      query = query.order('created_at', { ascending: false });
+
+      if (limit) {
+        query = query.limit(limit);
+      }
+      
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching articles:', error);

@@ -24,7 +24,6 @@ export default function Index() {
     
     checkAuth();
 
-    // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session ? "Session exists" : "No session");
       setIsAuthenticated(!!session);
@@ -65,7 +64,13 @@ export default function Index() {
         <Hero />
         <Features />
         <section className="mt-24 mb-16">
-          <ArticleList />
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold">Latest Resources</h2>
+            <Link to="/articles" className="text-primary hover:underline">
+              View all resources →
+            </Link>
+          </div>
+          <ArticleList limit={3} />
         </section>
       </main>
     </div>
