@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,8 @@ export default function ArticleManagement() {
         throw error;
       }
       
+      console.log("Fetched articles in admin:", data);
+      
       // Transform the data to match the Article type
       const transformedData = data.map(article => ({
         ...article,
@@ -51,18 +54,26 @@ export default function ArticleManagement() {
 
   const togglePublishMutation = useMutation({
     mutationFn: async ({ id, published }: { id: string; published: boolean }) => {
+      console.log("Toggling publish status:", { id, published });
+      
       const { error } = await supabase
         .from('articles')
-        .update({ published })
+        .update({ 
+          published,
+          publish_date: published ? new Date().toISOString() : null
+        })
         .eq('id', id);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+      // Also invalidate the public articles query to update the homepage
+      queryClient.invalidateQueries({ queryKey: ['published-articles'] });
       toast.success("文章状态已更新");
     },
     onError: (error) => {
+      console.error("Error toggling publish status:", error);
       toast.error("更新失败：" + error.message);
     },
   });
@@ -78,6 +89,8 @@ export default function ArticleManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+      // Also invalidate the public articles query
+      queryClient.invalidateQueries({ queryKey: ['published-articles'] });
       toast.success("文章已删除");
     },
     onError: (error) => {
@@ -98,6 +111,9 @@ export default function ArticleManagement() {
   const handleCloseEditor = () => {
     setIsEditorOpen(false);
     setSelectedArticle(null);
+    // Invalidate both admin and public article queries
+    queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+    queryClient.invalidateQueries({ queryKey: ['published-articles'] });
   };
 
   if (isLoading) {

@@ -21,7 +21,7 @@ export default function ArticleList({ categoryId, limit }: ArticleListProps) {
         .from('articles')
         .select(`
           *,
-          article_categories!inner (
+          article_categories (
             id,
             name
           )
@@ -44,8 +44,8 @@ export default function ArticleList({ categoryId, limit }: ArticleListProps) {
         throw error;
       }
 
-      console.log("Fetched articles:", data);
-      return data;
+      console.log("Fetched published articles:", data);
+      return data as (Article & { article_categories: ArticleCategory })[];
     }
   });
 
