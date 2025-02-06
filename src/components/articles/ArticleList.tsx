@@ -26,13 +26,12 @@ export default function ArticleList({ categoryId, limit }: ArticleListProps) {
             name
           )
         `)
-        .eq('published', true);
+        .eq('published', true)
+        .order('created_at', { ascending: false });
       
       if (categoryId) {
         query = query.eq('category_id', categoryId);
       }
-      
-      query = query.order('created_at', { ascending: false });
 
       if (limit) {
         query = query.limit(limit);
