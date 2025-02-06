@@ -191,7 +191,7 @@ export default function ArticleManagement() {
       </Table>
 
       <Sheet open={isEditorOpen} onOpenChange={setIsEditorOpen}>
-        <SheetContent className="w-[90%] sm:max-w-[800px]">
+        <SheetContent className="w-[80%] sm:max-w-[600px]">
           <SheetHeader>
             <SheetTitle>{selectedArticle ? '编辑文章' : '新建文章'}</SheetTitle>
           </SheetHeader>

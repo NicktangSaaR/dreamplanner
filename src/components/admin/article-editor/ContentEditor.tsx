@@ -41,7 +41,7 @@ export default function ContentEditor({ content, onChange }: ContentEditorProps)
         onChange={onChange}
         modules={modules}
         formats={formats}
-        style={{ height: '400px', marginBottom: '50px' }}
+        style={{ height: '300px', marginBottom: '30px' }}
       />
     </div>
   );
