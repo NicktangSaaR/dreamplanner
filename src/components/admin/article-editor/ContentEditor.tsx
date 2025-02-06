@@ -1,5 +1,6 @@
 
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
+import { Editor } from '@tinymce/tinymce-react';
 import { Label } from "@/components/ui/label";
 
 interface ContentEditorProps {
@@ -8,33 +9,33 @@ interface ContentEditorProps {
 }
 
 export default function ContentEditor({ content, onChange }: ContentEditorProps) {
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (contentRef.current) {
-      // 直接设置文本内容
-      contentRef.current.textContent = content || '';
-    }
-  }, [content]);
-
-  const handleContentChange = () => {
-    if (contentRef.current) {
-      // 获取纯文本内容
-      const newContent = contentRef.current.textContent || '';
-      onChange(newContent);
-    }
+  const handleEditorChange = (newContent: string) => {
+    onChange(newContent);
   };
 
   return (
     <div>
       <Label htmlFor="content">内容</Label>
-      <div
-        ref={contentRef}
-        contentEditable
-        className="min-h-[200px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring prose max-w-none whitespace-pre-wrap break-words"
-        onInput={handleContentChange}
-        suppressContentEditableWarning
-        dir="ltr"
+      <Editor
+        id="content"
+        apiKey="no-api-key" // You can get a free API key from TinyMCE
+        value={content}
+        onEditorChange={handleEditorChange}
+        init={{
+          height: 500,
+          menubar: true,
+          language: 'zh_CN',
+          plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+          ],
+          toolbar: 'undo redo | blocks | ' +
+            'bold italic forecolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | help',
+          content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+        }}
       />
     </div>
   );
