@@ -112,9 +112,9 @@ export default function Index() {
         <Features />
         <section className="mt-24 mb-16">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">Latest Resources</h2>
+            <h2 className="text-3xl font-bold">Latest Articles</h2>
             <Link to="/articles" className="text-primary hover:underline">
-              View all resources →
+              View all articles →
             </Link>
           </div>
           <Carousel 
@@ -171,3 +171,4 @@ export default function Index() {
     </div>
   );
 }
+
