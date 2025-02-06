@@ -124,19 +124,19 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
 
           <FormattingToolbar onExecCommand={execCommand} />
           <ContentEditor content={content} onChange={setContent} />
-
-          <div className="flex justify-end gap-2">
-            {onCancel && (
-              <Button type="button" variant="outline" onClick={onCancel}>
-                取消
-              </Button>
-            )}
-            <Button type="submit">
-              {articleId ? '更新' : '创建'}文章
-            </Button>
-          </div>
         </div>
       </Card>
+      
+      <div className="sticky bottom-0 bg-white p-4 border-t border-gray-200 flex justify-end gap-2 mt-4">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            取消
+          </Button>
+        )}
+        <Button type="submit">
+          {articleId ? '更新' : '创建'}文章
+        </Button>
+      </div>
     </form>
   );
 }

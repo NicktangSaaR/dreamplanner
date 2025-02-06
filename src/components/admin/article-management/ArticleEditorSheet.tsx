@@ -27,22 +27,27 @@ export default function ArticleEditorSheet({
         className="w-[80%] sm:max-w-[600px]"
         style={{ 
           maxHeight: '100vh',
-          overflowY: 'hidden',
+          overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
+          padding: '20px',
         }}
       >
-        <SheetHeader>
+        <SheetHeader className="mb-4">
           <SheetTitle>{selectedArticle ? '编辑文章' : '新建文章'}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto mt-6">
-          <div className="pb-20">
-            <ArticleEditor
-              articleId={selectedArticle?.id}
-              onSave={onClose}
-              onCancel={onClose}
-            />
-          </div>
+        
+        <div 
+          className="flex-1 overflow-y-auto"
+          style={{
+            marginBottom: '20px',
+          }}
+        >
+          <ArticleEditor
+            articleId={selectedArticle?.id}
+            onSave={onClose}
+            onCancel={onClose}
+          />
         </div>
       </SheetContent>
     </Sheet>
