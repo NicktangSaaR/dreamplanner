@@ -2,26 +2,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Article } from "@/types/article";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import ArticleEditor from "./ArticleEditor";
+import ArticleTable from "./article-management/ArticleTable";
+import ArticleHeader from "./article-management/ArticleHeader";
+import ArticleEditorSheet from "./article-management/ArticleEditorSheet";
 
 export default function ArticleManagement() {
   const queryClient = useQueryClient();
@@ -48,7 +33,6 @@ export default function ArticleManagement() {
       
       console.log("Fetched articles in admin:", data);
       
-      // Transform the data to match the Article type
       const transformedData = data.map(article => ({
         ...article,
         category: article.article_categories,
@@ -74,7 +58,6 @@ export default function ArticleManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
-      // Also invalidate the public articles query to update the homepage
       queryClient.invalidateQueries({ queryKey: ['published-articles'] });
       toast.success("文章状态已更新");
     },
@@ -95,7 +78,6 @@ export default function ArticleManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
-      // Also invalidate the public articles query
       queryClient.invalidateQueries({ queryKey: ['published-articles'] });
       toast.success("文章已删除");
     },
@@ -117,7 +99,6 @@ export default function ArticleManagement() {
   const handleCloseEditor = () => {
     setIsEditorOpen(false);
     setSelectedArticle(null);
-    // Invalidate both admin and public article queries
     queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
     queryClient.invalidateQueries({ queryKey: ['published-articles'] });
   };
@@ -128,82 +109,23 @@ export default function ArticleManagement() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">文章管理</h2>
-        <Button onClick={handleNew}>
-          <Plus className="h-4 w-4 mr-2" />
-          新建文章
-        </Button>
-      </div>
+      <ArticleHeader onNew={handleNew} />
+      
+      <ArticleTable
+        articles={articles || []}
+        onEdit={handleEdit}
+        onDelete={(id) => deleteArticleMutation.mutate(id)}
+        onTogglePublish={(id, published) => 
+          togglePublishMutation.mutate({ id, published })
+        }
+      />
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>标题</TableHead>
-            <TableHead>分类</TableHead>
-            <TableHead>发布状态</TableHead>
-            <TableHead>创建时间</TableHead>
-            <TableHead>操作</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {articles?.map((article) => (
-            <TableRow key={article.id}>
-              <TableCell>{article.title}</TableCell>
-              <TableCell>{article.category?.name}</TableCell>
-              <TableCell>
-                <Switch
-                  checked={article.published}
-                  onCheckedChange={(checked) => 
-                    togglePublishMutation.mutate({ 
-                      id: article.id, 
-                      published: checked 
-                    })
-                  }
-                />
-              </TableCell>
-              <TableCell>
-                {new Date(article.created_at).toLocaleDateString()}
-              </TableCell>
-              <TableCell className="space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleEdit(article)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => {
-                    if (confirm('确定要删除这篇文章吗？')) {
-                      deleteArticleMutation.mutate(article.id);
-                    }
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      <Sheet open={isEditorOpen} onOpenChange={setIsEditorOpen}>
-        <SheetContent className="w-[80%] sm:max-w-[600px]">
-          <SheetHeader>
-            <SheetTitle>{selectedArticle ? '编辑文章' : '新建文章'}</SheetTitle>
-          </SheetHeader>
-          <div className="mt-6">
-            <ArticleEditor
-              articleId={selectedArticle?.id}
-              onSave={handleCloseEditor}
-              onCancel={handleCloseEditor}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+      <ArticleEditorSheet
+        isOpen={isEditorOpen}
+        onOpenChange={setIsEditorOpen}
+        selectedArticle={selectedArticle}
+        onClose={handleCloseEditor}
+      />
     </div>
   );
 }
