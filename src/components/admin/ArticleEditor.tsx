@@ -4,7 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { ArticleEditorProps, ArticleData } from './article-editor/types';
 import FormattingToolbar from './article-editor/FormattingToolbar';
 import ContentEditor from './article-editor/ContentEditor';
@@ -13,6 +22,20 @@ import { loadArticle, saveArticle } from './article-editor/articleService';
 export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEditorProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("");
+
+  const { data: categories } = useQuery({
+    queryKey: ['article-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('article_categories')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -22,6 +45,7 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
           if (data) {
             setTitle(data.title);
             setContent(data.content);
+            setCategoryId(data.category_id || "");
           }
         } catch (error) {
           toast.error("Error loading article");
@@ -47,6 +71,7 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
     const articleData: ArticleData = {
       title,
       content,
+      category_id: categoryId || undefined,
       updated_at: new Date().toISOString()
     };
 
@@ -71,13 +96,30 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
       <Card className="p-4">
         <div className="space-y-4">
           <div>
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">标题</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Article title"
+              placeholder="文章标题"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="category">分类</Label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger>
+                <SelectValue placeholder="选择分类" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">无分类</SelectItem>
+                {categories?.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <FormattingToolbar onExecCommand={execCommand} />
@@ -86,11 +128,11 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
           <div className="flex justify-end gap-2">
             {onCancel && (
               <Button type="button" variant="outline" onClick={onCancel}>
-                Cancel
+                取消
               </Button>
             )}
             <Button type="submit">
-              {articleId ? 'Update' : 'Create'} Article
+              {articleId ? '更新' : '创建'}文章
             </Button>
           </div>
         </div>
