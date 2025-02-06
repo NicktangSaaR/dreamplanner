@@ -57,7 +57,7 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
                     to="/articles" 
                     className="px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground rounded-md"
                   >
-                    All Resources
+                    All Articles
                   </Link>
                   {categories?.map((category) => (
                     <Link 
