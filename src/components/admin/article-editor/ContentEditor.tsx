@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Editor } from '@tinymce/tinymce-react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { Label } from "@/components/ui/label";
 
 interface ContentEditorProps {
@@ -9,33 +10,38 @@ interface ContentEditorProps {
 }
 
 export default function ContentEditor({ content, onChange }: ContentEditorProps) {
-  const handleEditorChange = (newContent: string) => {
-    onChange(newContent);
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link', 'image'],
+      ['clean']
+    ],
   };
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'color', 'background',
+    'align',
+    'list', 'bullet',
+    'link', 'image'
+  ];
 
   return (
     <div>
       <Label htmlFor="content">内容</Label>
-      <Editor
+      <ReactQuill
         id="content"
-        apiKey="no-api-key" // You can get a free API key from TinyMCE
+        theme="snow"
         value={content}
-        onEditorChange={handleEditorChange}
-        init={{
-          height: 500,
-          menubar: true,
-          language: 'zh_CN',
-          plugins: [
-            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-            'insertdatetime', 'media', 'table', 'help', 'wordcount'
-          ],
-          toolbar: 'undo redo | blocks | ' +
-            'bold italic forecolor | alignleft aligncenter ' +
-            'alignright alignjustify | bullist numlist outdent indent | ' +
-            'removeformat | help',
-          content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
-        }}
+        onChange={onChange}
+        modules={modules}
+        formats={formats}
+        style={{ height: '400px', marginBottom: '50px' }}
       />
     </div>
   );
