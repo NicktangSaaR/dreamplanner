@@ -15,6 +15,12 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Article } from "@/types/article";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import ArticleEditor from "./ArticleEditor";
 
 export default function ArticleManagement() {
@@ -184,11 +190,20 @@ export default function ArticleManagement() {
         </TableBody>
       </Table>
 
-      <ArticleEditor
-        articleId={selectedArticle?.id}
-        onSave={handleCloseEditor}
-        onCancel={handleCloseEditor}
-      />
+      <Sheet open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+        <SheetContent className="w-[90%] sm:max-w-[800px]">
+          <SheetHeader>
+            <SheetTitle>{selectedArticle ? '编辑文章' : '新建文章'}</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <ArticleEditor
+              articleId={selectedArticle?.id}
+              onSave={handleCloseEditor}
+              onCancel={handleCloseEditor}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
