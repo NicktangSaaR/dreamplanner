@@ -23,11 +23,14 @@ export default function ArticleEditorSheet({
 }: ArticleEditorSheetProps) {
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[80%] sm:max-w-[600px]">
+      <SheetContent 
+        className="w-[80%] sm:max-w-[600px] overflow-y-auto"
+        style={{ maxHeight: '100vh' }}
+      >
         <SheetHeader>
           <SheetTitle>{selectedArticle ? '编辑文章' : '新建文章'}</SheetTitle>
         </SheetHeader>
-        <div className="mt-6">
+        <div className="mt-6 pb-20">
           <ArticleEditor
             articleId={selectedArticle?.id}
             onSave={onClose}
