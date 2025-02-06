@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -68,31 +67,52 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
       updated_at: new Date().toISOString()
     };
 
-    if (articleId) {
-      const { error } = await supabase
-        .from('articles')
-        .update(articleData)
-        .eq('id', articleId);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      if (error) {
-        toast.error("Error updating article");
+      if (!user) {
+        toast.error("You must be logged in to create/edit articles");
         return;
       }
-      toast.success("Article updated successfully");
-    } else {
-      const { error } = await supabase
-        .from('articles')
-        .insert([{ ...articleData, created_at: new Date().toISOString() }]);
 
-      if (error) {
-        toast.error("Error creating article");
-        return;
+      if (articleId) {
+        const { error } = await supabase
+          .from('articles')
+          .update({
+            ...articleData,
+            author_id: user.id
+          })
+          .eq('id', articleId);
+
+        if (error) {
+          toast.error("Error updating article");
+          return;
+        }
+        toast.success("Article updated successfully");
+      } else {
+        const { error } = await supabase
+          .from('articles')
+          .insert([{
+            ...articleData,
+            created_at: new Date().toISOString(),
+            author_id: user.id
+          }]);
+
+        if (error) {
+          toast.error("Error creating article");
+          return;
+        }
+        toast.success("Article created successfully");
       }
-      toast.success("Article created successfully");
-    }
 
-    if (onSave) {
-      onSave(articleData);
+      if (onSave) {
+        onSave(articleData);
+      }
+    } catch (error) {
+      console.error("Error saving article:", error);
+      toast.error("Error saving article");
     }
   };
 

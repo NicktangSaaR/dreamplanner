@@ -185,9 +185,9 @@ export default function ArticleManagement() {
       </Table>
 
       <ArticleEditor
-        article={selectedArticle}
-        isOpen={isEditorOpen}
-        onClose={handleCloseEditor}
+        articleId={selectedArticle?.id}
+        onSave={handleCloseEditor}
+        onCancel={handleCloseEditor}
       />
     </div>
   );
