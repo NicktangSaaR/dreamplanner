@@ -1,15 +1,15 @@
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { Article } from "@/types/article";
 import ArticleTable from "./article-management/ArticleTable";
 import ArticleHeader from "./article-management/ArticleHeader";
 import ArticleEditorSheet from "./article-management/ArticleEditorSheet";
+import { useTogglePublishMutation } from "./article-management/hooks/useTogglePublishMutation";
+import { useDeleteArticleMutation } from "./article-management/hooks/useDeleteArticleMutation";
 
 export default function ArticleManagement() {
-  const queryClient = useQueryClient();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
 
@@ -42,49 +42,8 @@ export default function ArticleManagement() {
     }
   });
 
-  const togglePublishMutation = useMutation({
-    mutationFn: async ({ id, published }: { id: string; published: boolean }) => {
-      console.log("Toggling publish status:", { id, published });
-      
-      const { error } = await supabase
-        .from('articles')
-        .update({ 
-          published,
-          publish_date: published ? new Date().toISOString() : null
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
-      queryClient.invalidateQueries({ queryKey: ['published-articles'] });
-      toast.success("文章状态已更新");
-    },
-    onError: (error) => {
-      console.error("Error toggling publish status:", error);
-      toast.error("更新失败：" + error.message);
-    },
-  });
-
-  const deleteArticleMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('articles')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
-      queryClient.invalidateQueries({ queryKey: ['published-articles'] });
-      toast.success("文章已删除");
-    },
-    onError: (error) => {
-      toast.error("删除失败：" + error.message);
-    },
-  });
+  const togglePublishMutation = useTogglePublishMutation();
+  const deleteArticleMutation = useDeleteArticleMutation();
 
   const handleEdit = (article: Article) => {
     setSelectedArticle(article);
@@ -99,8 +58,6 @@ export default function ArticleManagement() {
   const handleCloseEditor = () => {
     setIsEditorOpen(false);
     setSelectedArticle(null);
-    queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
-    queryClient.invalidateQueries({ queryKey: ['published-articles'] });
   };
 
   if (isLoading) {
