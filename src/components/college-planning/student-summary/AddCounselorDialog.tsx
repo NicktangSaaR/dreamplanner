@@ -23,7 +23,7 @@ export default function AddCounselorDialog({ studentId, onCounselorAdded }: AddC
     setIsLoading(true);
 
     try {
-      // First, get all users and find the counselor by email
+      // First, get the user by email
       const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
       
       if (usersError) {
@@ -31,7 +31,7 @@ export default function AddCounselorDialog({ studentId, onCounselorAdded }: AddC
         return;
       }
 
-      const counselorUser = users.find(u => u.email === email);
+      const counselorUser = users?.find(u => u.email === email);
       
       if (!counselorUser) {
         toast.error("Counselor not found with this email");

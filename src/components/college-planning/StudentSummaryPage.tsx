@@ -1,3 +1,4 @@
+
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import AcademicSection from "./student-summary/AcademicSection";
 import ActivitiesSection from "./student-summary/ActivitiesSection";
 import ApplicationsSection from "./student-summary/ApplicationsSection";
 import SharedFolderSection from "./student-summary/SharedFolderSection";
+import { Profile } from "@/types/profile";
+import { Json } from "@/integrations/supabase/types";
 
 export default function StudentSummaryPage() {
   const navigate = useNavigate();
@@ -17,7 +20,7 @@ export default function StudentSummaryPage() {
   console.log("StudentSummaryPage - Received studentId:", studentId);
 
   // Fetch student profile
-  const { data: profile } = useQuery({
+  const { data: profileData } = useQuery({
     queryKey: ["student-profile", studentId],
     queryFn: async () => {
       if (!studentId) {
@@ -38,7 +41,20 @@ export default function StudentSummaryPage() {
       }
 
       console.log("Student profile data:", data);
-      return data;
+
+      // Transform the data to match Profile type
+      const profile: Profile = {
+        ...data,
+        social_media: data.social_media ? {
+          linkedin: (data.social_media as any)?.linkedin || "",
+          twitter: (data.social_media as any)?.twitter || "",
+          instagram: (data.social_media as any)?.instagram || "",
+        } : null,
+        interested_majors: Array.isArray(data.interested_majors) ? data.interested_majors : [],
+        career_interest_test: data.career_interest_test as Profile['career_interest_test']
+      };
+
+      return profile;
     },
     enabled: !!studentId,
   });
@@ -121,7 +137,7 @@ export default function StudentSummaryPage() {
     return null;
   }
 
-  if (!profile) {
+  if (!profileData) {
     return <div>Loading...</div>;
   }
 
@@ -144,7 +160,7 @@ export default function StudentSummaryPage() {
         {/* Left column - Profile and Academics */}
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <ProfileSection profile={profile} studentId={studentId} />
+            <ProfileSection profile={profileData} studentId={studentId} />
           </div>
           <div className="bg-white rounded-lg shadow-sm">
             <AcademicSection 
