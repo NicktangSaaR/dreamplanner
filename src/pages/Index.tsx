@@ -7,6 +7,7 @@ import MainNav from "@/components/layout/MainNav";
 import Hero from "@/components/home/Hero";
 import Features from "@/components/home/Features";
 import ArticleList from "@/components/articles/ArticleList";
+import Autoplay from 'embla-carousel-autoplay';
 import {
   Carousel,
   CarouselContent,
@@ -113,10 +114,14 @@ export default function Index() {
               loop: true,
               skipSnaps: false,
               startIndex: 0,
-              slidesToScroll: 3,
-              autoplay: true,
-              interval: 5000 // Auto slide every 5 seconds
+              slidesToScroll: 3
             }}
+            plugins={[
+              Autoplay({
+                delay: 5000,
+                stopOnInteraction: false,
+              }),
+            ]}
           >
             <CarouselContent className="-ml-2 md:-ml-4">
               {articles?.map((article) => (
