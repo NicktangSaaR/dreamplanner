@@ -456,6 +456,36 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_student_relationships: {
+        Row: {
+          confirmed: boolean | null
+          created_at: string | null
+          id: string
+          parent_id: string
+          student_email: string
+          student_id: string
+          student_name: string
+        }
+        Insert: {
+          confirmed?: boolean | null
+          created_at?: string | null
+          id?: string
+          parent_id: string
+          student_email: string
+          student_id: string
+          student_name: string
+        }
+        Update: {
+          confirmed?: boolean | null
+          created_at?: string | null
+          id?: string
+          parent_id?: string
+          student_email?: string
+          student_id?: string
+          student_name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           application_year: string | null
