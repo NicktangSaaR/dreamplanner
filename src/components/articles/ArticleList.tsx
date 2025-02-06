@@ -12,7 +12,7 @@ interface ArticleListProps {
 }
 
 export default function ArticleList({ categoryId, limit }: ArticleListProps) {
-  const { data: articles, isLoading } = useQuery({
+  const { data: articles, isLoading, error } = useQuery({
     queryKey: ['published-articles', categoryId, limit],
     queryFn: async () => {
       console.log("Fetching articles with categoryId:", categoryId);
@@ -51,6 +51,11 @@ export default function ArticleList({ categoryId, limit }: ArticleListProps) {
 
   if (isLoading) {
     return <div className="flex justify-center p-8">Loading articles...</div>;
+  }
+
+  if (error) {
+    console.error('Error loading articles:', error);
+    return <div className="text-center text-red-500">Error loading articles.</div>;
   }
 
   if (!articles?.length) {
