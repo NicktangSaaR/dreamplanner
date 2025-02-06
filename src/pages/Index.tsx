@@ -7,11 +7,47 @@ import MainNav from "@/components/layout/MainNav";
 import Hero from "@/components/home/Hero";
 import Features from "@/components/home/Features";
 import ArticleList from "@/components/articles/ArticleList";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { Article, ArticleCategory } from "@/types/article";
+import { cn } from "@/lib/utils";
 
 export default function Index() {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+
+  const { data: articles } = useQuery({
+    queryKey: ['published-articles', null, 3],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('articles')
+        .select(`
+          *,
+          article_categories (
+            id,
+            name
+          )
+        `)
+        .eq('published', true)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (error) {
+        console.error('Error fetching articles:', error);
+        throw error;
+      }
+
+      return data as (Article & { article_categories: ArticleCategory })[];
+    }
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -70,7 +106,39 @@ export default function Index() {
               View all resources →
             </Link>
           </div>
-          <ArticleList limit={3} />
+          <Carousel className="w-full max-w-5xl mx-auto">
+            <CarouselContent>
+              {articles?.map((article) => (
+                <CarouselItem key={article.id}>
+                  <Card className={cn(
+                    "overflow-hidden cursor-pointer mx-4",
+                    "transition-all duration-200 hover:shadow-lg"
+                  )}>
+                    <Link to={`/articles/${article.id}`}>
+                      <CardHeader>
+                        <CardTitle className="line-clamp-2">{article.title}</CardTitle>
+                        {article.article_categories && (
+                          <div className="text-sm text-muted-foreground">
+                            {article.article_categories.name}
+                          </div>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <p className="line-clamp-3 text-muted-foreground">
+                          {article.content}
+                        </p>
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          {new Date(article.created_at).toLocaleDateString()}
+                        </div>
+                      </CardContent>
+                    </Link>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
         </section>
       </main>
     </div>
