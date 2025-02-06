@@ -1,56 +1,39 @@
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-
-interface ArticleEditorProps {
-  articleId?: string;
-  onSave?: (article: any) => void;
-  onCancel?: () => void;
-}
+import { ArticleEditorProps, ArticleData } from './article-editor/types';
+import FormattingToolbar from './article-editor/FormattingToolbar';
+import ContentEditor from './article-editor/ContentEditor';
+import { loadArticle, saveArticle } from './article-editor/articleService';
 
 export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEditorProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const loadArticle = async () => {
+    const fetchArticle = async () => {
       if (articleId) {
-        const { data, error } = await supabase
-          .from('articles')
-          .select('*')
-          .eq('id', articleId)
-          .single();
-
-        if (error) {
-          toast.error("Error loading article");
-          return;
-        }
-
-        if (data) {
-          setTitle(data.title);
-          setContent(data.content);
-          if (contentRef.current) {
-            contentRef.current.innerHTML = data.content;
+        try {
+          const data = await loadArticle(articleId);
+          if (data) {
+            setTitle(data.title);
+            setContent(data.content);
           }
+        } catch (error) {
+          toast.error("Error loading article");
         }
       }
     };
 
-    loadArticle();
+    fetchArticle();
   }, [articleId]);
 
   const execCommand = (command: string, value: string = '') => {
     document.execCommand(command, false, value);
-    if (contentRef.current) {
-      contentRef.current.focus();
-      setContent(contentRef.current.innerHTML);
-    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -61,64 +44,25 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
       return;
     }
 
-    const articleData = {
+    const articleData: ArticleData = {
       title,
-      content: contentRef.current?.innerHTML || content,
+      content,
       updated_at: new Date().toISOString()
     };
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        toast.error("You must be logged in to create/edit articles");
-        return;
-      }
-
-      if (articleId) {
-        const { error } = await supabase
-          .from('articles')
-          .update({
-            ...articleData,
-            author_id: user.id
-          })
-          .eq('id', articleId);
-
-        if (error) {
-          toast.error("Error updating article");
-          return;
-        }
-        toast.success("Article updated successfully");
-      } else {
-        const { error } = await supabase
-          .from('articles')
-          .insert([{
-            ...articleData,
-            created_at: new Date().toISOString(),
-            author_id: user.id
-          }]);
-
-        if (error) {
-          toast.error("Error creating article");
-          return;
-        }
-        toast.success("Article created successfully");
-      }
-
+      await saveArticle(articleId, articleData);
+      toast.success(articleId ? "Article updated successfully" : "Article created successfully");
       if (onSave) {
         onSave(articleData);
       }
     } catch (error) {
       console.error("Error saving article:", error);
-      toast.error("Error saving article");
-    }
-  };
-
-  const handleContentChange = () => {
-    if (contentRef.current) {
-      setContent(contentRef.current.innerHTML);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error saving article");
+      }
     }
   };
 
@@ -136,40 +80,8 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Formatting</Label>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={() => execCommand('bold')}>
-                Bold
-              </Button>
-              <Button type="button" variant="outline" onClick={() => execCommand('italic')}>
-                Italic
-              </Button>
-              <Button type="button" variant="outline" onClick={() => execCommand('underline')}>
-                Underline
-              </Button>
-              <Button type="button" variant="outline" onClick={() => execCommand('justifyLeft')}>
-                Left
-              </Button>
-              <Button type="button" variant="outline" onClick={() => execCommand('justifyCenter')}>
-                Center
-              </Button>
-              <Button type="button" variant="outline" onClick={() => execCommand('justifyRight')}>
-                Right
-              </Button>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="content">Content</Label>
-            <div
-              ref={contentRef}
-              contentEditable
-              className="min-h-[200px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring prose max-w-none"
-              onInput={handleContentChange}
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
-          </div>
+          <FormattingToolbar onExecCommand={execCommand} />
+          <ContentEditor content={content} onChange={setContent} />
 
           <div className="flex justify-end gap-2">
             {onCancel && (
