@@ -1,3 +1,4 @@
+
 import { Profile } from "@/hooks/useProfile";
 import StatisticsCards from "../StatisticsCards";
 import StudentProfile from "../student-summary/StudentProfile";
@@ -44,7 +45,7 @@ export default function StudentViewContent({
 
   return (
     <div className="space-y-6">
-      <StudentProfile profile={profile} />
+      <StudentProfile profile={profile} studentId={studentId} />
       
       <StatisticsCards
         courses={courses}
