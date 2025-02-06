@@ -1,4 +1,3 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,37 @@ export default function StudentSummaryPage() {
   const params = useParams();
   const studentId = params.studentId;
   console.log("StudentSummaryPage - Received studentId:", studentId);
+
+  // First check if the current user has access to this student
+  const { data: hasAccess, isLoading: checkingAccess } = useQuery({
+    queryKey: ["student-access", studentId],
+    queryFn: async () => {
+      if (!studentId) return false;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Check for parent relationship
+      const { data: parentRelationship } = await supabase
+        .from("parent_student_relationships")
+        .select("*")
+        .eq("parent_id", user.id)
+        .eq("student_id", studentId)
+        .eq("confirmed", true)
+        .maybeSingle();
+
+      // Check for counselor relationship
+      const { data: counselorRelationship } = await supabase
+        .from("counselor_student_relationships")
+        .select("*")
+        .eq("counselor_id", user.id)
+        .eq("student_id", studentId)
+        .maybeSingle();
+
+      return Boolean(parentRelationship || counselorRelationship || user.id === studentId);
+    },
+    enabled: !!studentId,
+  });
 
   // Fetch student profile
   const { data: profileData } = useQuery({
@@ -56,7 +86,7 @@ export default function StudentSummaryPage() {
 
       return profile;
     },
-    enabled: !!studentId,
+    enabled: !!studentId && !!hasAccess,
   });
 
   // Fetch courses
@@ -83,7 +113,7 @@ export default function StudentSummaryPage() {
       console.log("Fetched courses:", data);
       return data;
     },
-    enabled: !!studentId,
+    enabled: !!studentId && !!hasAccess,
   });
 
   const { data: applications = [] } = useQuery({
@@ -104,7 +134,7 @@ export default function StudentSummaryPage() {
 
       return data;
     },
-    enabled: !!studentId,
+    enabled: !!studentId && !!hasAccess,
   });
 
   const { data: activities = [] } = useQuery({
@@ -125,12 +155,22 @@ export default function StudentSummaryPage() {
 
       return data;
     },
-    enabled: !!studentId,
+    enabled: !!studentId && !!hasAccess,
   });
 
   const handleBack = () => {
     navigate('/counselor-dashboard');
   };
+
+  if (checkingAccess) {
+    return <div>Checking access...</div>;
+  }
+
+  if (!hasAccess) {
+    toast.error("You don't have permission to view this student's profile");
+    navigate('/');
+    return null;
+  }
 
   if (!studentId) {
     toast.error("No student ID provided");
