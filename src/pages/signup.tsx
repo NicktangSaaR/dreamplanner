@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +18,7 @@ export default function SignUp() {
     email: "",
     password: "",
     fullName: "",
-    userType: "student" as "student" | "counselor"
+    userType: "student" as "student" | "counselor" | "parent"
   });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -40,14 +41,12 @@ export default function SignUp() {
       if (error) {
         console.error("Signup error:", error);
         
-        // Handle user already exists error specifically
         if (error.message.includes("User already registered")) {
           toast({
             variant: "destructive",
             title: "Account Already Exists",
             description: "This email is already registered. Please log in instead.",
           });
-          // Automatically redirect to login after a short delay
           setTimeout(() => navigate("/login"), 2000);
           return;
         }
@@ -133,7 +132,7 @@ export default function SignUp() {
               <Label>I am a</Label>
               <RadioGroup
                 value={formData.userType}
-                onValueChange={(value) => setFormData({ ...formData, userType: value as "student" | "counselor" })}
+                onValueChange={(value) => setFormData({ ...formData, userType: value as "student" | "counselor" | "parent" })}
                 className="flex gap-4"
               >
                 <div className="flex items-center space-x-2">
@@ -143,6 +142,10 @@ export default function SignUp() {
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="counselor" id="counselor" />
                   <Label htmlFor="counselor">Counselor</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="parent" id="parent" />
+                  <Label htmlFor="parent">Parent</Label>
                 </div>
               </RadioGroup>
             </div>
