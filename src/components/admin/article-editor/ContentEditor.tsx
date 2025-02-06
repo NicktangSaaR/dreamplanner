@@ -12,16 +12,16 @@ export default function ContentEditor({ content, onChange }: ContentEditorProps)
 
   useEffect(() => {
     if (contentRef.current) {
-      // Simply set the HTML content directly
-      contentRef.current.innerHTML = content || '';
+      // 直接设置文本内容
+      contentRef.current.textContent = content || '';
     }
   }, [content]);
 
   const handleContentChange = () => {
     if (contentRef.current) {
-      // Get the HTML content and clean it
-      const cleanContent = contentRef.current.innerHTML;
-      onChange(cleanContent);
+      // 获取纯文本内容
+      const newContent = contentRef.current.textContent || '';
+      onChange(newContent);
     }
   };
 
@@ -31,9 +31,10 @@ export default function ContentEditor({ content, onChange }: ContentEditorProps)
       <div
         ref={contentRef}
         contentEditable
-        className="min-h-[200px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring prose max-w-none whitespace-pre-wrap"
+        className="min-h-[200px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring prose max-w-none whitespace-pre-wrap break-words"
         onInput={handleContentChange}
         suppressContentEditableWarning
+        dir="ltr"
       />
     </div>
   );
