@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Profile } from "@/types/profile";
-import { Json } from "@/integrations/supabase/types";
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -21,7 +18,7 @@ export default function LoginForm() {
 
     try {
       console.log("Attempting login with email:", email);
-      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -39,16 +36,16 @@ export default function LoginForm() {
         return;
       }
 
-      if (!authData.user) {
+      if (!data.user) {
         toast.error("未收到用户数据");
         return;
       }
 
       // Get user profile to check user type
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("*")
-        .eq("id", authData.user.id)
+        .select("user_type, is_admin")
+        .eq("id", data.user.id)
         .single();
 
       if (profileError) {
@@ -57,42 +54,13 @@ export default function LoginForm() {
         return;
       }
 
-      // Transform the profile data to match our Profile type
-      const socialMediaJson = profileData.social_media as { 
-        linkedin?: string;
-        twitter?: string;
-        instagram?: string;
-      } | null;
-
-      const careerTestJson = profileData.career_interest_test as {
-        completedAt: string;
-        scores: Record<string, number>;
-        primaryType: string;
-      } | null;
-
-      const profile: Profile = {
-        ...profileData,
-        social_media: socialMediaJson ? {
-          linkedin: socialMediaJson.linkedin || undefined,
-          twitter: socialMediaJson.twitter || undefined,
-          instagram: socialMediaJson.instagram || undefined,
-        } : null,
-        career_interest_test: careerTestJson ? {
-          completedAt: careerTestJson.completedAt,
-          scores: careerTestJson.scores,
-          primaryType: careerTestJson.primaryType,
-        } : null,
-        interested_majors: Array.isArray(profileData.interested_majors) ? 
-          profileData.interested_majors : null
-      };
-
       console.log("User profile:", profile);
 
       // Redirect based on user type first, then admin status
       if (profile.user_type === "counselor") {
         navigate("/counselor-dashboard");
       } else if (profile.user_type === "student") {
-        navigate(`/student-dashboard/${authData.user.id}`);
+        navigate(`/student-dashboard/${data.user.id}`);
       } else if (profile.is_admin) {
         navigate("/admin-dashboard");
       } else {

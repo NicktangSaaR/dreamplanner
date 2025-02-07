@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { StudentSearchResult } from "@/components/college-planning/types/student-management";
-import { Profile } from "@/types/profile";
+import { User } from "@supabase/supabase-js";
 
 export function useStudentManagement(counselorId: string) {
   const [isLoading, setIsLoading] = useState(false);
@@ -12,33 +11,22 @@ export function useStudentManagement(counselorId: string) {
     try {
       console.log("Searching for student with email:", email);
       
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("email", email)
-        .single();
+      const { data: users, error } = await supabase.auth.admin.listUsers({
+        page: 1,
+        perPage: 100,
+      });
 
       if (error) {
-        console.error("Error searching for student:", error);
+        console.error("Error fetching users:", error);
+        return { user: null, error: "Failed to search for user" };
+      }
+
+      const matchingUser = users.users.find((user: User) => user.email === email);
+      if (!matchingUser) {
         return { user: null, error: "No user found with this email" };
       }
 
-      if (profile.user_type !== 'student') {
-        return { user: null, error: "The specified email belongs to a non-student user" };
-      }
-
-      return { 
-        user: { 
-          id: profile.id, 
-          email: profile.email,
-          user_metadata: { 
-            full_name: profile.full_name 
-          },
-          app_metadata: {},
-          aud: "authenticated",
-          created_at: profile.created_at,
-        } 
-      };
+      return { user: matchingUser };
     } catch (error) {
       console.error("Error in searchStudent:", error);
       return { user: null, error: "An unexpected error occurred" };

@@ -1,4 +1,3 @@
-
 import { User } from "@supabase/supabase-js";
 
 export interface AddStudentDialogProps {
@@ -13,7 +12,7 @@ export interface StudentSearchFormData {
 }
 
 export interface StudentSearchResult {
-  user: Partial<User> | null;
+  user: User | null;
   error?: string;
 }
 

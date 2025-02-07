@@ -1,4 +1,3 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,6 @@ import AcademicSection from "./student-summary/AcademicSection";
 import ActivitiesSection from "./student-summary/ActivitiesSection";
 import ApplicationsSection from "./student-summary/ApplicationsSection";
 import SharedFolderSection from "./student-summary/SharedFolderSection";
-import { Profile } from "@/types/profile";
 
 export default function StudentSummaryPage() {
   const navigate = useNavigate();
@@ -39,37 +37,8 @@ export default function StudentSummaryPage() {
         throw error;
       }
 
-      // Type assertion for social_media and career_interest_test
-      const socialMedia = data.social_media as { 
-        linkedin?: string; 
-        twitter?: string; 
-        instagram?: string; 
-      } | null;
-
-      const careerTest = data.career_interest_test as {
-        completedAt: string;
-        scores: Record<string, number>;
-        primaryType: string;
-      } | null;
-
-      // Transform the data into the correct type
-      const transformedProfile: Profile = {
-        ...data,
-        social_media: socialMedia ? {
-          linkedin: socialMedia.linkedin || undefined,
-          twitter: socialMedia.twitter || undefined,
-          instagram: socialMedia.instagram || undefined,
-        } : null,
-        career_interest_test: careerTest ? {
-          completedAt: careerTest.completedAt,
-          scores: careerTest.scores,
-          primaryType: careerTest.primaryType,
-        } : null,
-        interested_majors: Array.isArray(data.interested_majors) ? data.interested_majors : null
-      };
-
-      console.log("Transformed student profile data:", transformedProfile);
-      return transformedProfile;
+      console.log("Student profile data:", data);
+      return data;
     },
     enabled: !!studentId,
   });
