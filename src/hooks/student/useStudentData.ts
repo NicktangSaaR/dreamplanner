@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/hooks/useProfile";
 
-interface RawProfile extends Omit<Profile, 'social_media'> {
+interface RawProfile extends Omit<Profile, 'social_media' | 'career_interest_test'> {
   social_media: any;
+  career_interest_test: any;
 }
 
 const transformProfile = (rawProfile: RawProfile | null): Profile | null => {
@@ -23,9 +24,24 @@ const transformProfile = (rawProfile: RawProfile | null): Profile | null => {
     socialMedia = null;
   }
 
+  let careerInterestTest = null;
+  try {
+    if (rawProfile.career_interest_test) {
+      if (typeof rawProfile.career_interest_test === 'string') {
+        careerInterestTest = JSON.parse(rawProfile.career_interest_test);
+      } else {
+        careerInterestTest = rawProfile.career_interest_test;
+      }
+    }
+  } catch (error) {
+    console.error("Error parsing career_interest_test:", error);
+    careerInterestTest = null;
+  }
+
   return {
     ...rawProfile,
-    social_media: socialMedia
+    social_media: socialMedia,
+    career_interest_test: careerInterestTest
   };
 };
 

@@ -1,3 +1,4 @@
+
 export interface Profile {
   id: string;
   user_type: string;
@@ -13,7 +14,6 @@ export interface Profile {
   personal_website: string | null;
   graduation_school: string | null;
   background_intro: string | null;
-  is_admin?: boolean;
   application_year: string | null;
   created_at?: string;
   updated_at?: string;
@@ -22,6 +22,7 @@ export interface Profile {
     scores: Record<string, number>;
     primaryType: string;
   } | null;
+  email?: string | null;
 }
 
 export interface ProfileError {

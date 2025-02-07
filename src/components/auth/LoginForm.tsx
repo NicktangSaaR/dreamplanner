@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ export default function LoginForm() {
       // Get user profile to check user type
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("user_type, is_admin")
+        .select("user_type")
         .eq("id", data.user.id)
         .single();
 
@@ -56,12 +57,12 @@ export default function LoginForm() {
 
       console.log("User profile:", profile);
 
-      // Redirect based on user type first, then admin status
+      // Redirect based on user type
       if (profile.user_type === "counselor") {
         navigate("/counselor-dashboard");
       } else if (profile.user_type === "student") {
         navigate(`/student-dashboard/${data.user.id}`);
-      } else if (profile.is_admin) {
+      } else if (profile.user_type === "admin") {
         navigate("/admin-dashboard");
       } else {
         navigate("/college-planning");
