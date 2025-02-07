@@ -19,6 +19,11 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
+      // 测试 Supabase 连接
+      console.log("Testing Supabase connection...");
+      const { data: connectionTest } = await supabase.from('profiles').select('count').limit(1);
+      console.log("Supabase connection test result:", connectionTest);
+
       console.log("Attempting login with email:", email);
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -33,7 +38,7 @@ export default function LoginForm() {
         } else if (signInError.message.includes("Invalid login credentials")) {
           toast.error("邮箱或密码不正确。请重试或注册新账号。");
         } else {
-          toast.error(signInError.message);
+          toast.error(`登录失败: ${signInError.message}`);
         }
         return;
       }
@@ -43,12 +48,16 @@ export default function LoginForm() {
         return;
       }
 
+      console.log("Successfully logged in, fetching profile...");
+      
       // Get user profile with better error handling
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", authData.user.id)
         .maybeSingle();
+
+      console.log("Profile query result:", { profileData, profileError });
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
@@ -114,7 +123,7 @@ export default function LoginForm() {
       toast.success("登录成功！");
     } catch (error) {
       console.error("Unexpected login error:", error);
-      toast.error("登录过程中发生意外错误");
+      toast.error("登录过程中发生意外错误，请稍后重试");
     } finally {
       setIsLoading(false);
     }
