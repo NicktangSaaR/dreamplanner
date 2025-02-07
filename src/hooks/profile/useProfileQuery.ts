@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/profile";
@@ -19,11 +20,16 @@ export const useProfileQuery = () => {
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching profile:", error);
         throw error;
+      }
+
+      if (!data) {
+        console.log("No profile found for user");
+        return null;
       }
 
       // Type assertion for social_media as it comes from JSON column

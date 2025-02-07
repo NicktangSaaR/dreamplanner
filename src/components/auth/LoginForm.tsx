@@ -18,6 +18,7 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
+      // 1. 尝试登录
       const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -25,7 +26,6 @@ export default function LoginForm() {
 
       if (signInError) {
         console.error("Login error:", signInError);
-        
         if (signInError.message.includes("Invalid login credentials")) {
           toast.error("邮箱或密码不正确。请重试或注册新账号。");
         } else {
@@ -35,44 +35,42 @@ export default function LoginForm() {
       }
 
       if (!user) {
-        toast.error("未收到用户数据");
+        toast.error("登录失败：未收到用户数据");
         return;
       }
 
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("user_type, is_admin")
-          .eq("id", user.id)
-          .single();
+      // 2. 获取用户资料
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_type, is_admin")
+        .eq("id", user.id)
+        .maybeSingle();
 
-        if (profileError) {
-          console.error("Error fetching profile:", profileError);
-          // Continue with login even if profile fetch fails
-          toast.success("登录成功！重定向到主页...");
-          navigate("/college-planning");
-          return;
-        }
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        toast.error("获取用户资料失败，请重试");
+        return;
+      }
 
-        console.log("User profile:", profile);
+      if (!profile) {
+        console.error("No profile found for user");
+        toast.error("未找到用户资料，请联系管理员");
+        return;
+      }
 
-        if (profile.user_type === "counselor") {
-          navigate("/counselor-dashboard");
-        } else if (profile.user_type === "student") {
-          navigate(`/student-dashboard/${user.id}`);
-        } else if (profile.is_admin) {
-          navigate("/admin-dashboard");
-        } else {
-          navigate("/college-planning");
-        }
-
-        toast.success("登录成功！");
-      } catch (error) {
-        console.error("Profile fetch error:", error);
-        // Fallback navigation if profile fetch fails
-        toast.success("登录成功！重定向到主页...");
+      // 3. 根据用户类型重定向
+      console.log("User profile:", profile);
+      if (profile.user_type === "counselor") {
+        navigate("/counselor-dashboard");
+      } else if (profile.user_type === "student") {
+        navigate(`/student-dashboard/${user.id}`);
+      } else if (profile.is_admin) {
+        navigate("/admin-dashboard");
+      } else {
         navigate("/college-planning");
       }
+
+      toast.success("登录成功！");
     } catch (error) {
       console.error("Unexpected login error:", error);
       toast.error("登录过程中发生意外错误");
