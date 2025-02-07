@@ -24,18 +24,18 @@ export default function AddCounselorDialog({ studentId, onCounselorAdded }: AddC
 
     try {
       // First, find the counselor by email
-      const { data: counselorProfile, error: counselorError } = await supabase
+      const { data: counselorProfiles, error: profileError } = await supabase
         .from("profiles")
         .select("id, user_type")
-        .eq("id", (await supabase.auth.admin.listUsers()).data.users.find(u => u.email === email)?.id)
-        .single();
+        .eq("email", email)
+        .maybeSingle();
 
-      if (counselorError || !counselorProfile) {
+      if (profileError || !counselorProfiles) {
         toast.error("Counselor not found with this email");
         return;
       }
 
-      if (counselorProfile.user_type !== "counselor") {
+      if (counselorProfiles.user_type !== "counselor") {
         toast.error("The specified user is not a counselor");
         return;
       }
@@ -44,7 +44,7 @@ export default function AddCounselorDialog({ studentId, onCounselorAdded }: AddC
       const { data: existingRelationship, error: checkError } = await supabase
         .from("counselor_student_relationships")
         .select("*")
-        .eq("counselor_id", counselorProfile.id)
+        .eq("counselor_id", counselorProfiles.id)
         .eq("student_id", studentId)
         .maybeSingle();
 
@@ -63,7 +63,7 @@ export default function AddCounselorDialog({ studentId, onCounselorAdded }: AddC
       const { error: insertError } = await supabase
         .from("counselor_student_relationships")
         .insert({
-          counselor_id: counselorProfile.id,
+          counselor_id: counselorProfiles.id,
           student_id: studentId,
           is_primary: false,
           added_by: authData.user?.id
