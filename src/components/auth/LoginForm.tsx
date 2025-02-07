@@ -20,8 +20,8 @@ export default function LoginForm() {
     try {
       console.log("Attempting to sign in with email:", email);
       
-      // 1. 尝试登录
-      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
+      // 1. Sign in attempt
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -37,6 +37,7 @@ export default function LoginForm() {
         return;
       }
 
+      const user = signInData.user;
       if (!user) {
         console.error("No user data received after successful login");
         toast.error("登录失败：未收到用户数据");
@@ -46,7 +47,7 @@ export default function LoginForm() {
 
       console.log("Successfully signed in user:", user.id);
 
-      // 2. 获取用户资料
+      // 2. Fetch user profile
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
@@ -57,6 +58,7 @@ export default function LoginForm() {
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
+        console.log("Profile query SQL:", profileError.message, profileError.details);
         toast.error("获取用户资料失败，请重试");
         setIsLoading(false);
         return;
@@ -64,15 +66,16 @@ export default function LoginForm() {
 
       if (!profile) {
         console.error("No profile found for user:", user.id);
+        console.log("Auth user data:", user);
         toast.error("未找到用户资料，请联系管理员");
         setIsLoading(false);
         return;
       }
 
-      // 3. 根据用户类型重定向
+      // 3. Redirect based on user type
       console.log("User profile found:", profile);
       
-      let redirectPath = "/college-planning"; // 默认重定向路径
+      let redirectPath = "/college-planning"; // Default redirect path
 
       if (profile.user_type === "counselor") {
         redirectPath = "/counselor-dashboard";
