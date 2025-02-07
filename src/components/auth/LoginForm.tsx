@@ -45,52 +45,58 @@ export default function LoginForm() {
       let profileData = null;
       let retryCount = 0;
       const maxRetries = 3;
-      let lastError = null;
+      const retryDelay = 1000; // 1 second delay between retries
 
       while (retryCount < maxRetries) {
+        console.log(`Attempt ${retryCount + 1} to fetch profile...`);
+        
         try {
           const { data, error } = await supabase
             .from("profiles")
-            .select("user_type")
+            .select("*")  // Select all fields to help with debugging
             .eq("id", signInData.user.id)
             .maybeSingle();
 
           if (error) {
             console.error(`Profile fetch attempt ${retryCount + 1} failed:`, error);
-            lastError = error;
             retryCount++;
             if (retryCount === maxRetries) {
               console.error("Failed to fetch profile after all retries");
-              throw new Error("获取用户信息失败");
+              throw new Error("获取用户信息失败，请刷新页面重试");
             }
-            // Wait before retrying
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
             continue;
           }
 
           if (!data) {
-            console.warn("No profile found for user:", signInData.user.id);
-            throw new Error("未找到用户信息");
+            console.warn("No profile data returned for user:", signInData.user.id);
+            throw new Error("找不到您的用户信息，请联系管理员");
           }
 
+          console.log("Successfully fetched profile data:", data);
           profileData = data;
           break;
         } catch (error) {
-          lastError = error;
+          console.error(`Error in attempt ${retryCount + 1}:`, error);
           retryCount++;
           if (retryCount === maxRetries) {
             throw error;
           }
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
         }
       }
 
       if (!profileData) {
-        throw new Error("未能成功获取用户信息");
+        throw new Error("无法获取用户信息，请稍后重试");
+      }
+
+      if (!profileData.user_type) {
+        console.error("Profile data missing user_type:", profileData);
+        throw new Error("用户类型未设置，请联系管理员");
       }
 
       // Step 3: Redirect based on user type
-      console.log("Profile data:", profileData);
+      console.log("Redirecting based on user type:", profileData.user_type);
       
       switch (profileData.user_type) {
         case "admin":
@@ -103,8 +109,8 @@ export default function LoginForm() {
           navigate(`/student-dashboard/${signInData.user.id}`);
           break;
         default:
-          console.warn("Unknown user type:", profileData.user_type);
-          throw new Error("未知的用户类型");
+          console.error("Invalid user type:", profileData.user_type);
+          throw new Error("未知的用户类型，请联系管理员");
       }
       
       toast.success("登录成功！");
