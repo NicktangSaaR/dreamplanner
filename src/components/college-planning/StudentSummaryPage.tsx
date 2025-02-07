@@ -9,6 +9,7 @@ import AcademicSection from "./student-summary/AcademicSection";
 import ActivitiesSection from "./student-summary/ActivitiesSection";
 import ApplicationsSection from "./student-summary/ApplicationsSection";
 import SharedFolderSection from "./student-summary/SharedFolderSection";
+import { Profile } from "@/types/profile";
 
 export default function StudentSummaryPage() {
   const navigate = useNavigate();
@@ -37,8 +38,24 @@ export default function StudentSummaryPage() {
         throw error;
       }
 
-      console.log("Student profile data:", data);
-      return data;
+      // Transform the social_media JSON data into the correct type
+      const transformedProfile: Profile = {
+        ...data,
+        social_media: data.social_media ? {
+          linkedin: data.social_media.linkedin || undefined,
+          twitter: data.social_media.twitter || undefined,
+          instagram: data.social_media.instagram || undefined,
+        } : null,
+        career_interest_test: data.career_interest_test ? {
+          completedAt: data.career_interest_test.completedAt,
+          scores: data.career_interest_test.scores,
+          primaryType: data.career_interest_test.primaryType,
+        } : null,
+        interested_majors: Array.isArray(data.interested_majors) ? data.interested_majors : null
+      };
+
+      console.log("Transformed student profile data:", transformedProfile);
+      return transformedProfile;
     },
     enabled: !!studentId,
   });
