@@ -18,6 +18,7 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
+      // First attempt to sign in
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -33,19 +34,18 @@ export default function LoginForm() {
         return;
       }
 
-      const user = signInData.user;
-      if (!user) {
+      if (!signInData.user) {
         toast.error("登录失败：未收到用户数据");
         return;
       }
 
-      console.log("Successfully signed in user:", user.id);
+      console.log("Successfully signed in user:", signInData.user.id);
 
-      // 使用 single() 获取用户类型，因为每个用户只能有一个 profile
+      // Now fetch the profile with the new policy in place
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
-        .eq("id", user.id)
+        .eq("id", signInData.user.id)
         .single();
 
       if (profileError) {
@@ -56,22 +56,19 @@ export default function LoginForm() {
 
       console.log("Retrieved user profile:", profile);
 
-      // 根据用户类型重定向
+      // Redirect based on user type
       switch (profile.user_type) {
         case "admin":
-          console.log("Redirecting to admin dashboard");
           navigate("/admin-dashboard");
           break;
         case "counselor":
-          console.log("Redirecting to counselor dashboard");
           navigate("/counselor-dashboard");
           break;
         case "student":
-          console.log("Redirecting to student dashboard");
-          navigate(`/student-dashboard/${user.id}`);
+          navigate(`/student-dashboard/${signInData.user.id}`);
           break;
         default:
-          console.log("Unknown user type:", profile.user_type);
+          console.error("Unknown user type:", profile.user_type);
           toast.error(`未知的用户类型: ${profile.user_type}`);
           return;
       }
