@@ -53,10 +53,6 @@ export default function LoginForm() {
       if (profileError) {
         console.error("Error fetching profile:", profileError);
         toast.error("获取用户信息失败");
-        // Still allow login but with a warning
-        toast.warning("部分用户信息可能无法显示");
-        // Redirect to a default route
-        navigate("/college-planning");
         return;
       }
 
@@ -69,7 +65,9 @@ export default function LoginForm() {
             {
               id: data.user.id,
               user_type: "student", // Default to student
-              email: data.user.email
+              email: data.user.email,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             }
           ]);
 
@@ -79,26 +77,35 @@ export default function LoginForm() {
           return;
         }
         
+        // Redirect new users to college planning
         navigate("/college-planning");
+        toast.success("登录成功！欢迎使用我们的系统。");
         return;
       }
+
+      // Handle social media and career test data safely
+      const socialMedia = profileData.social_media ? {
+        linkedin: typeof profileData.social_media === 'object' ? (profileData.social_media as any).linkedin || "" : "",
+        twitter: typeof profileData.social_media === 'object' ? (profileData.social_media as any).twitter || "" : "",
+        instagram: typeof profileData.social_media === 'object' ? (profileData.social_media as any).instagram || "" : "",
+      } : null;
+
+      const careerTest = profileData.career_interest_test ? {
+        completedAt: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).completedAt || "" : "",
+        scores: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).scores || {} : {},
+        primaryType: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).primaryType || "" : "",
+      } : null;
 
       // Transform the profile data with proper type handling
       const profile: Profile = {
         ...profileData,
-        social_media: profileData.social_media ? {
-          linkedin: (profileData.social_media as any)?.linkedin || "",
-          twitter: (profileData.social_media as any)?.twitter || "",
-          instagram: (profileData.social_media as any)?.instagram || "",
-        } : null,
-        career_interest_test: profileData.career_interest_test ? {
-          completedAt: (profileData.career_interest_test as any)?.completedAt || "",
-          scores: (profileData.career_interest_test as any)?.scores || {},
-          primaryType: (profileData.career_interest_test as any)?.primaryType || "",
-        } : null
+        social_media: socialMedia,
+        career_interest_test: careerTest
       };
 
-      // Redirect based on user type
+      console.log("Processed profile data:", profile);
+
+      // Redirect based on user type with safety checks
       if (profile.user_type === "counselor") {
         navigate("/counselor-dashboard");
       } else if (profile.user_type === "student") {
@@ -106,6 +113,7 @@ export default function LoginForm() {
       } else if (profile.is_admin) {
         navigate("/admin-dashboard");
       } else {
+        // Default fallback route
         navigate("/college-planning");
       }
 
