@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Profile } from "@/types/profile";
+import { Json } from "@/integrations/supabase/types";
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -57,17 +58,29 @@ export default function LoginForm() {
       }
 
       // Transform the profile data to match our Profile type
+      const socialMediaJson = profileData.social_media as { 
+        linkedin?: string;
+        twitter?: string;
+        instagram?: string;
+      } | null;
+
+      const careerTestJson = profileData.career_interest_test as {
+        completedAt: string;
+        scores: Record<string, number>;
+        primaryType: string;
+      } | null;
+
       const profile: Profile = {
         ...profileData,
-        social_media: profileData.social_media ? {
-          linkedin: profileData.social_media.linkedin || undefined,
-          twitter: profileData.social_media.twitter || undefined,
-          instagram: profileData.social_media.instagram || undefined,
+        social_media: socialMediaJson ? {
+          linkedin: socialMediaJson.linkedin || undefined,
+          twitter: socialMediaJson.twitter || undefined,
+          instagram: socialMediaJson.instagram || undefined,
         } : null,
-        career_interest_test: profileData.career_interest_test ? {
-          completedAt: profileData.career_interest_test.completedAt,
-          scores: profileData.career_interest_test.scores,
-          primaryType: profileData.career_interest_test.primaryType,
+        career_interest_test: careerTestJson ? {
+          completedAt: careerTestJson.completedAt,
+          scores: careerTestJson.scores,
+          primaryType: careerTestJson.primaryType,
         } : null,
         interested_majors: Array.isArray(profileData.interested_majors) ? 
           profileData.interested_majors : null
