@@ -33,7 +33,6 @@ export default function LoginForm() {
         } else {
           toast.error("登录失败: " + signInError.message);
         }
-        setIsLoading(false);
         return;
       }
 
@@ -41,35 +40,43 @@ export default function LoginForm() {
       if (!user) {
         console.error("No user data received after successful login");
         toast.error("登录失败：未收到用户数据");
-        setIsLoading(false);
         return;
       }
 
       console.log("Successfully signed in user:", user.id);
 
-      // 2. Fetch user profile
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
+      // 2. Fetch user profile with retry logic
+      let profile = null;
+      let retryCount = 0;
+      const maxRetries = 3;
 
-      console.log("Profile query result:", { profile, profileError });
+      while (retryCount < maxRetries && !profile) {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .maybeSingle();
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        console.log("Profile query SQL:", profileError.message, profileError.details);
-        toast.error("获取用户资料失败，请重试");
-        setIsLoading(false);
-        return;
-      }
+        if (profileError) {
+          console.error(`Profile fetch attempt ${retryCount + 1} failed:`, profileError);
+          retryCount++;
+          if (retryCount === maxRetries) {
+            toast.error("获取用户资料失败，请重试");
+            return;
+          }
+          // Wait briefly before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
 
-      if (!profile) {
-        console.error("No profile found for user:", user.id);
-        console.log("Auth user data:", user);
-        toast.error("未找到用户资料，请联系管理员");
-        setIsLoading(false);
-        return;
+        if (!profileData) {
+          console.error("No profile found for user:", user.id);
+          toast.error("未找到用户资料，请联系管理员");
+          return;
+        }
+
+        profile = profileData;
+        break;
       }
 
       // 3. Redirect based on user type
