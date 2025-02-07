@@ -1,3 +1,4 @@
+
 export interface Profile {
   id: string;
   user_type: string;
@@ -22,6 +23,7 @@ export interface Profile {
     scores: Record<string, number>;
     primaryType: string;
   } | null;
+  email?: string | null;
 }
 
 export interface ProfileError {
