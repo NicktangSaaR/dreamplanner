@@ -18,6 +18,7 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
+      // 1. 尝试登录
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -40,21 +41,21 @@ export default function LoginForm() {
         return;
       }
 
-      // Get user profile with just the user_type
-      const { data: userData, error: userError } = await supabase
+      // 2. 获取用户类型
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("id", user.id)
         .single();
 
-      if (userError) {
-        console.error("Error fetching user type:", userError);
+      if (profileError) {
+        console.error("Error fetching user type:", profileError);
         toast.error("获取用户信息失败");
         return;
       }
 
-      // Route based on user type
-      switch (userData.user_type) {
+      // 3. 根据用户类型重定向
+      switch (profile.user_type) {
         case "admin":
           navigate("/admin-dashboard");
           break;
@@ -69,7 +70,6 @@ export default function LoginForm() {
       }
 
       toast.success("登录成功！");
-
     } catch (error) {
       console.error("Unexpected login error:", error);
       toast.error("登录过程中发生意外错误，请重试");
