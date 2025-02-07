@@ -41,22 +41,16 @@ export default function LoginForm() {
 
       console.log("Successfully signed in user:", user.id);
 
-      // 使用 maybeSingle() 而不是 single() 来避免当找不到记录时的错误
+      // 使用 single() 获取用户类型，因为每个用户只能有一个 profile
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("id", user.id)
-        .maybeSingle();
+        .single();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
         toast.error("获取用户信息失败：" + profileError.message);
-        return;
-      }
-
-      if (!profile) {
-        console.error("No profile found for user:", user.id);
-        toast.error("未找到用户信息");
         return;
       }
 
