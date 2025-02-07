@@ -43,37 +43,62 @@ export default function LoginForm() {
         return;
       }
 
-      // Get user profile to check user type
+      // Get user profile with better error handling
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("*")
+        .select()
         .eq("id", data.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
         toast.error("获取用户信息失败");
+        // Still allow login but with a warning
+        toast.warning("部分用户信息可能无法显示");
+        // Redirect to a default route
+        navigate("/college-planning");
         return;
       }
 
-      console.log("User profile:", profileData);
+      if (!profileData) {
+        console.log("No profile found, creating new profile");
+        // Create a new profile if none exists
+        const { error: createProfileError } = await supabase
+          .from("profiles")
+          .insert([
+            {
+              id: data.user.id,
+              user_type: "student", // Default to student
+              email: data.user.email
+            }
+          ]);
 
-      // Transform the profile data
+        if (createProfileError) {
+          console.error("Error creating profile:", createProfileError);
+          toast.error("创建用户档案失败");
+          return;
+        }
+        
+        navigate("/college-planning");
+        return;
+      }
+
+      // Transform the profile data with proper type handling
       const profile: Profile = {
         ...profileData,
-        social_media: profileData.social_media as {
-          linkedin?: string;
-          twitter?: string;
-          instagram?: string;
-        } | null,
-        career_interest_test: profileData.career_interest_test as {
-          completedAt: string;
-          scores: Record<string, number>;
-          primaryType: string;
-        } | null
+        social_media: profileData.social_media ? {
+          linkedin: (profileData.social_media as any)?.linkedin || "",
+          twitter: (profileData.social_media as any)?.twitter || "",
+          instagram: (profileData.social_media as any)?.instagram || "",
+        } : null,
+        career_interest_test: profileData.career_interest_test ? {
+          completedAt: (profileData.career_interest_test as any)?.completedAt || "",
+          scores: (profileData.career_interest_test as any)?.scores || {},
+          primaryType: (profileData.career_interest_test as any)?.primaryType || "",
+        } : null
       };
 
-      // Redirect based on user type first, then admin status
+      // Redirect based on user type
       if (profile.user_type === "counselor") {
         navigate("/counselor-dashboard");
       } else if (profile.user_type === "student") {
