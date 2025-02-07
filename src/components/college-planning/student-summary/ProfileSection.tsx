@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ProfileSectionProps {
@@ -7,9 +8,10 @@ interface ProfileSectionProps {
     school: string | null;
     interested_majors: string[] | null;
   };
+  studentId: string;
 }
 
-export default function ProfileSection({ profile }: ProfileSectionProps) {
+export default function ProfileSection({ profile, studentId }: ProfileSectionProps) {
   return (
     <Card>
       <CardHeader>
