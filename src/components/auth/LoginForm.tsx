@@ -39,41 +39,52 @@ export default function LoginForm() {
         return;
       }
 
-      // 直接使用 single() 而不是 .eq() 来避免潜在的递归问题
+      console.log("Successfully signed in user:", user.id);
+
+      // 使用 maybeSingle() 而不是 single() 来避免当找不到记录时的错误
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
-        .single();
+        .eq("id", user.id)
+        .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        toast.error("获取用户信息失败");
+        toast.error("获取用户信息失败：" + profileError.message);
         return;
       }
 
       if (!profile) {
+        console.error("No profile found for user:", user.id);
         toast.error("未找到用户信息");
         return;
       }
 
+      console.log("Retrieved user profile:", profile);
+
       // 根据用户类型重定向
       switch (profile.user_type) {
         case "admin":
+          console.log("Redirecting to admin dashboard");
           navigate("/admin-dashboard");
           break;
         case "counselor":
+          console.log("Redirecting to counselor dashboard");
           navigate("/counselor-dashboard");
           break;
         case "student":
+          console.log("Redirecting to student dashboard");
           navigate(`/student-dashboard/${user.id}`);
           break;
         default:
-          navigate("/college-planning");
+          console.log("Unknown user type:", profile.user_type);
+          toast.error(`未知的用户类型: ${profile.user_type}`);
+          return;
       }
 
       toast.success("登录成功！");
     } catch (error) {
-      console.error("Unexpected error:", error);
+      console.error("Unexpected error during login:", error);
       toast.error("登录过程中发生意外错误，请重试");
     } finally {
       setIsLoading(false);
