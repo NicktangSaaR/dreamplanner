@@ -40,7 +40,7 @@ export default function LoginForm() {
         return;
       }
 
-      // 获取用户类型信息
+      // Get user profile with just the user_type
       const { data: userData, error: userError } = await supabase
         .from("profiles")
         .select("user_type")
@@ -53,15 +53,19 @@ export default function LoginForm() {
         return;
       }
 
-      // 根据用户类型直接跳转
-      if (userData.user_type === "admin") {
-        navigate("/admin-dashboard");
-      } else if (userData.user_type === "counselor") {
-        navigate("/counselor-dashboard");
-      } else if (userData.user_type === "student") {
-        navigate(`/student-dashboard/${user.id}`);
-      } else {
-        navigate("/college-planning");
+      // Route based on user type
+      switch (userData.user_type) {
+        case "admin":
+          navigate("/admin-dashboard");
+          break;
+        case "counselor":
+          navigate("/counselor-dashboard");
+          break;
+        case "student":
+          navigate(`/student-dashboard/${user.id}`);
+          break;
+        default:
+          navigate("/college-planning");
       }
 
       toast.success("登录成功！");
