@@ -47,6 +47,7 @@ export default function LoginForm() {
           .from("profiles")
           .select("user_type, is_admin")
           .eq("id", authData.user.id)
+          .limit(1)
           .maybeSingle();
 
         if (profileError) {
@@ -55,14 +56,20 @@ export default function LoginForm() {
           return;
         }
 
+        if (!profile) {
+          console.error("No profile found for user");
+          toast.error("未找到用户信息，请联系管理员");
+          return;
+        }
+
         console.log("Fetched profile:", profile);
 
         // Redirect based on user type
-        if (profile?.user_type === "counselor") {
+        if (profile.user_type === "counselor") {
           navigate("/counselor-dashboard");
-        } else if (profile?.user_type === "student") {
+        } else if (profile.user_type === "student") {
           navigate(`/student-dashboard/${authData.user.id}`);
-        } else if (profile?.is_admin) {
+        } else if (profile.is_admin) {
           navigate("/admin-dashboard");
         } else {
           // Fallback route if user_type is not set
