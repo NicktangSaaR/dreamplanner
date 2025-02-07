@@ -1,4 +1,3 @@
-
 export interface Profile {
   id: string;
   user_type: string;
@@ -18,7 +17,6 @@ export interface Profile {
   application_year: string | null;
   created_at?: string;
   updated_at?: string;
-  email: string | null;
   career_interest_test?: {
     completedAt: string;
     scores: Record<string, number>;

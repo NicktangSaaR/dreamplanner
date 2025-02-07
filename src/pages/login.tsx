@@ -1,35 +1,18 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import AuthCard from "@/components/auth/AuthCard";
 import LoginForm from "@/components/auth/LoginForm";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export default function Login() {
   const navigate = useNavigate();
-
-  const handleReturn = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Error logging out:", error);
-        toast.error("返回首页时出现错误");
-      }
-      navigate("/");
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      toast.error("发生未知错误");
-    }
-  };
 
   return (
     <div className="container mx-auto p-4">
       <Button 
         variant="ghost" 
         size="icon"
-        onClick={handleReturn}
+        onClick={() => navigate("/")}
         className="mb-4"
       >
         <ArrowLeft className="h-4 w-4" />

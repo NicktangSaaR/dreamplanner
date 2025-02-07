@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,13 +17,15 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+      console.log("Attempting login with email:", email);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
       if (signInError) {
         console.error("Login error:", signInError);
+        
         if (signInError.message.includes("Email not confirmed")) {
           toast.error("请先验证您的邮箱。请检查收件箱中的验证链接。");
         } else if (signInError.message.includes("Invalid login credentials")) {
@@ -35,53 +36,38 @@ export default function LoginForm() {
         return;
       }
 
-      if (!authData.user) {
+      if (!data.user) {
         toast.error("未收到用户数据");
         return;
       }
 
-      console.log("Login successful, user ID:", authData.user.id);
+      // Get user profile to check user type
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_type, is_admin")
+        .eq("id", data.user.id)
+        .single();
 
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("user_type, is_admin")
-          .eq("id", authData.user.id)
-          .limit(1)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error("Error fetching profile:", profileError);
-          toast.error("获取用户信息失败，请重试");
-          return;
-        }
-
-        if (!profile) {
-          console.error("No profile found for user");
-          toast.error("未找到用户信息，请联系管理员");
-          return;
-        }
-
-        console.log("Fetched profile:", profile);
-
-        // Redirect based on user type
-        if (profile.user_type === "counselor") {
-          navigate("/counselor-dashboard");
-        } else if (profile.user_type === "student") {
-          navigate(`/student-dashboard/${authData.user.id}`);
-        } else if (profile.is_admin) {
-          navigate("/admin-dashboard");
-        } else {
-          // Fallback route if user_type is not set
-          console.log("No specific user type found, redirecting to college-planning");
-          navigate("/college-planning");
-        }
-
-        toast.success("登录成功！");
-      } catch (profileError) {
-        console.error("Profile fetch error:", profileError);
-        toast.error("获取用户信息时出错");
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        toast.error("获取用户信息失败");
+        return;
       }
+
+      console.log("User profile:", profile);
+
+      // Redirect based on user type first, then admin status
+      if (profile.user_type === "counselor") {
+        navigate("/counselor-dashboard");
+      } else if (profile.user_type === "student") {
+        navigate(`/student-dashboard/${data.user.id}`);
+      } else if (profile.is_admin) {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/college-planning");
+      }
+
+      toast.success("登录成功！");
     } catch (error) {
       console.error("Unexpected login error:", error);
       toast.error("登录过程中发生意外错误");

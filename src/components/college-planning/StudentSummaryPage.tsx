@@ -144,7 +144,7 @@ export default function StudentSummaryPage() {
         {/* Left column - Profile and Academics */}
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <ProfileSection profile={profile} studentId={studentId} />
+            <ProfileSection profile={profile} />
           </div>
           <div className="bg-white rounded-lg shadow-sm">
             <AcademicSection 
