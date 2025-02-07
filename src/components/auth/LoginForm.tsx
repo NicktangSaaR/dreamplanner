@@ -42,22 +42,37 @@ export default function LoginForm() {
         return;
       }
 
-      // After successful authentication, get user profile
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("user_type, id")
-        .eq("id", authData.user.id)
-        .maybeSingle();
+      // Add a small delay to ensure the auth state is properly updated
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        toast.error("获取用户信息失败");
-        return;
+      // After successful authentication, get user profile with retry logic
+      let retryCount = 0;
+      let profile = null;
+      let profileError = null;
+
+      while (retryCount < 3 && !profile) {
+        const { data: profileData, error: fetchError } = await supabase
+          .from("profiles")
+          .select("user_type, id")
+          .eq("id", authData.user.id)
+          .maybeSingle();
+
+        if (!fetchError && profileData) {
+          profile = profileData;
+          break;
+        }
+
+        profileError = fetchError;
+        retryCount++;
+        
+        if (retryCount < 3) {
+          await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
+        }
       }
 
       if (!profile) {
-        console.error("No profile found for user");
-        toast.error("未找到用户信息");
+        console.error("Error fetching profile:", profileError);
+        toast.error("获取用户信息失败，请重试");
         return;
       }
 
