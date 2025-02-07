@@ -698,6 +698,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_profile_access: {
+        Args: {
+          profile_id: string
+        }
+        Returns: boolean
+      }
       is_admin: {
         Args: {
           user_id: string
