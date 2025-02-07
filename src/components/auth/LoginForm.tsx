@@ -20,7 +20,7 @@ export default function LoginForm() {
 
     try {
       console.log("Attempting login with email:", email);
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -38,7 +38,7 @@ export default function LoginForm() {
         return;
       }
 
-      if (!data.user) {
+      if (!authData.user) {
         toast.error("未收到用户数据");
         return;
       }
@@ -46,74 +46,68 @@ export default function LoginForm() {
       // Get user profile with better error handling
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select()
-        .eq("id", data.user.id)
+        .select("*")
+        .eq("id", authData.user.id)
         .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        toast.error("获取用户信息失败");
+        toast.error(`获取用户信息失败: ${profileError.message}`);
         return;
       }
 
       if (!profileData) {
         console.log("No profile found, creating new profile");
-        // Create a new profile if none exists
+        const now = new Date().toISOString();
+        const newProfile = {
+          id: authData.user.id,
+          user_type: "student",
+          email: authData.user.email,
+          created_at: now,
+          updated_at: now
+        };
+
         const { error: createProfileError } = await supabase
           .from("profiles")
-          .insert([
-            {
-              id: data.user.id,
-              user_type: "student", // Default to student
-              email: data.user.email,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          ]);
+          .insert([newProfile]);
 
         if (createProfileError) {
           console.error("Error creating profile:", createProfileError);
-          toast.error("创建用户档案失败");
+          toast.error(`创建用户档案失败: ${createProfileError.message}`);
           return;
         }
         
-        // Redirect new users to college planning
+        // Navigate new users to college planning
         navigate("/college-planning");
         toast.success("登录成功！欢迎使用我们的系统。");
         return;
       }
 
-      // Handle social media and career test data safely
-      const socialMedia = profileData.social_media ? {
-        linkedin: typeof profileData.social_media === 'object' ? (profileData.social_media as any).linkedin || "" : "",
-        twitter: typeof profileData.social_media === 'object' ? (profileData.social_media as any).twitter || "" : "",
-        instagram: typeof profileData.social_media === 'object' ? (profileData.social_media as any).instagram || "" : "",
-      } : null;
-
-      const careerTest = profileData.career_interest_test ? {
-        completedAt: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).completedAt || "" : "",
-        scores: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).scores || {} : {},
-        primaryType: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).primaryType || "" : "",
-      } : null;
-
-      // Transform the profile data with proper type handling
+      // Transform profile data with safe type handling
       const profile: Profile = {
         ...profileData,
-        social_media: socialMedia,
-        career_interest_test: careerTest
+        social_media: profileData.social_media ? {
+          linkedin: typeof profileData.social_media === 'object' ? (profileData.social_media as any).linkedin || "" : "",
+          twitter: typeof profileData.social_media === 'object' ? (profileData.social_media as any).twitter || "" : "",
+          instagram: typeof profileData.social_media === 'object' ? (profileData.social_media as any).instagram || "" : "",
+        } : null,
+        career_interest_test: profileData.career_interest_test ? {
+          completedAt: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).completedAt || "" : "",
+          scores: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).scores || {} : {},
+          primaryType: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).primaryType || "" : "",
+        } : null
       };
 
-      console.log("Processed profile data:", profile);
+      console.log("Successfully fetched profile:", profile);
 
-      // Redirect based on user type with safety checks
+      // Redirect based on user type
       if (profile.user_type === "counselor") {
         navigate("/counselor-dashboard");
       } else if (profile.user_type === "student") {
-        navigate(`/student-dashboard/${data.user.id}`);
+        navigate(`/student-dashboard/${authData.user.id}`);
       } else if (profile.is_admin) {
         navigate("/admin-dashboard");
       } else {
-        // Default fallback route
         navigate("/college-planning");
       }
 
