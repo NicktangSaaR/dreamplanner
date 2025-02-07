@@ -18,8 +18,7 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      console.log("Attempting to sign in with email:", email);
-      
+      // Step 1: Sign in
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -40,47 +39,46 @@ export default function LoginForm() {
         return;
       }
 
-      console.log("Successfully signed in user:", signInData.user.id);
-
-      // Simple profile fetch without retries
+      // Step 2: Get profile with simplified query
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("id", signInData.user.id)
-        .maybeSingle();
+        .single();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        toast.error("获取用户信息失败：" + profileError.message);
+        // Even if profile fetch fails, we know the user is authenticated
+        // Default to student dashboard as fallback
+        navigate(`/student-dashboard/${signInData.user.id}`);
+        toast.error("获取用户信息失败，默认导向学生页面");
         return;
       }
 
-      if (!profile) {
-        console.error("No profile found for user:", signInData.user.id);
-        toast.error("未找到用户信息");
-        return;
+      // Step 3: Redirect based on user type
+      if (profile) {
+        switch (profile.user_type) {
+          case "admin":
+            navigate("/admin-dashboard");
+            break;
+          case "counselor":
+            navigate("/counselor-dashboard");
+            break;
+          case "student":
+            navigate(`/student-dashboard/${signInData.user.id}`);
+            break;
+          default:
+            console.warn("Unknown user type:", profile.user_type);
+            navigate(`/student-dashboard/${signInData.user.id}`); // Fallback to student
+            break;
+        }
+        toast.success("登录成功！");
+      } else {
+        // Fallback if no profile found
+        console.warn("No profile found for user:", signInData.user.id);
+        navigate(`/student-dashboard/${signInData.user.id}`);
+        toast.success("登录成功！(使用默认配置)");
       }
-
-      console.log("Retrieved user profile:", profile);
-
-      // Redirect based on user type
-      switch (profile.user_type) {
-        case "admin":
-          navigate("/admin-dashboard");
-          break;
-        case "counselor":
-          navigate("/counselor-dashboard");
-          break;
-        case "student":
-          navigate(`/student-dashboard/${signInData.user.id}`);
-          break;
-        default:
-          console.error("Unknown user type:", profile.user_type);
-          toast.error(`未知的用户类型: ${profile.user_type}`);
-          return;
-      }
-
-      toast.success("登录成功！");
     } catch (error) {
       console.error("Unexpected error during login:", error);
       toast.error("登录过程中发生意外错误，请重试");
