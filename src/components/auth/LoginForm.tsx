@@ -18,7 +18,6 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      console.log("Attempting login with email:", email);
       // First authenticate with Supabase
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -43,10 +42,10 @@ export default function LoginForm() {
         return;
       }
 
-      // After successful authentication, get user profile to check user type
+      // After successful authentication, get user profile
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("user_type")
+        .select("user_type, id")
         .eq("id", authData.user.id)
         .maybeSingle();
 
@@ -56,17 +55,29 @@ export default function LoginForm() {
         return;
       }
 
+      if (!profile) {
+        console.error("No profile found for user");
+        toast.error("未找到用户信息");
+        return;
+      }
+
       console.log("User profile:", profile);
 
-      // Redirect based on user type
-      if (profile?.user_type === "counselor") {
-        navigate("/counselor-dashboard");
-      } else if (profile?.user_type === "student") {
-        navigate(`/student-dashboard/${authData.user.id}`);
-      } else if (profile?.user_type === "admin") {
-        navigate("/admin-dashboard");
-      } else {
-        navigate("/college-planning");
+      // Redirect based on user type with proper error handling
+      switch (profile.user_type) {
+        case "counselor":
+          navigate("/counselor-dashboard");
+          break;
+        case "student":
+          navigate(`/student-dashboard/${profile.id}`);
+          break;
+        case "admin":
+          navigate("/admin-dashboard");
+          break;
+        default:
+          console.error("Unknown user type:", profile.user_type);
+          toast.error("未知的用户类型");
+          return;
       }
 
       toast.success("登录成功！");
