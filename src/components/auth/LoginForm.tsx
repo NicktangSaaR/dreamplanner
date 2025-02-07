@@ -18,9 +18,6 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      console.log("Attempting to sign in with email:", email);
-      
-      // 1. Sign in attempt
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -43,49 +40,30 @@ export default function LoginForm() {
         return;
       }
 
-      console.log("Successfully signed in user:", user.id);
-
-      // 2. Fetch user profile with improved error handling
-      const { data: profileData, error: profileError } = await supabase
+      // 只获取用户类型信息
+      const { data: userData, error: userError } = await supabase
         .from("profiles")
-        .select("*")
+        .select("user_type, is_admin")
         .eq("id", user.id)
-        .maybeSingle();
+        .single();
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        // Sign out the user if we can't fetch their profile
-        await supabase.auth.signOut();
-        toast.error("获取用户资料失败：" + profileError.message);
+      if (userError) {
+        console.error("Error fetching user type:", userError);
+        toast.error("获取用户信息失败");
         return;
       }
 
-      if (!profileData) {
-        console.error("No profile found for user:", user.id);
-        // Sign out the user if they don't have a profile
-        await supabase.auth.signOut();
-        toast.error("未找到用户资料，请联系管理员");
-        return;
+      // 根据用户类型直接跳转
+      if (userData.is_admin) {
+        navigate("/admin-dashboard");
+      } else if (userData.user_type === "counselor") {
+        navigate("/counselor-dashboard");
+      } else if (userData.user_type === "student") {
+        navigate(`/student-dashboard/${user.id}`);
+      } else {
+        navigate("/college-planning");
       }
 
-      // 3. Redirect based on user type with improved logging
-      console.log("User profile found:", profileData);
-      
-      let redirectPath = "/college-planning"; // Default redirect path
-
-      if (profileData.is_admin) {
-        console.log("User is admin, redirecting to admin dashboard");
-        redirectPath = "/admin-dashboard";
-      } else if (profileData.user_type === "counselor") {
-        console.log("User is counselor, redirecting to counselor dashboard");
-        redirectPath = "/counselor-dashboard";
-      } else if (profileData.user_type === "student") {
-        console.log("User is student, redirecting to student dashboard");
-        redirectPath = `/student-dashboard/${user.id}`;
-      }
-
-      console.log("Redirecting to:", redirectPath);
-      navigate(redirectPath);
       toast.success("登录成功！");
 
     } catch (error) {
