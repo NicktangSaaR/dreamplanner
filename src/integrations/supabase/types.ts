@@ -492,6 +492,7 @@ export type Database = {
           background_intro: string | null
           career_interest_test: Json | null
           created_at: string
+          email: string | null
           full_name: string | null
           grade: string | null
           graduation_school: string | null
@@ -509,6 +510,7 @@ export type Database = {
           background_intro?: string | null
           career_interest_test?: Json | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           grade?: string | null
           graduation_school?: string | null
@@ -526,6 +528,7 @@ export type Database = {
           background_intro?: string | null
           career_interest_test?: Json | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           grade?: string | null
           graduation_school?: string | null

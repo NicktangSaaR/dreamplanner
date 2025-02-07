@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Profile } from "@/types/profile";
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -42,9 +44,9 @@ export default function LoginForm() {
       }
 
       // Get user profile to check user type
-      const { data: profile, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("user_type, is_admin")
+        .select("*")
         .eq("id", data.user.id)
         .single();
 
@@ -54,7 +56,22 @@ export default function LoginForm() {
         return;
       }
 
-      console.log("User profile:", profile);
+      console.log("User profile:", profileData);
+
+      // Transform the profile data
+      const profile: Profile = {
+        ...profileData,
+        social_media: profileData.social_media as {
+          linkedin?: string;
+          twitter?: string;
+          instagram?: string;
+        } | null,
+        career_interest_test: profileData.career_interest_test as {
+          completedAt: string;
+          scores: Record<string, number>;
+          primaryType: string;
+        } | null
+      };
 
       // Redirect based on user type first, then admin status
       if (profile.user_type === "counselor") {
