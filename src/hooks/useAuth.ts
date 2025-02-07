@@ -33,9 +33,24 @@ export const useAuth = () => {
         return null;
       }
 
-      return profileData;
+      // Validate user_type before assigning
+      const userType = profileData.user_type as string;
+      if (!isValidUserType(userType)) {
+        console.error("Invalid user type:", userType);
+        return null;
+      }
+
+      return {
+        id: profileData.id,
+        user_type: userType as UserType,
+        email: profileData.email
+      };
     },
   });
+
+  const isValidUserType = (type: string): type is UserType => {
+    return ['student', 'counselor', 'admin'].includes(type);
+  };
 
   const login = async (email: string, password: string) => {
     try {
@@ -65,7 +80,12 @@ export const useAuth = () => {
         .single();
 
       if (profileData) {
-        redirectBasedOnUserType(profileData.user_type, authData.user.id);
+        const userType = profileData.user_type as string;
+        if (isValidUserType(userType)) {
+          redirectBasedOnUserType(userType, authData.user.id);
+        } else {
+          toast.error("无效的用户类型");
+        }
       }
 
     } catch (error) {
