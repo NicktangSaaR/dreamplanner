@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,79 +17,60 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      // Step 1: Sign in
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      console.log("Attempting login with email:", email);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
       if (signInError) {
         console.error("Login error:", signInError);
-        if (signInError.message.includes("Invalid login credentials")) {
+        
+        if (signInError.message.includes("Email not confirmed")) {
+          toast.error("请先验证您的邮箱。请检查收件箱中的验证链接。");
+        } else if (signInError.message.includes("Invalid login credentials")) {
           toast.error("邮箱或密码不正确。请重试或注册新账号。");
         } else {
-          toast.error("登录失败: " + signInError.message);
+          toast.error(signInError.message);
         }
         return;
       }
 
-      if (!signInData.user) {
-        console.error("No user data received after login");
-        toast.error("登录失败：未收到用户数据");
+      if (!data.user) {
+        toast.error("未收到用户数据");
         return;
       }
 
-      console.log("Successfully signed in, user ID:", signInData.user.id);
-
-      // Step 2: Get profile with single attempt
-      const { data: profileData, error: profileError } = await supabase
+      // Get user profile to check user type
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("*")
-        .eq("id", signInData.user.id)
+        .select("user_type, is_admin")
+        .eq("id", data.user.id)
         .single();
 
       if (profileError) {
-        console.error("Profile fetch error:", profileError);
-        toast.error("获取用户信息失败，请稍后重试");
+        console.error("Error fetching profile:", profileError);
+        toast.error("获取用户信息失败");
         return;
       }
 
-      if (!profileData) {
-        console.error("No profile found for user:", signInData.user.id);
-        toast.error("用户档案不存在，请联系管理员");
-        return;
+      console.log("User profile:", profile);
+
+      // Redirect based on user type first, then admin status
+      if (profile.user_type === "counselor") {
+        navigate("/counselor-dashboard");
+      } else if (profile.user_type === "student") {
+        navigate(`/student-dashboard/${data.user.id}`);
+      } else if (profile.is_admin) {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/college-planning");
       }
 
-      if (!profileData.user_type) {
-        console.error("Profile missing user_type:", profileData);
-        toast.error("用户类型未设置，请联系管理员");
-        return;
-      }
-
-      // Step 3: Redirect based on user type
-      console.log("Redirecting user with type:", profileData.user_type);
-      
-      switch (profileData.user_type) {
-        case "admin":
-          navigate("/admin-dashboard");
-          break;
-        case "counselor":
-          navigate("/counselor-dashboard");
-          break;
-        case "student":
-          navigate(`/student-dashboard/${signInData.user.id}`);
-          break;
-        default:
-          console.error("Invalid user type:", profileData.user_type);
-          toast.error("未知的用户类型，请联系管理员");
-          return;
-      }
-      
       toast.success("登录成功！");
     } catch (error) {
-      console.error("Error during login process:", error);
-      const errorMessage = error instanceof Error ? error.message : "登录过程中发生意外错误，请稍后重试";
-      toast.error(errorMessage);
+      console.error("Unexpected login error:", error);
+      toast.error("登录过程中发生意外错误");
     } finally {
       setIsLoading(false);
     }

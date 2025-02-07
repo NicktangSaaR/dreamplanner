@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/profile";
@@ -9,42 +8,23 @@ export const useProfileQuery = () => {
     queryKey: ["profile"],
     queryFn: async (): Promise<Profile | null> => {
       console.log("Fetching profile data...");
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (userError) {
-        console.error("Error getting auth user:", userError);
-        return null;
-      }
-
       if (!user) {
         console.log("No authenticated user found");
         return null;
       }
 
-      console.log("Auth user found:", user.id);
-
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .maybeSingle();
+        .single();
 
       if (error) {
         console.error("Error fetching profile:", error);
-        console.log("Profile query details:", {
-          error: error.message,
-          details: error.details,
-          hint: error.hint
-        });
         throw error;
       }
-
-      if (!data) {
-        console.log("No profile found for user:", user.id);
-        return null;
-      }
-
-      console.log("Raw profile data:", data);
 
       // Type assertion for social_media as it comes from JSON column
       const socialMedia = data.social_media as { 
@@ -84,7 +64,7 @@ export const useProfileQuery = () => {
         career_interest_test: careerInterestTest
       };
 
-      console.log("Transformed profile data:", transformedData);
+      console.log("Profile data fetched:", transformedData);
       return transformedData;
     },
   });
