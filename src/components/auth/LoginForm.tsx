@@ -19,12 +19,9 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      // 测试 Supabase 连接
-      console.log("Testing Supabase connection...");
-      const { data: connectionTest } = await supabase.from('profiles').select('count').limit(1);
-      console.log("Supabase connection test result:", connectionTest);
-
-      console.log("Attempting login with email:", email);
+      console.log("Starting login process...");
+      
+      // Sign in
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -44,20 +41,21 @@ export default function LoginForm() {
       }
 
       if (!authData.user) {
+        console.error("No user data received after login");
         toast.error("未收到用户数据");
         return;
       }
 
       console.log("Successfully logged in, fetching profile...");
-      
-      // Get user profile with better error handling
-      const { data: profileData, error: profileError } = await supabase
+
+      // Get user profile
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", authData.user.id)
         .maybeSingle();
 
-      console.log("Profile query result:", { profileData, profileError });
+      console.log("Profile query result:", { profile, profileError });
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
@@ -65,51 +63,33 @@ export default function LoginForm() {
         return;
       }
 
-      if (!profileData) {
+      if (!profile) {
         console.log("No profile found, creating new profile");
-        const now = new Date().toISOString();
         const newProfile = {
           id: authData.user.id,
           user_type: "student",
           email: authData.user.email,
-          created_at: now,
-          updated_at: now
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         };
 
-        const { error: createProfileError } = await supabase
+        const { error: createError } = await supabase
           .from("profiles")
           .insert([newProfile]);
 
-        if (createProfileError) {
-          console.error("Error creating profile:", createProfileError);
-          toast.error(`创建用户档案失败: ${createProfileError.message}`);
+        if (createError) {
+          console.error("Error creating profile:", createError);
+          toast.error(`创建用户档案失败: ${createError.message}`);
           return;
         }
-        
-        // Navigate new users to college planning
+
+        // Redirect new users to college planning
         navigate("/college-planning");
         toast.success("登录成功！欢迎使用我们的系统。");
         return;
       }
 
-      // Transform profile data with safe type handling
-      const profile: Profile = {
-        ...profileData,
-        social_media: profileData.social_media ? {
-          linkedin: typeof profileData.social_media === 'object' ? (profileData.social_media as any).linkedin || "" : "",
-          twitter: typeof profileData.social_media === 'object' ? (profileData.social_media as any).twitter || "" : "",
-          instagram: typeof profileData.social_media === 'object' ? (profileData.social_media as any).instagram || "" : "",
-        } : null,
-        career_interest_test: profileData.career_interest_test ? {
-          completedAt: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).completedAt || "" : "",
-          scores: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).scores || {} : {},
-          primaryType: typeof profileData.career_interest_test === 'object' ? (profileData.career_interest_test as any).primaryType || "" : "",
-        } : null
-      };
-
-      console.log("Successfully fetched profile:", profile);
-
-      // Redirect based on user type
+      // Handle redirect based on user type
       if (profile.user_type === "counselor") {
         navigate("/counselor-dashboard");
       } else if (profile.user_type === "student") {
@@ -122,7 +102,7 @@ export default function LoginForm() {
 
       toast.success("登录成功！");
     } catch (error) {
-      console.error("Unexpected login error:", error);
+      console.error("Unexpected error during login:", error);
       toast.error("登录过程中发生意外错误，请稍后重试");
     } finally {
       setIsLoading(false);
