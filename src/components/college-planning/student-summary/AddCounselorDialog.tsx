@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User } from "@supabase/supabase-js";
 
 interface AddCounselorDialogProps {
   studentId: string;
@@ -24,30 +23,15 @@ export default function AddCounselorDialog({ studentId, onCounselorAdded }: AddC
     setIsLoading(true);
 
     try {
-      // First, get all users and find the counselor by email
-      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
-      
-      if (usersError) {
-        toast.error("Error fetching users");
-        return;
-      }
-
-      const counselorUser = users?.find((u: User) => u.email === email);
-      
-      if (!counselorUser) {
-        toast.error("Counselor not found with this email");
-        return;
-      }
-
-      // Find the counselor profile
+      // First, find the counselor by email
       const { data: counselorProfile, error: counselorError } = await supabase
         .from("profiles")
         .select("id, user_type")
-        .eq("id", counselorUser.id)
+        .eq("id", (await supabase.auth.admin.listUsers()).data.users.find(u => u.email === email)?.id)
         .single();
 
       if (counselorError || !counselorProfile) {
-        toast.error("Counselor profile not found");
+        toast.error("Counselor not found with this email");
         return;
       }
 

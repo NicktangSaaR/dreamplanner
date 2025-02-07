@@ -39,7 +39,6 @@ export default function App() {
           />
           <Route path="/student-dashboard/:studentId" element={<StudentDashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/parent-dashboard" element={<StudentView />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
