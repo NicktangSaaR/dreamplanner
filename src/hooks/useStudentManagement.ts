@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -57,7 +58,25 @@ export function useStudentManagement(counselorId: string) {
         return false;
       }
 
-      // Then create the relationship
+      // Check if student already has a counselor
+      const { data: existingRelationship, error: checkError } = await supabase
+        .from("counselor_student_relationships")
+        .select("counselor_id")
+        .eq("student_id", studentId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking existing relationship:", checkError);
+        toast.error("Failed to check existing relationship");
+        return false;
+      }
+
+      if (existingRelationship) {
+        toast.error("This student already has a counselor assigned");
+        return false;
+      }
+
+      // Create the relationship
       const { error } = await supabase
         .from("counselor_student_relationships")
         .insert([{ 

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -41,11 +42,10 @@ export default function SelectCounselorDialog({ studentId, onCounselorSelected }
     try {
       console.log("Creating relationship with counselor:", counselorId);
       
-      // First check if relationship already exists
+      // First check if student already has a counselor
       const { data: existingRelationship, error: checkError } = await supabase
         .from("counselor_student_relationships")
         .select()
-        .eq("counselor_id", counselorId)
         .eq("student_id", studentId)
         .maybeSingle();
 
@@ -56,24 +56,37 @@ export default function SelectCounselorDialog({ studentId, onCounselorSelected }
       }
 
       if (existingRelationship) {
-        toast.error("You already have a relationship with this counselor");
-        return;
+        // If there's an existing relationship, update it
+        const { error: updateError } = await supabase
+          .from("counselor_student_relationships")
+          .update({ counselor_id: counselorId })
+          .eq("student_id", studentId);
+
+        if (updateError) {
+          console.error("Error updating counselor:", updateError);
+          toast.error("Failed to update counselor");
+          return;
+        }
+
+        toast.success("Counselor updated successfully");
+      } else {
+        // If no existing relationship, create a new one
+        const { error: insertError } = await supabase
+          .from("counselor_student_relationships")
+          .insert({
+            counselor_id: counselorId,
+            student_id: studentId,
+          });
+
+        if (insertError) {
+          console.error("Error creating relationship:", insertError);
+          toast.error("Failed to select counselor");
+          return;
+        }
+
+        toast.success("Counselor selected successfully");
       }
 
-      const { error: relationshipError } = await supabase
-        .from("counselor_student_relationships")
-        .insert({
-          counselor_id: counselorId,
-          student_id: studentId,
-        });
-
-      if (relationshipError) {
-        console.error("Error creating relationship:", relationshipError);
-        toast.error("Failed to select counselor");
-        return;
-      }
-
-      toast.success("Counselor selected successfully");
       onCounselorSelected();
       setIsOpen(false);
     } catch (error) {

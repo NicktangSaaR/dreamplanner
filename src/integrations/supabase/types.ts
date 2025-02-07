@@ -182,7 +182,6 @@ export type Database = {
           counselor_id: string
           created_at: string | null
           id: string
-          is_primary: boolean | null
           student_id: string
           updated_at: string | null
         }
@@ -191,7 +190,6 @@ export type Database = {
           counselor_id: string
           created_at?: string | null
           id?: string
-          is_primary?: boolean | null
           student_id: string
           updated_at?: string | null
         }
@@ -200,7 +198,6 @@ export type Database = {
           counselor_id?: string
           created_at?: string | null
           id?: string
-          is_primary?: boolean | null
           student_id?: string
           updated_at?: string | null
         }
@@ -215,7 +212,7 @@ export type Database = {
           {
             foreignKeyName: "counselor_student_relationships_student_profiles_fkey"
             columns: ["student_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
