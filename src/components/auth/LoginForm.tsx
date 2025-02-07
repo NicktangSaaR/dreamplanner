@@ -42,35 +42,15 @@ export default function LoginForm() {
 
       console.log("Successfully signed in user:", signInData.user.id);
 
-      // Add a longer delay to ensure auth state is fully propagated
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Try to fetch the profile multiple times if needed
-      let retryCount = 0;
-      let profile = null;
-      let profileError = null;
-
-      while (retryCount < 3 && !profile) {
-        console.log(`Attempting to fetch profile, attempt ${retryCount + 1}`);
-        
-        const result = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("id", signInData.user.id)
-          .maybeSingle();
-        
-        if (!result.error && result.data) {
-          profile = result.data;
-          break;
-        }
-        
-        profileError = result.error;
-        await new Promise(resolve => setTimeout(resolve, 500));
-        retryCount++;
-      }
+      // Simple profile fetch without retries
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", signInData.user.id)
+        .maybeSingle();
 
       if (profileError) {
-        console.error("Final error fetching profile:", profileError);
+        console.error("Error fetching profile:", profileError);
         toast.error("获取用户信息失败：" + profileError.message);
         return;
       }
