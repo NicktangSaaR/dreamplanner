@@ -17,7 +17,7 @@ export interface Question {
   description: string;  // Changed from optional to required
   preparation_time: number;
   response_time: number;
-  created_by?: string;
+  created_by: string;  // Changed from optional to required
   is_system: boolean;  // Changed from optional to required
   mock_interview_bank_questions?: {
     id: string;
