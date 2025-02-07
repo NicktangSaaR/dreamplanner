@@ -40,10 +40,10 @@ export default function LoginForm() {
         return;
       }
 
-      // 只获取用户类型信息
+      // 获取用户类型信息
       const { data: userData, error: userError } = await supabase
         .from("profiles")
-        .select("user_type, is_admin")
+        .select("user_type")
         .eq("id", user.id)
         .single();
 
@@ -54,7 +54,7 @@ export default function LoginForm() {
       }
 
       // 根据用户类型直接跳转
-      if (userData.is_admin) {
+      if (userData.user_type === "admin") {
         navigate("/admin-dashboard");
       } else if (userData.user_type === "counselor") {
         navigate("/counselor-dashboard");

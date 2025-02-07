@@ -17,7 +17,7 @@ export default function AdminDashboard() {
   const { profile } = useProfile();
 
   useEffect(() => {
-    if (profile && !profile.is_admin) {
+    if (profile && profile.user_type !== 'admin') {
       navigate('/');
     }
   }, [profile, navigate]);
@@ -38,7 +38,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!profile?.is_admin) {
+  if (profile?.user_type !== 'admin') {
     return null;
   }
 

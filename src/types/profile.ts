@@ -14,7 +14,6 @@ export interface Profile {
   personal_website: string | null;
   graduation_school: string | null;
   background_intro: string | null;
-  is_admin?: boolean;
   application_year: string | null;
   created_at?: string;
   updated_at?: string;
