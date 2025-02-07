@@ -45,50 +45,35 @@ export default function LoginForm() {
 
       console.log("Successfully signed in user:", user.id);
 
-      // 2. Fetch user profile with retry logic
-      let profile = null;
-      let retryCount = 0;
-      const maxRetries = 3;
+      // 2. Fetch user profile with simplified approach
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
 
-      while (retryCount < maxRetries && !profile) {
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .maybeSingle();
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        toast.error("获取用户资料失败，请重试");
+        return;
+      }
 
-        if (profileError) {
-          console.error(`Profile fetch attempt ${retryCount + 1} failed:`, profileError);
-          retryCount++;
-          if (retryCount === maxRetries) {
-            toast.error("获取用户资料失败，请重试");
-            return;
-          }
-          // Wait briefly before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          continue;
-        }
-
-        if (!profileData) {
-          console.error("No profile found for user:", user.id);
-          toast.error("未找到用户资料，请联系管理员");
-          return;
-        }
-
-        profile = profileData;
-        break;
+      if (!profileData) {
+        console.error("No profile found for user:", user.id);
+        toast.error("未找到用户资料，请联系管理员");
+        return;
       }
 
       // 3. Redirect based on user type
-      console.log("User profile found:", profile);
+      console.log("User profile found:", profileData);
       
       let redirectPath = "/college-planning"; // Default redirect path
 
-      if (profile.user_type === "counselor") {
+      if (profileData.user_type === "counselor") {
         redirectPath = "/counselor-dashboard";
-      } else if (profile.user_type === "student") {
+      } else if (profileData.user_type === "student") {
         redirectPath = `/student-dashboard/${user.id}`;
-      } else if (profile.is_admin) {
+      } else if (profileData.is_admin) {
         redirectPath = "/admin-dashboard";
       }
 
