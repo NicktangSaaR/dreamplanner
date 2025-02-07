@@ -19,33 +19,50 @@ export const useAuth = () => {
   const { data: profile, isLoading } = useQuery({
     queryKey: ["user-profile"],
     queryFn: async (): Promise<UserProfile | null> => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          console.error("Error getting user:", userError);
+          return null;
+        }
+        if (!user) return null;
 
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("id, user_type, email")
-        .eq("id", user.id)
-        .single();
+        // Use maybeSingle instead of single to avoid errors when no profile exists
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, user_type, email")
+          .eq("id", user.id)
+          .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          return null;
+        }
+
+        if (!profileData) {
+          console.log("No profile found for user");
+          return null;
+        }
+
+        // Validate user_type before assigning
+        const userType = profileData.user_type as string;
+        if (!isValidUserType(userType)) {
+          console.error("Invalid user type:", userType);
+          return null;
+        }
+
+        return {
+          id: profileData.id,
+          user_type: userType as UserType,
+          email: profileData.email
+        };
+      } catch (error) {
+        console.error("Unexpected error in profile query:", error);
         return null;
       }
-
-      // Validate user_type before assigning
-      const userType = profileData.user_type as string;
-      if (!isValidUserType(userType)) {
-        console.error("Invalid user type:", userType);
-        return null;
-      }
-
-      return {
-        id: profileData.id,
-        user_type: userType as UserType,
-        email: profileData.email
-      };
     },
+    retry: false,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const isValidUserType = (type: string): type is UserType => {
@@ -72,20 +89,23 @@ export const useAuth = () => {
       // 刷新用户数据
       await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
       
-      // 获取最新的 profile
-      const { data: profileData } = await supabase
+      // 获取最新的 profile，使用 maybeSingle 避免错误
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("id", authData.user.id)
-        .single();
+        .maybeSingle();
 
-      if (profileData) {
-        const userType = profileData.user_type as string;
-        if (isValidUserType(userType)) {
-          redirectBasedOnUserType(userType, authData.user.id);
-        } else {
-          toast.error("无效的用户类型");
-        }
+      if (profileError) {
+        console.error("Error fetching profile after login:", profileError);
+        toast.error("获取用户信息失败");
+        return;
+      }
+
+      if (profileData && isValidUserType(profileData.user_type)) {
+        redirectBasedOnUserType(profileData.user_type as UserType, authData.user.id);
+      } else {
+        toast.error("用户类型无效或未找到用户信息");
       }
 
     } catch (error) {
@@ -96,7 +116,12 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error during logout:", error);
+        toast.error("登出失败");
+        return;
+      }
       queryClient.clear();
       navigate("/");
       toast.success("成功登出");
