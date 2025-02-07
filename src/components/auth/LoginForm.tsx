@@ -45,7 +45,7 @@ export default function LoginForm() {
 
       console.log("Successfully signed in user:", user.id);
 
-      // 2. Fetch user profile with simplified approach
+      // 2. Fetch user profile with improved error handling
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
@@ -54,27 +54,34 @@ export default function LoginForm() {
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        toast.error("获取用户资料失败，请重试");
+        // Sign out the user if we can't fetch their profile
+        await supabase.auth.signOut();
+        toast.error("获取用户资料失败：" + profileError.message);
         return;
       }
 
       if (!profileData) {
         console.error("No profile found for user:", user.id);
+        // Sign out the user if they don't have a profile
+        await supabase.auth.signOut();
         toast.error("未找到用户资料，请联系管理员");
         return;
       }
 
-      // 3. Redirect based on user type
+      // 3. Redirect based on user type with improved logging
       console.log("User profile found:", profileData);
       
       let redirectPath = "/college-planning"; // Default redirect path
 
-      if (profileData.user_type === "counselor") {
+      if (profileData.is_admin) {
+        console.log("User is admin, redirecting to admin dashboard");
+        redirectPath = "/admin-dashboard";
+      } else if (profileData.user_type === "counselor") {
+        console.log("User is counselor, redirecting to counselor dashboard");
         redirectPath = "/counselor-dashboard";
       } else if (profileData.user_type === "student") {
+        console.log("User is student, redirecting to student dashboard");
         redirectPath = `/student-dashboard/${user.id}`;
-      } else if (profileData.is_admin) {
-        redirectPath = "/admin-dashboard";
       }
 
       console.log("Redirecting to:", redirectPath);
@@ -83,7 +90,7 @@ export default function LoginForm() {
 
     } catch (error) {
       console.error("Unexpected login error:", error);
-      toast.error("登录过程中发生意外错误");
+      toast.error("登录过程中发生意外错误，请重试");
     } finally {
       setIsLoading(false);
     }
