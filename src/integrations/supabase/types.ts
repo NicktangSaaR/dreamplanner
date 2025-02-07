@@ -701,6 +701,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_supabase_connection: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_admin: {
         Args: {
           user_id: string
