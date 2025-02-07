@@ -18,8 +18,6 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      console.log("Starting login process...");
-      
       // Step 1: Sign in
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -44,60 +42,29 @@ export default function LoginForm() {
 
       console.log("Successfully signed in, user ID:", signInData.user.id);
 
-      // Step 2: Get profile with direct query and retry logic
-      let profileData = null;
-      let retryCount = 0;
-      const maxRetries = 3;
-      const retryDelay = 2000; // Increased to 2 seconds between retries
+      // Step 2: Get profile with single attempt
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", signInData.user.id)
+        .single();
 
-      while (retryCount < maxRetries) {
-        console.log(`Profile fetch attempt ${retryCount + 1} for user ${signInData.user.id}`);
-        
-        try {
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", signInData.user.id)
-            .maybeSingle();
-
-          if (error) {
-            console.error(`Profile fetch attempt ${retryCount + 1} failed:`, error);
-            retryCount++;
-            if (retryCount === maxRetries) {
-              throw new Error("获取用户信息失败，请联系管理员或稍后重试");
-            }
-            console.log(`Waiting ${retryDelay}ms before retry ${retryCount + 1}...`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-            continue;
-          }
-
-          if (!data) {
-            console.error(`No profile found for user ${signInData.user.id}`);
-            throw new Error("用户档案不存在，请联系管理员");
-          }
-
-          console.log("Profile data retrieved:", data);
-          profileData = data;
-          break;
-        } catch (error) {
-          console.error(`Error in attempt ${retryCount + 1}:`, error);
-          retryCount++;
-          if (retryCount === maxRetries) {
-            throw error;
-          }
-          console.log(`Waiting ${retryDelay}ms before retry ${retryCount + 1}...`);
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
-        }
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+        toast.error("获取用户信息失败，请稍后重试");
+        return;
       }
 
       if (!profileData) {
-        console.error("No profile data after all retries");
-        throw new Error("无法获取用户信息，请确认账号已激活并重试");
+        console.error("No profile found for user:", signInData.user.id);
+        toast.error("用户档案不存在，请联系管理员");
+        return;
       }
 
       if (!profileData.user_type) {
-        console.error("Profile data missing user_type:", profileData);
-        throw new Error("用户类型未设置，请联系管理员设置用户类型");
+        console.error("Profile missing user_type:", profileData);
+        toast.error("用户类型未设置，请联系管理员");
+        return;
       }
 
       // Step 3: Redirect based on user type
@@ -115,7 +82,8 @@ export default function LoginForm() {
           break;
         default:
           console.error("Invalid user type:", profileData.user_type);
-          throw new Error("未知的用户类型，请联系管理员修正用户类型");
+          toast.error("未知的用户类型，请联系管理员");
+          return;
       }
       
       toast.success("登录成功！");
