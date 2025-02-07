@@ -1,9 +1,11 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -35,12 +37,14 @@ const QuestionBankSelect = ({
       setCurrentUserId(user?.id || null);
 
       if (user) {
-        const { data: profile } = await supabase
+        const { data: profileData } = await supabase
           .from('profiles')
-          .select('is_admin')
+          .select('user_type')
           .eq('id', user.id)
           .single();
-        setIsAdmin(profile?.is_admin || false);
+        
+        // Check if user is admin based on user_type
+        setIsAdmin(profileData?.user_type === 'admin');
       }
     };
     getCurrentUser();
@@ -199,3 +203,4 @@ const QuestionBankSelect = ({
 };
 
 export default QuestionBankSelect;
+
