@@ -1,6 +1,8 @@
+
 export interface Profile {
   id: string;
   user_type: string;
+  email: string;
   full_name: string | null;
   grade: string | null;
   school: string | null;

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { StudentSearchResult } from "@/components/college-planning/types/student-management";
+import { Profile } from "@/types/profile";
 
 export function useStudentManagement(counselorId: string) {
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +27,18 @@ export function useStudentManagement(counselorId: string) {
         return { user: null, error: "The specified email belongs to a non-student user" };
       }
 
-      return { user: { id: profile.id, email, user_metadata: { full_name: profile.full_name } } };
+      return { 
+        user: { 
+          id: profile.id, 
+          email: profile.email,
+          user_metadata: { 
+            full_name: profile.full_name 
+          },
+          app_metadata: {},
+          aud: "authenticated",
+          created_at: profile.created_at,
+        } 
+      };
     } catch (error) {
       console.error("Error in searchStudent:", error);
       return { user: null, error: "An unexpected error occurred" };
