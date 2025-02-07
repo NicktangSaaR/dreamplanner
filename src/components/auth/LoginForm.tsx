@@ -18,7 +18,8 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      // First sign in to get the session
+      console.log("Attempting to sign in with email:", email);
+      
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -41,18 +42,35 @@ export default function LoginForm() {
 
       console.log("Successfully signed in user:", signInData.user.id);
 
-      // Wait a short moment to ensure the session is properly established
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Add a longer delay to ensure auth state is fully propagated
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Now fetch the profile
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", signInData.user.id)
-        .maybeSingle();
+      // Try to fetch the profile multiple times if needed
+      let retryCount = 0;
+      let profile = null;
+      let profileError = null;
+
+      while (retryCount < 3 && !profile) {
+        console.log(`Attempting to fetch profile, attempt ${retryCount + 1}`);
+        
+        const result = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("id", signInData.user.id)
+          .maybeSingle();
+        
+        if (!result.error && result.data) {
+          profile = result.data;
+          break;
+        }
+        
+        profileError = result.error;
+        await new Promise(resolve => setTimeout(resolve, 500));
+        retryCount++;
+      }
 
       if (profileError) {
-        console.error("Error fetching profile:", profileError);
+        console.error("Final error fetching profile:", profileError);
         toast.error("获取用户信息失败：" + profileError.message);
         return;
       }
