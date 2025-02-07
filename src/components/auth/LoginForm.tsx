@@ -45,35 +45,48 @@ export default function LoginForm() {
       let profileData = null;
       let retryCount = 0;
       const maxRetries = 3;
+      let lastError = null;
 
       while (retryCount < maxRetries) {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("id", signInData.user.id)
-          .maybeSingle();
+        try {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("user_type")
+            .eq("id", signInData.user.id)
+            .maybeSingle();
 
-        if (error) {
-          console.error(`Profile fetch attempt ${retryCount + 1} failed:`, error);
+          if (error) {
+            console.error(`Profile fetch attempt ${retryCount + 1} failed:`, error);
+            lastError = error;
+            retryCount++;
+            if (retryCount === maxRetries) {
+              console.error("Failed to fetch profile after all retries");
+              throw new Error("获取用户信息失败");
+            }
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+
+          if (!data) {
+            console.warn("No profile found for user:", signInData.user.id);
+            throw new Error("未找到用户信息");
+          }
+
+          profileData = data;
+          break;
+        } catch (error) {
+          lastError = error;
           retryCount++;
           if (retryCount === maxRetries) {
-            console.error("Failed to fetch profile after all retries");
-            toast.error("无法获取用户信息，请稍后重试");
-            return;
+            throw error;
           }
-          // Wait for a short time before retrying
           await new Promise(resolve => setTimeout(resolve, 1000));
-          continue;
         }
-
-        profileData = data;
-        break;
       }
 
       if (!profileData) {
-        console.warn("No profile found for user:", signInData.user.id);
-        toast.error("未找到用户信息，请联系管理员");
-        return;
+        throw new Error("未能成功获取用户信息");
       }
 
       // Step 3: Redirect based on user type
@@ -91,14 +104,14 @@ export default function LoginForm() {
           break;
         default:
           console.warn("Unknown user type:", profileData.user_type);
-          toast.error("未知的用户类型，请联系管理员");
-          return;
+          throw new Error("未知的用户类型");
       }
       
       toast.success("登录成功！");
     } catch (error) {
-      console.error("Unexpected error during login:", error);
-      toast.error("登录过程中发生意外错误，请重试");
+      console.error("Error during login process:", error);
+      const errorMessage = error instanceof Error ? error.message : "登录过程中发生意外错误";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
