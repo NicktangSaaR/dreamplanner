@@ -40,30 +40,22 @@ export default function LoginForm() {
         return;
       }
 
-      // Add a delay to allow for DB replication and policy updates
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log("Login successful, user ID:", authData.user.id);
 
       try {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("user_type, is_admin")
           .eq("id", authData.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error("Error fetching profile:", profileError);
-          // Handle policy-related errors gracefully
-          if (profileError.message.includes("infinite recursion") || 
-              profileError.message.includes("policy") ||
-              profileError.code === "42P17") {
-            console.log("Policy or permission error encountered, redirecting to default route");
-            navigate("/college-planning");
-            toast.success("登录成功！");
-            return;
-          }
           toast.error("获取用户信息失败，请重试");
           return;
         }
+
+        console.log("Fetched profile:", profile);
 
         // Redirect based on user type
         if (profile?.user_type === "counselor") {
@@ -73,15 +65,15 @@ export default function LoginForm() {
         } else if (profile?.is_admin) {
           navigate("/admin-dashboard");
         } else {
+          // Fallback route if user_type is not set
+          console.log("No specific user type found, redirecting to college-planning");
           navigate("/college-planning");
         }
 
         toast.success("登录成功！");
       } catch (profileError) {
         console.error("Profile fetch error:", profileError);
-        // Fallback to default route on any profile fetch error
-        navigate("/college-planning");
-        toast.success("登录成功！");
+        toast.error("获取用户信息时出错");
       }
     } catch (error) {
       console.error("Unexpected login error:", error);
