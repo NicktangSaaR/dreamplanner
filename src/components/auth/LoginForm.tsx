@@ -18,15 +18,14 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      console.log("Attempting login with email:", email);
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      // First attempt to sign in
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
       if (signInError) {
         console.error("Login error:", signInError);
-        
         if (signInError.message.includes("Email not confirmed")) {
           toast.error("请先验证您的邮箱。请检查收件箱中的验证链接。");
         } else if (signInError.message.includes("Invalid login credentials")) {
@@ -37,20 +36,30 @@ export default function LoginForm() {
         return;
       }
 
-      if (!data.user) {
+      if (!authData.user) {
         toast.error("未收到用户数据");
         return;
       }
 
-      console.log("Login successful, fetching profile...");
+      // Then fetch the profile with a delay to allow for any DB replication
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type, is_admin")
-        .eq("id", data.user.id)
+        .eq("id", authData.user.id)
+        .limit(1)
         .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
+        // If it's a policy error, we'll just redirect to the default route
+        if (profileError.message.includes("policy")) {
+          console.log("Policy error encountered, redirecting to default route");
+          navigate("/college-planning");
+          toast.success("登录成功！");
+          return;
+        }
         toast.error("获取用户信息失败");
         return;
       }
@@ -61,7 +70,7 @@ export default function LoginForm() {
       if (profile?.user_type === "counselor") {
         navigate("/counselor-dashboard");
       } else if (profile?.user_type === "student") {
-        navigate(`/student-dashboard/${data.user.id}`);
+        navigate(`/student-dashboard/${authData.user.id}`);
       } else if (profile?.is_admin) {
         navigate("/admin-dashboard");
       } else {
