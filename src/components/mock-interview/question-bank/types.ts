@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 
 export const formSchema = z.object({
@@ -13,7 +14,7 @@ export type FormData = z.infer<typeof formSchema>;
 export interface Question {
   id: string;
   title: string;
-  description?: string;
+  description: string;  // Changed from optional to required
   preparation_time: number;
   response_time: number;
   created_by?: string;
@@ -21,6 +22,6 @@ export interface Question {
   mock_interview_bank_questions?: {
     id: string;
     title: string;
-    description?: string;
+    description: string;  // Changed from optional to required
   }[];
 }
