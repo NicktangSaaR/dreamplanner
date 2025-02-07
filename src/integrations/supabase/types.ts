@@ -456,12 +456,43 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_student_relationships: {
+        Row: {
+          confirmed: boolean | null
+          created_at: string | null
+          id: string
+          parent_id: string
+          student_email: string
+          student_id: string
+          student_name: string
+        }
+        Insert: {
+          confirmed?: boolean | null
+          created_at?: string | null
+          id?: string
+          parent_id: string
+          student_email: string
+          student_id: string
+          student_name: string
+        }
+        Update: {
+          confirmed?: boolean | null
+          created_at?: string | null
+          id?: string
+          parent_id?: string
+          student_email?: string
+          student_id?: string
+          student_name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           application_year: string | null
           background_intro: string | null
           career_interest_test: Json | null
           created_at: string
+          email: string | null
           full_name: string | null
           grade: string | null
           graduation_school: string | null
@@ -479,6 +510,7 @@ export type Database = {
           background_intro?: string | null
           career_interest_test?: Json | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           grade?: string | null
           graduation_school?: string | null
@@ -496,6 +528,7 @@ export type Database = {
           background_intro?: string | null
           career_interest_test?: Json | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           grade?: string | null
           graduation_school?: string | null
