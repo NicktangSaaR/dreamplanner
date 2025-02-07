@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Profile } from "@/types/profile";
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ export default function LoginForm() {
 
     try {
       console.log("Attempting login with email:", email);
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -36,16 +38,16 @@ export default function LoginForm() {
         return;
       }
 
-      if (!data.user) {
+      if (!authData.user) {
         toast.error("未收到用户数据");
         return;
       }
 
       // Get user profile to check user type
-      const { data: profile, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("user_type, is_admin")
-        .eq("id", data.user.id)
+        .select("*")
+        .eq("id", authData.user.id)
         .single();
 
       if (profileError) {
@@ -54,13 +56,30 @@ export default function LoginForm() {
         return;
       }
 
+      // Transform the profile data to match our Profile type
+      const profile: Profile = {
+        ...profileData,
+        social_media: profileData.social_media ? {
+          linkedin: profileData.social_media.linkedin || undefined,
+          twitter: profileData.social_media.twitter || undefined,
+          instagram: profileData.social_media.instagram || undefined,
+        } : null,
+        career_interest_test: profileData.career_interest_test ? {
+          completedAt: profileData.career_interest_test.completedAt,
+          scores: profileData.career_interest_test.scores,
+          primaryType: profileData.career_interest_test.primaryType,
+        } : null,
+        interested_majors: Array.isArray(profileData.interested_majors) ? 
+          profileData.interested_majors : null
+      };
+
       console.log("User profile:", profile);
 
       // Redirect based on user type first, then admin status
       if (profile.user_type === "counselor") {
         navigate("/counselor-dashboard");
       } else if (profile.user_type === "student") {
-        navigate(`/student-dashboard/${data.user.id}`);
+        navigate(`/student-dashboard/${authData.user.id}`);
       } else if (profile.is_admin) {
         navigate("/admin-dashboard");
       } else {
