@@ -19,7 +19,8 @@ export default function LoginForm() {
 
     try {
       console.log("Attempting login with email:", email);
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      // First authenticate with Supabase
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -37,17 +38,17 @@ export default function LoginForm() {
         return;
       }
 
-      if (!data.user) {
+      if (!authData.user) {
         toast.error("未收到用户数据");
         return;
       }
 
-      // Get user profile to check user type
+      // After successful authentication, get user profile to check user type
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
-        .eq("id", data.user.id)
-        .single();
+        .eq("id", authData.user.id)
+        .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
@@ -58,11 +59,11 @@ export default function LoginForm() {
       console.log("User profile:", profile);
 
       // Redirect based on user type
-      if (profile.user_type === "counselor") {
+      if (profile?.user_type === "counselor") {
         navigate("/counselor-dashboard");
-      } else if (profile.user_type === "student") {
-        navigate(`/student-dashboard/${data.user.id}`);
-      } else if (profile.user_type === "admin") {
+      } else if (profile?.user_type === "student") {
+        navigate(`/student-dashboard/${authData.user.id}`);
+      } else if (profile?.user_type === "admin") {
         navigate("/admin-dashboard");
       } else {
         navigate("/college-planning");
