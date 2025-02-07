@@ -9,6 +9,8 @@ import AcademicSection from "./student-summary/AcademicSection";
 import ActivitiesSection from "./student-summary/ActivitiesSection";
 import ApplicationsSection from "./student-summary/ApplicationsSection";
 import SharedFolderSection from "./student-summary/SharedFolderSection";
+import { Profile } from "@/types/profile";
+import { Json } from "@/integrations/supabase/types";
 
 export default function StudentSummaryPage() {
   const navigate = useNavigate();
@@ -38,7 +40,25 @@ export default function StudentSummaryPage() {
       }
 
       console.log("Student profile data:", data);
-      return data;
+      
+      if (!data) return null;
+
+      // Transform the data to match the Profile type
+      const transformedProfile: Profile = {
+        ...data,
+        social_media: data.social_media ? (data.social_media as { 
+          linkedin?: string; 
+          twitter?: string; 
+          instagram?: string; 
+        }) : null,
+        career_interest_test: data.career_interest_test ? {
+          completedAt: (data.career_interest_test as any).completedAt,
+          scores: (data.career_interest_test as any).scores,
+          primaryType: (data.career_interest_test as any).primaryType,
+        } : null
+      };
+
+      return transformedProfile;
     },
     enabled: !!studentId,
   });

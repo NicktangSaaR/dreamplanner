@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Profile } from "@/hooks/useProfile";
+import { Profile } from "@/types/profile";
+import { Json } from "@/integrations/supabase/types";
 
-interface RawProfile extends Omit<Profile, 'social_media'> {
-  social_media: any;
+interface RawProfile extends Omit<Profile, 'social_media' | 'career_interest_test'> {
+  social_media: Json;
+  career_interest_test: Json;
 }
 
 const transformProfile = (rawProfile: RawProfile | null): Profile | null => {
@@ -15,7 +17,11 @@ const transformProfile = (rawProfile: RawProfile | null): Profile | null => {
       if (typeof rawProfile.social_media === 'string') {
         socialMedia = JSON.parse(rawProfile.social_media);
       } else {
-        socialMedia = rawProfile.social_media;
+        socialMedia = rawProfile.social_media as {
+          linkedin?: string;
+          twitter?: string;
+          instagram?: string;
+        };
       }
     }
   } catch (error) {
@@ -23,9 +29,25 @@ const transformProfile = (rawProfile: RawProfile | null): Profile | null => {
     socialMedia = null;
   }
 
+  let careerTest = null;
+  try {
+    if (rawProfile.career_interest_test) {
+      const rawTest = rawProfile.career_interest_test as any;
+      careerTest = {
+        completedAt: rawTest.completedAt,
+        scores: rawTest.scores,
+        primaryType: rawTest.primaryType
+      };
+    }
+  } catch (error) {
+    console.error("Error parsing career_interest_test:", error);
+    careerTest = null;
+  }
+
   return {
     ...rawProfile,
-    social_media: socialMedia
+    social_media: socialMedia,
+    career_interest_test: careerTest
   };
 };
 
