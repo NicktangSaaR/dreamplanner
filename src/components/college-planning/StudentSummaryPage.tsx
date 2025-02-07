@@ -1,3 +1,4 @@
+
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -38,18 +39,31 @@ export default function StudentSummaryPage() {
         throw error;
       }
 
-      // Transform the social_media JSON data into the correct type
+      // Type assertion for social_media and career_interest_test
+      const socialMedia = data.social_media as { 
+        linkedin?: string; 
+        twitter?: string; 
+        instagram?: string; 
+      } | null;
+
+      const careerTest = data.career_interest_test as {
+        completedAt: string;
+        scores: Record<string, number>;
+        primaryType: string;
+      } | null;
+
+      // Transform the data into the correct type
       const transformedProfile: Profile = {
         ...data,
-        social_media: data.social_media ? {
-          linkedin: data.social_media.linkedin || undefined,
-          twitter: data.social_media.twitter || undefined,
-          instagram: data.social_media.instagram || undefined,
+        social_media: socialMedia ? {
+          linkedin: socialMedia.linkedin || undefined,
+          twitter: socialMedia.twitter || undefined,
+          instagram: socialMedia.instagram || undefined,
         } : null,
-        career_interest_test: data.career_interest_test ? {
-          completedAt: data.career_interest_test.completedAt,
-          scores: data.career_interest_test.scores,
-          primaryType: data.career_interest_test.primaryType,
+        career_interest_test: careerTest ? {
+          completedAt: careerTest.completedAt,
+          scores: careerTest.scores,
+          primaryType: careerTest.primaryType,
         } : null,
         interested_majors: Array.isArray(data.interested_majors) ? data.interested_majors : null
       };
