@@ -41,18 +41,20 @@ export default function LoginForm() {
 
       console.log("Successfully signed in, attempting to fetch profile for user:", signInData.user.id);
 
-      // Step 2: Get profile with direct query and no joins
+      // Step 2: Get profile with direct query
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("id", signInData.user.id)
-        .limit(1)
-        .maybeSingle();
-
-      console.log("Profile query response:", { profileData, profileError });
+        .single();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
+        console.log("Profile query details:", {
+          error: profileError.message,
+          details: profileError.details,
+          hint: profileError.hint
+        });
         toast.error("获取用户信息失败，默认导向学生页面");
         navigate(`/student-dashboard/${signInData.user.id}`);
         return;
@@ -66,10 +68,9 @@ export default function LoginForm() {
       }
 
       // Step 3: Redirect based on user type
-      const userType = profileData.user_type;
-      console.log("User type:", userType);
-
-      switch (userType) {
+      console.log("Profile data:", profileData);
+      
+      switch (profileData.user_type) {
         case "admin":
           navigate("/admin-dashboard");
           break;
@@ -80,7 +81,7 @@ export default function LoginForm() {
           navigate(`/student-dashboard/${signInData.user.id}`);
           break;
         default:
-          console.warn("Unknown user type:", userType);
+          console.warn("Unknown user type:", profileData.user_type);
           navigate(`/student-dashboard/${signInData.user.id}`);
           break;
       }
