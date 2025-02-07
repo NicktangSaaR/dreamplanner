@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 export type UserType = "student" | "counselor" | "admin";
 
@@ -16,18 +17,47 @@ export const useAuth = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // 初始化时检查会话状态
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Session check error:", error);
+        return;
+      }
+      if (session) {
+        console.log("Initial session found");
+        queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      }
+    };
+    checkSession();
+  }, [queryClient]);
+
   const { data: profile, isLoading } = useQuery({
     queryKey: ["user-profile"],
     queryFn: async (): Promise<UserProfile | null> => {
       try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          return null;
+        }
+
+        if (!session) {
+          console.log("No active session");
+          return null;
+        }
+
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError) {
           console.error("Error getting user:", userError);
           return null;
         }
-        if (!user) return null;
+        if (!user) {
+          console.log("No user found");
+          return null;
+        }
 
-        // Use maybeSingle instead of single to avoid errors when no profile exists
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("id, user_type, email")
@@ -44,7 +74,6 @@ export const useAuth = () => {
           return null;
         }
 
-        // Validate user_type before assigning
         const userType = profileData.user_type as string;
         if (!isValidUserType(userType)) {
           console.error("Invalid user type:", userType);
@@ -62,7 +91,8 @@ export const useAuth = () => {
       }
     },
     retry: false,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5, // 缓存5分钟
+    enabled: true, // 始终启用查询
   });
 
   const isValidUserType = (type: string): type is UserType => {
@@ -71,6 +101,8 @@ export const useAuth = () => {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Starting login process...");
+      
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -86,10 +118,12 @@ export const useAuth = () => {
         return;
       }
 
+      console.log("Authentication successful, fetching profile...");
+      
       // 刷新用户数据
       await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
       
-      // 获取最新的 profile，使用 maybeSingle 避免错误
+      // 获取最新的 profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
@@ -102,11 +136,20 @@ export const useAuth = () => {
         return;
       }
 
-      if (profileData && isValidUserType(profileData.user_type)) {
-        redirectBasedOnUserType(profileData.user_type as UserType, authData.user.id);
-      } else {
-        toast.error("用户类型无效或未找到用户信息");
+      if (!profileData) {
+        console.error("No profile found after login");
+        toast.error("未找到用户信息");
+        return;
       }
+
+      if (!isValidUserType(profileData.user_type)) {
+        console.error("Invalid user type:", profileData.user_type);
+        toast.error("用户类型无效");
+        return;
+      }
+
+      console.log("Login successful, redirecting...");
+      redirectBasedOnUserType(profileData.user_type as UserType, authData.user.id);
 
     } catch (error) {
       console.error("Unexpected login error:", error);
@@ -116,13 +159,18 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
+      console.log("Starting logout process...");
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Error during logout:", error);
         toast.error("登出失败");
         return;
       }
+      
+      // 清除所有缓存的数据
       queryClient.clear();
+      
+      console.log("Logout successful");
       navigate("/");
       toast.success("成功登出");
     } catch (error) {
@@ -132,6 +180,7 @@ export const useAuth = () => {
   };
 
   const redirectBasedOnUserType = (userType: UserType, userId: string) => {
+    console.log("Redirecting based on user type:", userType);
     switch (userType) {
       case "counselor":
         navigate("/counselor-dashboard");
