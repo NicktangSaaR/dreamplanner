@@ -19,9 +19,6 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      console.log("Starting login process...");
-      
-      // Sign in
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -29,7 +26,6 @@ export default function LoginForm() {
 
       if (signInError) {
         console.error("Login error:", signInError);
-        
         if (signInError.message.includes("Email not confirmed")) {
           toast.error("请先验证您的邮箱。请检查收件箱中的验证链接。");
         } else if (signInError.message.includes("Invalid login credentials")) {
@@ -46,16 +42,14 @@ export default function LoginForm() {
         return;
       }
 
-      console.log("Successfully logged in, fetching profile...");
+      console.log("Successfully logged in with user ID:", authData.user.id);
 
-      // Get user profile
+      // Get user profile using maybeSingle() instead of single()
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", authData.user.id)
         .maybeSingle();
-
-      console.log("Profile query result:", { profile, profileError });
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
@@ -88,6 +82,8 @@ export default function LoginForm() {
         toast.success("登录成功！欢迎使用我们的系统。");
         return;
       }
+
+      console.log("Profile found:", profile);
 
       // Handle redirect based on user type
       if (profile.user_type === "counselor") {
