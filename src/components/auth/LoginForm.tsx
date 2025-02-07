@@ -18,7 +18,6 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      // 1. 尝试登录
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -36,25 +35,28 @@ export default function LoginForm() {
 
       const user = signInData.user;
       if (!user) {
-        console.error("No user data received after successful login");
         toast.error("登录失败：未收到用户数据");
         return;
       }
 
-      // 2. 获取用户类型
+      // 直接使用 single() 而不是 .eq() 来避免潜在的递归问题
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
-        .eq("id", user.id)
         .single();
 
       if (profileError) {
-        console.error("Error fetching user type:", profileError);
+        console.error("Error fetching profile:", profileError);
         toast.error("获取用户信息失败");
         return;
       }
 
-      // 3. 根据用户类型重定向
+      if (!profile) {
+        toast.error("未找到用户信息");
+        return;
+      }
+
+      // 根据用户类型重定向
       switch (profile.user_type) {
         case "admin":
           navigate("/admin-dashboard");
@@ -71,7 +73,7 @@ export default function LoginForm() {
 
       toast.success("登录成功！");
     } catch (error) {
-      console.error("Unexpected login error:", error);
+      console.error("Unexpected error:", error);
       toast.error("登录过程中发生意外错误，请重试");
     } finally {
       setIsLoading(false);
