@@ -18,7 +18,7 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      // First attempt to sign in
+      // First sign in to get the session
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -41,16 +41,25 @@ export default function LoginForm() {
 
       console.log("Successfully signed in user:", signInData.user.id);
 
-      // Now fetch the profile with the new policy in place
+      // Wait a short moment to ensure the session is properly established
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Now fetch the profile
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("id", signInData.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
         toast.error("获取用户信息失败：" + profileError.message);
+        return;
+      }
+
+      if (!profile) {
+        console.error("No profile found for user:", signInData.user.id);
+        toast.error("未找到用户信息");
         return;
       }
 
