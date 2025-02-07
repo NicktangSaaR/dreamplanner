@@ -18,6 +18,8 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
+      console.log("Starting login process...");
+      
       // Step 1: Sign in
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -35,25 +37,26 @@ export default function LoginForm() {
       }
 
       if (!signInData.user) {
+        console.error("No user data received after login");
         toast.error("登录失败：未收到用户数据");
         return;
       }
 
-      console.log("Successfully signed in, attempting to fetch profile for user:", signInData.user.id);
+      console.log("Successfully signed in, user ID:", signInData.user.id);
 
       // Step 2: Get profile with direct query and retry logic
       let profileData = null;
       let retryCount = 0;
       const maxRetries = 3;
-      const retryDelay = 1000; // 1 second delay between retries
+      const retryDelay = 2000; // Increased to 2 seconds between retries
 
       while (retryCount < maxRetries) {
-        console.log(`Attempt ${retryCount + 1} to fetch profile...`);
+        console.log(`Profile fetch attempt ${retryCount + 1} for user ${signInData.user.id}`);
         
         try {
           const { data, error } = await supabase
             .from("profiles")
-            .select("*")  // Select all fields to help with debugging
+            .select("*")
             .eq("id", signInData.user.id)
             .maybeSingle();
 
@@ -61,19 +64,19 @@ export default function LoginForm() {
             console.error(`Profile fetch attempt ${retryCount + 1} failed:`, error);
             retryCount++;
             if (retryCount === maxRetries) {
-              console.error("Failed to fetch profile after all retries");
-              throw new Error("获取用户信息失败，请刷新页面重试");
+              throw new Error("获取用户信息失败，请联系管理员或稍后重试");
             }
+            console.log(`Waiting ${retryDelay}ms before retry ${retryCount + 1}...`);
             await new Promise(resolve => setTimeout(resolve, retryDelay));
             continue;
           }
 
           if (!data) {
-            console.warn("No profile data returned for user:", signInData.user.id);
-            throw new Error("找不到您的用户信息，请联系管理员");
+            console.error(`No profile found for user ${signInData.user.id}`);
+            throw new Error("用户档案不存在，请联系管理员");
           }
 
-          console.log("Successfully fetched profile data:", data);
+          console.log("Profile data retrieved:", data);
           profileData = data;
           break;
         } catch (error) {
@@ -82,21 +85,23 @@ export default function LoginForm() {
           if (retryCount === maxRetries) {
             throw error;
           }
+          console.log(`Waiting ${retryDelay}ms before retry ${retryCount + 1}...`);
           await new Promise(resolve => setTimeout(resolve, retryDelay));
         }
       }
 
       if (!profileData) {
-        throw new Error("无法获取用户信息，请稍后重试");
+        console.error("No profile data after all retries");
+        throw new Error("无法获取用户信息，请确认账号已激活并重试");
       }
 
       if (!profileData.user_type) {
         console.error("Profile data missing user_type:", profileData);
-        throw new Error("用户类型未设置，请联系管理员");
+        throw new Error("用户类型未设置，请联系管理员设置用户类型");
       }
 
       // Step 3: Redirect based on user type
-      console.log("Redirecting based on user type:", profileData.user_type);
+      console.log("Redirecting user with type:", profileData.user_type);
       
       switch (profileData.user_type) {
         case "admin":
@@ -110,13 +115,13 @@ export default function LoginForm() {
           break;
         default:
           console.error("Invalid user type:", profileData.user_type);
-          throw new Error("未知的用户类型，请联系管理员");
+          throw new Error("未知的用户类型，请联系管理员修正用户类型");
       }
       
       toast.success("登录成功！");
     } catch (error) {
       console.error("Error during login process:", error);
-      const errorMessage = error instanceof Error ? error.message : "登录过程中发生意外错误";
+      const errorMessage = error instanceof Error ? error.message : "登录过程中发生意外错误，请稍后重试";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
