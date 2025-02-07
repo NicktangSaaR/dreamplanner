@@ -39,12 +39,16 @@ export default function LoginForm() {
         return;
       }
 
-      // Step 2: Get profile with simplified query
+      console.log("Successfully signed in, fetching profile...");
+
+      // Step 2: Get profile with direct query
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("id", signInData.user.id)
-        .single();
+        .maybeSingle();
+
+      console.log("Profile query result:", { profile, profileError });
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
@@ -74,7 +78,7 @@ export default function LoginForm() {
         }
         toast.success("登录成功！");
       } else {
-        // Fallback if no profile found
+        // If no profile found, default to student dashboard
         console.warn("No profile found for user:", signInData.user.id);
         navigate(`/student-dashboard/${signInData.user.id}`);
         toast.success("登录成功！(使用默认配置)");
