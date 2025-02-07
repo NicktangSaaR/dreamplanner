@@ -41,29 +41,38 @@ export default function LoginForm() {
 
       console.log("Successfully signed in, attempting to fetch profile for user:", signInData.user.id);
 
-      // Step 2: Get profile with direct query
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", signInData.user.id)
-        .single();
+      // Step 2: Get profile with direct query and retry logic
+      let profileData = null;
+      let retryCount = 0;
+      const maxRetries = 3;
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        console.log("Profile query details:", {
-          error: profileError.message,
-          details: profileError.details,
-          hint: profileError.hint
-        });
-        toast.error("获取用户信息失败，默认导向学生页面");
-        navigate(`/student-dashboard/${signInData.user.id}`);
-        return;
+      while (retryCount < maxRetries) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("id", signInData.user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error(`Profile fetch attempt ${retryCount + 1} failed:`, error);
+          retryCount++;
+          if (retryCount === maxRetries) {
+            console.error("Failed to fetch profile after all retries");
+            toast.error("无法获取用户信息，请稍后重试");
+            return;
+          }
+          // Wait for a short time before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+
+        profileData = data;
+        break;
       }
 
       if (!profileData) {
         console.warn("No profile found for user:", signInData.user.id);
-        toast.error("未找到用户信息，默认导向学生页面");
-        navigate(`/student-dashboard/${signInData.user.id}`);
+        toast.error("未找到用户信息，请联系管理员");
         return;
       }
 
@@ -82,8 +91,8 @@ export default function LoginForm() {
           break;
         default:
           console.warn("Unknown user type:", profileData.user_type);
-          navigate(`/student-dashboard/${signInData.user.id}`);
-          break;
+          toast.error("未知的用户类型，请联系管理员");
+          return;
       }
       
       toast.success("登录成功！");
