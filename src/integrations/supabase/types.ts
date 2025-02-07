@@ -178,6 +178,7 @@ export type Database = {
       }
       counselor_student_relationships: {
         Row: {
+          added_by: string | null
           counselor_id: string
           created_at: string | null
           id: string
@@ -185,6 +186,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          added_by?: string | null
           counselor_id: string
           created_at?: string | null
           id?: string
@@ -192,6 +194,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          added_by?: string | null
           counselor_id?: string
           created_at?: string | null
           id?: string
@@ -209,7 +212,7 @@ export type Database = {
           {
             foreignKeyName: "counselor_student_relationships_student_profiles_fkey"
             columns: ["student_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -456,12 +459,12 @@ export type Database = {
           background_intro: string | null
           career_interest_test: Json | null
           created_at: string
+          email: string | null
           full_name: string | null
           grade: string | null
           graduation_school: string | null
           id: string
           interested_majors: string[] | null
-          is_admin: boolean | null
           personal_website: string | null
           school: string | null
           social_media: Json | null
@@ -473,12 +476,12 @@ export type Database = {
           background_intro?: string | null
           career_interest_test?: Json | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           grade?: string | null
           graduation_school?: string | null
           id: string
           interested_majors?: string[] | null
-          is_admin?: boolean | null
           personal_website?: string | null
           school?: string | null
           social_media?: Json | null
@@ -490,12 +493,12 @@ export type Database = {
           background_intro?: string | null
           career_interest_test?: Json | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           grade?: string | null
           graduation_school?: string | null
           id?: string
           interested_majors?: string[] | null
-          is_admin?: boolean | null
           personal_website?: string | null
           school?: string | null
           social_media?: Json | null
@@ -686,7 +689,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_if_user_exists: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
+      check_profile_access: {
+        Args: {
+          profile_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
+      is_counselor: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
