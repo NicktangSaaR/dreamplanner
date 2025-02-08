@@ -51,9 +51,9 @@ export default function AddCollaboratorDialog({ studentId, open, onOpenChange }:
         .eq("primary_counselor_id", primaryCounselorId)
         .eq("collaborator_id", collaboratorId)
         .eq("student_id", studentId)
-        .single();
+        .maybeSingle();
 
-      if (checkError && checkError.code !== "PGRST116") { // PGRST116 means no rows found
+      if (checkError) {
         throw checkError;
       }
 
