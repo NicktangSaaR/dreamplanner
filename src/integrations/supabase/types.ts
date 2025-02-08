@@ -176,6 +176,55 @@ export type Database = {
         }
         Relationships: []
       }
+      counselor_collaborations: {
+        Row: {
+          collaborator_id: string
+          created_at: string
+          id: string
+          primary_counselor_id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          collaborator_id: string
+          created_at?: string
+          id?: string
+          primary_counselor_id: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          collaborator_id?: string
+          created_at?: string
+          id?: string
+          primary_counselor_id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counselor_collaborations_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counselor_collaborations_primary_counselor_id_fkey"
+            columns: ["primary_counselor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counselor_collaborations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       counselor_student_relationships: {
         Row: {
           added_by: string | null
