@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,20 +9,22 @@ import { toast } from "sonner";
 
 interface AddCollaboratorDialogProps {
   studentId: string;
-  primaryCounselorId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export default function AddCollaboratorDialog({ studentId, primaryCounselorId }: AddCollaboratorDialogProps) {
-  const [open, setOpen] = useState(false);
-
+export default function AddCollaboratorDialog({ studentId, open, onOpenChange }: AddCollaboratorDialogProps) {
   const { data: counselors, isLoading } = useQuery({
     queryKey: ["counselors"],
     queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUserId = session?.user?.id;
+
       const { data, error } = await supabase
         .from("profiles")
         .select("id, full_name, email")
         .eq("user_type", "counselor")
-        .neq("id", primaryCounselorId);
+        .neq("id", currentUserId);
 
       if (error) {
         console.error("Error fetching counselors:", error);
@@ -34,6 +36,14 @@ export default function AddCollaboratorDialog({ studentId, primaryCounselorId }:
 
   const addCollaborator = async (collaboratorId: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const primaryCounselorId = session?.user?.id;
+
+      if (!primaryCounselorId) {
+        toast.error("You must be logged in to add collaborators");
+        return;
+      }
+
       // First check if collaboration already exists
       const { data: existingCollaboration, error: checkError } = await supabase
         .from("counselor_collaborations")
@@ -65,7 +75,7 @@ export default function AddCollaboratorDialog({ studentId, primaryCounselorId }:
       }
 
       toast.success("Collaborator added successfully");
-      setOpen(false);
+      onOpenChange(false);
     } catch (error) {
       console.error("Error adding collaborator:", error);
       toast.error("Failed to add collaborator");
@@ -73,13 +83,7 @@ export default function AddCollaboratorDialog({ studentId, primaryCounselorId }:
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add Collaborator
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add Collaborating Counselor</DialogTitle>
