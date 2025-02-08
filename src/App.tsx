@@ -31,7 +31,7 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
         <Route element={<AuthLayout />}>
           <Route path="/mock-interview" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedUserTypes={["student", "admin"]}>
               <MockInterview />
             </ProtectedRoute>
           } />
