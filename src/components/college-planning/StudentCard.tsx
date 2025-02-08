@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { User, Plus } from "lucide-react";
 import AddCollaboratorDialog from "./AddCollaboratorDialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StudentCardProps {
   student: {
@@ -20,6 +21,30 @@ interface StudentCardProps {
 export default function StudentCard({ student, onClick }: StudentCardProps) {
   const navigate = useNavigate();
   const [showCollaboratorDialog, setShowCollaboratorDialog] = useState(false);
+  const [isPrimaryCounselor, setIsPrimaryCounselor] = useState(false);
+
+  useEffect(() => {
+    const checkPrimaryCounselor = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("counselor_student_relationships")
+        .select()
+        .eq('counselor_id', user.id)
+        .eq('student_id', student.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error checking primary counselor status:", error);
+        return;
+      }
+
+      setIsPrimaryCounselor(!!data);
+    };
+
+    checkPrimaryCounselor();
+  }, [student.id]);
 
   const handleViewSummary = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -59,15 +84,17 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
               </div>
             </div>
             <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAddCollaborator}
-                className="whitespace-nowrap px-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add
-              </Button>
+              {isPrimaryCounselor && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddCollaborator}
+                  className="whitespace-nowrap px-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add
+                </Button>
+              )}
               <Button 
                 onClick={handleViewSummary}
                 size="sm"
