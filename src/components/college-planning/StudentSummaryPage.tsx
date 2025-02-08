@@ -12,12 +12,14 @@ import ApplicationsSection from "./student-summary/ApplicationsSection";
 import SharedFolderSection from "./student-summary/SharedFolderSection";
 import AddCollaboratorDialog from "./AddCollaboratorDialog";
 import { useProfile } from "@/hooks/useProfile";
+import { useState } from "react";
 
 export default function StudentSummaryPage() {
   const navigate = useNavigate();
   const params = useParams();
   const studentId = params.studentId;
   const { profile } = useProfile();
+  const [showCollaboratorDialog, setShowCollaboratorDialog] = useState(false);
   console.log("StudentSummaryPage - Received studentId:", studentId);
 
   // Fetch student profile
@@ -144,10 +146,12 @@ export default function StudentSummaryPage() {
           <h1 className="text-2xl font-bold">Student Summary</h1>
         </div>
         {profile?.user_type === 'counselor' && (
-          <AddCollaboratorDialog 
-            studentId={studentId} 
-            primaryCounselorId={profile.id}
-          />
+          <Button
+            variant="outline"
+            onClick={() => setShowCollaboratorDialog(true)}
+          >
+            Add Collaborator
+          </Button>
         )}
       </div>
 
@@ -179,6 +183,14 @@ export default function StudentSummaryPage() {
           </div>
         </div>
       </div>
+
+      {studentId && (
+        <AddCollaboratorDialog
+          studentId={studentId}
+          open={showCollaboratorDialog}
+          onOpenChange={setShowCollaboratorDialog}
+        />
+      )}
     </div>
   );
 }
