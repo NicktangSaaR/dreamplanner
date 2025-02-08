@@ -49,7 +49,7 @@ export function useCounselorStudents() {
         .from("counselor_collaborations")
         .select(`
           student_id,
-          students:profiles(
+          students:profiles!counselor_collaborations_student_id_fkey(
             id,
             full_name,
             grade,
