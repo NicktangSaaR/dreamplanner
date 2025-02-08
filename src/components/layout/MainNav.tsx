@@ -43,9 +43,12 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-6">
-            <Link to="/" className="font-bold text-xl">
-              DreamPlanner
-            </Link>
+            <div className="flex items-baseline gap-2">
+              <Link to="/" className="font-bold text-xl">
+                DreamPlanner
+              </Link>
+              <span className="text-xs text-muted-foreground">Beta v1.0</span>
+            </div>
             <HoverCard openDelay={0} closeDelay={100}>
               <HoverCardTrigger className="flex items-center text-muted-foreground hover:text-primary transition-colors">
                 Free Resources
