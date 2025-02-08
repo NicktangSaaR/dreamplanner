@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
@@ -21,8 +22,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log("Starting invitation email process...");
     const { email, token }: InvitationEmailRequest = await req.json();
-    console.log("Sending invitation email to:", email);
+    console.log("Received request data:", { email, token });
+    console.log("SUPABASE_URL:", Deno.env.get("SUPABASE_URL"));
+    console.log("Resend API Key present:", !!Deno.env.get("RESEND_API_KEY"));
 
     const emailResponse = await resend.emails.send({
       from: "Journey Buddy <onboarding@resend.dev>",
@@ -48,6 +52,12 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in send-invitation function:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
     return new Response(
       JSON.stringify({ error: error.message }),
       {
