@@ -20,7 +20,7 @@ export function useAccessControl(studentId: string | undefined, profile: Profile
         // Check direct counselor relationship
         const { data: directRelation, error: relationError } = await supabase
           .from("counselor_student_relationships")
-          .select("*")
+          .select()
           .eq("counselor_id", profile.id)
           .eq("student_id", studentId)
           .maybeSingle();
@@ -33,7 +33,7 @@ export function useAccessControl(studentId: string | undefined, profile: Profile
         // Check collaboration relationship
         const { data: collaboration, error: collabError } = await supabase
           .from("counselor_collaborations")
-          .select("*")
+          .select()
           .eq("collaborator_id", profile.id)
           .eq("student_id", studentId)
           .maybeSingle();

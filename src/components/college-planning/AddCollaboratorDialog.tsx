@@ -34,7 +34,25 @@ export default function AddCollaboratorDialog({ studentId, primaryCounselorId }:
 
   const addCollaborator = async (collaboratorId: string) => {
     try {
-      const { error } = await supabase
+      // First check if collaboration already exists
+      const { data: existingCollaboration, error: checkError } = await supabase
+        .from("counselor_collaborations")
+        .select()
+        .eq("primary_counselor_id", primaryCounselorId)
+        .eq("collaborator_id", collaboratorId)
+        .eq("student_id", studentId)
+        .single();
+
+      if (checkError && checkError.code !== "PGRST116") { // PGRST116 means no rows found
+        throw checkError;
+      }
+
+      if (existingCollaboration) {
+        toast.error("This counselor is already a collaborator");
+        return;
+      }
+
+      const { error: insertError } = await supabase
         .from("counselor_collaborations")
         .insert({
           primary_counselor_id: primaryCounselorId,
@@ -42,16 +60,12 @@ export default function AddCollaboratorDialog({ studentId, primaryCounselorId }:
           student_id: studentId,
         });
 
-      if (error) {
-        if (error.code === '23505') {
-          toast.error("This counselor is already a collaborator");
-        } else {
-          throw error;
-        }
-      } else {
-        toast.success("Collaborator added successfully");
-        setOpen(false);
+      if (insertError) {
+        throw insertError;
       }
+
+      toast.success("Collaborator added successfully");
+      setOpen(false);
     } catch (error) {
       console.error("Error adding collaborator:", error);
       toast.error("Failed to add collaborator");
