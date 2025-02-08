@@ -1,3 +1,4 @@
+
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,15 +10,18 @@ import AcademicSection from "./student-summary/AcademicSection";
 import ActivitiesSection from "./student-summary/ActivitiesSection";
 import ApplicationsSection from "./student-summary/ApplicationsSection";
 import SharedFolderSection from "./student-summary/SharedFolderSection";
+import AddCollaboratorDialog from "./AddCollaboratorDialog";
+import { useProfile } from "@/hooks/useProfile";
 
 export default function StudentSummaryPage() {
   const navigate = useNavigate();
   const params = useParams();
   const studentId = params.studentId;
+  const { profile } = useProfile();
   console.log("StudentSummaryPage - Received studentId:", studentId);
 
   // Fetch student profile
-  const { data: profile } = useQuery({
+  const { data: studentProfile } = useQuery({
     queryKey: ["student-profile", studentId],
     queryFn: async () => {
       if (!studentId) {
@@ -121,22 +125,30 @@ export default function StudentSummaryPage() {
     return null;
   }
 
-  if (!profile) {
+  if (!studentProfile) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      {/* Header with back button */}
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={handleBack}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-2xl font-bold">Student Summary</h1>
+      {/* Header with back button and collaboration button */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={handleBack}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">Student Summary</h1>
+        </div>
+        {profile?.user_type === 'counselor' && (
+          <AddCollaboratorDialog 
+            studentId={studentId} 
+            primaryCounselorId={profile.id}
+          />
+        )}
       </div>
 
       {/* Main content */}
@@ -144,7 +156,7 @@ export default function StudentSummaryPage() {
         {/* Left column - Profile and Academics */}
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <ProfileSection profile={profile} />
+            <ProfileSection profile={studentProfile} />
           </div>
           <div className="bg-white rounded-lg shadow-sm">
             <AcademicSection 
