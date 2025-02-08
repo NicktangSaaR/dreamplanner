@@ -1,7 +1,8 @@
+
 import { useNavigate } from "react-router-dom";
 import { useCounselorStudents } from "@/hooks/useCounselorStudents";
 import { Button } from "@/components/ui/button";
-import { Plus, LogOut, User, Video } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import StudentCard from "@/components/college-planning/StudentCard";
 import InviteStudentDialog from "@/components/college-planning/InviteStudentDialog";
 import { useState, useEffect } from "react";
@@ -77,13 +78,6 @@ export default function CounselorDashboard() {
           <InviteStudentDialog 
             counselorId={counselorId}
           />
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/mock-interview')}
-          >
-            <Video className="mr-2 h-4 w-4" />
-            Mock Interview
-          </Button>
           <Button 
             variant="outline"
             onClick={() => navigate('/counselor-profile')}
