@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/hooks/useProfile";
@@ -45,6 +46,38 @@ const transformProfile = (rawProfile: RawProfile | null): Profile | null => {
   };
 };
 
+const checkCounselorAccess = async (studentId: string, counselorId: string) => {
+  // Check if counselor has access through primary relationship
+  const { data: primaryRelation, error: primaryError } = await supabase
+    .from("counselor_student_relationships")
+    .select()
+    .eq('counselor_id', counselorId)
+    .eq('student_id', studentId)
+    .maybeSingle();
+
+  if (primaryError) {
+    console.error("Error checking primary relationship:", primaryError);
+    return false;
+  }
+
+  if (primaryRelation) return true;
+
+  // Check if counselor has access through collaboration
+  const { data: collaboration, error: collabError } = await supabase
+    .from("counselor_collaborations")
+    .select()
+    .eq('collaborator_id', counselorId)
+    .eq('student_id', studentId)
+    .maybeSingle();
+
+  if (collabError) {
+    console.error("Error checking collaboration:", collabError);
+    return false;
+  }
+
+  return !!collaboration;
+};
+
 export const useStudentData = (studentId: string | undefined) => {
   // Profile query
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
@@ -52,6 +85,19 @@ export const useStudentData = (studentId: string | undefined) => {
     queryFn: async () => {
       if (!studentId) {
         console.log("No student ID provided for profile query");
+        return null;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log("No authenticated user");
+        return null;
+      }
+
+      // Verify counselor access
+      const hasAccess = await checkCounselorAccess(studentId, user.id);
+      if (!hasAccess) {
+        console.log("Counselor does not have access to this student");
         return null;
       }
       
@@ -73,7 +119,7 @@ export const useStudentData = (studentId: string | undefined) => {
       
       return transformedProfile;
     },
-    enabled: Boolean(studentId), // Only run query if studentId exists
+    enabled: Boolean(studentId),
   });
 
   // Courses query
@@ -88,12 +134,13 @@ export const useStudentData = (studentId: string | undefined) => {
       const { data, error } = await supabase
         .from("courses")
         .select("*")
-        .eq("student_id", studentId);
+        .eq("student_id", studentId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
     },
-    enabled: Boolean(studentId), // Only run query if studentId exists
+    enabled: Boolean(studentId),
   });
 
   // Activities query
@@ -108,12 +155,13 @@ export const useStudentData = (studentId: string | undefined) => {
       const { data, error } = await supabase
         .from("extracurricular_activities")
         .select("*")
-        .eq("student_id", studentId);
+        .eq("student_id", studentId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
     },
-    enabled: Boolean(studentId), // Only run query if studentId exists
+    enabled: Boolean(studentId),
   });
 
   // Notes query
@@ -134,7 +182,7 @@ export const useStudentData = (studentId: string | undefined) => {
       if (error) throw error;
       return data;
     },
-    enabled: Boolean(studentId), // Only run query if studentId exists
+    enabled: Boolean(studentId),
   });
 
   // Todos query
@@ -149,12 +197,13 @@ export const useStudentData = (studentId: string | undefined) => {
       const { data, error } = await supabase
         .from("todos")
         .select("*")
-        .eq("author_id", studentId);
+        .eq("author_id", studentId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
     },
-    enabled: Boolean(studentId), // Only run query if studentId exists
+    enabled: Boolean(studentId),
   });
 
   const isLoading = isLoadingProfile || isLoadingCourses || isLoadingActivities || isLoadingNotes || isLoadingTodos;
