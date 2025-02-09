@@ -17,6 +17,13 @@ export const useUpdateUserDetailsMutation = () => {
     }) => {
       console.log("Updating user details:", userId, data);
       
+      // First, ensure we have a valid session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error("Session error:", sessionError);
+        throw new Error('Not authenticated or session expired. Please log in again.');
+      }
+
       const updates: Array<Promise<void>> = [];
 
       if (data.full_name) {
@@ -42,15 +49,13 @@ export const useUpdateUserDetailsMutation = () => {
         updates.push(
           new Promise<void>(async (resolve, reject) => {
             try {
-              const session = await supabase.auth.getSession();
-              if (!session.data.session?.access_token) {
-                throw new Error('Not authenticated');
-              }
-
               const response = await supabase.functions.invoke('update-user-email', {
                 body: {
                   userId,
                   newEmail: data.email,
+                },
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`,
                 },
               });
               
@@ -72,15 +77,13 @@ export const useUpdateUserDetailsMutation = () => {
         updates.push(
           new Promise<void>(async (resolve, reject) => {
             try {
-              const session = await supabase.auth.getSession();
-              if (!session.data.session?.access_token) {
-                throw new Error('Not authenticated');
-              }
-
               const response = await supabase.functions.invoke('update-user-password', {
                 body: {
                   userId,
                   newPassword: data.password,
+                },
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`,
                 },
               });
               
@@ -101,7 +104,6 @@ export const useUpdateUserDetailsMutation = () => {
       await Promise.all(updates);
     },
     onSuccess: () => {
-      // 修改这里：同时使 profile 查询缓存失效
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       toast.success("用户信息已更新");
