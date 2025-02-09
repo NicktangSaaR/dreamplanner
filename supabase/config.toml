@@ -1,1 +1,10 @@
+
 project_id = "fyxnuhqzgkzfuldqurej"
+
+[[functions]]
+name = "update-user-email"
+verify_jwt = true
+
+[[functions]]
+name = "update-user-password"
+verify_jwt = true
