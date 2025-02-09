@@ -2,7 +2,6 @@
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Article } from "@/types/article";
 import ArticleList from "@/components/articles/ArticleList";
 import MainNav from "@/components/layout/MainNav";
 import { useState, useEffect } from "react";
@@ -12,6 +11,22 @@ export default function Articles() {
   const categoryId = searchParams.get('category');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+
+  const { data: category } = useQuery({
+    queryKey: ['article-category', categoryId],
+    queryFn: async () => {
+      if (!categoryId) return null;
+      const { data, error } = await supabase
+        .from('article_categories')
+        .select('name')
+        .eq('id', categoryId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!categoryId
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -50,7 +65,7 @@ export default function Articles() {
       />
       <main className="container mx-auto px-4 pt-32">
         <h1 className="text-3xl font-bold mb-8">
-          {categoryId ? "Category Articles" : "All Articles"}
+          {categoryId ? (category?.name || 'Loading...') : "All Articles"}
         </h1>
         <ArticleList categoryId={categoryId} />
       </main>
