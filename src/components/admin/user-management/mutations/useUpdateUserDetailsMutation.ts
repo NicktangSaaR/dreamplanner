@@ -27,8 +27,12 @@ export const useUpdateUserDetailsMutation = () => {
               .update({ full_name: data.full_name })
               .eq('id', userId)
               .then(({ error }) => {
-                if (error) reject(error);
-                else resolve();
+                if (error) {
+                  console.error("Error updating full name:", error);
+                  reject(new Error(`Failed to update full name: ${error.message}`));
+                } else {
+                  resolve();
+                }
               });
           })
         );
@@ -43,26 +47,16 @@ export const useUpdateUserDetailsMutation = () => {
                 throw new Error('Not authenticated');
               }
 
-              const response = await fetch('/functions/v1/update-user-email', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session.data.session.access_token}`,
-                },
-                body: JSON.stringify({
+              const response = await supabase.functions.invoke('update-user-email', {
+                body: {
                   userId,
                   newEmail: data.email,
-                }),
+                },
               });
               
-              if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: response.statusText }));
-                throw new Error(errorData.error || 'Failed to update email');
-              }
-              
-              const result = await response.json();
-              if (result.error) {
-                throw new Error(result.error);
+              if (response.error) {
+                console.error('Email update error:', response.error);
+                throw new Error(response.error.message || 'Failed to update email');
               }
               
               resolve();
@@ -83,26 +77,16 @@ export const useUpdateUserDetailsMutation = () => {
                 throw new Error('Not authenticated');
               }
 
-              const response = await fetch('/functions/v1/update-user-password', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session.data.session.access_token}`,
-                },
-                body: JSON.stringify({
+              const response = await supabase.functions.invoke('update-user-password', {
+                body: {
                   userId,
                   newPassword: data.password,
-                }),
+                },
               });
               
-              if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: response.statusText }));
-                throw new Error(errorData.error || 'Failed to update password');
-              }
-              
-              const result = await response.json();
-              if (result.error) {
-                throw new Error(result.error);
+              if (response.error) {
+                console.error('Password update error:', response.error);
+                throw new Error(response.error.message || 'Failed to update password');
               }
               
               resolve();

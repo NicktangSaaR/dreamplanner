@@ -14,6 +14,7 @@ serve(async (req) => {
   }
 
   try {
+    // Create Supabase client with service role key
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -33,17 +34,25 @@ serve(async (req) => {
       throw new Error('Invalid authentication')
     }
 
+    // Get request body
     const { userId, newEmail } = await req.json()
-    
+    if (!userId || !newEmail) {
+      throw new Error('Missing required fields')
+    }
+
     console.log("Updating email for user:", userId, "to:", newEmail, "by admin:", adminUser.id)
 
+    // Call the database function to update user credentials
     const { data, error } = await supabaseClient.rpc('update_user_credentials', {
       admin_id: adminUser.id,
       target_user_id: userId,
       new_email: newEmail
     })
 
-    if (error) throw error
+    if (error) {
+      console.error("Database error:", error)
+      throw error
+    }
 
     return new Response(
       JSON.stringify({ data, error: null }),
