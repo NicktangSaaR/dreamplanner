@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -21,10 +22,11 @@ serve(async (req) => {
     
     console.log("Updating email for user:", userId, "to:", newEmail)
 
-    const { data, error } = await supabaseClient.auth.admin.updateUserById(
-      userId,
-      { email: newEmail }
-    )
+    const { data, error } = await supabaseClient.rpc('update_user_credentials', {
+      admin_id: (await supabaseClient.auth.getUser()).data.user?.id,
+      target_user_id: userId,
+      new_email: newEmail
+    })
 
     if (error) throw error
 

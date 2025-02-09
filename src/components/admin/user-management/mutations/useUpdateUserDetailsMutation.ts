@@ -51,12 +51,17 @@ export const useUpdateUserDetailsMutation = () => {
                 }),
               });
               
-              const result = await response.json();
               if (!response.ok) {
-                reject(new Error(result.error));
-              } else {
-                resolve();
+                const errorData = await response.json().catch(() => ({ error: response.statusText }));
+                throw new Error(errorData.error || 'Failed to update email');
               }
+              
+              const result = await response.json();
+              if (result.error) {
+                throw new Error(result.error);
+              }
+              
+              resolve();
             } catch (error) {
               reject(error);
             }
@@ -81,12 +86,17 @@ export const useUpdateUserDetailsMutation = () => {
                 }),
               });
               
-              const result = await response.json();
               if (!response.ok) {
-                reject(new Error(result.error));
-              } else {
-                resolve();
+                const errorData = await response.json().catch(() => ({ error: response.statusText }));
+                throw new Error(errorData.error || 'Failed to update password');
               }
+              
+              const result = await response.json();
+              if (result.error) {
+                throw new Error(result.error);
+              }
+              
+              resolve();
             } catch (error) {
               reject(error);
             }
@@ -100,9 +110,9 @@ export const useUpdateUserDetailsMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       toast.success("用户信息已更新");
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error("Error updating user details:", error);
-      toast.error("更新用户信息失败");
+      toast.error(`更新用户信息失败: ${error.message}`);
     },
   });
 };
