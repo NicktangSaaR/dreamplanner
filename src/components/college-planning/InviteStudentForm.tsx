@@ -40,7 +40,7 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
       if (existingInvitation) {
         const expirationDate = new Date(existingInvitation.expires_at);
         const timeUntilExpiration = Math.ceil((expirationDate.getTime() - new Date().getTime()) / 1000);
-        toast.error(`Please wait ${timeUntilExpiration} seconds before sending another invitation to this email.`);
+        toast.error(`请等待 ${timeUntilExpiration} 秒后再发送邀请。`);
         return;
       }
 
@@ -52,7 +52,7 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
         .maybeSingle();
 
       if (userProfile) {
-        toast.error("This email is already registered in the system.");
+        toast.error("此邮箱已在系统中注册。");
         return;
       }
 
@@ -71,7 +71,7 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
 
       if (invitationError) {
         console.error("Error creating invitation:", invitationError);
-        toast.error("Failed to send invitation. Please try again.");
+        toast.error("发送邀请失败，请重试。");
         return;
       }
 
@@ -85,16 +85,16 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
 
       if (emailError) {
         console.error("Error sending invitation email:", emailError);
-        toast.error("Failed to send invitation email. Please try again.");
+        toast.error("发送邀请邮件失败，请重试。");
         return;
       }
 
-      toast.success("Invitation sent successfully! The link will expire in 1 minute.");
+      toast.success("邀请发送成功！链接将在1分钟后过期。");
       setEmail("");
       onSuccess();
     } catch (error) {
       console.error("Error inviting student:", error);
-      toast.error("An unexpected error occurred. Please try again.");
+      toast.error("发生意外错误，请重试。");
     } finally {
       setIsInviting(false);
     }
@@ -103,7 +103,7 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
   return (
     <div className="space-y-4 py-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Student Email</Label>
+        <Label htmlFor="email">学生邮箱</Label>
         <Input
           id="email"
           type="email"
@@ -120,10 +120,10 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
         {isInviting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Sending Invitation...
+            正在发送邀请...
           </>
         ) : (
-          "Send Invitation"
+          "发送邀请"
         )}
       </Button>
     </div>
