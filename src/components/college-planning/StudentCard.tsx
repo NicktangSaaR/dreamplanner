@@ -83,10 +83,22 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
         return;
       }
 
+      // Only allow primary counselor to remove collaborators
+      const { data: primaryData, error: primaryError } = await supabase
+        .from("counselor_student_relationships")
+        .select()
+        .eq('counselor_id', user.id)
+        .eq('student_id', student.id)
+        .maybeSingle();
+
+      if (primaryError || !primaryData) {
+        toast.error("Only the primary counselor can remove collaborators");
+        return;
+      }
+
       const { error } = await supabase
         .from("counselor_collaborations")
         .delete()
-        .eq('collaborator_id', user.id)
         .eq('student_id', student.id);
 
       if (error) {
@@ -95,7 +107,7 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
         return;
       }
 
-      toast.success("Removed from collaboration");
+      toast.success("Collaborator removed successfully");
       // Refresh the page to update the UI
       window.location.reload();
     } catch (error) {
@@ -132,26 +144,26 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
             </div>
             <div className="flex items-center gap-2 ml-4 flex-shrink-0">
               {isPrimaryCounselor && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddCollaborator}
-                  className="whitespace-nowrap px-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add
-                </Button>
-              )}
-              {isCollaborator && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRemoveCollaborator}
-                  className="whitespace-nowrap px-2 text-destructive hover:text-destructive"
-                >
-                  <X className="h-4 w-4" />
-                  Remove
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddCollaborator}
+                    className="whitespace-nowrap px-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRemoveCollaborator}
+                    className="whitespace-nowrap px-2 text-destructive hover:text-destructive"
+                  >
+                    <X className="h-4 w-4" />
+                    Remove
+                  </Button>
+                </>
               )}
               <Button 
                 onClick={handleViewSummary}
