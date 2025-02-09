@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,25 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
       setIsInviting(true);
       console.log("Inviting student with email:", email);
 
+      // First check if an invitation already exists
+      const { data: existingInvitation, error: checkError } = await supabase
+        .from('student_invitations')
+        .select('*')
+        .eq('email', email)
+        .eq('counselor_id', counselorId)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows returned
+        console.error("Error checking existing invitation:", checkError);
+        toast.error("Failed to check existing invitations. Please try again.");
+        return;
+      }
+
+      if (existingInvitation) {
+        toast.error("An invitation has already been sent to this email.");
+        return;
+      }
+
       const token = Math.random().toString(36).substring(2);
 
       const { error: invitationError } = await supabase
@@ -32,13 +52,8 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
 
       if (invitationError) {
         console.error("Error creating invitation:", invitationError);
-        if (invitationError.code === '23505') {
-          toast.error("An invitation has already been sent to this email.");
-          return;
-        } else {
-          toast.error("Failed to send invitation. Please try again.");
-          return;
-        }
+        toast.error("Failed to send invitation. Please try again.");
+        return;
       }
 
       const { error: emailError } = await supabase.functions.invoke('send-invitation', {
