@@ -25,7 +25,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log("Starting invitation email process...");
     const { email, token, expirationDate }: InvitationEmailRequest = await req.json();
-    const formattedExpiration = new Date(expirationDate).toLocaleDateString();
+    const formattedExpiration = new Date(expirationDate).toLocaleTimeString();
     
     console.log("Received request data:", { email, token, expirationDate });
     console.log("SUPABASE_URL:", Deno.env.get("SUPABASE_URL"));
@@ -39,7 +39,8 @@ const handler = async (req: Request): Promise<Response> => {
         <h1>Welcome to Journey Buddy!</h1>
         <p>You've been invited to join Journey Buddy as a student. Click the link below to create your account:</p>
         <p><a href="${Deno.env.get("SUPABASE_URL")}/auth/v1/verify?token=${token}&type=signup">Accept Invitation</a></p>
-        <p><strong>This invitation link will expire on ${formattedExpiration}</strong></p>
+        <p><strong>This invitation link will expire at ${formattedExpiration}</strong></p>
+        <p>If you don't accept within 1 minute, the counselor can send you a new invitation.</p>
         <p>If you didn't expect this invitation, you can safely ignore this email.</p>
         <p>Best regards,<br>The Journey Buddy Team</p>
       `,

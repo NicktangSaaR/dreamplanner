@@ -38,8 +38,9 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
       }
 
       if (existingInvitation) {
-        toast.error("A valid invitation already exists for this email. It will expire on " + 
-          new Date(existingInvitation.expires_at).toLocaleDateString());
+        const expirationDate = new Date(existingInvitation.expires_at);
+        const timeUntilExpiration = Math.ceil((expirationDate.getTime() - new Date().getTime()) / 1000);
+        toast.error(`Please wait ${timeUntilExpiration} seconds before sending another invitation to this email.`);
         return;
       }
 
@@ -57,7 +58,7 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
 
       const token = Math.random().toString(36).substring(2);
       const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 7); // 7 days from now
+      expirationDate.setMinutes(expirationDate.getMinutes() + 1); // 1 minute from now
 
       const { error: invitationError } = await supabase
         .from('student_invitations')
@@ -88,7 +89,7 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
         return;
       }
 
-      toast.success("Invitation sent successfully!");
+      toast.success("Invitation sent successfully! The link will expire in 1 minute.");
       setEmail("");
       onSuccess();
     } catch (error) {
