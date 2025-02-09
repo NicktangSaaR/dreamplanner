@@ -109,9 +109,10 @@ export default function ArticleDetail() {
               Published on {new Date(article.created_at).toLocaleDateString()}
             </div>
           </header>
-          <div className="prose prose-lg max-w-none">
-            {article.content}
-          </div>
+          <div 
+            className="prose prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: article.content }}
+          />
         </article>
       </main>
     </div>
