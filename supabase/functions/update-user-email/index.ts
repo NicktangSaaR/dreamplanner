@@ -54,8 +54,22 @@ serve(async (req) => {
       throw error
     }
 
+    // Fetch the updated profile to confirm changes
+    const { data: updatedProfile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (profileError) {
+      console.error("Error fetching updated profile:", profileError)
+      throw profileError
+    }
+
+    console.log("Successfully updated user profile:", updatedProfile)
+
     return new Response(
-      JSON.stringify({ data, error: null }),
+      JSON.stringify({ data: updatedProfile, error: null }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,

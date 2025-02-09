@@ -26,6 +26,7 @@ export const useUsersQuery = () => {
       console.log("Fetched profiles:", profiles);
       return profiles;
     },
-    refetchInterval: 2000, // Add polling to keep data fresh
+    refetchInterval: 1000, // Poll more frequently to keep data fresh
+    retry: 3,
   });
 };
