@@ -32,6 +32,17 @@ serve(async (req) => {
       throw new Error('Invalid authentication')
     }
 
+    // Check if the user is an admin
+    const { data: adminProfile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('user_type')
+      .eq('id', adminUser.id)
+      .single()
+
+    if (profileError || !adminProfile || adminProfile.user_type !== 'admin') {
+      throw new Error('Unauthorized: Only admins can update user passwords')
+    }
+
     const { userId, newPassword } = await req.json()
     
     if (!userId || !newPassword) {
@@ -40,21 +51,21 @@ serve(async (req) => {
 
     console.log("Starting password update process for user:", userId, "by admin:", adminUser.id)
 
-    const { data, error } = await supabaseClient.rpc('update_user_credentials', {
-      admin_id: adminUser.id,
-      target_user_id: userId,
-      new_password: newPassword
-    })
+    // Use the admin API to update the user's password
+    const { error: updateError } = await supabaseClient.auth.admin.updateUserById(
+      userId,
+      { password: newPassword }
+    )
 
-    if (error) {
-      console.error('Database error:', error)
-      throw error
+    if (updateError) {
+      console.error('Password update error:', updateError)
+      throw updateError
     }
 
     console.log("Password update successful")
 
     return new Response(
-      JSON.stringify({ success: true, data }),
+      JSON.stringify({ success: true }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
