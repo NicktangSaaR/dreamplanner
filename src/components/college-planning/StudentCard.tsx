@@ -123,8 +123,8 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
         className="hover:shadow-md transition-shadow duration-200"
       >
         <CardContent className="p-4">
-          <div className="flex items-start justify-between">
-            <div className="flex gap-3">
+          <div className="flex items-start gap-4">
+            <div className="flex gap-3 flex-1 min-w-0">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <User className="h-5 w-5 text-primary" />
               </div>
@@ -142,25 +142,25 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+            <div className="flex flex-col gap-2">
               {isPrimaryCounselor && (
                 <>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleAddCollaborator}
-                    className="whitespace-nowrap px-2"
+                    className="whitespace-nowrap"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-4 w-4 mr-1" />
                     Add
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleRemoveCollaborator}
-                    className="whitespace-nowrap px-2 text-destructive hover:text-destructive"
+                    className="whitespace-nowrap text-destructive hover:text-destructive"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4 mr-1" />
                     Remove
                   </Button>
                 </>
@@ -168,7 +168,7 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
               <Button 
                 onClick={handleViewSummary}
                 size="sm"
-                className="whitespace-nowrap px-2"
+                className="whitespace-nowrap"
               >
                 View
               </Button>
