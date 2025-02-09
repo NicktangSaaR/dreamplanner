@@ -11,6 +11,13 @@ import {
 } from "@/components/ui/hover-card";
 import { useQuery } from "@tanstack/react-query";
 import { ArticleCategory } from "@/types/article";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MainNavProps {
   isAuthenticated: boolean;
@@ -20,6 +27,7 @@ interface MainNavProps {
 
 export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavProps) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const getDashboardLink = () => {
     return isAuthenticated && userId ? `/student-dashboard/${userId}` : "/login";
@@ -38,6 +46,64 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
     }
   });
 
+  const ResourcesMenu = () => {
+    if (isMobile) {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center text-muted-foreground hover:text-primary transition-colors">
+            Free Resources
+            <ChevronDown className="ml-1 h-4 w-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48 bg-white">
+            <DropdownMenuItem asChild>
+              <Link to="/articles" className="w-full">
+                All Articles
+              </Link>
+            </DropdownMenuItem>
+            {categories?.map((category) => (
+              <DropdownMenuItem key={category.id} asChild>
+                <Link
+                  to={`/articles?category=${category.id}`}
+                  className="w-full"
+                >
+                  {category.name}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    }
+
+    return (
+      <HoverCard openDelay={0} closeDelay={100}>
+        <HoverCardTrigger className="flex items-center text-muted-foreground hover:text-primary transition-colors">
+          Free Resources
+          <ChevronDown className="ml-1 h-4 w-4" />
+        </HoverCardTrigger>
+        <HoverCardContent align="start" className="w-48 bg-white shadow-lg border rounded-md">
+          <div className="flex flex-col space-y-1">
+            <Link 
+              to="/articles" 
+              className="px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground rounded-md"
+            >
+              All Articles
+            </Link>
+            {categories?.map((category) => (
+              <Link 
+                key={category.id}
+                to={`/articles?category=${category.id}`}
+                className="px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground rounded-md"
+              >
+                {category.name}
+              </Link>
+            ))}
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+    );
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b">
       <div className="container mx-auto px-4">
@@ -49,31 +115,7 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
               </Link>
               <span className="text-xs text-muted-foreground">Beta v1.0</span>
             </div>
-            <HoverCard openDelay={0} closeDelay={100}>
-              <HoverCardTrigger className="flex items-center text-muted-foreground hover:text-primary transition-colors">
-                Free Resources
-                <ChevronDown className="ml-1 h-4 w-4" />
-              </HoverCardTrigger>
-              <HoverCardContent align="start" className="w-48 bg-white shadow-lg border rounded-md">
-                <div className="flex flex-col space-y-1">
-                  <Link 
-                    to="/articles" 
-                    className="px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground rounded-md"
-                  >
-                    All Articles
-                  </Link>
-                  {categories?.map((category) => (
-                    <Link 
-                      key={category.id}
-                      to={`/articles?category=${category.id}`}
-                      className="px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground rounded-md"
-                    >
-                      {category.name}
-                    </Link>
-                  ))}
-                </div>
-              </HoverCardContent>
-            </HoverCard>
+            <ResourcesMenu />
           </div>
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
