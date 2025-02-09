@@ -69,11 +69,6 @@ export default function DashboardHeader() {
             </Button>
           </>
         )}
-        {profile?.user_type === 'counselor' && (
-          <Button onClick={handleMockInterview} variant="outline">
-            Mock Interview
-          </Button>
-        )}
       </div>
     </div>
   );
