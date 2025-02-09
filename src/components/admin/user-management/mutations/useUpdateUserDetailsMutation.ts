@@ -39,11 +39,15 @@ export const useUpdateUserDetailsMutation = () => {
           new Promise<void>(async (resolve, reject) => {
             try {
               const session = await supabase.auth.getSession();
+              if (!session.data.session?.access_token) {
+                throw new Error('Not authenticated');
+              }
+
               const response = await fetch('/functions/v1/update-user-email', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session.data.session?.access_token}`,
+                  'Authorization': `Bearer ${session.data.session.access_token}`,
                 },
                 body: JSON.stringify({
                   userId,
@@ -63,6 +67,7 @@ export const useUpdateUserDetailsMutation = () => {
               
               resolve();
             } catch (error) {
+              console.error('Email update error:', error);
               reject(error);
             }
           })
@@ -74,11 +79,15 @@ export const useUpdateUserDetailsMutation = () => {
           new Promise<void>(async (resolve, reject) => {
             try {
               const session = await supabase.auth.getSession();
+              if (!session.data.session?.access_token) {
+                throw new Error('Not authenticated');
+              }
+
               const response = await fetch('/functions/v1/update-user-password', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session.data.session?.access_token}`,
+                  'Authorization': `Bearer ${session.data.session.access_token}`,
                 },
                 body: JSON.stringify({
                   userId,
@@ -98,6 +107,7 @@ export const useUpdateUserDetailsMutation = () => {
               
               resolve();
             } catch (error) {
+              console.error('Password update error:', error);
               reject(error);
             }
           })
