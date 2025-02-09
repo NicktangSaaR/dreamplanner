@@ -1,9 +1,11 @@
 
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import MainNav from "@/components/layout/MainNav";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export default function ArticleDetail() {
   const { id } = useParams();
@@ -90,7 +92,7 @@ export default function ArticleDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 relative">
       <MainNav 
         isAuthenticated={isAuthenticated} 
         userId={userId}
@@ -114,7 +116,16 @@ export default function ArticleDetail() {
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
         </article>
+        <div className="fixed bottom-8 left-8">
+          <Link to="/">
+            <Button variant="outline" size="lg" className="gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Home
+            </Button>
+          </Link>
+        </div>
       </main>
     </div>
   );
 }
+
