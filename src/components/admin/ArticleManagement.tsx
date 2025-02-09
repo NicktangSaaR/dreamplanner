@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Article } from "@/types/article";
 import ArticleTable from "./article-management/ArticleTable";
@@ -12,6 +12,7 @@ import { useDeleteArticleMutation } from "./article-management/hooks/useDeleteAr
 export default function ArticleManagement() {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ['admin-articles'],
@@ -58,6 +59,8 @@ export default function ArticleManagement() {
   const handleCloseEditor = () => {
     setIsEditorOpen(false);
     setSelectedArticle(null);
+    // Invalidate and refetch articles after closing editor
+    queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
   };
 
   if (isLoading) {
@@ -86,3 +89,4 @@ export default function ArticleManagement() {
     </div>
   );
 }
+

@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ArticleEditorProps, ArticleData } from './article-editor/types';
 import FormattingToolbar from './article-editor/FormattingToolbar';
@@ -23,6 +23,7 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [categoryId, setCategoryId] = useState<string>("none");
+  const queryClient = useQueryClient();
 
   const { data: categories } = useQuery({
     queryKey: ['article-categories'],
@@ -77,6 +78,8 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
 
     try {
       await saveArticle(articleId, articleData);
+      // Invalidate the articles query to trigger a refetch
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
       toast.success(articleId ? "Article updated successfully" : "Article created successfully");
       if (onSave) {
         onSave(articleData);
@@ -140,3 +143,4 @@ export default function ArticleEditor({ articleId, onSave, onCancel }: ArticleEd
     </form>
   );
 }
+
