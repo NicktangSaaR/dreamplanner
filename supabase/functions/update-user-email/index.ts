@@ -18,12 +18,26 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Get the JWT token from the request header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header')
+    }
+
+    // Get the admin user from the JWT
+    const jwt = authHeader.replace('Bearer ', '')
+    const { data: { user: adminUser }, error: authError } = await supabaseClient.auth.getUser(jwt)
+    
+    if (authError || !adminUser) {
+      throw new Error('Invalid authentication')
+    }
+
     const { userId, newEmail } = await req.json()
     
-    console.log("Updating email for user:", userId, "to:", newEmail)
+    console.log("Updating email for user:", userId, "to:", newEmail, "by admin:", adminUser.id)
 
     const { data, error } = await supabaseClient.rpc('update_user_credentials', {
-      admin_id: (await supabaseClient.auth.getUser()).data.user?.id,
+      admin_id: adminUser.id,
       target_user_id: userId,
       new_email: newEmail
     })
