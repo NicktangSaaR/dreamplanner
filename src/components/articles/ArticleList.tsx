@@ -77,15 +77,10 @@ export default function ArticleList({ categoryId, limit }: ArticleListProps) {
                   {article.article_categories.name}
                 </div>
               )}
-            </CardHeader>
-            <CardContent>
-              <p className="line-clamp-3 text-muted-foreground">
-                {article.content}
-              </p>
-              <div className="mt-2 text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground">
                 {new Date(article.created_at).toLocaleDateString()}
               </div>
-            </CardContent>
+            </CardHeader>
           </Link>
         </Card>
       ))}
