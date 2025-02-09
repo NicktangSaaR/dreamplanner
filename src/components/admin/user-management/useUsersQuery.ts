@@ -7,6 +7,12 @@ export const useUsersQuery = () => {
     queryKey: ['admin-users'],
     queryFn: async () => {
       console.log("Fetching all users...");
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error("Session error:", sessionError);
+        throw new Error('Not authenticated or session expired');
+      }
+
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*')
@@ -20,5 +26,6 @@ export const useUsersQuery = () => {
       console.log("Fetched profiles:", profiles);
       return profiles;
     },
+    refetchInterval: 2000, // Add polling to keep data fresh
   });
 };
