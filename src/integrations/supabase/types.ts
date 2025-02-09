@@ -642,28 +642,31 @@ export type Database = {
       }
       student_invitations: {
         Row: {
-          accepted: boolean | null
           counselor_id: string
           created_at: string | null
           email: string
+          expires_at: string
           id: string
           token: string
+          used_at: string | null
         }
         Insert: {
-          accepted?: boolean | null
           counselor_id: string
           created_at?: string | null
           email: string
+          expires_at?: string
           id?: string
           token: string
+          used_at?: string | null
         }
         Update: {
-          accepted?: boolean | null
           counselor_id?: string
           created_at?: string | null
           email?: string
+          expires_at?: string
           id?: string
           token?: string
+          used_at?: string | null
         }
         Relationships: []
       }

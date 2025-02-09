@@ -21,12 +21,14 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
       setIsInviting(true);
       console.log("Inviting student with email:", email);
 
-      // First check if an invitation already exists
+      // First check if a valid invitation already exists
       const { data: existingInvitation, error: checkError } = await supabase
         .from('student_invitations')
         .select('*')
         .eq('email', email)
         .eq('counselor_id', counselorId)
+        .is('used_at', null)
+        .gt('expires_at', new Date().toISOString())
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows returned
@@ -36,18 +38,34 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
       }
 
       if (existingInvitation) {
-        toast.error("An invitation has already been sent to this email.");
+        toast.error("A valid invitation already exists for this email. It will expire on " + 
+          new Date(existingInvitation.expires_at).toLocaleDateString());
+        return;
+      }
+
+      // Check if the email is already registered in the system
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (userProfile) {
+        toast.error("This email is already registered in the system.");
         return;
       }
 
       const token = Math.random().toString(36).substring(2);
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 7); // 7 days from now
 
       const { error: invitationError } = await supabase
         .from('student_invitations')
         .insert({
           counselor_id: counselorId,
           email,
-          token
+          token,
+          expires_at: expirationDate.toISOString()
         });
 
       if (invitationError) {
@@ -57,7 +75,11 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
       }
 
       const { error: emailError } = await supabase.functions.invoke('send-invitation', {
-        body: { email, token }
+        body: { 
+          email, 
+          token,
+          expirationDate: expirationDate.toISOString()
+        }
       });
 
       if (emailError) {
