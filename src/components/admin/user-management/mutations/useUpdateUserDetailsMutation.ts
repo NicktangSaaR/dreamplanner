@@ -24,73 +24,67 @@ export const useUpdateUserDetailsMutation = () => {
         throw new Error('Not authenticated or session expired. Please log in again.');
       }
 
-      const updates: Promise<any>[] = [];
+      const updates = [];
 
       // Update full name in profiles table
       if (data.full_name) {
         updates.push(
-          Promise.resolve(
-            supabase
-              .from('profiles')
-              .update({ 
-                full_name: data.full_name,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', userId)
-              .then(({ error, data }) => {
-                if (error) {
-                  console.error("Error updating full name:", error);
-                  throw new Error(`Failed to update full name: ${error.message}`);
-                }
-                return data;
-              })
-          )
+          supabase
+            .from('profiles')
+            .update({ 
+              full_name: data.full_name,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', userId)
+            .then(({ error, data }) => {
+              if (error) {
+                console.error("Error updating full name:", error);
+                throw new Error(`Failed to update full name: ${error.message}`);
+              }
+              return data;
+            })
         );
       }
 
       // Update email using edge function
       if (data.email) {
         updates.push(
-          Promise.resolve(
-            supabase.functions.invoke('update-user-email', {
-              body: {
-                userId,
-                newEmail: data.email,
-              },
-              headers: {
-                Authorization: `Bearer ${session.access_token}`,
-              },
-            }).then(({ error, data }) => {
-              if (error) {
-                console.error('Email update error:', error);
-                throw new Error(error.message || 'Failed to update email');
-              }
-              return data;
-            })
-          )
+          supabase.functions.invoke('update-user-email', {
+            body: {
+              userId,
+              newEmail: data.email,
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }).then(({ error, data }) => {
+            if (error) {
+              console.error('Email update error:', error);
+              throw new Error(error.message || 'Failed to update email');
+            }
+            return data;
+          })
         );
       }
 
       // Update password using edge function
       if (data.password) {
         updates.push(
-          Promise.resolve(
-            supabase.functions.invoke('update-user-password', {
-              body: {
-                userId,
-                newPassword: data.password,
-              },
-              headers: {
-                Authorization: `Bearer ${session.access_token}`,
-              },
-            }).then(({ error, data }) => {
-              if (error) {
-                console.error('Password update error:', error);
-                throw new Error(error.message || 'Failed to update password');
-              }
-              return data;
-            })
-          )
+          supabase.functions.invoke('update-user-password', {
+            body: {
+              userId,
+              newPassword: data.password,
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }).then(({ error, data }) => {
+            if (error) {
+              console.error('Password update error:', error);
+              throw new Error(error.message || 'Failed to update password');
+            }
+            return data;
+          })
         );
       }
 
