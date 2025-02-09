@@ -99,6 +99,14 @@ export default function ArticleDetail() {
         onLogout={handleLogout}
       />
       <main className="container mx-auto px-4 pt-32">
+        <div className="mb-8">
+          <Link to="/">
+            <Button variant="outline" size="lg" className="gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Home
+            </Button>
+          </Link>
+        </div>
         <article className="max-w-3xl mx-auto">
           <header className="mb-8">
             <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
@@ -112,20 +120,11 @@ export default function ArticleDetail() {
             </div>
           </header>
           <div 
-            className="prose prose-lg max-w-none"
+            className="prose prose-lg max-w-none mb-16"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
         </article>
-        <div className="fixed bottom-8 left-8">
-          <Link to="/">
-            <Button variant="outline" size="lg" className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Button>
-          </Link>
-        </div>
       </main>
     </div>
   );
 }
-
