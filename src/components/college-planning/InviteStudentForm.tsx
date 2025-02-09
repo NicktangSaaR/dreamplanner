@@ -29,9 +29,9 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
         .eq('counselor_id', counselorId)
         .is('used_at', null)
         .gt('expires_at', new Date().toISOString())
-        .single();
+        .maybeSingle();
 
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows returned
+      if (checkError) {
         console.error("Error checking existing invitation:", checkError);
         toast.error("Failed to check existing invitations. Please try again.");
         return;
@@ -49,7 +49,7 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
         .from('profiles')
         .select('id')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       if (userProfile) {
         toast.error("This email is already registered in the system.");
