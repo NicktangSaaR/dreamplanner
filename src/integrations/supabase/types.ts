@@ -762,6 +762,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_user_credentials: {
+        Args: {
+          admin_id: string
+          target_user_id: string
+          new_email?: string
+          new_password?: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

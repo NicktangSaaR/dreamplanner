@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -21,7 +22,7 @@ interface EditableUser {
 interface UserTableProps {
   users: any[];
   editingUser: EditableUser | null;
-  editForm: { full_name: string; email: string };
+  editForm: { full_name: string; email: string; password?: string };
   onEdit: (user: any) => void;
   onSave: () => void;
   onCancel: () => void;
@@ -47,6 +48,7 @@ export const UserTable = ({
         <TableRow>
           <TableHead>Name</TableHead>
           <TableHead>Email</TableHead>
+          <TableHead>Password</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>School</TableHead>
           <TableHead>Joined</TableHead>
@@ -77,6 +79,19 @@ export const UserTable = ({
                 />
               ) : (
                 user.email || 'N/A'
+              )}
+            </TableCell>
+            <TableCell>
+              {editingUser?.id === user.id ? (
+                <Input
+                  value={editForm.password || ''}
+                  onChange={(e) => onFormChange('password', e.target.value)}
+                  className="w-full"
+                  type="password"
+                  placeholder="新密码"
+                />
+              ) : (
+                '********'
               )}
             </TableCell>
             <TableCell>

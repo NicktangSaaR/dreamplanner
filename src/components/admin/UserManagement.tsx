@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { UserTable } from "./user-management/UserTable";
@@ -12,7 +13,11 @@ interface EditableUser {
 
 const UserManagement = () => {
   const [editingUser, setEditingUser] = useState<EditableUser | null>(null);
-  const [editForm, setEditForm] = useState<{ full_name: string; email: string }>({
+  const [editForm, setEditForm] = useState<{ 
+    full_name: string; 
+    email: string;
+    password?: string;
+  }>({
     full_name: "",
     email: "",
   });
@@ -54,12 +59,20 @@ const UserManagement = () => {
   const saveUserDetails = async () => {
     if (!editingUser) return;
 
-    const updates: { full_name?: string; email?: string } = {};
+    const updates: { 
+      full_name?: string; 
+      email?: string;
+      password?: string;
+    } = {};
+
     if (editForm.full_name !== editingUser.full_name) {
       updates.full_name = editForm.full_name;
     }
     if (editForm.email !== editingUser.email) {
       updates.email = editForm.email;
+    }
+    if (editForm.password) {
+      updates.password = editForm.password;
     }
 
     if (Object.keys(updates).length > 0) {
