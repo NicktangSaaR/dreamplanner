@@ -738,6 +738,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_email_not_registered: {
+        Args: {
+          email: string
+        }
+        Returns: boolean
+      }
       check_if_user_exists: {
         Args: {
           user_id: string
