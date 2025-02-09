@@ -9,7 +9,7 @@ export default function Hero() {
         Your Future Starts Here
       </span>
       <h1 className="mt-6 text-4xl sm:text-6xl font-bold">
-        Weave Your Dreams, Plan for the Future
+        Weave Your Dreams
       </h1>
       <p className="mt-4 text-xl text-muted-foreground">
         Collaborate with counselors, track your progress, and prepare for success
