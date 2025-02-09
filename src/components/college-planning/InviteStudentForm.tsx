@@ -39,8 +39,8 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
 
       if (existingInvitation) {
         const expirationDate = new Date(existingInvitation.expires_at);
-        const timeUntilExpiration = Math.ceil((expirationDate.getTime() - new Date().getTime()) / 1000);
-        toast.error(`请等待 ${timeUntilExpiration} 秒后再发送邀请。`);
+        const remainingTime = Math.ceil((expirationDate.getTime() - new Date().getTime()) / 1000);
+        toast.error(`请等待 ${remainingTime} 秒后再发送邀请。`);
         return;
       }
 
@@ -57,16 +57,13 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
       }
 
       const token = Math.random().toString(36).substring(2);
-      const expirationDate = new Date();
-      expirationDate.setMinutes(expirationDate.getMinutes() + 1); // 1 minute from now
 
       const { error: invitationError } = await supabase
         .from('student_invitations')
         .insert({
           counselor_id: counselorId,
           email,
-          token,
-          expires_at: expirationDate.toISOString()
+          token
         });
 
       if (invitationError) {
@@ -79,7 +76,7 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
         body: { 
           email, 
           token,
-          expirationDate: expirationDate.toISOString()
+          expirationDate: new Date(Date.now() + 60000).toISOString() // 1 minute from now
         }
       });
 
