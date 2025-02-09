@@ -34,7 +34,11 @@ serve(async (req) => {
 
     const { userId, newPassword } = await req.json()
     
-    console.log("Updating password for user:", userId, "by admin:", adminUser.id)
+    if (!userId || !newPassword) {
+      throw new Error('Missing required fields: userId and newPassword')
+    }
+
+    console.log("Starting password update process for user:", userId, "by admin:", adminUser.id)
 
     const { data, error } = await supabaseClient.rpc('update_user_credentials', {
       admin_id: adminUser.id,
@@ -46,6 +50,8 @@ serve(async (req) => {
       console.error('Database error:', error)
       throw error
     }
+
+    console.log("Password update successful")
 
     return new Response(
       JSON.stringify({ success: true, data }),
