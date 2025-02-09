@@ -54,7 +54,7 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
                 Free Resources
                 <ChevronDown className="ml-1 h-4 w-4" />
               </HoverCardTrigger>
-              <HoverCardContent align="start" className="w-48">
+              <HoverCardContent align="start" className="w-48 bg-white shadow-lg border rounded-md">
                 <div className="flex flex-col space-y-1">
                   <Link 
                     to="/articles" 
