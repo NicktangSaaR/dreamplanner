@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -143,21 +142,18 @@ export default function Index() {
                   )}>
                     <Link to={`/articles/${article.id}`}>
                       <CardHeader>
-                        <CardTitle className="line-clamp-2">{article.title}</CardTitle>
-                        {article.article_categories && (
-                          <div className="text-sm text-muted-foreground font-medium">
-                            {article.article_categories.name}
+                        <CardTitle className="line-clamp-2 h-12">{article.title}</CardTitle>
+                        <div className="space-y-1.5">
+                          {article.article_categories && (
+                            <div className="text-sm text-muted-foreground font-medium">
+                              {article.article_categories.name}
+                            </div>
+                          )}
+                          <div className="text-sm text-muted-foreground">
+                            {new Date(article.created_at).toLocaleDateString()}
                           </div>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <p className="line-clamp-3 text-muted-foreground">
-                          {article.content}
-                        </p>
-                        <div className="mt-2 text-sm text-muted-foreground">
-                          {new Date(article.created_at).toLocaleDateString()}
                         </div>
-                      </CardContent>
+                      </CardHeader>
                     </Link>
                   </Card>
                 </CarouselItem>
@@ -171,4 +167,3 @@ export default function Index() {
     </div>
   );
 }
-
