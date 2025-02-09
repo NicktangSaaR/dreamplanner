@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -20,17 +21,17 @@ export default function Login() {
       
       <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <AuthCard
-          title="欢迎回来"
-          subtitle="请输入您的登录信息"
+          title="Welcome Back"
+          subtitle="Please enter your login details"
           footer={
             <>
-              <span className="text-muted-foreground">还没有账号？</span>
+              <span className="text-muted-foreground">Don't have an account?</span>
               <Button 
                 variant="link" 
                 className="p-0 h-auto font-semibold"
                 onClick={() => navigate("/signup")}
               >
-                注册
+                Sign Up
               </Button>
             </>
           }

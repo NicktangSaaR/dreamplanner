@@ -24,11 +24,11 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleLogin} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">邮箱</Label>
+        <Label htmlFor="email">Email</Label>
         <Input
           id="email"
           type="email"
-          placeholder="请输入邮箱"
+          placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -36,11 +36,11 @@ export default function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">密码</Label>
+        <Label htmlFor="password">Password</Label>
         <Input
           id="password"
           type="password"
-          placeholder="请输入密码"
+          placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -52,7 +52,7 @@ export default function LoginForm() {
         className="w-full"
         disabled={isLoading}
       >
-        {isLoading ? "登录中..." : "登录"}
+        {isLoading ? "Logging in..." : "Login"}
       </Button>
     </form>
   );
