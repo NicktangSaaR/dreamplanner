@@ -99,14 +99,6 @@ export default function ArticleDetail() {
         onLogout={handleLogout}
       />
       <main className="container mx-auto px-4 pt-32">
-        <div className="mb-8">
-          <Link to="/">
-            <Button variant="outline" size="lg" className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Button>
-          </Link>
-        </div>
         <article className="max-w-3xl mx-auto">
           <header className="mb-8">
             <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
@@ -125,6 +117,14 @@ export default function ArticleDetail() {
           />
         </article>
       </main>
+      <div className="fixed left-8 top-1/2 transform -translate-y-1/2 z-50">
+        <Link to="/">
+          <Button variant="outline" size="lg" className="gap-2 bg-white/80 backdrop-blur-sm hover:bg-white/90">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }
