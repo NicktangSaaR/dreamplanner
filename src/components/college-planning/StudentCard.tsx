@@ -2,10 +2,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { User, Plus } from "lucide-react";
+import { User, Plus, X } from "lucide-react";
 import AddCollaboratorDialog from "./AddCollaboratorDialog";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface StudentCardProps {
   student: {
@@ -22,28 +23,44 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
   const navigate = useNavigate();
   const [showCollaboratorDialog, setShowCollaboratorDialog] = useState(false);
   const [isPrimaryCounselor, setIsPrimaryCounselor] = useState(false);
+  const [isCollaborator, setIsCollaborator] = useState(false);
 
   useEffect(() => {
-    const checkPrimaryCounselor = async () => {
+    const checkCounselorStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      // Check if primary counselor
+      const { data: primaryData, error: primaryError } = await supabase
         .from("counselor_student_relationships")
         .select()
         .eq('counselor_id', user.id)
         .eq('student_id', student.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error checking primary counselor status:", error);
+      if (primaryError) {
+        console.error("Error checking primary counselor status:", primaryError);
         return;
       }
 
-      setIsPrimaryCounselor(!!data);
+      // Check if collaborator
+      const { data: collabData, error: collabError } = await supabase
+        .from("counselor_collaborations")
+        .select()
+        .eq('collaborator_id', user.id)
+        .eq('student_id', student.id)
+        .maybeSingle();
+
+      if (collabError) {
+        console.error("Error checking collaborator status:", collabError);
+        return;
+      }
+
+      setIsPrimaryCounselor(!!primaryData);
+      setIsCollaborator(!!collabData);
     };
 
-    checkPrimaryCounselor();
+    checkCounselorStatus();
   }, [student.id]);
 
   const handleViewSummary = (e: React.MouseEvent) => {
@@ -55,6 +72,36 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
   const handleAddCollaborator = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowCollaboratorDialog(true);
+  };
+
+  const handleRemoveCollaborator = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("No authenticated user found");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("counselor_collaborations")
+        .delete()
+        .eq('collaborator_id', user.id)
+        .eq('student_id', student.id);
+
+      if (error) {
+        console.error("Error removing collaborator:", error);
+        toast.error("Failed to remove collaborator");
+        return;
+      }
+
+      toast.success("Removed from collaboration");
+      // Refresh the page to update the UI
+      window.location.reload();
+    } catch (error) {
+      console.error("Error in handleRemoveCollaborator:", error);
+      toast.error("Failed to remove collaborator");
+    }
   };
 
   return (
@@ -93,6 +140,17 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
                 >
                   <Plus className="h-4 w-4" />
                   Add
+                </Button>
+              )}
+              {isCollaborator && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveCollaborator}
+                  className="whitespace-nowrap px-2 text-destructive hover:text-destructive"
+                >
+                  <X className="h-4 w-4" />
+                  Remove
                 </Button>
               )}
               <Button 
