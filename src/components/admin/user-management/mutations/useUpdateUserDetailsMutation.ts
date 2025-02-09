@@ -101,7 +101,9 @@ export const useUpdateUserDetailsMutation = () => {
       await Promise.all(updates);
     },
     onSuccess: () => {
+      // 修改这里：同时使 profile 查询缓存失效
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
       toast.success("用户信息已更新");
     },
     onError: (error: Error) => {
