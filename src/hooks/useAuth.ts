@@ -17,7 +17,7 @@ export const useAuth = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // 初始化时检查会话状态
+  // Initialize check session state
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
@@ -91,8 +91,8 @@ export const useAuth = () => {
       }
     },
     retry: false,
-    staleTime: 1000 * 60 * 5, // 缓存5分钟
-    enabled: true, // 始终启用查询
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    enabled: true, // Always enable query
   });
 
   const isValidUserType = (type: string): type is UserType => {
@@ -114,16 +114,16 @@ export const useAuth = () => {
       }
 
       if (!authData.user) {
-        toast.error("未收到用户数据");
+        toast.error("No user data received");
         return;
       }
 
       console.log("Authentication successful, fetching profile...");
       
-      // 刷新用户数据
+      // Refresh user data
       await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
       
-      // 获取最新的 profile
+      // Get latest profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
@@ -132,19 +132,19 @@ export const useAuth = () => {
 
       if (profileError) {
         console.error("Error fetching profile after login:", profileError);
-        toast.error("获取用户信息失败");
+        toast.error("Failed to get user information");
         return;
       }
 
       if (!profileData) {
         console.error("No profile found after login");
-        toast.error("未找到用户信息");
+        toast.error("User information not found");
         return;
       }
 
       if (!isValidUserType(profileData.user_type)) {
         console.error("Invalid user type:", profileData.user_type);
-        toast.error("用户类型无效");
+        toast.error("Invalid user type");
         return;
       }
 
@@ -153,29 +153,47 @@ export const useAuth = () => {
 
     } catch (error) {
       console.error("Unexpected login error:", error);
-      toast.error("登录过程中发生意外错误");
+      toast.error("An unexpected error occurred during login");
     }
   };
 
   const logout = async () => {
     try {
       console.log("Starting logout process...");
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Error during logout:", error);
-        toast.error("登出失败");
+      
+      // First check if we have a session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.log("No active session found, cleaning up local state");
+        // Clean up local state even if there's no session
+        queryClient.clear();
+        navigate("/");
         return;
       }
       
-      // 清除所有缓存的数据
+      // If we have a session, try to sign out
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error during logout:", error);
+        // If we get a session_not_found error, we can still proceed with cleanup
+        if (error.message.includes("session_not_found")) {
+          console.log("Session not found, proceeding with cleanup");
+        } else {
+          toast.error("Logout failed");
+          return;
+        }
+      }
+      
+      // Clear all cached data
       queryClient.clear();
       
       console.log("Logout successful");
       navigate("/");
-      toast.success("成功登出");
+      toast.success("Successfully logged out");
     } catch (error) {
       console.error("Error during logout:", error);
-      toast.error("登出失败");
+      toast.error("Logout failed");
     }
   };
 
@@ -193,16 +211,16 @@ export const useAuth = () => {
         break;
       default:
         console.error("Unknown user type:", userType);
-        toast.error("未知的用户类型");
+        toast.error("Unknown user type");
     }
   };
 
   const handleAuthError = (error: any) => {
     console.error("Login error:", error);
     if (error.message.includes("Email not confirmed")) {
-      toast.error("请先验证您的邮箱。请检查收件箱中的验证链接。");
+      toast.error("Please verify your email first. Check your inbox for the verification link.");
     } else if (error.message.includes("Invalid login credentials")) {
-      toast.error("邮箱或密码不正确。请重试或注册新账号。");
+      toast.error("Incorrect email or password. Please try again or sign up for a new account.");
     } else {
       toast.error(error.message);
     }
