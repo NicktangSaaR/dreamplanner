@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +75,26 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
       await queryClient.invalidateQueries({ 
         queryKey: ["student-activities", studentId] 
       });
+
+      // Set up realtime subscription for this activity
+      const channel = supabase
+        .channel('activities_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'extracurricular_activities',
+            filter: `student_id=eq.${studentId}`,
+          },
+          () => {
+            console.log('Activity updated, refreshing...');
+            queryClient.invalidateQueries({ 
+              queryKey: ["student-activities", studentId] 
+            });
+          }
+        )
+        .subscribe();
       
       setIsDialogOpen(false);
       setNewActivity({
@@ -82,6 +103,12 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
         description: "",
         time_commitment: "",
       });
+
+      // Cleanup subscription on component unmount
+      return () => {
+        channel.unsubscribe();
+      };
+
     } catch (error) {
       console.error("Error adding activity:", error);
       toast.error("Failed to add activity");
