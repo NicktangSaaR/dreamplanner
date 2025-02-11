@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,16 @@ export default function ActivityTable({
 
   console.log("ActivityTable - Current editing activity:", editingActivity);
 
+  const handleGradeLevelChange = (level: string, checked: boolean) => {
+    const currentLevels = editingActivity?.grade_levels || [];
+    const updatedLevels = checked
+      ? [...currentLevels, level]
+      : currentLevels.filter((l) => l !== level);
+    
+    console.log("Updating grade levels from:", currentLevels, "to:", updatedLevels);
+    onEditingActivityChange("grade_levels", updatedLevels);
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -69,13 +80,13 @@ export default function ActivityTable({
               </TableCell>
               <TableCell>
                 <Textarea
-                  value={editingActivity.description}
+                  value={editingActivity.description || ""}
                   onChange={(e) => onEditingActivityChange("description", e.target.value)}
                 />
               </TableCell>
               <TableCell>
                 <Input
-                  value={editingActivity.time_commitment}
+                  value={editingActivity.time_commitment || ""}
                   onChange={(e) => onEditingActivityChange("time_commitment", e.target.value)}
                 />
               </TableCell>
@@ -87,14 +98,7 @@ export default function ActivityTable({
                         type="checkbox"
                         id={`grade-${level}`}
                         checked={(editingActivity.grade_levels || []).includes(level)}
-                        onChange={(e) => {
-                          const currentLevels = editingActivity.grade_levels || [];
-                          const updatedLevels = e.target.checked
-                            ? [...currentLevels, level]
-                            : currentLevels.filter((l) => l !== level);
-                          console.log("Updating grade levels to:", updatedLevels);
-                          onEditingActivityChange("grade_levels", updatedLevels);
-                        }}
+                        onChange={(e) => handleGradeLevelChange(level, e.target.checked)}
                         className="rounded border-gray-300"
                       />
                       <label htmlFor={`grade-${level}`} className="text-sm">

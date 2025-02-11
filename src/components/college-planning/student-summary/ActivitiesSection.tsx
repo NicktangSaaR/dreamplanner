@@ -31,13 +31,13 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
     role: "",
     description: "",
     time_commitment: "",
+    grade_levels: [] as string[],
   });
   const queryClient = useQueryClient();
   const { studentId } = useParams();
 
   console.log("ActivitiesSection - Rendering with activities:", activities);
 
-  // Set up realtime subscription
   useEffect(() => {
     if (!studentId) return;
 
@@ -51,9 +51,9 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
           table: 'extracurricular_activities',
           filter: `student_id=eq.${studentId}`,
         },
-        (payload) => {
+        async (payload) => {
           console.log('Activity updated, refreshing...', payload);
-          queryClient.invalidateQueries({ 
+          await queryClient.invalidateQueries({ 
             queryKey: ["student-activities", studentId] 
           });
         }
@@ -91,6 +91,7 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
             role: newActivity.role,
             description: newActivity.description,
             time_commitment: newActivity.time_commitment,
+            grade_levels: newActivity.grade_levels,
             student_id: studentId,
           },
         ]);
@@ -110,6 +111,7 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
         role: "",
         description: "",
         time_commitment: "",
+        grade_levels: [],
       });
 
     } catch (error) {
