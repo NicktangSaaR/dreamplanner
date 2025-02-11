@@ -1,3 +1,4 @@
+
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -11,6 +12,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     },
   },
 })
@@ -33,6 +35,9 @@ const initializeAuth = async () => {
       if (event === 'SIGNED_OUT') {
         // Clear any auth-related cache on sign out
         queryClient.clear()
+      } else if (event === 'SIGNED_IN' && session) {
+        // Refresh relevant queries on sign in
+        queryClient.invalidateQueries({ queryKey: ["user-profile"] })
       }
     })
 

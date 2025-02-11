@@ -20,4 +20,3 @@ export const useAuth = () => {
     userType: profile?.user_type,
   };
 };
-
