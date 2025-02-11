@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -7,6 +8,7 @@ import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StudentViewContent from "@/components/college-planning/student-view/StudentViewContent";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import { useStudentRealtime } from "@/hooks/student/useStudentRealtime";
+import { useTodos } from "@/hooks/useTodos";
 import { toast } from "sonner";
 
 export default function StudentView() {
@@ -61,9 +63,13 @@ export default function StudentView() {
     courses,
     activities,
     notes,
-    todos,
-    isLoading,
+    isLoading: isStudentDataLoading,
   } = useStudentData(studentId);
+
+  // Use the todos hook separately
+  const { todos, isLoading: isTodosLoading } = useTodos();
+
+  const isLoading = isStudentDataLoading || isTodosLoading;
 
   if (isLoading) {
     return (
