@@ -20,18 +20,45 @@ export const useAuth = () => {
   // Initialize check session state
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Session check error:", error);
-        return;
-      }
-      if (session) {
-        console.log("Initial session found");
-        queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Session check error:", error);
+          queryClient.setQueryData(["user-profile"], null);
+          return;
+        }
+        if (session) {
+          console.log("Initial session found");
+          queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+        } else {
+          console.log("No initial session found");
+          queryClient.setQueryData(["user-profile"], null);
+        }
+      } catch (error) {
+        console.error("Unexpected error checking session:", error);
+        queryClient.setQueryData(["user-profile"], null);
       }
     };
+
+    // Set up auth state change listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        queryClient.setQueryData(["user-profile"], null);
+        navigate("/");
+      } else if (event === 'SIGNED_IN' && session) {
+        queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      }
+    });
+
     checkSession();
-  }, [queryClient]);
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [queryClient, navigate]);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["user-profile"],
@@ -51,6 +78,10 @@ export const useAuth = () => {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError) {
           console.error("Error getting user:", userError);
+          if (userError.message.includes("session_not_found")) {
+            await supabase.auth.signOut();
+            queryClient.setQueryData(["user-profile"], null);
+          }
           return null;
         }
         if (!user) {
