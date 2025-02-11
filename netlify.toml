@@ -4,4 +4,9 @@
   to = "/index.html"
   status = 200
 
+[[redirects]]
+  from = "https://your-netlify-subdomain.netlify.app/*"
+  to = "https://your-custom-domain.com/:splat"
+  status = 301
+  force = true
 
