@@ -46,7 +46,8 @@ export default function ActivityTable({
     let updatedLevels: string[];
     
     if (checked) {
-      updatedLevels = [...currentLevels, level];
+      // 确保不重复添加
+      updatedLevels = currentLevels.includes(level) ? currentLevels : [...currentLevels, level];
     } else {
       updatedLevels = currentLevels.filter((l) => l !== level);
     }

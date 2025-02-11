@@ -48,9 +48,24 @@ export default function ActivityList({ activities }: ActivityListProps) {
 
       if (error) throw error;
 
+      // Immediately update the local data
+      const updatedActivities = activities.map(activity => 
+        activity.id === editingActivity.id ? editingActivity : activity
+      );
+      
+      // Update the query cache with the new data
+      queryClient.setQueryData(
+        ["student-activities", editingActivity.student_id], 
+        updatedActivities
+      );
+
+      // Also invalidate to ensure fresh data
+      await queryClient.invalidateQueries({ 
+        queryKey: ["student-activities", editingActivity.student_id],
+        exact: true
+      });
+
       toast.success("活动更新成功");
-      // Immediately update the local query cache
-      await queryClient.invalidateQueries({ queryKey: ["student-activities", editingActivity.student_id] });
       setEditingActivity(null);
     } catch (error) {
       console.error("Error updating activity:", error);
@@ -75,7 +90,10 @@ export default function ActivityList({ activities }: ActivityListProps) {
       // Find the activity to get the student_id
       const deletedActivity = activities.find(activity => activity.id === activityId);
       if (deletedActivity) {
-        await queryClient.invalidateQueries({ queryKey: ["student-activities", deletedActivity.student_id] });
+        await queryClient.invalidateQueries({ 
+          queryKey: ["student-activities", deletedActivity.student_id],
+          exact: true
+        });
       }
     } catch (error) {
       console.error("Error deleting activity:", error);
