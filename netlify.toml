@@ -6,7 +6,7 @@
 
 [[redirects]]
   from = "https://your-netlify-subdomain.netlify.app/*"
-  to = "https://your-custom-domain.com/:splat"
+  to = "https://dreamplaneredu.com/:splat"
   status = 301
   force = true
 
