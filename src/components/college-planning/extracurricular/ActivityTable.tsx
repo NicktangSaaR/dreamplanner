@@ -38,7 +38,8 @@ export default function ActivityTable({
 }: ActivityTableProps) {
   const GRADE_LEVELS = ["Prior to G9", "G9", "G10", "G11", "G12"];
 
-  console.log("ActivityTable - Current editing activity:", editingActivity);
+  console.log("Editing activity:", editingActivity);
+  console.log("Activities:", activities);
 
   const handleGradeLevelChange = (level: string, checked: boolean) => {
     const currentLevels = editingActivity?.grade_levels || [];
