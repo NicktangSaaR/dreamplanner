@@ -40,7 +40,7 @@ export default function Footer() {
             </nav>
           </div>
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} DreamPlanner. All rights reserved. By Nick Tang
+            © {new Date().getFullYear()} DreamPlanner. All rights reserved.
           </div>
         </div>
       </footer>
