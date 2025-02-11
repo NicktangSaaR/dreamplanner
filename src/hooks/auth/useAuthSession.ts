@@ -14,31 +14,50 @@ export const useAuthSession = () => {
 
     const checkSession = async () => {
       try {
+        // Get current session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Session check error:", error);
-          queryClient.setQueryData(["user-profile"], null);
+          if (mounted) {
+            queryClient.setQueryData(["user-profile"], null);
+            // Only show error toast and redirect if we're not already on the login page
+            if (window.location.pathname !== '/login') {
+              toast.error("会话已过期");
+              navigate("/login");
+            }
+          }
           return;
         }
 
         if (!mounted) return;
 
         if (session) {
-          console.log("Initial session found:", session.user.id);
+          console.log("Session found:", session.user.id);
+          // Refresh user profile data
           queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+          
+          // If user is on login page but has valid session, redirect to dashboard
+          if (window.location.pathname === '/login') {
+            navigate("/");
+          }
         } else {
-          console.log("No initial session found");
+          console.log("No session found");
           queryClient.setQueryData(["user-profile"], null);
-          toast.error("请先登录");
-          navigate("/login");
+          // Only redirect if not already on login page
+          if (window.location.pathname !== '/login') {
+            toast.error("请先登录");
+            navigate("/login");
+          }
         }
       } catch (error) {
         console.error("Unexpected error checking session:", error);
         if (mounted) {
           queryClient.setQueryData(["user-profile"], null);
-          toast.error("会话检查失败，请重新登录");
-          navigate("/login");
+          if (window.location.pathname !== '/login') {
+            toast.error("会话检查失败，请重新登录");
+            navigate("/login");
+          }
         }
       }
     };
@@ -49,13 +68,21 @@ export const useAuthSession = () => {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session?.user?.id);
       
-      if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
         queryClient.setQueryData(["user-profile"], null);
         queryClient.clear();
-        toast.error("会话已过期，请重新登录");
-        navigate("/login");
+        
+        // Only show error and redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          toast.error("会话已过期，请重新登录");
+          navigate("/login");
+        }
       } else if (event === 'SIGNED_IN' && session) {
         queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+        // Redirect to home if on login page
+        if (window.location.pathname === '/login') {
+          navigate("/");
+        }
       }
     });
 
