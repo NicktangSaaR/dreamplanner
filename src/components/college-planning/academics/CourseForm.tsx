@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,10 +76,10 @@ export default function CourseForm({
               <SelectValue placeholder="Select grade level" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="9">9th Grade</SelectItem>
-              <SelectItem value="10">10th Grade</SelectItem>
-              <SelectItem value="11">11th Grade</SelectItem>
-              <SelectItem value="12">12th Grade</SelectItem>
+              <SelectItem value="9">9</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="11">11</SelectItem>
+              <SelectItem value="12">12</SelectItem>
             </SelectContent>
           </Select>
         </div>

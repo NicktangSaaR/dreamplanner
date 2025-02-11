@@ -19,7 +19,7 @@ interface EditableCourseRowProps {
   academicYears: string[];
 }
 
-const GRADE_LEVELS = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
+const GRADE_LEVELS = ['9', '10', '11', '12'];
 
 export default function EditableCourseRow({
   editingCourse,
