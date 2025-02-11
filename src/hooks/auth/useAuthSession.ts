@@ -3,30 +3,43 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const useAuthSession = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    let mounted = true;
+
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
+        
         if (error) {
           console.error("Session check error:", error);
           queryClient.setQueryData(["user-profile"], null);
           return;
         }
+
+        if (!mounted) return;
+
         if (session) {
-          console.log("Initial session found");
+          console.log("Initial session found:", session.user.id);
           queryClient.invalidateQueries({ queryKey: ["user-profile"] });
         } else {
           console.log("No initial session found");
           queryClient.setQueryData(["user-profile"], null);
+          toast.error("请先登录");
+          navigate("/login");
         }
       } catch (error) {
         console.error("Unexpected error checking session:", error);
-        queryClient.setQueryData(["user-profile"], null);
+        if (mounted) {
+          queryClient.setQueryData(["user-profile"], null);
+          toast.error("会话检查失败，请重新登录");
+          navigate("/login");
+        }
       }
     };
 
@@ -34,18 +47,23 @@ export const useAuthSession = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
-      if (event === 'SIGNED_OUT') {
+      console.log("Auth state changed:", event, session?.user?.id);
+      
+      if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
         queryClient.setQueryData(["user-profile"], null);
-        navigate("/");
+        queryClient.clear();
+        toast.error("会话已过期，请重新登录");
+        navigate("/login");
       } else if (event === 'SIGNED_IN' && session) {
         queryClient.invalidateQueries({ queryKey: ["user-profile"] });
       }
     });
 
+    // Initial session check
     checkSession();
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [queryClient, navigate]);

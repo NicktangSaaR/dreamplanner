@@ -2,7 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StudentViewContent from "@/components/college-planning/student-view/StudentViewContent";
@@ -15,43 +15,50 @@ export default function StudentView() {
   const { studentId } = useParams();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-
-  console.log("StudentView - Viewing student:", studentId);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check authentication state
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.log("No active session, redirecting to login");
-          toast.error("Please log in to continue");
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error checking session:", error);
+          toast.error("会话检查失败");
           navigate('/login');
           return;
         }
 
-        // Set up auth state change listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          console.log("Auth state changed:", event);
-          if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
-            console.log("User signed out or token refresh failed");
-            toast.error("Session expired. Please log in again");
-            navigate('/login');
-          }
-        });
+        if (!session) {
+          console.log("No active session, redirecting to login");
+          toast.error("请先登录");
+          navigate('/login');
+          return;
+        }
 
-        // Cleanup subscription
-        return () => {
-          subscription.unsubscribe();
-        };
+        setIsLoading(false);
       } catch (error) {
-        console.error("Error checking auth:", error);
-        toast.error("Authentication error. Please try logging in again");
+        console.error("Error in auth check:", error);
+        toast.error("认证检查失败");
         navigate('/login');
       }
     };
-    
+
     checkAuth();
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed in StudentView:", event);
+      if (!session) {
+        console.log("No session in StudentView");
+        toast.error("会话已过期，请重新登录");
+        navigate('/login');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   // Set up real-time subscriptions
@@ -69,9 +76,7 @@ export default function StudentView() {
   // Use the todos hook separately
   const { todos, isLoading: isTodosLoading } = useTodos();
 
-  const isLoading = isStudentDataLoading || isTodosLoading;
-
-  if (isLoading) {
+  if (isLoading || isStudentDataLoading || isTodosLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -80,7 +85,7 @@ export default function StudentView() {
   }
 
   if (!profile) {
-    return <div className="p-4 text-center">Student not found</div>;
+    return <div className="p-4 text-center">未找到学生信息</div>;
   }
 
   return (
