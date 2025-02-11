@@ -1,3 +1,4 @@
+
 import { Note } from "../types/note";
 import NoteCard from "../NoteCard";
 
@@ -6,6 +7,7 @@ interface NotesListProps {
   onTogglePin: (note: Note) => void;
   onToggleStar: (note: Note) => void;
   onEdit: (note: Note) => void;
+  onDelete: (note: Note) => void;
   canEdit: boolean;
 }
 
@@ -14,6 +16,7 @@ export default function NotesList({
   onTogglePin,
   onToggleStar,
   onEdit,
+  onDelete,
   canEdit
 }: NotesListProps) {
   const pinnedNotes = notes.filter(note => note.is_pinned);
@@ -32,6 +35,7 @@ export default function NotesList({
                 onTogglePin={onTogglePin}
                 onToggleStar={onToggleStar}
                 onEdit={onEdit}
+                onDelete={onDelete}
                 canEdit={canEdit}
               />
             ))}
@@ -51,6 +55,7 @@ export default function NotesList({
               onTogglePin={onTogglePin}
               onToggleStar={onToggleStar}
               onEdit={onEdit}
+              onDelete={onDelete}
               canEdit={canEdit}
             />
           ))}

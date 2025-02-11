@@ -1,22 +1,26 @@
-import { Pin, Star, Edit } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  date: string;
-  author_name?: string;
-  is_pinned?: boolean;
-  stars?: number;
-}
+import { Pin, Star, Edit, Trash2 } from "lucide-react";
+import { Note } from "./types/note";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface NoteCardProps {
   note: Note;
   onTogglePin: (note: Note) => void;
   onToggleStar: (note: Note) => void;
   onEdit: (note: Note) => void;
+  onDelete: (note: Note) => void;
   canEdit: boolean;
 }
 
@@ -25,6 +29,7 @@ export default function NoteCard({
   onTogglePin, 
   onToggleStar, 
   onEdit,
+  onDelete,
   canEdit 
 }: NoteCardProps) {
   return (
@@ -36,10 +41,10 @@ export default function NoteCard({
             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
               <span>{note.date}</span>
               {note.author_name && (
-                <span className="hidden sm:inline">•</span>
-              )}
-              {note.author_name && (
-                <span>{note.author_name}</span>
+                <>
+                  <span className="hidden sm:inline">•</span>
+                  <span>{note.author_name}</span>
+                </>
               )}
               {note.stars > 0 && (
                 <>
@@ -71,6 +76,34 @@ export default function NoteCard({
                 >
                   <Pin className="h-4 w-4" />
                 </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-red-500 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Note</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this note? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => onDelete(note)}
+                        className="bg-red-500 hover:bg-red-600"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </>
             )}
             <Button
@@ -83,7 +116,7 @@ export default function NoteCard({
             </Button>
           </div>
         </div>
-        <p className="hidden sm:block mt-2 whitespace-pre-wrap text-sm">{note.content}</p>
+        <p className="mt-2 whitespace-pre-wrap text-sm">{note.content}</p>
       </CardContent>
     </Card>
   );

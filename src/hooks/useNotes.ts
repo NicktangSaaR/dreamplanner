@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -81,6 +82,30 @@ export function useNotes(studentId?: string) {
       toast({
         title: "Error",
         description: "Failed to create note",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteNote = async (noteId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', noteId);
+
+      if (error) throw error;
+
+      setNotes(notes.filter(note => note.id !== noteId));
+      toast({
+        title: "Success",
+        description: "Note deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete note",
         variant: "destructive",
       });
     }
@@ -195,6 +220,7 @@ export function useNotes(studentId?: string) {
   return {
     notes,
     createNote,
+    deleteNote,
     updateNote,
     handleTogglePin,
     handleToggleStar,

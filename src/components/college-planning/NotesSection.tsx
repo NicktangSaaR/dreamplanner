@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StickyNote, PlusCircle } from "lucide-react";
@@ -17,7 +18,7 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const { studentId } = useParams();
-  const { notes, createNote, updateNote, handleTogglePin, handleToggleStar } = useNotes(studentId);
+  const { notes, createNote, updateNote, deleteNote, handleTogglePin, handleToggleStar } = useNotes(studentId);
 
   console.log("NotesSection - studentId:", studentId);
   console.log("NotesSection - notes:", notes);
@@ -40,6 +41,12 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
     }, studentId);
     
     setEditingNote(null);
+    if (onNotesChange) onNotesChange(notes);
+  };
+
+  const handleDeleteNote = async (note: Note) => {
+    if (!studentId) return;
+    await deleteNote(note.id);
     if (onNotesChange) onNotesChange(notes);
   };
 
@@ -80,6 +87,7 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
             onTogglePin={handleTogglePinNote}
             onToggleStar={handleToggleStarNote}
             onEdit={setEditingNote}
+            onDelete={handleDeleteNote}
             canEdit={true}
           />
         </CardContent>
