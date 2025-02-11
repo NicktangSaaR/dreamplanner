@@ -4,6 +4,8 @@ import { useState } from "react";
 import { UserTable } from "./user-management/UserTable";
 import { useUsersQuery } from "./user-management/useUsersQuery";
 import { useUserMutations } from "./user-management/useUserMutations";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EditableUser {
   id: string;
@@ -22,7 +24,7 @@ const UserManagement = () => {
     email: "",
   });
 
-  const { data: users = [], isLoading } = useUsersQuery();
+  const { data: users = [], isLoading, refetch } = useUsersQuery();
   const { 
     deleteUserMutation,
     updateUserTypeMutation,
@@ -89,6 +91,23 @@ const UserManagement = () => {
     setEditForm(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleVerifyUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_verified: true })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast.success("Counselor account verified successfully");
+      refetch();
+    } catch (error) {
+      console.error("Error verifying user:", error);
+      toast.error("Failed to verify counselor account");
+    }
+  };
+
   if (isLoading) {
     return <div>Loading users...</div>;
   }
@@ -97,7 +116,9 @@ const UserManagement = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">User Management</h2>
-        <Badge variant="secondary">{users.length} Users</Badge>
+        <Badge variant="secondary">
+          {users.length} Users ({users.filter(u => u.user_type === 'counselor' && !u.is_verified).length} pending verification)
+        </Badge>
       </div>
       
       <UserTable
@@ -110,6 +131,7 @@ const UserManagement = () => {
         onDelete={handleDeleteUser}
         onUpdateType={handleUpdateUserType}
         onFormChange={handleFormChange}
+        onVerifyUser={handleVerifyUser}
       />
     </div>
   );

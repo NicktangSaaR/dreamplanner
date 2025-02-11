@@ -10,8 +10,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { Edit2, Save, X } from "lucide-react";
+import { Edit2, Save, X, CheckCircle, XCircle } from "lucide-react";
 import { UserTypeSelect } from "./UserTypeSelect";
+import { Badge } from "@/components/ui/badge";
 
 interface EditableUser {
   id: string;
@@ -29,6 +30,7 @@ interface UserTableProps {
   onDelete: (userId: string) => void;
   onUpdateType: (userId: string, newType: string) => void;
   onFormChange: (field: string, value: string) => void;
+  onVerifyUser?: (userId: string) => void;
 }
 
 export const UserTable = ({
@@ -41,6 +43,7 @@ export const UserTable = ({
   onDelete,
   onUpdateType,
   onFormChange,
+  onVerifyUser,
 }: UserTableProps) => {
   return (
     <Table>
@@ -50,6 +53,7 @@ export const UserTable = ({
           <TableHead>Email</TableHead>
           <TableHead>Password</TableHead>
           <TableHead>Type</TableHead>
+          <TableHead>Status</TableHead>
           <TableHead>School</TableHead>
           <TableHead>Joined</TableHead>
           <TableHead className="w-[100px]">Actions</TableHead>
@@ -100,6 +104,32 @@ export const UserTable = ({
                 userId={user.id}
                 onUpdate={onUpdateType}
               />
+            </TableCell>
+            <TableCell>
+              {user.user_type === 'counselor' && (
+                <>
+                  {user.is_verified ? (
+                    <Badge className="bg-green-500">
+                      <CheckCircle className="w-4 h-4 mr-1" /> Verified
+                    </Badge>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="bg-yellow-500">
+                        <XCircle className="w-4 h-4 mr-1" /> Pending
+                      </Badge>
+                      {onVerifyUser && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onVerifyUser(user.id)}
+                        >
+                          Verify
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
             </TableCell>
             <TableCell>{user.school || 'N/A'}</TableCell>
             <TableCell>
