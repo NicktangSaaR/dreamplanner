@@ -1,7 +1,9 @@
+
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { Course } from "../../types/course";
+import { calculateGPA } from "../GradeCalculator";
 
 interface CourseTableRowProps {
   course: Course;
@@ -14,6 +16,8 @@ export default function CourseTableRow({
   onEditCourse,
   onDeleteCourse 
 }: CourseTableRowProps) {
+  const gpa = course.gpa_value ?? calculateGPA(course.grade, course.course_type, course.grade_type);
+
   return (
     <TableRow key={course.id} className="hover:bg-muted/50">
       <TableCell className="font-medium">{course.name}</TableCell>
@@ -23,7 +27,7 @@ export default function CourseTableRow({
       <TableCell>{course.grade_level}</TableCell>
       <TableCell>{course.academic_year}</TableCell>
       <TableCell>{course.semester || '-'}</TableCell>
-      <TableCell className="text-right">{course.gpa_value?.toFixed(2)}</TableCell>
+      <TableCell className="text-right">{gpa.toFixed(2)}</TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
           <Button

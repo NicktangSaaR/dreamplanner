@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, X } from "lucide-react";
-import { calculateGPA, GRADE_TO_GPA, COURSE_TYPE_BONUS } from "../GradeCalculator";
+import { calculateGPA } from "../GradeCalculator";
 import { Course } from "../../types/course";
 import GradeInput from "../course-form/GradeInput";
 import GradeTypeSelect from "../course-form/GradeTypeSelect";
@@ -28,6 +28,8 @@ export default function EditableCourseRow({
   onCancelEdit,
   academicYears,
 }: EditableCourseRowProps) {
+  const gpa = calculateGPA(editingCourse.grade, editingCourse.course_type, editingCourse.grade_type);
+
   return (
     <TableRow className="bg-muted/30">
       <TableCell>
@@ -89,14 +91,17 @@ export default function EditableCourseRow({
         />
       </TableCell>
       <TableCell className="text-right">
-        {calculateGPA(editingCourse.grade, editingCourse.course_type, editingCourse.grade_type).toFixed(2)}
+        {gpa.toFixed(2)}
       </TableCell>
       <TableCell>
         <div className="flex gap-1">
           <Button
             variant="ghost"
             size="icon"
-            onClick={onSaveEdit}
+            onClick={() => {
+              onEditingCourseChange('gpa_value', gpa.toString());
+              onSaveEdit();
+            }}
             className="h-8 w-8"
           >
             <Save className="h-4 w-4" />
