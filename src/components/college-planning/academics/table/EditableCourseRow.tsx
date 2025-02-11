@@ -1,3 +1,4 @@
+
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Save, X } from "lucide-react";
 import { calculateGPA, GRADE_TO_GPA, COURSE_TYPE_BONUS } from "../GradeCalculator";
 import { Course } from "../../types/course";
+import GradeInput from "../course-form/GradeInput";
+import GradeTypeSelect from "../course-form/GradeTypeSelect";
+import CourseTypeSelect from "../course-form/CourseTypeSelect";
+import AcademicYearSelect from "../course-form/AcademicYearSelect";
 
 interface EditableCourseRowProps {
   editingCourse: Course;
@@ -33,63 +38,23 @@ export default function EditableCourseRow({
         />
       </TableCell>
       <TableCell>
-        <Select
+        <GradeTypeSelect
           value={editingCourse.grade_type || 'letter'}
-          onValueChange={(value) => onEditingCourseChange('grade_type', value)}
-        >
-          <SelectTrigger className="h-8">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="letter">Letter Grade</SelectItem>
-            <SelectItem value="100-point">100-Point Scale</SelectItem>
-          </SelectContent>
-        </Select>
+          onChange={(value) => onEditingCourseChange('grade_type', value)}
+        />
       </TableCell>
       <TableCell>
-        {editingCourse.grade_type === '100-point' ? (
-          <Input
-            type="number"
-            min="0"
-            max="100"
-            value={editingCourse.grade}
-            onChange={(e) => onEditingCourseChange('grade', e.target.value)}
-            className="h-8"
-          />
-        ) : (
-          <Select
-            value={editingCourse.grade}
-            onValueChange={(value) => onEditingCourseChange('grade', value)}
-          >
-            <SelectTrigger className="h-8">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.keys(GRADE_TO_GPA).map((grade) => (
-                <SelectItem key={grade} value={grade}>
-                  {grade}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        <GradeInput
+          gradeType={editingCourse.grade_type || 'letter'}
+          value={editingCourse.grade}
+          onChange={(value) => onEditingCourseChange('grade', value)}
+        />
       </TableCell>
       <TableCell>
-        <Select
+        <CourseTypeSelect
           value={editingCourse.course_type}
-          onValueChange={(value) => onEditingCourseChange('course_type', value)}
-        >
-          <SelectTrigger className="h-8">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.keys(COURSE_TYPE_BONUS).map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(value) => onEditingCourseChange('course_type', value)}
+        />
       </TableCell>
       <TableCell>
         <Select
@@ -97,7 +62,7 @@ export default function EditableCourseRow({
           onValueChange={(value) => onEditingCourseChange('grade_level', value)}
         >
           <SelectTrigger className="h-8">
-            <SelectValue />
+            <SelectValue placeholder="Select grade level" />
           </SelectTrigger>
           <SelectContent>
             {GRADE_LEVELS.map((level) => (
@@ -109,21 +74,11 @@ export default function EditableCourseRow({
         </Select>
       </TableCell>
       <TableCell>
-        <Select
-          value={editingCourse.academic_year}
-          onValueChange={(value) => onEditingCourseChange('academic_year', value)}
-        >
-          <SelectTrigger className="h-8">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {academicYears.map((year) => (
-              <SelectItem key={year} value={year}>
-                {year}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <AcademicYearSelect
+          value={editingCourse.academic_year || ''}
+          onChange={(value) => onEditingCourseChange('academic_year', value)}
+          academicYears={academicYears}
+        />
       </TableCell>
       <TableCell>
         <Input
