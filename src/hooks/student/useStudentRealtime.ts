@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { QueryClient } from "@tanstack/react-query";
@@ -6,9 +7,9 @@ export const useStudentRealtime = (studentId: string | undefined, queryClient: Q
   useEffect(() => {
     if (!studentId) return;
 
-    const channel = supabase.channel('student_data_changes');
+    console.log("Setting up realtime subscriptions for student:", studentId);
 
-    channel
+    const channel = supabase.channel('student_data_changes')
       .on(
         'postgres_changes',
         {
@@ -17,8 +18,8 @@ export const useStudentRealtime = (studentId: string | undefined, queryClient: Q
           table: 'courses',
           filter: `student_id=eq.${studentId}`,
         },
-        () => {
-          console.log('Courses changed, refreshing...');
+        (payload) => {
+          console.log('Courses changed, refreshing...', payload);
           queryClient.invalidateQueries({ queryKey: ["student-courses", studentId] });
         }
       )
@@ -30,8 +31,8 @@ export const useStudentRealtime = (studentId: string | undefined, queryClient: Q
           table: 'extracurricular_activities',
           filter: `student_id=eq.${studentId}`,
         },
-        () => {
-          console.log('Activities changed, refreshing...');
+        (payload) => {
+          console.log('Activities changed, refreshing...', payload);
           queryClient.invalidateQueries({ queryKey: ["student-activities", studentId] });
         }
       )
@@ -43,27 +44,17 @@ export const useStudentRealtime = (studentId: string | undefined, queryClient: Q
           table: 'notes',
           filter: `author_id=eq.${studentId}`,
         },
-        () => {
-          console.log('Notes changed, refreshing...');
+        (payload) => {
+          console.log('Notes changed, refreshing...', payload);
           queryClient.invalidateQueries({ queryKey: ["student-notes", studentId] });
         }
       )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'todos',
-          filter: `author_id=eq.${studentId}`,
-        },
-        () => {
-          console.log('Todos changed, refreshing...');
-          queryClient.invalidateQueries({ queryKey: ["student-todos", studentId] });
-        }
-      )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Subscription status:", status);
+      });
 
     return () => {
+      console.log("Cleaning up realtime subscriptions");
       channel.unsubscribe();
     };
   }, [studentId, queryClient]);

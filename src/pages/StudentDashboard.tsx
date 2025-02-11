@@ -8,8 +8,6 @@ import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import { useStudentRealtime } from "@/hooks/student/useStudentRealtime";
 import { useTodos } from "@/hooks/useTodos";
-import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function StudentDashboard() {
   const { studentId } = useParams();
@@ -30,36 +28,6 @@ export default function StudentDashboard() {
 
   // Use the useTodos hook to get real-time todo data
   const { todos, isLoading: isTodosLoading } = useTodos();
-
-  // Set up real-time subscription for courses
-  useEffect(() => {
-    if (!studentId) return;
-
-    console.log("Setting up real-time subscription for courses...");
-    const channel = supabase
-      .channel('courses_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'courses',
-          filter: `student_id=eq.${studentId}`,
-        },
-        async (payload) => {
-          console.log('Course updated, refreshing...', payload);
-          await queryClient.invalidateQueries({ 
-            queryKey: ["student-courses", studentId] 
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log("Cleaning up courses subscription");
-      channel.unsubscribe();
-    };
-  }, [studentId, queryClient]);
 
   if (isLoading || isTodosLoading) {
     return (
