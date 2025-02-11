@@ -41,13 +41,15 @@ export default function ActivityList({ activities }: ActivityListProps) {
           role: editingActivity.role,
           description: editingActivity.description,
           time_commitment: editingActivity.time_commitment,
-          grade_levels: editingActivity.grade_levels || [],
+          grade_levels: editingActivity.grade_levels,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", editingActivity.id);
 
       if (error) throw error;
 
       toast.success("活动更新成功");
+      // Immediately update the local query cache
       await queryClient.invalidateQueries({ queryKey: ["student-activities", editingActivity.student_id] });
       setEditingActivity(null);
     } catch (error) {
@@ -70,7 +72,11 @@ export default function ActivityList({ activities }: ActivityListProps) {
       if (error) throw error;
 
       toast.success("活动删除成功");
-      await queryClient.invalidateQueries({ queryKey: ["student-activities"] });
+      // Find the activity to get the student_id
+      const deletedActivity = activities.find(activity => activity.id === activityId);
+      if (deletedActivity) {
+        await queryClient.invalidateQueries({ queryKey: ["student-activities", deletedActivity.student_id] });
+      }
     } catch (error) {
       console.error("Error deleting activity:", error);
       toast.error("删除活动失败");

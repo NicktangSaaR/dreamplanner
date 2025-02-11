@@ -43,9 +43,13 @@ export default function ActivityTable({
 
   const handleGradeLevelChange = (level: string, checked: boolean) => {
     const currentLevels = editingActivity?.grade_levels || [];
-    const updatedLevels = checked
-      ? [...currentLevels, level]
-      : currentLevels.filter((l) => l !== level);
+    let updatedLevels: string[];
+    
+    if (checked) {
+      updatedLevels = [...currentLevels, level];
+    } else {
+      updatedLevels = currentLevels.filter((l) => l !== level);
+    }
     
     console.log("Updating grade levels from:", currentLevels, "to:", updatedLevels);
     onEditingActivityChange("grade_levels", updatedLevels);
