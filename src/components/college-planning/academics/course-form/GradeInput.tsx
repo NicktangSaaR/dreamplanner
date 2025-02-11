@@ -23,18 +23,11 @@ export default function GradeInput({ gradeType, value, onChange }: GradeInputPro
             <SelectItem value="Planned">Planned</SelectItem>
             <SelectItem value="In Progress">In Progress</SelectItem>
             <SelectItem value="Drop">Drop</SelectItem>
-            <SelectItem value="numeric">
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                value={value === "numeric" ? "" : value}
-                onChange={(e) => onChange(e.target.value)}
-                placeholder="Enter grade (0-100)"
-                className="mt-1"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </SelectItem>
+            {Array.from({ length: 101 }, (_, i) => (
+              <SelectItem key={i} value={i.toString()}>
+                {i}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
