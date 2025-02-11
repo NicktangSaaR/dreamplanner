@@ -1,7 +1,18 @@
 
 export interface RawProfile {
+  id: string;
+  user_type: string;
+  full_name: string | null;
+  grade: string | null;
+  school: string | null;
+  interested_majors: string[] | null;
   social_media: any;
+  personal_website: string | null;
+  graduation_school: string | null;
+  background_intro: string | null;
+  application_year: string | null;
   career_interest_test: any;
+  email: string | null;
   [key: string]: any;
 }
 
@@ -36,9 +47,22 @@ export const transformProfile = (rawProfile: RawProfile | null) => {
     careerInterestTest = null;
   }
 
+  // Return a properly typed profile object
   return {
-    ...rawProfile,
+    id: rawProfile.id,
+    user_type: rawProfile.user_type,
+    full_name: rawProfile.full_name,
+    grade: rawProfile.grade,
+    school: rawProfile.school,
+    interested_majors: rawProfile.interested_majors,
     social_media: socialMedia,
-    career_interest_test: careerInterestTest
+    personal_website: rawProfile.personal_website,
+    graduation_school: rawProfile.graduation_school,
+    background_intro: rawProfile.background_intro,
+    application_year: rawProfile.application_year,
+    career_interest_test: careerInterestTest,
+    email: rawProfile.email,
+    created_at: rawProfile.created_at,
+    updated_at: rawProfile.updated_at
   };
 };
