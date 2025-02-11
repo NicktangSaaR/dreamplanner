@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -38,6 +39,35 @@ export default function ExtracurricularSection({ onActivitiesChange }: { onActiv
       return data || [];
     },
   });
+
+  // 添加实时订阅
+  useEffect(() => {
+    const { data: { user } } = supabase.auth.getUser();
+    if (!user) return;
+
+    console.log("Setting up realtime subscription for activities");
+    
+    const channel = supabase.channel('activities_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'extracurricular_activities',
+          filter: `student_id=eq.${user.id}`,
+        },
+        async (payload) => {
+          console.log('Activity changed, refreshing...', payload);
+          await refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log("Cleaning up realtime subscription");
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
   const handleActivityChange = (field: string, value: string | string[]) => {
     setNewActivity((prev) => ({ ...prev, [field]: value }));
