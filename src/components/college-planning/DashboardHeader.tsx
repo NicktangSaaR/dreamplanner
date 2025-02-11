@@ -61,12 +61,10 @@ export default function DashboardHeader() {
             <Button onClick={handleProfile} variant="outline">
               My Profile
             </Button>
-            <div className="flex flex-col items-center">
-              <Button onClick={handleMockInterview} variant="outline">
-                Mock Interview
-              </Button>
-              <span className="text-xs text-muted-foreground mt-1">developing...</span>
-            </div>
+            <Button onClick={handleMockInterview} variant="outline" className="flex flex-col gap-0.5">
+              <span>Mock Interview</span>
+              <span className="text-[10px] text-muted-foreground leading-none">developing...</span>
+            </Button>
             <Button onClick={handleLogout} variant="outline">
               Log Out
             </Button>
