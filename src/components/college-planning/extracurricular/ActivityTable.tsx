@@ -38,7 +38,7 @@ export default function ActivityTable({
 }: ActivityTableProps) {
   const GRADE_LEVELS = ["Prior to G9", "G9", "G10", "G11", "G12"];
 
-  console.log("Editing activity:", editingActivity);
+  console.log("Current editing activity:", editingActivity);
   console.log("Activities:", activities);
 
   const handleGradeLevelChange = (level: string, checked: boolean) => {
@@ -55,12 +55,12 @@ export default function ActivityTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Activity Name</TableHead>
-          <TableHead>Role</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead>Time Commitment</TableHead>
-          <TableHead>Grade Levels</TableHead>
-          <TableHead>Actions</TableHead>
+          <TableHead>活动名称</TableHead>
+          <TableHead>角色</TableHead>
+          <TableHead>描述</TableHead>
+          <TableHead>时间投入</TableHead>
+          <TableHead>年级</TableHead>
+          <TableHead>操作</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -148,18 +148,18 @@ export default function ActivityTable({
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                      <AlertDialogTitle>确认删除</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to delete this activity? This action cannot be undone.
+                        您确定要删除这个活动吗？此操作无法撤销。
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel>取消</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() => onDeleteActivity(activity.id)}
                         className="bg-red-500 hover:bg-red-600"
                       >
-                        Delete
+                        删除
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>

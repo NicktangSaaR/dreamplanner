@@ -15,11 +15,13 @@ export default function ActivityList({ activities }: ActivityListProps) {
   const queryClient = useQueryClient();
 
   const handleEditActivity = (activity: Activity) => {
+    console.log("Editing activity:", activity);
     setEditingActivity(activity);
   };
 
   const handleEditingActivityChange = (field: string, value: string | string[]) => {
     if (editingActivity) {
+      console.log(`Updating ${field} with value:`, value);
       setEditingActivity({
         ...editingActivity,
         [field]: value,
@@ -31,6 +33,7 @@ export default function ActivityList({ activities }: ActivityListProps) {
     if (!editingActivity) return;
 
     try {
+      console.log("Saving activity with data:", editingActivity);
       const { error } = await supabase
         .from("extracurricular_activities")
         .update({
@@ -38,18 +41,18 @@ export default function ActivityList({ activities }: ActivityListProps) {
           role: editingActivity.role,
           description: editingActivity.description,
           time_commitment: editingActivity.time_commitment,
-          grade_levels: editingActivity.grade_levels || [], // Ensure grade_levels is included in update
+          grade_levels: editingActivity.grade_levels || [],
         })
         .eq("id", editingActivity.id);
 
       if (error) throw error;
 
-      toast.success("Activity updated successfully");
-      await queryClient.invalidateQueries({ queryKey: ["student-activities"] });
+      toast.success("活动更新成功");
+      await queryClient.invalidateQueries({ queryKey: ["student-activities", editingActivity.student_id] });
       setEditingActivity(null);
     } catch (error) {
       console.error("Error updating activity:", error);
-      toast.error("Failed to update activity");
+      toast.error("更新活动失败");
     }
   };
 
@@ -66,11 +69,11 @@ export default function ActivityList({ activities }: ActivityListProps) {
 
       if (error) throw error;
 
-      toast.success("Activity deleted successfully");
+      toast.success("活动删除成功");
       await queryClient.invalidateQueries({ queryKey: ["student-activities"] });
     } catch (error) {
       console.error("Error deleting activity:", error);
-      toast.error("Failed to delete activity");
+      toast.error("删除活动失败");
     }
   };
 
