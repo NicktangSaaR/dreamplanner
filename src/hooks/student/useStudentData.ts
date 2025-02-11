@@ -122,7 +122,7 @@ export const useStudentData = (studentId: string | undefined) => {
     enabled: Boolean(studentId),
   });
 
-  // Courses query
+  // Courses query with better logging
   const { data: courses = [], isLoading: isLoadingCourses } = useQuery({
     queryKey: ["student-courses", studentId],
     queryFn: async () => {
@@ -131,13 +131,19 @@ export const useStudentData = (studentId: string | undefined) => {
         return [];
       }
       
+      console.log("Fetching courses for student:", studentId);
       const { data, error } = await supabase
         .from("courses")
         .select("*")
         .eq("student_id", studentId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching courses:", error);
+        throw error;
+      }
+
+      console.log("Fetched courses:", data);
       return data;
     },
     enabled: Boolean(studentId),
@@ -185,35 +191,13 @@ export const useStudentData = (studentId: string | undefined) => {
     enabled: Boolean(studentId),
   });
 
-  // Todos query
-  const { data: todos = [], isLoading: isLoadingTodos } = useQuery({
-    queryKey: ["student-todos", studentId],
-    queryFn: async () => {
-      if (!studentId) {
-        console.log("No student ID provided for todos query");
-        return [];
-      }
-      
-      const { data, error } = await supabase
-        .from("todos")
-        .select("*")
-        .eq("author_id", studentId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: Boolean(studentId),
-  });
-
-  const isLoading = isLoadingProfile || isLoadingCourses || isLoadingActivities || isLoadingNotes || isLoadingTodos;
+  const isLoading = isLoadingProfile || isLoadingCourses || isLoadingActivities || isLoadingNotes;
 
   return {
     profile,
     courses,
     activities,
     notes,
-    todos,
     isLoading,
   };
 };
