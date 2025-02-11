@@ -57,6 +57,7 @@ export default function GradeInput({ gradeType, value, onChange }: GradeInputPro
           <SelectItem value="F">F</SelectItem>
           <SelectItem value="In Progress">In Progress</SelectItem>
           <SelectItem value="Pass/Fail">Pass/Fail</SelectItem>
+          <SelectItem value="Planned">Planned</SelectItem>
           <SelectItem value="Drop">Drop</SelectItem>
         </SelectContent>
       </Select>
