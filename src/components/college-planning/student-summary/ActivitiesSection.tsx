@@ -17,6 +17,7 @@ interface Activity {
   role: string;
   description?: string | null;
   time_commitment?: string | null;
+  grade_levels?: string[];
 }
 
 interface ActivitiesSectionProps {
@@ -50,8 +51,8 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
           table: 'extracurricular_activities',
           filter: `student_id=eq.${studentId}`,
         },
-        () => {
-          console.log('Activity updated, refreshing...');
+        (payload) => {
+          console.log('Activity updated, refreshing...', payload);
           queryClient.invalidateQueries({ 
             queryKey: ["student-activities", studentId] 
           });
@@ -59,7 +60,6 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
       )
       .subscribe();
 
-    // Cleanup subscription on component unmount
     return () => {
       channel.unsubscribe();
     };
@@ -100,7 +100,6 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
       console.log("Activity added successfully");
       toast.success("Activity added successfully");
       
-      // Invalidate and refetch the activities query
       await queryClient.invalidateQueries({ 
         queryKey: ["student-activities", studentId] 
       });
@@ -152,6 +151,15 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
               </div>
               {activity.description && (
                 <p className="text-sm text-gray-600 mt-2">{activity.description}</p>
+              )}
+              {activity.grade_levels && activity.grade_levels.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {activity.grade_levels.map((level) => (
+                    <Badge key={level} variant="outline" className="text-xs">
+                      {level}
+                    </Badge>
+                  ))}
+                </div>
               )}
             </div>
           ))}

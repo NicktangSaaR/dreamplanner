@@ -37,6 +37,8 @@ export default function ActivityTable({
 }: ActivityTableProps) {
   const GRADE_LEVELS = ["Prior to G9", "G9", "G10", "G11", "G12"];
 
+  console.log("ActivityTable - Current editing activity:", editingActivity);
+
   return (
     <Table>
       <TableHeader>
@@ -90,6 +92,7 @@ export default function ActivityTable({
                           const updatedLevels = e.target.checked
                             ? [...currentLevels, level]
                             : currentLevels.filter((l) => l !== level);
+                          console.log("Updating grade levels to:", updatedLevels);
                           onEditingActivityChange("grade_levels", updatedLevels);
                         }}
                         className="rounded border-gray-300"
