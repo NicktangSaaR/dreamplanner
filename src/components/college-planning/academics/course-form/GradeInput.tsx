@@ -1,3 +1,4 @@
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,16 +14,29 @@ export default function GradeInput({ gradeType, value, onChange }: GradeInputPro
     return (
       <div>
         <Label htmlFor="grade">Grade</Label>
-        <Input
-          id="grade"
-          type="number"
-          min="0"
-          max="100"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Enter grade (0-100)"
-          className="mt-1"
-        />
+        <Select value={value} onValueChange={onChange}>
+          <SelectTrigger id="grade" className="mt-1">
+            <SelectValue placeholder="Enter grade or select status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Pass/Fail">Pass/Fail</SelectItem>
+            <SelectItem value="Planned">Planned</SelectItem>
+            <SelectItem value="In Progress">In Progress</SelectItem>
+            <SelectItem value="Drop">Drop</SelectItem>
+            <SelectItem value="numeric">
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                value={value === "numeric" ? "" : value}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="Enter grade (0-100)"
+                className="mt-1"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     );
   }
