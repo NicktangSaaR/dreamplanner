@@ -40,33 +40,37 @@ export default function ExtracurricularSection({ onActivitiesChange }: { onActiv
     },
   });
 
-  // 添加实时订阅
+  // Add realtime subscription
   useEffect(() => {
-    const { data: { user } } = supabase.auth.getUser();
-    if (!user) return;
+    const setupRealtimeSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    console.log("Setting up realtime subscription for activities");
-    
-    const channel = supabase.channel('activities_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'extracurricular_activities',
-          filter: `student_id=eq.${user.id}`,
-        },
-        async (payload) => {
-          console.log('Activity changed, refreshing...', payload);
-          await refetch();
-        }
-      )
-      .subscribe();
+      console.log("Setting up realtime subscription for activities");
+      
+      const channel = supabase.channel('activities_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'extracurricular_activities',
+            filter: `student_id=eq.${user.id}`,
+          },
+          async (payload) => {
+            console.log('Activity changed, refreshing...', payload);
+            await refetch();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      console.log("Cleaning up realtime subscription");
-      supabase.removeChannel(channel);
+      return () => {
+        console.log("Cleaning up realtime subscription");
+        supabase.removeChannel(channel);
+      };
     };
+
+    setupRealtimeSubscription();
   }, [refetch]);
 
   const handleActivityChange = (field: string, value: string | string[]) => {
