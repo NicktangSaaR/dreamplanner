@@ -36,7 +36,7 @@ export const useAuthActions = () => {
       // Get latest profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("user_type")
+        .select("user_type, is_verified")
         .eq("id", authData.user.id)
         .maybeSingle();
 
@@ -49,6 +49,15 @@ export const useAuthActions = () => {
       if (!profileData) {
         console.error("No profile found after login");
         toast.error("User information not found");
+        return;
+      }
+
+      // Check if counselor needs verification
+      if (profileData.user_type === 'counselor' && !profileData.is_verified) {
+        console.log("Unverified counselor attempting to login");
+        await supabase.auth.signOut();
+        toast.error("Your counselor account is pending verification. Please wait for admin approval.");
+        navigate("/login");
         return;
       }
 

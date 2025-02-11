@@ -61,10 +61,20 @@ export default function SignUp() {
       }
 
       console.log("Signup successful:", data);
-      toast({
-        title: "Success!",
-        description: "Please check your email to verify your account.",
-      });
+
+      // Show different messages based on user type
+      if (formData.userType === 'counselor') {
+        toast({
+          title: "Registration Pending",
+          description: "Your counselor account has been created. Please wait for admin verification before logging in.",
+        });
+      } else {
+        toast({
+          title: "Success!",
+          description: "Please check your email to verify your account.",
+        });
+      }
+      
       navigate("/login");
     } catch (error) {
       console.error("Unexpected error:", error);
