@@ -11,7 +11,7 @@ export default function Features() {
   const features: Feature[] = [
     {
       title: "Track Your Progress",
-      description: "Keep an eye on your college applications and deadlines.",
+      description: "Keep on eye on your course selction, GPA and excurricular activities.",
       icon: <Check className="h-6 w-6 text-green-500" />,
     },
     {
