@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ interface NotesListProps {
   onTogglePin: (note: Note) => void;
   onToggleStar: (note: Note) => void;
   onEdit: (note: Note) => void;
+  onDelete: (note: Note) => void;
   canEditNote: (note: Note) => boolean;
 }
 
@@ -30,6 +32,7 @@ const NotesList = memo(function NotesList({
   onTogglePin,
   onToggleStar,
   onEdit,
+  onDelete,
   canEditNote,
 }: NotesListProps) {
   const validNotes = Array.isArray(notes) ? notes : [];
@@ -54,6 +57,7 @@ const NotesList = memo(function NotesList({
                   onTogglePin={onTogglePin}
                   onToggleStar={onToggleStar}
                   onEdit={onEdit}
+                  onDelete={onDelete}
                   canEdit={canEditNote(note)}
                 />
               ) : null
