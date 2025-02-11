@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +18,7 @@ export default function ActivityList({ activities }: ActivityListProps) {
     setEditingActivity(activity);
   };
 
-  const handleEditingActivityChange = (field: string, value: string) => {
+  const handleEditingActivityChange = (field: string, value: string | string[]) => {
     if (editingActivity) {
       setEditingActivity({
         ...editingActivity,
@@ -37,17 +38,18 @@ export default function ActivityList({ activities }: ActivityListProps) {
           role: editingActivity.role,
           description: editingActivity.description,
           time_commitment: editingActivity.time_commitment,
+          grade_levels: editingActivity.grade_levels || [], // Ensure grade_levels is included in update
         })
         .eq("id", editingActivity.id);
 
       if (error) throw error;
 
-      toast.success("活动更新成功");
-      await queryClient.invalidateQueries({ queryKey: ["extracurricular-activities"] });
+      toast.success("Activity updated successfully");
+      await queryClient.invalidateQueries({ queryKey: ["student-activities"] });
       setEditingActivity(null);
     } catch (error) {
       console.error("Error updating activity:", error);
-      toast.error("更新活动失败");
+      toast.error("Failed to update activity");
     }
   };
 
@@ -64,11 +66,11 @@ export default function ActivityList({ activities }: ActivityListProps) {
 
       if (error) throw error;
 
-      toast.success("活动删除成功");
-      await queryClient.invalidateQueries({ queryKey: ["extracurricular-activities"] });
+      toast.success("Activity deleted successfully");
+      await queryClient.invalidateQueries({ queryKey: ["student-activities"] });
     } catch (error) {
       console.error("Error deleting activity:", error);
-      toast.error("删除活动失败");
+      toast.error("Failed to delete activity");
     }
   };
 
