@@ -20,8 +20,8 @@ export default function Features() {
       icon: <User className="h-6 w-6 text-blue-500" />,
     },
     {
-      title: "Prepare for Success",
-      description: "Access resources and tools to help you succeed.",
+      title: "AI-Supported School Research",
+      description: "Build your AI-supported school list that includes top schools across the world.",
       icon: <Star className="h-6 w-6 text-yellow-500" />,
     },
   ];
