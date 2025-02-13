@@ -6,6 +6,16 @@ import { useUsersQuery } from "./user-management/useUsersQuery";
 import { useUserMutations } from "./user-management/useUserMutations";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface EditableUser {
   id: string;
@@ -23,6 +33,7 @@ const UserManagement = () => {
     full_name: "",
     email: "",
   });
+  const [userToDelete, setUserToDelete] = useState<{id: string; name: string | null; type: string} | null>(null);
 
   const { data: users = [], isLoading, refetch } = useUsersQuery();
   const { 
@@ -31,9 +42,18 @@ const UserManagement = () => {
     updateUserDetailsMutation 
   } = useUserMutations();
 
-  const handleDeleteUser = async (userId: string) => {
-    if (window.confirm("确定要删除这个用户吗？此操作不可撤销。")) {
-      await deleteUserMutation.mutateAsync(userId);
+  const handleDeleteUser = async (userId: string, userName: string | null, userType: string) => {
+    setUserToDelete({
+      id: userId,
+      name: userName,
+      type: userType === 'counselor' ? '辅导员' : '学生'
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (userToDelete) {
+      await deleteUserMutation.mutateAsync(userToDelete.id);
+      setUserToDelete(null);
     }
   };
 
@@ -133,6 +153,26 @@ const UserManagement = () => {
         onFormChange={handleFormChange}
         onVerifyUser={handleVerifyUser}
       />
+
+      <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除用户</AlertDialogTitle>
+            <AlertDialogDescription>
+              您确定要删除{userToDelete?.type}{userToDelete?.name ? ` ${userToDelete.name}` : ''}吗？此操作将删除该用户的所有相关数据，且不可撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              确认删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
