@@ -1,6 +1,8 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, BookOpen, CheckCircle2, ListTodo, StickyNote, Star } from "lucide-react";
-import { calculateGPA, GRADE_TO_GPA } from "./academics/GradeCalculator";
+import { calculateGPA } from "./academics/GradeCalculator";
+import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
 
 interface StatisticsCardsProps {
   courses: Array<{
@@ -14,15 +16,20 @@ interface StatisticsCardsProps {
   notes: Array<{
     date: string;
   }>;
-  todoStats: {
-    completed: number;
-    starred: number;
-    total: number;
-  };
+  studentId: string; // Add studentId prop
 }
 
-export default function StatisticsCards({ courses, activities, notes, todoStats }: StatisticsCardsProps) {
+export default function StatisticsCards({ courses, activities, notes, studentId }: StatisticsCardsProps) {
   console.log("StatisticsCards - Current notes count:", notes.length);
+  
+  // Use studentId to fetch todos
+  const { todos } = useStudentTodos(studentId);
+  
+  const todoStats = {
+    completed: todos.filter(todo => todo.completed).length,
+    starred: todos.filter(todo => todo.starred).length,
+    total: todos.length,
+  };
 
   const calculateCurrentGPA = (weighted: boolean = true) => {
     if (courses.length === 0) return "0.00";

@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -9,7 +8,6 @@ import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import { useStudentRealtime } from "@/hooks/student/useStudentRealtime";
-import { useTodos } from "@/hooks/useTodos";
 import { toast } from "sonner";
 
 export default function StudentDashboard() {
@@ -75,24 +73,13 @@ export default function StudentDashboard() {
     isLoading: isDataLoading,
   } = useStudentData(studentId);
 
-  // Use the useTodos hook to get real-time todo data
-  const { todos, isLoading: isTodosLoading } = useTodos();
-
-  if (isAuthChecking || isDataLoading || isTodosLoading) {
+  if (isAuthChecking || isDataLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
-
-  const todoStats = {
-    completed: todos.filter(todo => todo.completed).length,
-    starred: todos.filter(todo => todo.starred).length,
-    total: todos.length,
-  };
-
-  console.log("StudentDashboard - Current todo stats:", todoStats);
 
   const transformedActivities = activities.map(activity => ({
     timeCommitment: activity.time_commitment || "",
@@ -107,7 +94,7 @@ export default function StudentDashboard() {
             courses={courses}
             activities={transformedActivities}
             notes={notes}
-            todoStats={todoStats}
+            studentId={studentId || ''} // Add studentId prop
           />
         </div>
         <div className="mt-8">
