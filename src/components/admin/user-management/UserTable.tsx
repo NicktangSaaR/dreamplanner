@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { Edit2, Save, X, CheckCircle, XCircle } from "lucide-react";
+import { Edit2, Save, X, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import { UserTypeSelect } from "./UserTypeSelect";
 import { Badge } from "@/components/ui/badge";
 
@@ -27,7 +27,7 @@ interface UserTableProps {
   onEdit: (user: any) => void;
   onSave: () => void;
   onCancel: () => void;
-  onDelete: (userId: string) => void;
+  onDelete: (userId: string, userName: string | null, userType: string) => void;
   onUpdateType: (userId: string, newType: string) => void;
   onFormChange: (field: string, value: string) => void;
   onVerifyUser?: (userId: string) => void;
@@ -155,13 +155,23 @@ export const UserTable = ({
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(user)}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(user)}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(user.id, user.full_name, user.user_type)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </>
                 )}
               </div>
             </TableCell>
