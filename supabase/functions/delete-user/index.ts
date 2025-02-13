@@ -58,23 +58,31 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized - Admin access required')
     }
 
-    // Parse request body carefully
-    let body;
-    try {
-      const text = await req.text();
-      console.log('Raw request body:', text);
-      body = JSON.parse(text);
-    } catch (e) {
-      console.error('Failed to parse request body:', e);
-      throw new Error('Invalid request body');
+    // Parse request body as a stream first
+    const text = await req.text();
+    console.log('Raw request body:', text);
+    
+    if (!text) {
+      throw new Error('Empty request body');
     }
 
-    console.log('Parsed request body:', body);
+    let body;
+    try {
+      body = JSON.parse(text);
+      console.log('Parsed request body:', body);
+    } catch (e) {
+      console.error('JSON parse error:', e);
+      throw new Error('Invalid JSON in request body');
+    }
+
+    if (!body || typeof body !== 'object') {
+      throw new Error('Request body must be an object');
+    }
 
     const { userId } = body;
     if (!userId) {
       console.error('User ID is required but not provided');
-      throw new Error('User ID is required')
+      throw new Error('User ID is required');
     }
 
     console.log('Attempting to delete user:', userId);

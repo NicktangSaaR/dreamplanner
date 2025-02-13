@@ -1,11 +1,12 @@
 
 project_id = "fyxnuhqzgkzfuldqurej"
 
+[functions.delete-user]
+verify_jwt = true
+
 [functions.update-user-email]
 verify_jwt = true
 
 [functions.update-user-password]
 verify_jwt = true
 
-[functions.delete-user]
-verify_jwt = true
