@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -20,7 +21,7 @@ export default function StudentDashboard() {
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const { toast } = useToast();
 
-  // Check authentication state
+  // Check authentication state and get current user
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -45,6 +46,11 @@ export default function StudentDashboard() {
           return;
         }
 
+        // 确保 studentId 匹配当前登录用户
+        if (studentId !== session.user.id) {
+          console.log("StudentId mismatch:", { studentId, userId: session.user.id });
+        }
+
         setIsAuthChecking(false);
       } catch (error) {
         console.error("Error in auth check:", error);
@@ -58,7 +64,6 @@ export default function StudentDashboard() {
 
     checkAuth();
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) {
         console.log("No session in StudentDashboard, redirecting to login");
@@ -73,7 +78,7 @@ export default function StudentDashboard() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate, toast, studentId]);
 
   // Fetch counselor relationship
   const { data: counselorRelationship, isSuccess: isCounselorCheckComplete } = useQuery({
@@ -145,6 +150,7 @@ export default function StudentDashboard() {
                 onClick={() => navigate('/select-counselor')}
                 variant="outline"
                 size="sm"
+                className="w-full"
               >
                 选择辅导员
               </Button>
@@ -166,6 +172,7 @@ export default function StudentDashboard() {
                 onClick={() => navigate('/student-profile')}
                 variant="outline"
                 size="sm"
+                className="w-full"
               >
                 前往设置
               </Button>
