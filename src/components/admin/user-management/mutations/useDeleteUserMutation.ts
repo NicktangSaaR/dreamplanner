@@ -27,9 +27,12 @@ export const useDeleteUserMutation = () => {
         
       if (error) throw error;
 
-      // Also delete from auth.users
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-      if (authError) throw authError;
+      // Call the Edge Function to delete the user from auth.users
+      const { error: deleteError } = await supabase.functions.invoke('delete-user', {
+        body: { userId }
+      });
+
+      if (deleteError) throw deleteError;
 
       return userProfile;
     },
