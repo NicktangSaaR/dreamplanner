@@ -5,6 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.1'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 Deno.serve(async (req) => {
@@ -14,6 +15,10 @@ Deno.serve(async (req) => {
   }
 
   try {
+    if (req.method !== 'POST') {
+      throw new Error('Method not allowed');
+    }
+
     // Initialize Supabase client with service role
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -23,6 +28,7 @@ Deno.serve(async (req) => {
     // Get the JWT token from the Authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('Missing Authorization header');
       throw new Error('Missing Authorization header')
     }
 
@@ -48,12 +54,14 @@ Deno.serve(async (req) => {
     }
 
     if (!profile || profile.user_type !== 'admin') {
+      console.error('Unauthorized - not an admin:', user.id);
       throw new Error('Unauthorized - Admin access required')
     }
 
     // Get user ID from request body
     const { userId } = await req.json()
     if (!userId) {
+      console.error('User ID is required but not provided');
       throw new Error('User ID is required')
     }
 
@@ -66,8 +74,10 @@ Deno.serve(async (req) => {
       throw deleteError
     }
 
+    console.log('Successfully deleted user:', userId);
+
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, message: 'User deleted successfully' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -78,11 +88,12 @@ Deno.serve(async (req) => {
     console.error('Edge function error:', error)
     return new Response(
       JSON.stringify({
+        success: false,
         error: error.message || 'An error occurred',
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: error.status || 400,
       }
     )
   }

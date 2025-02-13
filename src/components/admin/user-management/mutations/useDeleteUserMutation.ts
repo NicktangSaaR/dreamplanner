@@ -23,15 +23,31 @@ export const useDeleteUserMutation = () => {
       }
 
       try {
+        // Get current session for authentication
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+          console.error("Session error:", sessionError);
+          throw new Error("Authentication required");
+        }
+
         // Call the Edge Function to delete the user from auth.users
-        const { error: deleteError } = await supabase.functions.invoke('delete-user', {
-          body: { userId }
-        });
+        const { data, error: deleteError } = await supabase.functions.invoke(
+          'delete-user',
+          {
+            body: { userId },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            }
+          }
+        );
 
         if (deleteError) {
           console.error("Edge function error:", deleteError);
           throw deleteError;
         }
+
+        console.log("Edge function response:", data);
 
         // If edge function succeeds, delete from profiles table
         const { error: profileDeleteError } = await supabase
@@ -45,9 +61,9 @@ export const useDeleteUserMutation = () => {
         }
 
         return userProfile;
-      } catch (error) {
+      } catch (error: any) {
         console.error("Delete operation failed:", error);
-        throw error;
+        throw new Error(error?.message || "删除用户失败");
       }
     },
     onSuccess: (data) => {
@@ -55,9 +71,9 @@ export const useDeleteUserMutation = () => {
       const userType = data.user_type === 'counselor' ? '辅导员' : '学生';
       toast.success(`${userType}${data.full_name ? ` ${data.full_name}` : ''} 已成功删除`);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error("Error deleting user:", error);
-      toast.error("删除用户失败");
+      toast.error(error.message || "删除用户失败");
     },
   });
 };
