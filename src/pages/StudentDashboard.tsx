@@ -63,9 +63,10 @@ export default function StudentDashboard() {
   }, [navigate]);
 
   // Fetch counselor relationship
-  const { data: counselorRelationship } = useQuery({
+  const { data: counselorRelationship, isSuccess: isCounselorCheckComplete } = useQuery({
     queryKey: ["counselor-relationship", studentId],
     queryFn: async () => {
+      console.log("Fetching counselor relationship for student:", studentId);
       const { data, error } = await supabase
         .from("counselor_student_relationships")
         .select(`
@@ -81,12 +82,11 @@ export default function StudentDashboard() {
         console.error("Error fetching counselor relationship:", error);
         return null;
       }
+      console.log("Counselor relationship data:", data);
       return data;
     },
     enabled: !!studentId
   });
-
-  console.log("StudentDashboard - Student ID:", studentId);
 
   // Set up real-time subscriptions
   useStudentRealtime(studentId, queryClient);
@@ -102,7 +102,15 @@ export default function StudentDashboard() {
 
   // Check profile completeness and show persistent toast
   useEffect(() => {
-    if (profile) {
+    // 仅在所有数据都加载完成后进行检查
+    if (!isDataLoading && isCounselorCheckComplete && profile) {
+      console.log("Checking profile completeness:", {
+        profile,
+        counselorRelationship,
+        isDataLoading,
+        isCounselorCheckComplete
+      });
+
       const profileFields = {
         '学校信息': profile.school,
         '年级信息': profile.grade,
@@ -114,6 +122,7 @@ export default function StudentDashboard() {
 
       // 分开检查辅导员关系
       if (!counselorRelationship) {
+        console.log("No counselor relationship found, showing warning");
         toast.warning(
           <div className="flex flex-col gap-4">
             <p>您还未关联辅导员，请先选择或添加辅导员</p>
@@ -128,12 +137,14 @@ export default function StudentDashboard() {
           {
             duration: 0,
             position: "top-center",
+            id: "counselor-warning" // 添加唯一ID防止重复显示
           }
         );
       }
 
       // 如果有其他缺失的个人信息，显示单独的提示
       if (missingProfileFields.length > 0) {
+        console.log("Missing profile fields:", missingProfileFields);
         toast.warning(
           <div className="flex flex-col gap-4">
             <p>请完善以下必要信息：{missingProfileFields.join('、')}</p>
@@ -148,11 +159,12 @@ export default function StudentDashboard() {
           {
             duration: 0,
             position: "top-center",
+            id: "profile-warning" // 添加唯一ID防止重复显示
           }
         );
       }
     }
-  }, [profile, counselorRelationship, navigate]);
+  }, [profile, counselorRelationship, isDataLoading, isCounselorCheckComplete, navigate]);
 
   if (isAuthChecking || isDataLoading) {
     return (
