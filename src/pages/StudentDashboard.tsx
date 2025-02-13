@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -9,12 +10,15 @@ import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import { useStudentRealtime } from "@/hooks/student/useStudentRealtime";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
 
 export default function StudentDashboard() {
   const { studentId } = useParams();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [showProfileAlert, setShowProfileAlert] = useState(false);
 
   // Check authentication state
   useEffect(() => {
@@ -59,6 +63,30 @@ export default function StudentDashboard() {
     };
   }, [navigate]);
 
+  // Fetch counselor relationship
+  const { data: counselorRelationship } = useQuery({
+    queryKey: ["counselor-relationship", studentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("counselor_student_relationships")
+        .select(`
+          counselor_id,
+          counselor:profiles!counselor_student_relationships_counselor_profiles_fkey(
+            full_name
+          )
+        `)
+        .eq("student_id", studentId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching counselor relationship:", error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !!studentId
+  });
+
   console.log("StudentDashboard - Student ID:", studentId);
 
   // Set up real-time subscriptions
@@ -72,6 +100,33 @@ export default function StudentDashboard() {
     notes,
     isLoading: isDataLoading,
   } = useStudentData(studentId);
+
+  // Check profile completeness
+  useEffect(() => {
+    if (profile) {
+      const isProfileIncomplete = !profile.school || !profile.grade || !counselorRelationship;
+      setShowProfileAlert(isProfileIncomplete);
+      
+      if (isProfileIncomplete) {
+        toast.warning(
+          <div className="flex flex-col gap-4">
+            <p>请完善您的个人信息（学校、年级和辅导员信息）</p>
+            <Button 
+              onClick={() => navigate(`/student-profile`)}
+              variant="outline"
+              size="sm"
+            >
+              前往设置
+            </Button>
+          </div>,
+          {
+            duration: 0, // Toast will stay until dismissed
+            position: "top-center",
+          }
+        );
+      }
+    }
+  }, [profile, counselorRelationship, navigate]);
 
   if (isAuthChecking || isDataLoading) {
     return (
@@ -94,7 +149,7 @@ export default function StudentDashboard() {
             courses={courses}
             activities={transformedActivities}
             notes={notes}
-            studentId={studentId || ''} // Add studentId prop
+            studentId={studentId || ''} 
           />
         </div>
         <div className="mt-8">
