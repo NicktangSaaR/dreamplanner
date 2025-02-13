@@ -1,3 +1,4 @@
+
 import { Profile } from "@/hooks/useProfile";
 import StatisticsCards from "../StatisticsCards";
 import StudentProfile from "../student-summary/StudentProfile";
@@ -28,12 +29,6 @@ export default function StudentViewContent({
 }: StudentViewContentProps) {
   const queryClient = useQueryClient();
 
-  const todoStats = {
-    completed: todos.filter(todo => todo.completed).length,
-    starred: todos.filter(todo => todo.starred).length,
-    total: todos.length,
-  };
-
   const transformedActivities = activities.map(activity => ({
     timeCommitment: activity.time_commitment || "",
   }));
@@ -50,7 +45,7 @@ export default function StudentViewContent({
         courses={courses}
         activities={transformedActivities}
         notes={notes}
-        todoStats={todoStats}
+        studentId={studentId}
       />
 
       <AcademicSection 

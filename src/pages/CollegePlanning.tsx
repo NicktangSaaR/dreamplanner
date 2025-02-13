@@ -1,9 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import DashboardTabs from "@/components/college-planning/DashboardTabs";
-import { useTodos } from "@/hooks/useTodos";
 import { useProfile } from "@/hooks/useProfile";
 import { Course } from "@/components/college-planning/types/course";
 
@@ -27,7 +27,6 @@ export default function CollegePlanning() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [activities, setActivities] = useState<ActivityType[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
-  const { todos } = useTodos();
   const { profile } = useProfile();
 
   useEffect(() => {
@@ -35,13 +34,6 @@ export default function CollegePlanning() {
       navigate('/counselor-dashboard');
     }
   }, [profile, navigate]);
-
-  const getTodoStats = () => {
-    const completed = todos.filter(todo => todo.completed).length;
-    const starred = todos.filter(todo => todo.starred).length;
-    const total = todos.length;
-    return { completed, starred, total };
-  };
 
   const handleCoursesChange = (newCourses: Course[]) => {
     setCourses(newCourses);
@@ -56,7 +48,7 @@ export default function CollegePlanning() {
             courses={courses}
             activities={activities}
             notes={notes}
-            todoStats={getTodoStats()}
+            studentId={profile?.id || ''}
           />
         </div>
         <div className="mt-8">

@@ -1,3 +1,4 @@
+
 import { useProfile } from "@/hooks/useProfile";
 import { useCounselorStudents } from "@/hooks/useCounselorStudents";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,11 +43,7 @@ export default function CounselorView() {
         courses={[]}
         activities={[]}
         notes={[]}
-        todoStats={{
-          completed: 0,
-          starred: 0,
-          total: 0
-        }}
+        studentId={profile.id}
       />
 
       {isLoading ? (
