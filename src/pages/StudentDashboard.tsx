@@ -18,7 +18,6 @@ export default function StudentDashboard() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [isAuthChecking, setIsAuthChecking] = useState(true);
-  const [showProfileAlert, setShowProfileAlert] = useState(false);
 
   // Check authentication state
   useEffect(() => {
@@ -101,18 +100,25 @@ export default function StudentDashboard() {
     isLoading: isDataLoading,
   } = useStudentData(studentId);
 
-  // Check profile completeness
+  // Check profile completeness and show persistent toast
   useEffect(() => {
     if (profile) {
-      const isProfileIncomplete = !profile.school || !profile.grade || !counselorRelationship;
-      setShowProfileAlert(isProfileIncomplete);
-      
-      if (isProfileIncomplete) {
+      const requiredFields = {
+        '学校信息': profile.school,
+        '年级信息': profile.grade,
+        '辅导员': counselorRelationship
+      };
+
+      const missingFields = Object.entries(requiredFields)
+        .filter(([_, value]) => !value)
+        .map(([field]) => field);
+
+      if (missingFields.length > 0) {
         toast.warning(
           <div className="flex flex-col gap-4">
-            <p>请完善您的个人信息（学校、年级和辅导员信息）</p>
+            <p>请完善以下必要信息：{missingFields.join('、')}</p>
             <Button 
-              onClick={() => navigate(`/student-profile`)}
+              onClick={() => navigate('/student-profile')}
               variant="outline"
               size="sm"
             >
