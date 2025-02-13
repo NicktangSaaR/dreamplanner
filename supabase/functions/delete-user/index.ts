@@ -1,4 +1,5 @@
 
+// @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.1'
 
 const corsHeaders = {
@@ -7,34 +8,32 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    // Initialize Supabase client with service role
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        }
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const authClient = supabase.auth.admin;
-
-    // Get the token from the request header
+    // Get the JWT token from the Authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      throw new Error('No authorization header')
+      throw new Error('Missing Authorization header')
     }
 
-    // Verify the user making the request is an admin
     const token = authHeader.replace('Bearer ', '')
+    
+    // Verify the user and check if they're an admin
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
-    if (userError || !user) throw new Error('Invalid token')
+    if (userError || !user) {
+      console.error('User verification error:', userError)
+      throw new Error('Invalid token or user not found')
+    }
 
     // Check if user is admin
     const { data: profile, error: profileError } = await supabase
@@ -43,27 +42,48 @@ Deno.serve(async (req) => {
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile || profile.user_type !== 'admin') {
+    if (profileError) {
+      console.error('Profile fetch error:', profileError)
+      throw new Error('Error fetching user profile')
+    }
+
+    if (!profile || profile.user_type !== 'admin') {
       throw new Error('Unauthorized - Admin access required')
     }
 
-    // Get the user ID to delete from the request body
+    // Get user ID from request body
     const { userId } = await req.json()
-    if (!userId) throw new Error('User ID is required')
+    if (!userId) {
+      throw new Error('User ID is required')
+    }
 
-    // Delete the user
-    const { error: deleteError } = await authClient.deleteUser(userId)
-    if (deleteError) throw deleteError
+    console.log('Attempting to delete user:', userId)
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    })
+    // Delete the user using admin auth client
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(userId)
+    if (deleteError) {
+      console.error('Delete user error:', deleteError)
+      throw deleteError
+    }
+
+    return new Response(
+      JSON.stringify({ success: true }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    )
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    })
+    console.error('Edge function error:', error)
+    return new Response(
+      JSON.stringify({
+        error: error.message || 'An error occurred',
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      }
+    )
   }
 })

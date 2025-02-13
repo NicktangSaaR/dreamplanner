@@ -11,30 +11,44 @@ export const useDeleteUserMutation = () => {
       console.log("Deleting user:", userId);
       
       // First, get the user type to customize the confirmation message
-      const { data: userProfile } = await supabase
+      const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
         .select('user_type, full_name')
         .eq('id', userId)
         .single();
         
-      if (!userProfile) throw new Error("User not found");
-      
-      // Delete from profiles table (this will cascade to related tables)
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-        
-      if (error) throw error;
+      if (profileError || !userProfile) {
+        console.error("Error fetching user profile:", profileError);
+        throw new Error("User not found");
+      }
 
-      // Call the Edge Function to delete the user from auth.users
-      const { error: deleteError } = await supabase.functions.invoke('delete-user', {
-        body: { userId }
-      });
+      try {
+        // Call the Edge Function to delete the user from auth.users
+        const { error: deleteError } = await supabase.functions.invoke('delete-user', {
+          body: { userId }
+        });
 
-      if (deleteError) throw deleteError;
+        if (deleteError) {
+          console.error("Edge function error:", deleteError);
+          throw deleteError;
+        }
 
-      return userProfile;
+        // If edge function succeeds, delete from profiles table
+        const { error: profileDeleteError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', userId);
+          
+        if (profileDeleteError) {
+          console.error("Error deleting profile:", profileDeleteError);
+          throw profileDeleteError;
+        }
+
+        return userProfile;
+      } catch (error) {
+        console.error("Delete operation failed:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
