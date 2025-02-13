@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -19,7 +20,6 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const { toast } = useToast();
-  const [toastsDisplayed, setToastsDisplayed] = useState(false);
 
   // Check authentication state and get current user
   useEffect(() => {
@@ -46,11 +46,7 @@ export default function StudentDashboard() {
           return;
         }
 
-        // 确保 studentId 匹配当前登录用户
-        if (studentId !== session.user.id) {
-          console.log("StudentId mismatch:", { studentId, userId: session.user.id });
-        }
-
+        console.log("Current session user:", session.user.id);
         setIsAuthChecking(false);
       } catch (error) {
         console.error("Error in auth check:", error);
@@ -78,7 +74,7 @@ export default function StudentDashboard() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast, studentId]);
+  }, [navigate, toast]);
 
   // Fetch counselor relationship
   const { data: counselorRelationship, isSuccess: isCounselorCheckComplete } = useQuery({
@@ -103,7 +99,7 @@ export default function StudentDashboard() {
       console.log("Counselor relationship data:", data);
       return data;
     },
-    enabled: !!studentId
+    enabled: !!studentId,
   });
 
   // Set up real-time subscriptions
@@ -118,78 +114,64 @@ export default function StudentDashboard() {
     isLoading: isDataLoading,
   } = useStudentData(studentId);
 
-  // Check profile completeness and show persistent toast
+  // Check profile completeness and show persistent toast immediately after profile loads
   useEffect(() => {
-    if (!isDataLoading && isCounselorCheckComplete && profile && !toastsDisplayed) {
-      console.log("Checking profile completeness:", {
-        profile,
-        counselorRelationship,
-        isDataLoading,
-        isCounselorCheckComplete
-      });
+    console.log("Profile completion check effect running", {
+      isDataLoading,
+      isCounselorCheckComplete,
+      profile,
+      counselorRelationship
+    });
 
-      const profileFields = {
-        '学校信息': profile.school,
-        '年级信息': profile.grade,
+    if (!isDataLoading && isCounselorCheckComplete && profile) {
+      const checkAndShowToasts = () => {
+        // Check for empty school field
+        if (!profile.school || profile.school.trim() === '') {
+          console.log("School information missing, showing toast");
+          toast({
+            title: "提示",
+            description: (
+              <div className="flex flex-col gap-4">
+                <p>请完善学校信息</p>
+                <Button 
+                  onClick={() => navigate('/student-profile')}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  前往设置
+                </Button>
+              </div>
+            ),
+          });
+        }
+
+        // Check for missing counselor relationship
+        if (!counselorRelationship) {
+          console.log("No counselor relationship found, showing toast");
+          toast({
+            title: "提示",
+            description: (
+              <div className="flex flex-col gap-4">
+                <p>您还未关联辅导员，请先选择或添加辅导员</p>
+                <Button 
+                  onClick={() => navigate('/select-counselor')}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  选择辅导员
+                </Button>
+              </div>
+            ),
+          });
+        }
       };
 
-      const missingProfileFields = Object.entries(profileFields)
-        .filter(([_, value]) => !value)
-        .map(([field]) => field);
-
-      let hasShownToast = false;
-
-      // 分开检查辅导员关系
-      if (!counselorRelationship) {
-        console.log("No counselor relationship found, showing warning");
-        hasShownToast = true;
-        toast({
-          title: "提示",
-          description: (
-            <div className="flex flex-col gap-4">
-              <p>您还未关联辅导员，请先选择或添加辅导员</p>
-              <Button 
-                onClick={() => navigate('/select-counselor')}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                选择辅导员
-              </Button>
-            </div>
-          ),
-          duration: 0,
-        });
-      }
-
-      // 如果有其他缺失的个人信息，显示单独的提示
-      if (missingProfileFields.length > 0) {
-        console.log("Missing profile fields:", missingProfileFields);
-        hasShownToast = true;
-        toast({
-          title: "提示",
-          description: (
-            <div className="flex flex-col gap-4">
-              <p>请完善以下必要信息：{missingProfileFields.join('、')}</p>
-              <Button 
-                onClick={() => navigate('/student-profile')}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                前往设置
-              </Button>
-            </div>
-          ),
-          duration: 0,
-        });
-      }
-
-      if (hasShownToast) {
-        setToastsDisplayed(true);
-      }
+      // Execute checks immediately
+      checkAndShowToasts();
     }
-  }, [profile, counselorRelationship, isDataLoading, isCounselorCheckComplete, navigate, toast, toastsDisplayed]);
+  }, [profile, counselorRelationship, isDataLoading, isCounselorCheckComplete, navigate, toast]);
 
   if (isAuthChecking || isDataLoading) {
     return (
