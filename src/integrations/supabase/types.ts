@@ -774,6 +774,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_counselor_for_student: {
+        Args: {
+          counselor_id: string
+          student_id: string
+        }
+        Returns: boolean
+      }
       update_user_credentials: {
         Args: {
           admin_id: string
