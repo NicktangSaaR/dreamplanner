@@ -155,12 +155,12 @@ export default function StudentDashboard() {
           <div className="flex flex-col gap-4">
             <p>您还未关联辅导员，这将影响您获取专业的指导</p>
             <Button 
-              onClick={() => navigate('/select-counselor')}
+              onClick={() => navigate('/student-profile')}
               variant="secondary"
               size="sm"
               className="w-full bg-white hover:bg-gray-100"
             >
-              选择辅导员
+              前往个人主页选择辅导员
             </Button>
           </div>
         ),
