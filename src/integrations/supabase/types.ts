@@ -744,6 +744,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_student_data: {
+        Args: {
+          viewer_id: string
+          student_id: string
+        }
+        Returns: boolean
+      }
       check_email_not_registered: {
         Args: {
           email: string
