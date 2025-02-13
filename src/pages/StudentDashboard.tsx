@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -9,7 +8,7 @@ import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import { useStudentRealtime } from "@/hooks/student/useStudentRealtime";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -20,6 +19,7 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const { toast } = useToast();
+  const [toastsDisplayed, setToastsDisplayed] = useState(false);
 
   // Check authentication state and get current user
   useEffect(() => {
@@ -120,8 +120,7 @@ export default function StudentDashboard() {
 
   // Check profile completeness and show persistent toast
   useEffect(() => {
-    // 仅在所有数据都加载完成后进行检查
-    if (!isDataLoading && isCounselorCheckComplete && profile) {
+    if (!isDataLoading && isCounselorCheckComplete && profile && !toastsDisplayed) {
       console.log("Checking profile completeness:", {
         profile,
         counselorRelationship,
@@ -138,9 +137,12 @@ export default function StudentDashboard() {
         .filter(([_, value]) => !value)
         .map(([field]) => field);
 
+      let hasShownToast = false;
+
       // 分开检查辅导员关系
       if (!counselorRelationship) {
         console.log("No counselor relationship found, showing warning");
+        hasShownToast = true;
         toast({
           title: "提示",
           description: (
@@ -163,6 +165,7 @@ export default function StudentDashboard() {
       // 如果有其他缺失的个人信息，显示单独的提示
       if (missingProfileFields.length > 0) {
         console.log("Missing profile fields:", missingProfileFields);
+        hasShownToast = true;
         toast({
           title: "提示",
           description: (
@@ -181,8 +184,12 @@ export default function StudentDashboard() {
           duration: 0,
         });
       }
+
+      if (hasShownToast) {
+        setToastsDisplayed(true);
+      }
     }
-  }, [profile, counselorRelationship, isDataLoading, isCounselorCheckComplete, navigate, toast]);
+  }, [profile, counselorRelationship, isDataLoading, isCounselorCheckComplete, navigate, toast, toastsDisplayed]);
 
   if (isAuthChecking || isDataLoading) {
     return (
