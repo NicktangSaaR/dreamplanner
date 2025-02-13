@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,9 +12,25 @@ export function useStudentTodos(studentId: string | undefined) {
   const { data: todos = [] } = useQuery({
     queryKey: ["student-todos", studentId],
     queryFn: async () => {
-      if (!studentId) return [];
+      if (!studentId) {
+        console.log("No student ID provided");
+        return [];
+      }
       
       console.log("Fetching todos for student:", studentId);
+      
+      // First get the student's profile to log the name
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", studentId)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      } else {
+        console.log("Student name:", profile?.full_name);
+      }
       
       const { data, error } = await supabase
         .from("todos")
@@ -27,7 +44,8 @@ export function useStudentTodos(studentId: string | undefined) {
         return [];
       }
 
-      console.log("Fetched todos:", data);
+      console.log("Fetched todos for student:", studentId, "Count:", data?.length);
+      console.log("Todos data:", data);
       return data as Todo[];
     },
     enabled: !!studentId
