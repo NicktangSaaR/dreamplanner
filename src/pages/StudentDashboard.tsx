@@ -12,6 +12,7 @@ import { useStudentRealtime } from "@/hooks/student/useStudentRealtime";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function StudentDashboard() {
   const { studentId } = useParams();
@@ -179,32 +180,35 @@ export default function StudentDashboard() {
   }));
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-8">
-      <div className="max-w-7xl mx-auto">
-        <DashboardHeader />
-        <div className="mt-8">
-          <StatisticsCards 
-            courses={courses}
-            activities={transformedActivities}
-            notes={notes}
-            studentId={studentId || ''} 
-          />
-        </div>
-        <div className="mt-8">
-          <DashboardTabs
-            courses={courses}
-            onCoursesChange={(newCourses) => {
-              queryClient.setQueryData(["student-courses", studentId], newCourses);
-            }}
-            onActivitiesChange={(newActivities) => {
-              queryClient.setQueryData(["student-activities", studentId], newActivities);
-            }}
-            onNotesChange={(newNotes) => {
-              queryClient.setQueryData(["student-notes", studentId], newNotes);
-            }}
-          />
+    <>
+      <Toaster />
+      <div className="container mx-auto px-4 py-6 space-y-8">
+        <div className="max-w-7xl mx-auto">
+          <DashboardHeader />
+          <div className="mt-8">
+            <StatisticsCards 
+              courses={courses}
+              activities={transformedActivities}
+              notes={notes}
+              studentId={studentId || ''} 
+            />
+          </div>
+          <div className="mt-8">
+            <DashboardTabs
+              courses={courses}
+              onCoursesChange={(newCourses) => {
+                queryClient.setQueryData(["student-courses", studentId], newCourses);
+              }}
+              onActivitiesChange={(newActivities) => {
+                queryClient.setQueryData(["student-activities", studentId], newActivities);
+              }}
+              onNotesChange={(newNotes) => {
+                queryClient.setQueryData(["student-notes", studentId], newNotes);
+              }}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
