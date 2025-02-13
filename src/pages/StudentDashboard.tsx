@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -9,16 +8,17 @@ import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import { useStudentRealtime } from "@/hooks/student/useStudentRealtime";
-import { toast } from "sonner";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function StudentDashboard() {
   const { studentId } = useParams();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const { toast } = useToast();
 
   // Check authentication state
   useEffect(() => {
@@ -27,14 +27,20 @@ export default function StudentDashboard() {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error("Error checking session:", error);
-          toast.error("会话检查失败");
+          toast({
+            title: "Error",
+            description: "会话检查失败",
+          });
           navigate('/login');
           return;
         }
 
         if (!session) {
           console.log("No active session, redirecting to login");
-          toast.error("请先登录");
+          toast({
+            title: "Error",
+            description: "请先登录",
+          });
           navigate('/login');
           return;
         }
@@ -42,7 +48,10 @@ export default function StudentDashboard() {
         setIsAuthChecking(false);
       } catch (error) {
         console.error("Error in auth check:", error);
-        toast.error("认证检查失败");
+        toast({
+          title: "Error",
+          description: "认证检查失败",
+        });
         navigate('/login');
       }
     };
@@ -53,7 +62,10 @@ export default function StudentDashboard() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) {
         console.log("No session in StudentDashboard, redirecting to login");
-        toast.error("会话已过期，请重新登录");
+        toast({
+          title: "Error",
+          description: "会话已过期，请重新登录",
+        });
         navigate('/login');
       }
     });
@@ -61,7 +73,7 @@ export default function StudentDashboard() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, toast]);
 
   // Fetch counselor relationship
   const { data: counselorRelationship, isSuccess: isCounselorCheckComplete } = useQuery({
@@ -124,48 +136,46 @@ export default function StudentDashboard() {
       // 分开检查辅导员关系
       if (!counselorRelationship) {
         console.log("No counselor relationship found, showing warning");
-        toast.warning(
-          <div className="flex flex-col gap-4">
-            <p>您还未关联辅导员，请先选择或添加辅导员</p>
-            <Button 
-              onClick={() => navigate('/select-counselor')}
-              variant="outline"
-              size="sm"
-            >
-              选择辅导员
-            </Button>
-          </div>,
-          {
-            duration: 0,
-            position: "top-center",
-            id: "counselor-warning" // 添加唯一ID防止重复显示
-          }
-        );
+        toast({
+          title: "提示",
+          description: (
+            <div className="flex flex-col gap-4">
+              <p>您还未关联辅导员，请先选择或添加辅导员</p>
+              <Button 
+                onClick={() => navigate('/select-counselor')}
+                variant="outline"
+                size="sm"
+              >
+                选择辅导员
+              </Button>
+            </div>
+          ),
+          duration: 0,
+        });
       }
 
       // 如果有其他缺失的个人信息，显示单独的提示
       if (missingProfileFields.length > 0) {
         console.log("Missing profile fields:", missingProfileFields);
-        toast.warning(
-          <div className="flex flex-col gap-4">
-            <p>请完善以下必要信息：{missingProfileFields.join('、')}</p>
-            <Button 
-              onClick={() => navigate('/student-profile')}
-              variant="outline"
-              size="sm"
-            >
-              前往设置
-            </Button>
-          </div>,
-          {
-            duration: 0,
-            position: "top-center",
-            id: "profile-warning" // 添加唯一ID防止重复显示
-          }
-        );
+        toast({
+          title: "提示",
+          description: (
+            <div className="flex flex-col gap-4">
+              <p>请完善以下必要信息：{missingProfileFields.join('、')}</p>
+              <Button 
+                onClick={() => navigate('/student-profile')}
+                variant="outline"
+                size="sm"
+              >
+                前往设置
+              </Button>
+            </div>
+          ),
+          duration: 0,
+        });
       }
     }
-  }, [profile, counselorRelationship, isDataLoading, isCounselorCheckComplete, navigate]);
+  }, [profile, counselorRelationship, isDataLoading, isCounselorCheckComplete, navigate, toast]);
 
   if (isAuthChecking || isDataLoading) {
     return (
