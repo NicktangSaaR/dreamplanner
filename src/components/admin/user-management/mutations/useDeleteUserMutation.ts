@@ -30,11 +30,13 @@ export const useDeleteUserMutation = () => {
           throw new Error("Authentication required");
         }
 
+        console.log("Sending delete request with body:", { userId });
+        
         // Call the Edge Function to delete the user from auth.users
         const { data, error: deleteError } = await supabase.functions.invoke(
           'delete-user',
           {
-            body: JSON.stringify({ userId }), // Explicitly stringify the body
+            body: { userId }, // supabase.functions.invoke will handle stringification
             headers: {
               Authorization: `Bearer ${session.access_token}`,
               'Content-Type': 'application/json',

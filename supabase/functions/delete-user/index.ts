@@ -61,11 +61,15 @@ Deno.serve(async (req) => {
     // Parse request body carefully
     let body;
     try {
-      body = await req.json();
+      const text = await req.text();
+      console.log('Raw request body:', text);
+      body = JSON.parse(text);
     } catch (e) {
       console.error('Failed to parse request body:', e);
       throw new Error('Invalid request body');
     }
+
+    console.log('Parsed request body:', body);
 
     const { userId } = body;
     if (!userId) {
