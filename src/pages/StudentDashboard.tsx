@@ -114,64 +114,60 @@ export default function StudentDashboard() {
     isLoading: isDataLoading,
   } = useStudentData(studentId);
 
-  // Check profile completeness and show persistent toast immediately after profile loads
+  // Show toasts for incomplete profile information
   useEffect(() => {
-    console.log("Profile completion check effect running", {
-      isDataLoading,
-      isCounselorCheckComplete,
-      profile,
-      counselorRelationship
-    });
-
-    if (!isDataLoading && isCounselorCheckComplete && profile) {
-      const checkAndShowToasts = () => {
-        // Check for empty school field
+    if (!isDataLoading && profile) {
+      const showProfileWarnings = () => {
+        // 检查学校信息是否为空
         if (!profile.school || profile.school.trim() === '') {
-          console.log("School information missing, showing toast");
           toast({
-            title: "提示",
+            variant: "destructive",
+            title: "信息未完善",
             description: (
               <div className="flex flex-col gap-4">
-                <p>请完善学校信息</p>
+                <p>请完善学校信息，这对于您的规划非常重要</p>
                 <Button 
                   onClick={() => navigate('/student-profile')}
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
-                  className="w-full"
+                  className="w-full bg-white hover:bg-gray-100"
                 >
-                  前往设置
+                  前往完善信息
                 </Button>
               </div>
             ),
-          });
-        }
-
-        // Check for missing counselor relationship
-        if (!counselorRelationship) {
-          console.log("No counselor relationship found, showing toast");
-          toast({
-            title: "提示",
-            description: (
-              <div className="flex flex-col gap-4">
-                <p>您还未关联辅导员，请先选择或添加辅导员</p>
-                <Button 
-                  onClick={() => navigate('/select-counselor')}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                >
-                  选择辅导员
-                </Button>
-              </div>
-            ),
+            duration: null,
           });
         }
       };
 
-      // Execute checks immediately
-      checkAndShowToasts();
+      showProfileWarnings();
     }
-  }, [profile, counselorRelationship, isDataLoading, isCounselorCheckComplete, navigate, toast]);
+  }, [profile, isDataLoading, navigate, toast]);
+
+  // Show toast for missing counselor relationship
+  useEffect(() => {
+    if (isCounselorCheckComplete && !counselorRelationship) {
+      toast({
+        variant: "destructive",
+        title: "未关联辅导员",
+        description: (
+          <div className="flex flex-col gap-4">
+            <p>您还未关联辅导员，这将影响您获取专业的指导</p>
+            <Button 
+              onClick={() => navigate('/select-counselor')}
+              variant="secondary"
+              size="sm"
+              className="w-full bg-white hover:bg-gray-100"
+            >
+              选择辅导员
+            </Button>
+          </div>
+        ),
+        duration: null,
+      });
+    }
+  }, [counselorRelationship, isCounselorCheckComplete, navigate, toast]);
 
   if (isAuthChecking || isDataLoading) {
     return (
