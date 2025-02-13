@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -61,8 +60,12 @@ export default function StudentDashboard() {
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        console.log("No session in StudentDashboard, redirecting to login");
+      if (event === 'SIGNED_OUT') {
+        console.log("User signed out, redirecting to login");
+        queryClient.clear();
+        navigate('/login');
+      } else if (!session && event !== 'SIGNED_OUT') {
+        console.log("Session expired, redirecting to login");
         toast({
           title: "Error",
           description: "会话已过期，请重新登录",
@@ -74,7 +77,7 @@ export default function StudentDashboard() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate, toast, queryClient]);
 
   // Fetch counselor relationship
   const { data: counselorRelationship, isSuccess: isCounselorCheckComplete } = useQuery({
