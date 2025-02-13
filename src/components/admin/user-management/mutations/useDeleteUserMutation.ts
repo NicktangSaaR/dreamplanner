@@ -34,7 +34,7 @@ export const useDeleteUserMutation = () => {
         const { data, error: deleteError } = await supabase.functions.invoke(
           'delete-user',
           {
-            body: { userId },
+            body: JSON.stringify({ userId }), // Explicitly stringify the body
             headers: {
               Authorization: `Bearer ${session.access_token}`,
               'Content-Type': 'application/json',

@@ -58,14 +58,22 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized - Admin access required')
     }
 
-    // Get user ID from request body
-    const { userId } = await req.json()
+    // Parse request body carefully
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.error('Failed to parse request body:', e);
+      throw new Error('Invalid request body');
+    }
+
+    const { userId } = body;
     if (!userId) {
       console.error('User ID is required but not provided');
       throw new Error('User ID is required')
     }
 
-    console.log('Attempting to delete user:', userId)
+    console.log('Attempting to delete user:', userId);
 
     // Delete the user using admin auth client
     const { error: deleteError } = await supabase.auth.admin.deleteUser(userId)
@@ -77,7 +85,10 @@ Deno.serve(async (req) => {
     console.log('Successfully deleted user:', userId);
 
     return new Response(
-      JSON.stringify({ success: true, message: 'User deleted successfully' }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'User deleted successfully' 
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
