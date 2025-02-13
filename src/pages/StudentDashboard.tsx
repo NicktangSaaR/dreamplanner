@@ -103,20 +103,40 @@ export default function StudentDashboard() {
   // Check profile completeness and show persistent toast
   useEffect(() => {
     if (profile) {
-      const requiredFields = {
+      const profileFields = {
         '学校信息': profile.school,
         '年级信息': profile.grade,
-        '辅导员': counselorRelationship
       };
 
-      const missingFields = Object.entries(requiredFields)
+      const missingProfileFields = Object.entries(profileFields)
         .filter(([_, value]) => !value)
         .map(([field]) => field);
 
-      if (missingFields.length > 0) {
+      // 分开检查辅导员关系
+      if (!counselorRelationship) {
         toast.warning(
           <div className="flex flex-col gap-4">
-            <p>请完善以下必要信息：{missingFields.join('、')}</p>
+            <p>您还未关联辅导员，请先选择或添加辅导员</p>
+            <Button 
+              onClick={() => navigate('/select-counselor')}
+              variant="outline"
+              size="sm"
+            >
+              选择辅导员
+            </Button>
+          </div>,
+          {
+            duration: 0,
+            position: "top-center",
+          }
+        );
+      }
+
+      // 如果有其他缺失的个人信息，显示单独的提示
+      if (missingProfileFields.length > 0) {
+        toast.warning(
+          <div className="flex flex-col gap-4">
+            <p>请完善以下必要信息：{missingProfileFields.join('、')}</p>
             <Button 
               onClick={() => navigate('/student-profile')}
               variant="outline"
@@ -126,7 +146,7 @@ export default function StudentDashboard() {
             </Button>
           </div>,
           {
-            duration: 0, // Toast will stay until dismissed
+            duration: 0,
             position: "top-center",
           }
         );
