@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -12,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { AuthError, Session, User } from '@supabase/supabase-js';
 
 export default function StudentDashboard() {
   const { studentId } = useParams();
@@ -37,10 +39,6 @@ export default function StudentDashboard() {
 
         if (!session) {
           console.log("No active session, redirecting to login");
-          toast({
-            title: "Error",
-            description: "请先登录",
-          });
           navigate('/login');
           return;
         }
@@ -59,18 +57,23 @@ export default function StudentDashboard() {
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
-        console.log("User signed out, redirecting to login");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
+      
+      if (!session) {
         queryClient.clear();
-        navigate('/login');
-      } else if (!session && event !== 'SIGNED_OUT') {
-        console.log("Session expired, redirecting to login");
-        toast({
-          title: "Error",
-          description: "会话已过期，请重新登录",
-        });
-        navigate('/login');
+        
+        if (event === 'SIGNED_OUT') {
+          console.log("User signed out, redirecting to login");
+          navigate('/login');
+        } else {
+          console.log("Session expired, redirecting to login");
+          toast({
+            title: "Error",
+            description: "会话已过期，请重新登录",
+          });
+          navigate('/login');
+        }
       }
     });
 
