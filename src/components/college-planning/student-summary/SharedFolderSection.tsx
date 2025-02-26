@@ -24,7 +24,7 @@ export default function SharedFolderSection({ studentId }: { studentId: string }
     checkAccess();
   }, [studentId]);
 
-  const { data: sharedFolder } = useQuery({
+  const { data: sharedFolder, isLoading } = useQuery({
     queryKey: ["shared-folder", studentId],
     queryFn: async () => {
       if (!studentId) return null;
@@ -35,7 +35,10 @@ export default function SharedFolderSection({ studentId }: { studentId: string }
         .eq("created_by", studentId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching shared folder:", error);
+        return null;
+      }
       return data;
     },
   });
@@ -44,14 +47,21 @@ export default function SharedFolderSection({ studentId }: { studentId: string }
     try {
       if (!studentId) throw new Error("No student ID provided");
 
+      // Check if folder already exists
+      const existingFolder = sharedFolder?.id;
+      
       const { error } = await supabase
         .from("shared_folders")
         .upsert({
+          id: existingFolder, // Include ID if updating existing folder
           created_by: studentId,
           ...data,
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error saving folder:", error);
+        throw error;
+      }
 
       toast.success("文件夹保存成功");
       setIsEditingFolder(false);
@@ -61,6 +71,10 @@ export default function SharedFolderSection({ studentId }: { studentId: string }
       toast.error("保存文件夹失败");
     }
   };
+
+  if (!hasAccess) {
+    return null;
+  }
 
   return (
     <>
@@ -72,6 +86,7 @@ export default function SharedFolderSection({ studentId }: { studentId: string }
         open={isEditingFolder}
         onOpenChange={setIsEditingFolder}
         onSubmit={handleSaveFolder}
+        initialData={sharedFolder || undefined}
       />
     </>
   );
