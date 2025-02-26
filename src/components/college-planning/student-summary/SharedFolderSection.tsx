@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,6 +9,19 @@ import SharedFolderDialog from "../SharedFolderDialog";
 export default function SharedFolderSection({ studentId }: { studentId: string }) {
   const [isEditingFolder, setIsEditingFolder] = useState(false);
   const queryClient = useQueryClient();
+  const [hasAccess, setHasAccess] = useState(false);
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const hasAccess = await checkCounselorAccess(studentId, user.id);
+      setHasAccess(hasAccess);
+    };
+
+    checkAccess();
+  }, [studentId]);
 
   const { data: sharedFolder } = useQuery({
     queryKey: ["shared-folder", studentId],
@@ -38,12 +52,12 @@ export default function SharedFolderSection({ studentId }: { studentId: string }
 
       if (error) throw error;
 
-      toast.success("Folder saved successfully");
+      toast.success("文件夹保存成功");
       setIsEditingFolder(false);
       queryClient.invalidateQueries({ queryKey: ["shared-folder", studentId] });
     } catch (error) {
       console.error("Error saving folder:", error);
-      toast.error("Failed to save folder");
+      toast.error("保存文件夹失败");
     }
   };
 
