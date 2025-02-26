@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SharedFolderCard from "../SharedFolderCard";
 import SharedFolderDialog from "../SharedFolderDialog";
+import { checkCounselorAccess } from "@/hooks/student/utils/counselorAccess";
 
 export default function SharedFolderSection({ studentId }: { studentId: string }) {
   const [isEditingFolder, setIsEditingFolder] = useState(false);
