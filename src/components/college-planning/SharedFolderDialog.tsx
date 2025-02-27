@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -15,14 +16,18 @@ interface SharedFolderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: FolderFormData) => Promise<void>;
+  initialData?: FolderFormData;
 }
 
 export default function SharedFolderDialog({ 
   open, 
   onOpenChange, 
-  onSubmit 
+  onSubmit,
+  initialData 
 }: SharedFolderDialogProps) {
-  const form = useForm<FolderFormData>();
+  const form = useForm<FolderFormData>({
+    defaultValues: initialData
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
