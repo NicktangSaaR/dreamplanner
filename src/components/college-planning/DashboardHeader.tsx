@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BrainCircuit } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -12,6 +12,10 @@ export default function DashboardHeader() {
 
   const handleMockInterview = () => {
     navigate('/mock-interview');
+  };
+
+  const handleActivityBrainstorming = () => {
+    navigate('/activity-brainstorming');
   };
 
   const handleProfile = () => {
@@ -64,6 +68,11 @@ export default function DashboardHeader() {
             <Button onClick={handleMockInterview} variant="outline" className="flex flex-col gap-0.5">
               <span>Mock Interview</span>
               <span className="text-[10px] text-muted-foreground leading-none">developing...</span>
+            </Button>
+            <Button onClick={handleActivityBrainstorming} variant="outline" className="flex items-center gap-1">
+              <BrainCircuit className="h-4 w-4" />
+              <span>活动构思器</span>
+              <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded-full">Beta</span>
             </Button>
             <Button onClick={handleLogout} variant="outline">
               Log Out
