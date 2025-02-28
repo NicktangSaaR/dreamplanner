@@ -15,7 +15,7 @@ export default function DashboardHeader() {
   };
 
   const handleActivityBrainstorming = () => {
-    navigate('/activity-brainstorming');
+    window.open('https://tbox.alipay.com/pro/share/202503APVPPw00291117?platform=WebService', '_blank');
   };
 
   const handleProfile = () => {
