@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, BrainCircuit } from "lucide-react";
 import {
   HoverCard,
   HoverCardContent,
@@ -128,6 +128,13 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
                 <Link to="/mock-interview">
                   <Button>
                     Mock Interview
+                  </Button>
+                </Link>
+                <Link to="/activity-brainstorming">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <BrainCircuit className="h-4 w-4" />
+                    活动构思器
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-1 rounded-full">Beta</span>
                   </Button>
                 </Link>
                 <Button variant="outline" onClick={onLogout}>

@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -18,6 +19,7 @@ import Index from "@/pages/Index";
 import Articles from "@/pages/Articles";
 import ArticleDetail from "@/pages/ArticleDetail";
 import AdminDashboard from "@/pages/AdminDashboard";
+import ActivityBrainstorming from "@/pages/ActivityBrainstorming";
 import Footer from "@/components/layout/Footer";
 
 export default function App() {
@@ -36,6 +38,11 @@ export default function App() {
             <Route path="/mock-interview" element={
               <ProtectedRoute allowedUserTypes={["student", "admin"]}>
                 <MockInterview />
+              </ProtectedRoute>
+            } />
+            <Route path="/activity-brainstorming" element={
+              <ProtectedRoute>
+                <ActivityBrainstorming />
               </ProtectedRoute>
             } />
             <Route path="/student-profile" element={
