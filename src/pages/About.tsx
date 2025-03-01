@@ -31,7 +31,7 @@ export default function About() {
     try {
       const { data, error } = await supabase
         .from('platform_updates')
-        .select('*')
+        .select('id, title, content, date')
         .order('date', { ascending: false })
         .limit(5);
       

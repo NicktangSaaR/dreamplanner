@@ -548,6 +548,33 @@ export type Database = {
           },
         ]
       }
+      platform_updates: {
+        Row: {
+          content: string
+          created_at: string
+          date: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          date?: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          date?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           application_year: string | null
