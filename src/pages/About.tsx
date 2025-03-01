@@ -1,7 +1,5 @@
-
 export default function About() {
-  return (
-    <div className="container mx-auto px-4 py-12">
+  return <div className="container mx-auto px-4 py-12">
       <div className="max-w-3xl mx-auto space-y-12">
         <div>
           <h1 className="text-4xl font-bold mb-6">About Us</h1>
@@ -22,7 +20,7 @@ export default function About() {
         </div>
 
         <div>
-          <h2 className="text-3xl font-bold mb-6">About Developer</h2>
+          <h2 className="text-3xl font-bold mb-6">About The Developer</h2>
           <div className="prose prose-lg space-y-6">
             <p>
               Nick Tang, the driving force behind DreamPlanner, brings 12 years of expertise in college admissions, essay coaching, and interview preparation for top universities in the U.S., Canada, and the U.K.
@@ -33,6 +31,5 @@ export default function About() {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
