@@ -9,6 +9,7 @@ import UserManagement from "@/components/admin/UserManagement";
 import QuestionBankManagement from "@/components/admin/QuestionBankManagement";
 import ProspectiveClientManagement from "@/components/admin/ProspectiveClientManagement";
 import ArticleManagement from "@/components/admin/ArticleManagement";
+import PlatformUpdateManagement from "@/components/admin/PlatformUpdateManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -61,6 +62,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="question-banks">Question Banks</TabsTrigger>
           <TabsTrigger value="prospective-clients">Prospective Clients</TabsTrigger>
           <TabsTrigger value="articles">Articles</TabsTrigger>
+          <TabsTrigger value="platform-updates">Platform Updates</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
@@ -77,6 +79,10 @@ export default function AdminDashboard() {
 
         <TabsContent value="articles" className="space-y-4">
           <ArticleManagement />
+        </TabsContent>
+
+        <TabsContent value="platform-updates" className="space-y-4">
+          <PlatformUpdateManagement />
         </TabsContent>
       </Tabs>
     </div>
