@@ -20,7 +20,7 @@ export default function Features() {
       icon: <User className="h-6 w-6 text-blue-500" />,
     },
     {
-      title: "AI-Supported School Research",
+      title: "AI-Supported Planning Tools",
       description: "Build your AI-supported school list that includes top schools across the world.",
       icon: <Star className="h-6 w-6 text-yellow-500" />,
     },
