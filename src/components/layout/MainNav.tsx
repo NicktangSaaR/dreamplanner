@@ -133,7 +133,7 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
                 <Link to="/activity-brainstorming">
                   <Button variant="outline" className="flex items-center gap-2">
                     <BrainCircuit className="h-4 w-4" />
-                    活动构思器
+                    AI Activity Brainstromer
                     <span className="text-xs bg-yellow-100 text-yellow-800 px-1 rounded-full">Beta</span>
                   </Button>
                 </Link>

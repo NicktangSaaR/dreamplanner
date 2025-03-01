@@ -41,7 +41,7 @@ export default function App() {
               </ProtectedRoute>
             } />
             <Route path="/activity-brainstorming" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedUserTypes={["student", "counselor", "admin"]}>
                 <ActivityBrainstorming />
               </ProtectedRoute>
             } />
