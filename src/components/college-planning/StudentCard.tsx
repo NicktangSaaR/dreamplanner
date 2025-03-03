@@ -1,19 +1,12 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { User, Plus, X, CheckCircle } from "lucide-react";
-import AddCollaboratorDialog from "./AddCollaboratorDialog";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import AddCollaboratorDialog from "./AddCollaboratorDialog";
+import { StudentInfo } from "./components/StudentInfo";
+import { StudentCardActions } from "./components/StudentCardActions";
 
 interface StudentCardProps {
   student: {
@@ -158,26 +151,6 @@ export default function StudentCard({ student, onClick, onStatusChange }: Studen
     }
   };
 
-  // Helper function to get status color
-  const getStatusColor = (statusValue: string) => {
-    switch (statusValue) {
-      case "Pre-9":
-        return "bg-blue-100 text-blue-800";
-      case "G9":
-        return "bg-purple-100 text-purple-800";
-      case "G10":
-        return "bg-indigo-100 text-indigo-800";
-      case "G11":
-        return "bg-orange-100 text-orange-800";
-      case "College Bound":
-        return "bg-pink-100 text-pink-800";
-      case "Completed":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   return (
     <>
       <Card 
@@ -186,85 +159,15 @@ export default function StudentCard({ student, onClick, onStatusChange }: Studen
       >
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
-            <div className="flex gap-3 flex-1 min-w-0">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <User className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-base text-gray-900 truncate">
-                    {student.full_name}
-                  </h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(status)}`}>
-                    {status}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 truncate">
-                  {student.grade || "Grade not set"} • {student.school || "School not set"}
-                </p>
-                {student.interested_majors && student.interested_majors.length > 0 && (
-                  <p className="text-sm text-gray-500 truncate">
-                    Interested in: {student.interested_majors.join(", ")}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              {isPrimaryCounselor && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddCollaborator}
-                    className="whitespace-nowrap"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRemoveCollaborator}
-                    className="whitespace-nowrap text-destructive hover:text-destructive"
-                  >
-                    <X className="h-4 w-4 mr-1" />
-                    Remove
-                  </Button>
-                  <Select 
-                    value={status} 
-                    onValueChange={handleStatusChange} 
-                    onOpenChange={(open) => {
-                      // Prevent card click when opening the select
-                      if (open) {
-                        event?.stopPropagation();
-                      }
-                    }}
-                  >
-                    <SelectTrigger 
-                      className="h-8 w-full text-xs" 
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Pre-9">Pre-9</SelectItem>
-                      <SelectItem value="G9">G9</SelectItem>
-                      <SelectItem value="G10">G10</SelectItem>
-                      <SelectItem value="G11">G11</SelectItem>
-                      <SelectItem value="College Bound">College Bound</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </>
-              )}
-              <Button 
-                onClick={handleViewSummary}
-                size="sm"
-                className="whitespace-nowrap"
-              >
-                View
-              </Button>
-            </div>
+            <StudentInfo student={student} status={status} />
+            <StudentCardActions
+              isPrimaryCounselor={isPrimaryCounselor}
+              status={status}
+              onStatusChange={handleStatusChange}
+              onAddCollaborator={handleAddCollaborator}
+              onRemoveCollaborator={handleRemoveCollaborator}
+              onViewSummary={handleViewSummary}
+            />
           </div>
         </CardContent>
       </Card>
