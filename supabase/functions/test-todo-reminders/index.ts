@@ -13,6 +13,9 @@ serve(async (req) => {
   }
 
   try {
+    // List available environment variable names (not values) for debugging
+    console.log("Available environment variables:", Object.keys(Deno.env.toObject()));
+    
     // Parse request body
     const requestBody = await req.json().catch((e) => {
       console.error("Failed to parse request body:", e);

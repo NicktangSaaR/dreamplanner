@@ -56,8 +56,33 @@ export function validateResendApiKey() {
   const envVars = Object.keys(Deno.env.toObject());
   console.log("Available environment variables:", envVars);
   
-  // Try multiple possible environment variable names for the Resend API key
-  const possibleNames = ["RESEND_API_KEY", "Remind API", "REMIND_API"];
+  // Prioritize "Remind API" as the environment variable name
+  const remindApi = Deno.env.get("Remind API");
+  if (remindApi) {
+    console.log(`Found API key in environment variable: Remind API`);
+    
+    // Safely validate API key format (without outputting the full key)
+    console.log(`API key length: ${remindApi.length} characters`);
+    
+    // Check for correct prefix for Resend API keys
+    if (!remindApi.startsWith("re_")) {
+      console.error("API key has incorrect format. Resend API keys should start with 're_'");
+      return { 
+        isValid: false,
+        error: "API key has incorrect format", 
+        details: "Resend API keys should start with 're_'. Please check your Supabase Edge Function secrets.",
+        availableEnvVars: envVars
+      };
+    }
+    
+    return {
+      isValid: true,
+      resendApiKey: remindApi
+    };
+  }
+  
+  // Fall back to checking other possible names if "Remind API" is not found
+  const possibleNames = ["RESEND_API_KEY", "REMIND_API"];
   let resendApiKey: string | null = null;
   
   for (const name of possibleNames) {
@@ -74,7 +99,7 @@ export function validateResendApiKey() {
     return { 
       isValid: false,
       error: "Email service configuration is missing", 
-      details: "Resend API key not found. Please add it to your Supabase Edge Function secrets with name 'RESEND_API_KEY'.",
+      details: "Resend API key not found. Please add it to your Supabase Edge Function secrets with name 'Remind API'.",
       availableEnvVars: envVars
     };
   }

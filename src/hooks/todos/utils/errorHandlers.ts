@@ -46,7 +46,7 @@ export const handleInvokeError = (error: any): string => {
       // Provide additional suggestions
       setTimeout(() => {
         import("sonner").then(({ toast }) => {
-          toast.error("可能原因：RESEND_API_KEY 密钥无效或域名未验证", {
+          toast.error("可能原因：Remind API 密钥无效或域名未验证", {
             description: "请检查 Supabase Edge Function 密钥和日志",
             duration: 5000
           });
@@ -81,13 +81,13 @@ export const handleApiKeyError = (errorInfo: any): string => {
       (errorInfo.message && errorInfo.message.includes("unauthorized")) || 
       (errorInfo.error && errorInfo.error.includes("unauthorized")) ||
       (errorInfo.message && errorInfo.message.includes("API key"))) {
-    return `API密钥错误: 请检查Supabase Edge Function配置中的RESEND_API_KEY密钥是否有效`;
+    return `API密钥错误: 请检查Supabase Edge Function配置中的Remind API密钥是否有效`;
   } else if (errorInfo.code === "invalid_api_key_format" || 
             (errorInfo.message && errorInfo.message.includes("Invalid API key format"))) {
     return `API密钥格式错误: Resend API密钥应以're_'开头，请检查设置`;
   } else if (errorInfo.code === "missing_api_key" || 
             (errorInfo.message && errorInfo.message.includes("missing"))) {
-    return `缺少API密钥: RESEND_API_KEY 环境变量未设置，请在 Supabase Edge Function 密钥中设置`;
+    return `缺少API密钥: Remind API 环境变量未设置，请在 Supabase Edge Function 密钥中设置`;
   }
   return "";
 };
