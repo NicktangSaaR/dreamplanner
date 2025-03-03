@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useCounselorStudents } from "@/hooks/useCounselorStudents";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,7 @@ export default function CounselorDashboard() {
   };
 
   const handleActivityBrainstorming = () => {
-    window.open('https://tbox.alipay.com/pro/share/202503APVPPw00291117?platform=WebService', '_blank');
+    window.open('https://chatgpt.com/g/g-67c3ae02ca70819186461af602529c0e-nick-activity-brainstromer', '_blank');
   };
 
   if (isLoading) {
