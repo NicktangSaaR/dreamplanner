@@ -173,14 +173,23 @@ export default function TodoSection() {
         return;
       }
       
+      // 处理警告信息
+      if (data.warning) {
+        toast.warning(`${data.warning}: 学生邮箱 (${data.studentEmail}), 辅导员邮箱 (${data.counselorEmail})`);
+        return;
+      }
+      
       // 处理成功响应
       if (data.success) {
-        if (data.note) {
-          toast.success(`${data.message} (${data.note})`);
-        } else if (data.message) {
-          toast.success(data.message);
-        } else {
-          toast.success("提醒邮件已发送");
+        // 显示提醒发送成功信息，并包含收件人信息
+        const recipientInfo = data.sentTo ? `(发送给: ${data.sentTo.join(", ")})` : "";
+        toast.success(`${data.message} ${recipientInfo}`);
+        
+        // 如果有部分错误，显示警告
+        if (data.errors && data.errors.length > 0) {
+          setTimeout(() => {
+            toast.warning(`部分发送失败: ${data.errors.join("; ")}`);
+          }, 1000);
         }
       } else if (data.message === "No uncompleted todos to remind about") {
         toast.info("该学生没有未完成的待办事项");

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.14.0";
 
 export interface DatabaseService {
   getUncompletedTodos(studentId: string): Promise<any[]>;
+  getCounselorForStudent(studentId: string): Promise<any>;
 }
 
 export class SupabaseDatabaseService implements DatabaseService {
@@ -38,6 +39,55 @@ export class SupabaseDatabaseService implements DatabaseService {
     }
     
     return todos || [];
+  }
+
+  async getCounselorForStudent(studentId: string): Promise<any> {
+    try {
+      console.log(`Fetching counselor for student: ${studentId}`);
+      
+      // 获取与学生关联的辅导员
+      const { data: relationship, error: relationshipError } = await this.supabase
+        .from("counselor_student_relationships")
+        .select(`
+          counselor_id
+        `)
+        .eq("student_id", studentId)
+        .single();
+      
+      if (relationshipError) {
+        console.error("Error fetching counselor relationship:", relationshipError);
+        return null;
+      }
+      
+      if (!relationship || !relationship.counselor_id) {
+        console.log(`No counselor found for student: ${studentId}`);
+        return null;
+      }
+      
+      console.log(`Found counselor ID: ${relationship.counselor_id}`);
+      
+      // 获取辅导员详细信息
+      const { data: counselor, error: counselorError } = await this.supabase
+        .from("profiles")
+        .select(`
+          id,
+          full_name,
+          email
+        `)
+        .eq("id", relationship.counselor_id)
+        .single();
+      
+      if (counselorError) {
+        console.error("Error fetching counselor profile:", counselorError);
+        return null;
+      }
+      
+      console.log(`Found counselor: ${JSON.stringify(counselor)}`);
+      return counselor;
+    } catch (error) {
+      console.error("Exception in getCounselorForStudent:", error);
+      return null;
+    }
   }
 }
 
