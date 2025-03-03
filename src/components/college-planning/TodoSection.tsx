@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckSquare, Bell, Loader2, AlertCircle, RefreshCcw } from "lucide-react";
+import { CheckSquare, Bell, Loader2, AlertCircle, RefreshCcw, ExternalLink } from "lucide-react";
 import TodoForm from "./todos/TodoForm";
 import BulkImportForm from "./todos/BulkImportForm";
 import TodoList from "./todos/TodoList";
@@ -26,7 +26,7 @@ export default function TodoSection() {
     updateTodo,
     deleteTodo,
   } = useStudentTodos(studentId);
-  const { sendReminder, isLoading, connectionError } = useTodoReminder(studentId);
+  const { sendReminder, isLoading, connectionError, lastAttempt } = useTodoReminder(studentId);
 
   console.log("TodoSection - Current user type:", profile?.user_type);
   console.log("TodoSection - Student ID from params:", studentId);
@@ -123,6 +123,10 @@ export default function TodoSection() {
     }
   }, [handleSendReminder]);
 
+  const handleOpenSupabaseConsole = useCallback(() => {
+    window.open("https://supabase.com/dashboard/project/fyxnuhqzgkzfuldqurej", "_blank");
+  }, []);
+
   // Only show the reminder button for counselors
   const isCounselor = profile?.user_type === 'counselor' || profile?.user_type === 'admin';
   const hasUncompletedTodos = todos.some(todo => !todo.completed);
@@ -130,6 +134,8 @@ export default function TodoSection() {
   // Format the last reminder time
   const lastReminderText = lastReminderSent 
     ? `上次提醒发送时间: ${lastReminderSent.toLocaleString('zh-CN')}`
+    : lastAttempt 
+    ? `上次尝试时间: ${lastAttempt.toLocaleString('zh-CN')}`
     : null;
 
   return (
@@ -147,6 +153,15 @@ export default function TodoSection() {
                   <div className="flex flex-col items-end">
                     {connectionError ? (
                       <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleOpenSupabaseConsole}
+                          className="flex items-center gap-1 text-blue-500 hover:text-blue-600 border-blue-200"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          打开 Supabase
+                        </Button>
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -198,7 +213,7 @@ export default function TodoSection() {
                         )}
                       </Button>
                     )}
-                    {lastReminderText && !connectionError && (
+                    {lastReminderText && (
                       <span className="text-xs text-muted-foreground mt-1">
                         {lastReminderText}
                       </span>

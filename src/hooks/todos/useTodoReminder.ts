@@ -11,6 +11,7 @@ import { processResponse, showResponseToast } from "./utils/responseProcessor";
 export const useTodoReminder = (studentId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [lastAttempt, setLastAttempt] = useState<Date | null>(null);
   
   const sendReminder = useCallback(async () => {
     if (!studentId) {
@@ -21,6 +22,7 @@ export const useTodoReminder = (studentId: string | undefined) => {
     
     setIsLoading(true);
     setConnectionError(null);
+    setLastAttempt(new Date());
     
     try {
       // Convert the toast loading ID to string to ensure type safety
@@ -52,7 +54,7 @@ export const useTodoReminder = (studentId: string | undefined) => {
           toast.dismiss(toastId);
           const errorMessage = error.message || "无法连接到 Edge Function，请检查 Supabase 项目状态";
           toast.error(errorMessage, {
-            description: "请尝试访问 Supabase 控制台以激活项目，然后重试",
+            description: "请访问 Supabase 控制台以激活项目，然后重试",
             duration: 5000
           });
           setConnectionError(errorMessage);
@@ -88,7 +90,7 @@ export const useTodoReminder = (studentId: string | undefined) => {
         
         const errorMessage = "无法连接到 Edge Function，可能原因: 1) Supabase 项目休眠 2) 网络连接问题 3) Edge Function 部署问题";
         toast.error(errorMessage, {
-          description: "请尝试访问 Supabase 控制台以激活项目，然后重试",
+          description: "请访问 Supabase 控制台以激活项目，然后重试",
           duration: 5000
         });
         
@@ -104,5 +106,5 @@ export const useTodoReminder = (studentId: string | undefined) => {
     }
   }, [studentId]);
 
-  return { sendReminder, isLoading, connectionError };
+  return { sendReminder, isLoading, connectionError, lastAttempt };
 };

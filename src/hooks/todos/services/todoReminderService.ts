@@ -21,7 +21,7 @@ export const invokeReminderFunction = async (studentId: string) => {
     // Check project connectivity before attempting to invoke the function
     try {
       // Simple ping to check Supabase connectivity
-      const { data: pingData, error: pingError } = await supabase.from('_schema').select('version').limit(1).maybeSingle();
+      const { data: pingData, error: pingError } = await supabase.from('todos').select('count').limit(1);
       if (pingError) {
         console.warn("Supabase connectivity check failed:", pingError);
         return { 
@@ -77,7 +77,8 @@ export const invokeReminderFunction = async (studentId: string) => {
  */
 export const checkSupabaseConnectivity = async () => {
   try {
-    const { data, error } = await supabase.from('_schema').select('version').limit(1).maybeSingle();
+    // Use a simple query to check if Supabase is responsive
+    const { data, error } = await supabase.from('todos').select('count').limit(1);
     return !error;
   } catch (e) {
     console.error("Error checking Supabase connectivity:", e);

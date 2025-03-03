@@ -14,7 +14,7 @@ export const handleInvokeError = (error: any): string => {
     setTimeout(() => {
       import("sonner").then(({ toast }) => {
         toast.error("Edge Function 连接失败，可能原因: 1) Supabase 项目休眠 2) 网络连接问题 3) Edge Function 部署问题", {
-          description: "请确保 Supabase 项目处于活动状态，检查网络连接，并确认 Edge Function 已正确部署",
+          description: "请访问 Supabase 控制台以激活项目，然后重试",
           duration: 5000
         });
       });
@@ -31,7 +31,7 @@ export const handleInvokeError = (error: any): string => {
     setTimeout(() => {
       import("sonner").then(({ toast }) => {
         toast.error("Edge Function 连接失败，可能原因: 1) Supabase 项目休眠 2) 网络连接问题 3) Edge Function 部署问题", {
-          description: "请尝试访问 Supabase 控制台以激活项目，然后重试",
+          description: "请访问 Supabase 控制台以激活项目，然后重试",
           duration: 5000
         });
       });
@@ -54,6 +54,7 @@ export const handleInvokeError = (error: any): string => {
     }
   }
   
+  // Generic error
   return `发送提醒失败 (系统错误): ${JSON.stringify(error)}`;
 };
 
