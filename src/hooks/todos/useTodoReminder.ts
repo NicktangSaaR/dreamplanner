@@ -29,7 +29,11 @@ export const useTodoReminder = (studentId: string | undefined) => {
       
       // The actual request to the Edge Function
       const edgeFunctionPromise = supabase.functions.invoke('test-todo-reminders', {
-        body: { studentId }
+        body: { 
+          studentId,
+          debug: true, // Enable debug mode to get more detailed logs
+          domain: "dreamplaneredu.com" // Explicitly set domain
+        }
       });
       
       // Race the timeout against the actual request

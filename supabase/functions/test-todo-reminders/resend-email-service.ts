@@ -1,3 +1,4 @@
+
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { EmailService } from "./email-interface.ts";
 import { formatErrorResponse } from "./error-handling.ts";
@@ -31,7 +32,10 @@ export class ResendEmailService implements EmailService {
     console.log(`Default verified domain set to: ${this.verifiedDomain}`);
     
     // Save verified email as backup (for testing)
-    this.verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "nicktangbusiness87@gmail.com";
+    // Try multiple environment variable names
+    this.verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || 
+                         Deno.env.get("TEST_EMAIL") || 
+                         "nicktangbusiness87@gmail.com";
     console.log(`Verified email for testing: ${this.verifiedEmail}`);
   }
 

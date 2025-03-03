@@ -56,15 +56,25 @@ export function validateResendApiKey() {
   const envVars = Object.keys(Deno.env.toObject());
   console.log("Available environment variables:", envVars);
   
-  // Get Resend API key with proper error handling - use "Remind API" secret name
-  const resendApiKey = Deno.env.get("Remind API");
+  // Try multiple possible environment variable names for the Resend API key
+  const possibleNames = ["RESEND_API_KEY", "Remind API", "REMIND_API"];
+  let resendApiKey: string | null = null;
+  
+  for (const name of possibleNames) {
+    const value = Deno.env.get(name);
+    if (value) {
+      console.log(`Found API key in environment variable: ${name}`);
+      resendApiKey = value;
+      break;
+    }
+  }
   
   if (!resendApiKey) {
-    console.error("Remind API environment variable is not set");
+    console.error("Resend API key not found in any of the expected environment variables");
     return { 
       isValid: false,
       error: "Email service configuration is missing", 
-      details: "Remind API environment variable is not set. Please add it to your Supabase Edge Function secrets.",
+      details: "Resend API key not found. Please add it to your Supabase Edge Function secrets with name 'RESEND_API_KEY'.",
       availableEnvVars: envVars
     };
   }

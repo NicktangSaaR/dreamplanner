@@ -27,17 +27,17 @@ export const handleInvokeError = (error: any): string => {
   if (error.name === "FunctionsFetchError") {
     console.error("FunctionsFetchError detected. This typically indicates a connection issue to the Edge Function.");
     
-    // Show more helpful message
+    // Show more helpful message about Supabase edge function configuration
     setTimeout(() => {
       import("sonner").then(({ toast }) => {
-        toast.error("Edge Function 连接失败，可能原因: 1) Supabase 项目休眠 2) 网络连接问题 3) Edge Function 部署问题", {
-          description: "请访问 Supabase 控制台以激活项目，然后重试",
+        toast.error("Edge Function 连接失败", {
+          description: "请确保 Edge Function 已部署，且 Supabase 项目处于活动状态。检查 Edge Function 密钥是否正确设置。",
           duration: 5000
         });
       });
     }, 1000);
     
-    return "无法连接到 Edge Function，请检查 Supabase 项目状态和网络连接";
+    return "Edge Function 调用失败，请检查 Edge Function 部署状态和密钥配置";
   }
   
   // Check for non-2xx errors
@@ -46,7 +46,10 @@ export const handleInvokeError = (error: any): string => {
       // Provide additional suggestions
       setTimeout(() => {
         import("sonner").then(({ toast }) => {
-          toast.error("可能原因：Remind API 密钥无效或域名未验证，请检查 Supabase Edge Function 密钥和日志");
+          toast.error("可能原因：RESEND_API_KEY 密钥无效或域名未验证", {
+            description: "请检查 Supabase Edge Function 密钥和日志",
+            duration: 5000
+          });
         });
       }, 1000);
       
@@ -78,13 +81,13 @@ export const handleApiKeyError = (errorInfo: any): string => {
       (errorInfo.message && errorInfo.message.includes("unauthorized")) || 
       (errorInfo.error && errorInfo.error.includes("unauthorized")) ||
       (errorInfo.message && errorInfo.message.includes("API key"))) {
-    return `API密钥错误: 请检查Supabase Edge Function配置中的Remind API密钥是否有效`;
+    return `API密钥错误: 请检查Supabase Edge Function配置中的RESEND_API_KEY密钥是否有效`;
   } else if (errorInfo.code === "invalid_api_key_format" || 
             (errorInfo.message && errorInfo.message.includes("Invalid API key format"))) {
     return `API密钥格式错误: Resend API密钥应以're_'开头，请检查设置`;
   } else if (errorInfo.code === "missing_api_key" || 
             (errorInfo.message && errorInfo.message.includes("missing"))) {
-    return `缺少API密钥: Remind API 环境变量未设置，请在 Supabase Edge Function 密钥中设置`;
+    return `缺少API密钥: RESEND_API_KEY 环境变量未设置，请在 Supabase Edge Function 密钥中设置`;
   }
   return "";
 };
