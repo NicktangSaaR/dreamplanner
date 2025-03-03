@@ -4,7 +4,7 @@ import { Resend } from 'npm:resend@2.0.0'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-// Update to use the new "Remind API" secret name
+// Use the correct "Remind API" secret name
 const resendApiKey = Deno.env.get('Remind API') || ''
 
 const supabase = createClient(supabaseUrl, supabaseKey)

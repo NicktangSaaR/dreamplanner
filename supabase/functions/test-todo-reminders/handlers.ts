@@ -41,51 +41,11 @@ export async function processReminderRequest(requestBody: any) {
     };
   }
   
-  // Validate studentId
-  if (!studentId) {
-    console.error("No studentId provided");
-    return { error: "Student ID is required" };
-  }
-  
   // Initialize services
   try {
     console.log("Creating email service with API key");
     const emailService = createEmailService(resendApiKey);
     console.log("Email service initialized successfully");
-    
-    // Test API key and domain settings
-    try {
-      console.log(`Testing email service with domain: ${domain}`);
-      const testResult = await emailService.testApiKey(domain);
-      console.log("API key validation test successful:", JSON.stringify(testResult));
-    } catch (testError) {
-      console.error("API key validation failed:", testError);
-      console.error("Error details:", JSON.stringify(testError, Object.getOwnPropertyNames(testError)));
-      
-      // Check if it's a domain verification error
-      const errorMessage = String(testError);
-      if (errorMessage.includes("from_address_not_allowed")) {
-        return { 
-          error: `From address 'reminder@${domain}' is not allowed. Please verify your domain in Resend.`,
-          domain: domain,
-          details: errorMessage
-        };
-      }
-      
-      if (errorMessage.includes("validation")) {
-        return { 
-          error: `Failed to validate API key with domain ${domain}`,
-          domain: domain,
-          details: errorMessage
-        };
-      }
-      
-      return { 
-        error: "API key validation failed", 
-        domain: domain,
-        details: errorMessage
-      };
-    }
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
