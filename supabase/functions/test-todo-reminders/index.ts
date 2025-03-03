@@ -3,10 +3,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.14.0"
 import { Resend } from "https://esm.sh/resend@2.0.0"
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const supabaseUrl = Deno.env.get("SUPABASE_URL") as string;
-const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string;
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -20,10 +16,32 @@ serve(async (req) => {
 
   try {
     // Check if RESEND_API_KEY is available
-    if (!Deno.env.get("RESEND_API_KEY")) {
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
       console.error("RESEND_API_KEY is not set");
       return new Response(
-        JSON.stringify({ error: "Email service configuration is missing" }),
+        JSON.stringify({ 
+          error: "Email service configuration is missing", 
+          details: "Please set RESEND_API_KEY in Supabase Edge Function secrets" 
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Initialize resend with the API key
+    const resend = new Resend(resendApiKey);
+    
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") as string;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set");
+      return new Response(
+        JSON.stringify({ 
+          error: "Supabase configuration is missing",
+          details: "Please check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Edge Function secrets"
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -68,7 +86,7 @@ serve(async (req) => {
     if (todosError) {
       console.error("Error fetching todos:", todosError);
       return new Response(
-        JSON.stringify({ error: "Failed to fetch todos" }),
+        JSON.stringify({ error: "Failed to fetch todos", details: todosError.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
