@@ -12,7 +12,10 @@ serve(async (req) => {
 
   try {
     // 获取请求体
-    const requestBody = await req.json().catch(() => ({}));
+    const requestBody = await req.json().catch((e) => {
+      console.error("Failed to parse request body:", e);
+      return {};
+    });
     const { studentId, debug, domain = "dreamplaneredu.com" } = requestBody;
     
     console.log("Request received with studentId:", studentId, "debug mode:", debug, "domain:", domain);
@@ -68,6 +71,7 @@ serve(async (req) => {
     
     // 初始化服务
     try {
+      console.log("Creating email service with API key");
       const emailService = createEmailService(resendApiKey);
       console.log("Email service initialized successfully");
       
@@ -75,9 +79,10 @@ serve(async (req) => {
       try {
         console.log(`Testing email service with domain: ${domain}`);
         const testResult = await emailService.testApiKey(domain);
-        console.log("API key validation test successful:", testResult);
+        console.log("API key validation test successful:", JSON.stringify(testResult));
       } catch (testError) {
         console.error("API key validation failed:", testError);
+        console.error("Error details:", JSON.stringify(testError));
         
         // 检查是否是域名验证错误
         const errorMessage = String(testError);
@@ -126,6 +131,7 @@ serve(async (req) => {
         );
       }
       
+      console.log("Creating database service");
       const dbService = createDatabaseService(supabaseUrl, supabaseKey);
       console.log("Database service initialized successfully");
       
@@ -157,6 +163,9 @@ serve(async (req) => {
       const studentName = studentInfo?.full_name || '学生';
       const studentEmail = studentInfo?.email || null;
 
+      // 记录学生邮箱信息用于调试
+      console.log("Student email:", studentEmail);
+      
       // 创建邮件HTML模板
       const htmlContent = `
         <html>
@@ -198,6 +207,8 @@ serve(async (req) => {
           domain
         );
         
+        console.log("Email sending result:", JSON.stringify(emailResult));
+        
         // 如果发送成功但是发送到了备用邮箱而非学生邮箱
         if (recipient !== studentEmail) {
           return new Response(
@@ -221,6 +232,7 @@ serve(async (req) => {
         );
       } catch (emailError) {
         console.error("Exception while sending email:", emailError);
+        console.error("Error details:", JSON.stringify(emailError));
         
         // 检查是否是域名验证错误
         const errorMessage = String(emailError);
@@ -246,6 +258,7 @@ serve(async (req) => {
       }
     } catch (initError) {
       console.error("Failed to initialize services:", initError);
+      console.error("Error details:", JSON.stringify(initError));
       return new Response(
         JSON.stringify({ 
           error: "Failed to initialize services", 
@@ -256,11 +269,13 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error("Error in test-todo-reminders function:", error);
+    console.error("Error details:", JSON.stringify(error));
     return new Response(
       JSON.stringify({ 
         error: String(error),
         stack: error.stack,
-        message: error.message
+        message: error.message,
+        errorObject: JSON.stringify(error)
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

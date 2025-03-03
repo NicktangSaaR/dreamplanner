@@ -88,7 +88,7 @@ export default function TodoSection() {
       
       console.log("Invoking Edge Function with studentId:", studentId);
       
-      // 调用Edge Function
+      // 调用Edge Function，明确指定domain
       const { data, error } = await supabase.functions.invoke('test-todo-reminders', {
         body: { 
           studentId, 
@@ -102,43 +102,43 @@ export default function TodoSection() {
       
       toast.dismiss(toastId);
       
+      // 如果有错误，处理它
       if (error) {
-        console.error("Error sending reminder:", error);
+        console.error("Error sending reminder (invoke error):", error);
+        console.error("Error details:", JSON.stringify(error));
         
         // 提供更具体的错误信息
-        if (error.message?.includes("validation_error")) {
-          toast.error("Resend验证错误：域名验证失败，请确认已在Resend.com完成域名验证");
-        } else if (error.message?.includes("api_error")) {
-          toast.error("API错误：Resend API密钥可能无效，请在Supabase Edge Function设置中检查密钥");
+        if (error.message?.includes("validation_error") || error.message?.includes("from_address_not_allowed")) {
+          toast.error(`域名验证错误: 请确认 dreamplaneredu.com 已在Resend.com完成验证。详情: ${error.message}`);
+        } else if (error.message?.includes("api_error") || error.message?.includes("API key")) {
+          toast.error("API错误: Resend API密钥可能无效，请在Supabase Edge Function设置中检查密钥");
         } else if (error.message?.includes("rate_limit")) {
-          toast.error("发送频率限制：请稍后再试");
-        } else if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
-          toast.error("服务器错误：请检查Edge Function日志以获取详细信息。错误详情: " + JSON.stringify(error));
+          toast.error("发送频率限制: 请稍后再试");
         } else {
-          toast.error(`发送提醒失败: ${error.message || "未知错误"}`);
+          toast.error(`发送提醒失败 (系统错误): ${JSON.stringify(error)}`);
         }
         
         return;
       }
       
+      // 处理Edge Function返回的错误
       if (data?.error) {
-        // 处理Edge Function返回的错误
         console.error("Edge Function returned an error:", data.error);
+        console.error("Error details:", JSON.stringify(data));
         
-        if (data.error.includes("validation_error")) {
-          toast.warning("邮件发送受限：请确认Resend.com已完成域名验证");
+        if (data.error.includes("from_address_not_allowed") || data.error.includes("validation")) {
+          toast.error(`域名验证错误: 请确认 ${data.domain || "dreamplaneredu.com"} 已在Resend.com正确验证。详情: ${data.details || data.error}`);
         } else if (data.error.includes("domain")) {
-          toast.warning(`域名验证错误：请确认${data.domain || "dreamplaneredu.com"}已在Resend.com正确验证`);
-        } else if (data.error.includes("from_address_not_allowed")) {
-          toast.error(`发件人地址受限: reminder@${data.domain || "dreamplaneredu.com"} 不被允许。请确认域名已在Resend.com验证。`);
+          toast.error(`域名错误: 请确认 ${data.domain || "dreamplaneredu.com"} 配置正确。详情: ${data.details || data.error}`);
         } else if (data.error.includes("API key")) {
-          toast.error("API密钥错误：请在Supabase Edge Function设置中检查Resend API密钥");
+          toast.error(`API密钥错误: 请检查Supabase Edge Function设置中的Resend API密钥。详情: ${data.details || data.error}`);
         } else {
-          toast.error(`提醒发送失败: ${data.error}`);
+          toast.error(`提醒发送失败 (业务错误): ${data.error}`);
         }
         return;
       }
       
+      // 处理成功响应
       if (data?.note) {
         toast.success(`${data.message} (${data.note})`);
       } else if (data?.message === "No uncompleted todos to remind about") {
@@ -146,12 +146,13 @@ export default function TodoSection() {
       } else if (data?.success) {
         toast.success(data.message || "提醒邮件已发送");
       } else {
-        toast.warning("操作完成，但返回了意外响应");
+        toast.warning(`操作完成，但返回了意外响应: ${JSON.stringify(data)}`);
       }
     } catch (err: any) {
-      console.error("Error in send reminder:", err);
+      console.error("Exception in send reminder:", err);
+      console.error("Error details:", JSON.stringify(err));
       toast.dismiss();
-      toast.error(`发送提醒失败: ${err.message || "未知错误"}`);
+      toast.error(`发送提醒失败 (应用错误): ${err.message || JSON.stringify(err)}`);
     }
   }, [studentId]);
 
