@@ -57,30 +57,9 @@ export class ResendEmailService implements EmailService {
   async testApiKey(domain: string = "dreamplaneredu.com"): Promise<any> {
     console.log(`Testing Resend API key with domain: ${domain}`);
     
-    // Check if API key exists
-    const apiKey = Deno.env.get("RESEND_API_KEY");
-    if (!apiKey) {
-      console.error("RESEND_API_KEY environment variable is not set");
-      return {
-        error: true,
-        code: "missing_api_key",
-        message: "RESEND_API_KEY environment variable is not set"
-      };
-    }
-    
     try {
-      // Check API key prefix
-      if (!apiKey.startsWith("re_")) {
-        console.error("Invalid API key format:", apiKey.substring(0, 3) + "***");
-        return {
-          error: true,
-          code: "invalid_api_key_format",
-          message: "Resend API key has incorrect format. It should start with 're_'."
-        };
-      }
-      
       console.log(`Using from address for test: reminder@${domain}`);
-      // Use specified verified domain
+      // Try to send a test email
       const result = await this.resend.emails.send({
         from: `College Planning <reminder@${domain}>`,
         to: this.verifiedEmail, // Send to verified email for testing
@@ -108,6 +87,8 @@ export class ResendEmailService implements EmailService {
         domain: domain
       };
     } catch (error) {
+      console.error("Exception in testApiKey:", error);
+      console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
       return formatErrorResponse(error, domain);
     }
   }
@@ -118,13 +99,6 @@ export class ResendEmailService implements EmailService {
   async sendReminderEmail(to: string, subject: string, htmlContent: string, domain: string = "dreamplaneredu.com"): Promise<any> {
     try {
       console.log(`Sending email to ${to} from reminder@${domain}`);
-      
-      // First test API key and domain
-      const testResult = await this.testApiKey(domain);
-      if (testResult.error) {
-        console.error("Pre-send domain validation failed:", testResult);
-        return testResult;
-      }
       
       // Create full sender address
       const fromAddress = `College Planning <reminder@${domain}>`;
@@ -159,6 +133,8 @@ export class ResendEmailService implements EmailService {
         id: emailResult.id
       };
     } catch (error) {
+      console.error("Exception in sendReminderEmail:", error);
+      console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
       return formatErrorResponse(error, domain);
     }
   }

@@ -19,8 +19,13 @@ serve(async (req) => {
       return {};
     });
     
+    console.log("Request body received:", JSON.stringify(requestBody));
+    
     // Process the reminder request
     const result = await processReminderRequest(requestBody);
+    
+    // Log the result for debugging
+    console.log("Result from processReminderRequest:", JSON.stringify(result));
     
     // Determine appropriate status code
     let statusCode = 200;
@@ -41,13 +46,15 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Error in test-todo-reminders function:", error);
-    console.error("Error details:", JSON.stringify(error));
+    console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    
+    // Format error response for better debugging
     return new Response(
       JSON.stringify({ 
         error: String(error),
+        message: error.message || "Unknown error occurred",
         stack: error.stack,
-        message: error.message,
-        errorObject: JSON.stringify(error)
+        errorObject: JSON.stringify(error, Object.getOwnPropertyNames(error))
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

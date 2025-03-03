@@ -50,7 +50,8 @@ export function handleApiKeyError(errorInfo: any): { code: string; message: stri
  * Formats and processes error data
  */
 export function formatErrorResponse(error: any, domain: string): any {
-  console.error("Error details:", JSON.stringify(error));
+  console.error("Formatting error response for:", error);
+  console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
   
   // Try to determine error type
   const domainError = handleDomainVerificationError(error);
@@ -60,7 +61,7 @@ export function formatErrorResponse(error: any, domain: string): any {
       code: domainError.code,
       message: domainError.message,
       domain: domain,
-      details: JSON.stringify(error),
+      details: JSON.stringify(error, Object.getOwnPropertyNames(error)),
       time: new Date().toISOString()
     };
   }
@@ -71,7 +72,7 @@ export function formatErrorResponse(error: any, domain: string): any {
       error: true,
       code: apiKeyError.code,
       message: apiKeyError.message,
-      details: JSON.stringify(error),
+      details: JSON.stringify(error, Object.getOwnPropertyNames(error)),
       time: new Date().toISOString()
     };
   }
@@ -81,7 +82,7 @@ export function formatErrorResponse(error: any, domain: string): any {
     error: true,
     code: "unknown_error",
     message: error.message || "Unknown error occurred",
-    details: JSON.stringify(error),
+    details: JSON.stringify(error, Object.getOwnPropertyNames(error)),
     time: new Date().toISOString()
   };
 }

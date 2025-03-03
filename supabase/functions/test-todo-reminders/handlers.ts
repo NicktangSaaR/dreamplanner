@@ -18,11 +18,11 @@ export async function processReminderRequest(requestBody: any) {
   
   // Try different API key name formats
   const possibleKeyNames = [
+    "RESEND_API_KEY", 
+    "resend_api_key",
     "Remind API", 
     "REMIND_API", 
-    "remind_api",
-    "RESEND_API_KEY", 
-    "resend_api_key"
+    "remind_api"
   ];
   
   let resendApiKey = null;
@@ -39,11 +39,21 @@ export async function processReminderRequest(requestBody: any) {
   if (resendApiKey) {
     console.log(`Found API key with prefix: ${resendApiKey.substring(0, 3)}***`);
     console.log(`API key length: ${resendApiKey.length} characters`);
+    
+    // Check for correct prefix for Resend API keys
+    if (!resendApiKey.startsWith("re_")) {
+      console.error("API key has incorrect format. Resend API keys should start with 're_'");
+      return { 
+        error: "API key has incorrect format", 
+        details: "Resend API keys should start with 're_'. Please check your Supabase Edge Function secrets.",
+        availableEnvVars: envVars
+      };
+    }
   } else {
     console.error("No Resend API key found. Tried the following names:", possibleKeyNames);
     return { 
       error: "Email service configuration is missing", 
-      details: "Could not find API key with any of the expected names",
+      details: "Could not find API key with any of the expected names. Please add RESEND_API_KEY to your Supabase Edge Function secrets.",
       checkedNames: possibleKeyNames,
       availableEnvVars: envVars
     };
@@ -68,7 +78,7 @@ export async function processReminderRequest(requestBody: any) {
       console.log("API key validation test successful:", JSON.stringify(testResult));
     } catch (testError) {
       console.error("API key validation failed:", testError);
-      console.error("Error details:", JSON.stringify(testError));
+      console.error("Error details:", JSON.stringify(testError, Object.getOwnPropertyNames(testError)));
       
       // Check if it's a domain verification error
       const errorMessage = String(testError);
@@ -95,12 +105,15 @@ export async function processReminderRequest(requestBody: any) {
       };
     }
     
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") as string;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (!supabaseUrl || !supabaseKey) {
       console.error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set");
-      return { error: "Supabase configuration is missing" };
+      return { 
+        error: "Supabase configuration is missing",
+        availableEnvVars: envVars 
+      };
     }
     
     console.log("Creating database service");
@@ -110,7 +123,7 @@ export async function processReminderRequest(requestBody: any) {
     return await sendEmailReminders(studentId, domain, emailService, dbService);
   } catch (initError) {
     console.error("Failed to initialize services:", initError);
-    console.error("Error details:", JSON.stringify(initError));
+    console.error("Error details:", JSON.stringify(initError, Object.getOwnPropertyNames(initError)));
     return { 
       error: "Failed to initialize services", 
       details: String(initError) 
@@ -231,7 +244,7 @@ async function sendEmailReminders(studentId: string, domain: string, emailServic
       }
     } catch (emailError) {
       console.error("Exception while sending email:", emailError);
-      console.error("Error details:", JSON.stringify(emailError));
+      console.error("Error details:", JSON.stringify(emailError, Object.getOwnPropertyNames(emailError)));
       
       // Check if it's a domain verification error
       const errorMessage = String(emailError);
@@ -251,6 +264,7 @@ async function sendEmailReminders(studentId: string, domain: string, emailServic
     }
   } catch (error) {
     console.error("Error in sendEmailReminders:", error);
+    console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
     return formatErrorResponse(error, domain);
   }
 }
