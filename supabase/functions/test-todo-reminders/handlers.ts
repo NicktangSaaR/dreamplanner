@@ -1,4 +1,3 @@
-
 import { createEmailService } from "./email-service.ts";
 import { createDatabaseService } from "./db-service.ts";
 import { formatErrorResponse } from "./error-handling.ts";
@@ -16,14 +15,14 @@ export async function processReminderRequest(requestBody: any) {
   const envVars = Object.keys(Deno.env.toObject());
   console.log("Available environment variables:", envVars);
   
-  // Get Resend API key with proper error handling
-  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  // Get Resend API key with proper error handling - use "Remind API" secret name
+  const resendApiKey = Deno.env.get("Remind API");
   
   if (!resendApiKey) {
-    console.error("RESEND_API_KEY environment variable is not set");
+    console.error("Remind API environment variable is not set");
     return { 
       error: "Email service configuration is missing", 
-      details: "RESEND_API_KEY environment variable is not set. Please add it to your Supabase Edge Function secrets.",
+      details: "Remind API environment variable is not set. Please add it to your Supabase Edge Function secrets.",
       availableEnvVars: envVars
     };
   }

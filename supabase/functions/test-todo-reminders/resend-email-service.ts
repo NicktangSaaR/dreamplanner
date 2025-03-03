@@ -1,4 +1,3 @@
-
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { EmailService } from "./email-interface.ts";
 import { formatErrorResponse } from "./error-handling.ts";
