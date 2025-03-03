@@ -591,6 +591,7 @@ export type Database = {
           personal_website: string | null
           school: string | null
           social_media: Json | null
+          status: string | null
           updated_at: string
           user_type: string
         }
@@ -609,6 +610,7 @@ export type Database = {
           personal_website?: string | null
           school?: string | null
           social_media?: Json | null
+          status?: string | null
           updated_at?: string
           user_type: string
         }
@@ -627,6 +629,7 @@ export type Database = {
           personal_website?: string | null
           school?: string | null
           social_media?: Json | null
+          status?: string | null
           updated_at?: string
           user_type?: string
         }

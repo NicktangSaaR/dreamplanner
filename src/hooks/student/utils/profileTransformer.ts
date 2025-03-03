@@ -1,4 +1,3 @@
-
 export interface RawProfile {
   id: string;
   user_type: string;
