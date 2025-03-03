@@ -102,7 +102,7 @@ export default function TodoSection() {
         // 提供更详细的错误信息
         if (error.message.includes("500") || error.message.includes("non-2xx")) {
           // 尝试验证API密钥问题
-          toast.error("发送提醒失败: API密钥可能配置有误，请检查以下几点：\n1. 确保Supabase中密钥名称为'Remind API'或'RESEND_API_KEY'\n2. 确保密钥值正确且有效\n3. 检查Edge Function日志获取更多信息");
+          toast.error("发送提醒失败: API密钥可能配置有误或存在Resend账户限制，请检查Edge Function日志");
         } else if (error.message.toLowerCase().includes("configuration")) {
           toast.error("发送提醒失败: Edge Function配置问题，请确保API密钥正确设置");
         } else {
@@ -111,13 +111,14 @@ export default function TodoSection() {
         return;
       }
       
-      console.log("Reminder sent successfully:", data);
       toast.dismiss();
       
-      if (data?.message === "No uncompleted todos to remind about") {
+      if (data?.note) {
+        toast.success(`${data.message} (${data.note})`);
+      } else if (data?.message === "No uncompleted todos to remind about") {
         toast.info("该学生没有未完成的待办事项");
       } else if (data?.success) {
-        toast.success("提醒邮件已发送");
+        toast.success(data.message || "提醒邮件已发送");
       } else {
         toast.warning("操作完成，但返回了意外响应");
       }
