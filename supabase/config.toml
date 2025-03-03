@@ -10,3 +10,5 @@ verify_jwt = true
 [functions.update-user-password]
 verify_jwt = true
 
+[functions.test-todo-reminders]
+verify_jwt = false

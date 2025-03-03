@@ -19,6 +19,15 @@ serve(async (req) => {
   }
 
   try {
+    // Check if RESEND_API_KEY is available
+    if (!Deno.env.get("RESEND_API_KEY")) {
+      console.error("RESEND_API_KEY is not set");
+      return new Response(
+        JSON.stringify({ error: "Email service configuration is missing" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Get the request body, which may contain a studentId
@@ -27,8 +36,17 @@ serve(async (req) => {
     
     console.log("Request received with studentId:", studentId);
     
-    // Fetch todos based on studentId (if provided) or all uncompleted todos
-    let query = supabase
+    // Validate studentId
+    if (!studentId) {
+      console.error("No studentId provided");
+      return new Response(
+        JSON.stringify({ error: "Student ID is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Fetch todos based on studentId
+    const { data: todos, error: todosError } = await supabase
       .from("todos")
       .select(`
         id, 
@@ -44,14 +62,8 @@ serve(async (req) => {
           user_type
         )
       `)
+      .eq("author_id", studentId)
       .eq("completed", false);
-    
-    // If a specific studentId is provided, only get todos for that student
-    if (studentId) {
-      query = query.eq("author_id", studentId);
-    }
-    
-    const { data: todos, error: todosError } = await query;
     
     if (todosError) {
       console.error("Error fetching todos:", todosError);
@@ -62,14 +74,14 @@ serve(async (req) => {
     }
     
     if (!todos || todos.length === 0) {
-      console.log("No uncompleted todos found");
+      console.log("No uncompleted todos found for student:", studentId);
       return new Response(
         JSON.stringify({ message: "No uncompleted todos to remind about" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
-    console.log(`Found ${todos.length} uncompleted todos`);
+    console.log(`Found ${todos.length} uncompleted todos for student:`, studentId);
     
     // Group todos by student
     const todosByStudent = todos.reduce((acc, todo) => {
@@ -159,20 +171,25 @@ serve(async (req) => {
       `;
       
       // Send email to student
-      const studentEmailPromise = resend.emails.send({
-        from: "College Planning Assistant <noreply@resend.dev>",
-        to: student.email,
-        subject: "待办事项提醒",
-        html: htmlContent,
-      }).then(result => {
-        console.log(`Email sent to student ${student.full_name} (${student.email}):`, result);
-        return result;
-      }).catch(error => {
-        console.error(`Error sending email to student ${student.email}:`, error);
-        return error;
-      });
-      
-      emailPromises.push(studentEmailPromise);
+      try {
+        const studentEmailPromise = resend.emails.send({
+          from: "College Planning Assistant <noreply@resend.dev>",
+          to: student.email,
+          subject: "待办事项提醒",
+          html: htmlContent,
+        }).then(result => {
+          console.log(`Email sent to student ${student.full_name} (${student.email}):`, result);
+          return result;
+        }).catch(error => {
+          console.error(`Error sending email to student ${student.email}:`, error);
+          throw error;
+        });
+        
+        emailPromises.push(studentEmailPromise);
+      } catch (emailError) {
+        console.error(`Failed to send email to student ${student.email}:`, emailError);
+        // Continue with other emails even if one fails
+      }
       
       // If there's a counselor, send them a copy too
       if (counselor?.email) {
@@ -204,35 +221,47 @@ serve(async (req) => {
           </html>
         `;
         
-        const counselorEmailPromise = resend.emails.send({
-          from: "College Planning Assistant <noreply@resend.dev>",
-          to: counselor.email,
-          subject: `学生待办事项提醒 - ${student.full_name || '学生'}`,
-          html: counselorHtmlContent,
-        }).then(result => {
-          console.log(`Email sent to counselor ${counselor.full_name} (${counselor.email}):`, result);
-          return result;
-        }).catch(error => {
-          console.error(`Error sending email to counselor ${counselor.email}:`, error);
-          return error;
-        });
-        
-        emailPromises.push(counselorEmailPromise);
+        try {
+          const counselorEmailPromise = resend.emails.send({
+            from: "College Planning Assistant <noreply@resend.dev>",
+            to: counselor.email,
+            subject: `学生待办事项提醒 - ${student.full_name || '学生'}`,
+            html: counselorHtmlContent,
+          }).then(result => {
+            console.log(`Email sent to counselor ${counselor.full_name} (${counselor.email}):`, result);
+            return result;
+          }).catch(error => {
+            console.error(`Error sending email to counselor ${counselor.email}:`, error);
+            throw error;
+          });
+          
+          emailPromises.push(counselorEmailPromise);
+        } catch (emailError) {
+          console.error(`Failed to send email to counselor ${counselor.email}:`, emailError);
+          // Continue with other emails even if one fails
+        }
       }
     }
     
     // Wait for all emails to be sent
-    await Promise.all(emailPromises);
-    
-    console.log("All email reminders sent successfully");
-    return new Response(
-      JSON.stringify({ success: true, message: "Reminder emails sent successfully" }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    try {
+      await Promise.all(emailPromises);
+      console.log("All email reminders sent successfully");
+      return new Response(
+        JSON.stringify({ success: true, message: "Reminder emails sent successfully" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (emailError) {
+      console.error("Error sending some or all emails:", emailError);
+      return new Response(
+        JSON.stringify({ error: "Some emails failed to send", details: String(emailError) }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
   } catch (error) {
     console.error("Error in test-todo-reminders function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: String(error) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

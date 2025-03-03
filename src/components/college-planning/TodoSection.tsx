@@ -79,6 +79,7 @@ export default function TodoSection() {
   const handleSendReminder = useCallback(async () => {
     if (!studentId) {
       console.error("No student ID provided");
+      toast.error("无法发送提醒：未找到学生ID");
       return;
     }
     
@@ -92,17 +93,22 @@ export default function TodoSection() {
       if (error) {
         console.error("Error sending reminder:", error);
         toast.dismiss();
-        toast.error("发送提醒失败: " + error.message);
+        toast.error("发送提醒失败: " + (error.message || "请联系管理员检查Edge Function配置"));
         return;
       }
       
       console.log("Reminder sent successfully:", data);
       toast.dismiss();
-      toast.success("提醒邮件已发送");
+      
+      if (data?.message === "No uncompleted todos to remind about") {
+        toast.info("该学生没有未完成的待办事项");
+      } else {
+        toast.success("提醒邮件已发送");
+      }
     } catch (err) {
       console.error("Error in send reminder:", err);
       toast.dismiss();
-      toast.error("发送提醒失败");
+      toast.error("发送提醒失败，请确保已设置RESEND_API_KEY");
     }
   }, [studentId]);
 
