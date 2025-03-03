@@ -84,30 +84,36 @@ export default function TodoSection() {
     }
     
     try {
-      toast.loading("发送提醒中...");
+      const toastId = toast.loading("发送提醒中...");
       
       console.log("Invoking Edge Function with studentId:", studentId);
       
       // 调用Edge Function
       const { data, error } = await supabase.functions.invoke('test-todo-reminders', {
-        body: { studentId, debug: true }
+        body: { 
+          studentId, 
+          debug: true,
+          domain: "dreamplaneredu.com"  // 显式传递验证的域名
+        }
       });
       
-      console.log("Function response:", data);
+      console.log("Edge Function response:", data);
+      console.log("Edge Function error:", error);
+      
+      toast.dismiss(toastId);
       
       if (error) {
         console.error("Error sending reminder:", error);
-        toast.dismiss();
         
         // 提供更具体的错误信息
-        if (error.message.includes("validation_error")) {
+        if (error.message?.includes("validation_error")) {
           toast.error("Resend验证错误：域名验证失败，请确认已在Resend.com完成域名验证");
-        } else if (error.message.includes("api_error")) {
+        } else if (error.message?.includes("api_error")) {
           toast.error("API错误：Resend API密钥可能无效，请在Supabase Edge Function设置中检查密钥");
-        } else if (error.message.includes("rate_limit")) {
+        } else if (error.message?.includes("rate_limit")) {
           toast.error("发送频率限制：请稍后再试");
-        } else if (error.message.includes("500") || error.message.includes("non-2xx")) {
-          toast.error("服务器错误：请检查Edge Function日志以获取详细信息");
+        } else if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
+          toast.error("服务器错误：请检查Edge Function日志以获取详细信息。错误详情: " + JSON.stringify(error));
         } else {
           toast.error(`发送提醒失败: ${error.message || "未知错误"}`);
         }
@@ -115,14 +121,18 @@ export default function TodoSection() {
         return;
       }
       
-      toast.dismiss();
-      
       if (data?.error) {
         // 处理Edge Function返回的错误
+        console.error("Edge Function returned an error:", data.error);
+        
         if (data.error.includes("validation_error")) {
           toast.warning("邮件发送受限：请确认Resend.com已完成域名验证");
         } else if (data.error.includes("domain")) {
-          toast.warning("域名验证错误：请确认dreamplaneredu.com已在Resend.com正确验证");
+          toast.warning(`域名验证错误：请确认${data.domain || "dreamplaneredu.com"}已在Resend.com正确验证`);
+        } else if (data.error.includes("from_address_not_allowed")) {
+          toast.error(`发件人地址受限: reminder@${data.domain || "dreamplaneredu.com"} 不被允许。请确认域名已在Resend.com验证。`);
+        } else if (data.error.includes("API key")) {
+          toast.error("API密钥错误：请在Supabase Edge Function设置中检查Resend API密钥");
         } else {
           toast.error(`提醒发送失败: ${data.error}`);
         }
@@ -138,10 +148,10 @@ export default function TodoSection() {
       } else {
         toast.warning("操作完成，但返回了意外响应");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error in send reminder:", err);
       toast.dismiss();
-      toast.error("发送提醒失败，请查看控制台获取详细错误信息");
+      toast.error(`发送提醒失败: ${err.message || "未知错误"}`);
     }
   }, [studentId]);
 

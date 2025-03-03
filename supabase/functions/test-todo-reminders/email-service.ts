@@ -4,7 +4,7 @@ import { corsHeaders } from "./cors.ts";
 
 export interface EmailService {
   sendReminderEmail(to: string, subject: string, htmlContent: string): Promise<any>;
-  testApiKey(): Promise<any>;
+  testApiKey(domain: string): Promise<any>;
 }
 
 export class ResendEmailService implements EmailService {
@@ -17,20 +17,20 @@ export class ResendEmailService implements EmailService {
       throw new Error("No Resend API key provided");
     }
     this.resend = new Resend(apiKey);
-    // 设置已验证的域名
+    // 默认已验证的域名
     this.verifiedDomain = "dreamplaneredu.com";
     // 安全地保存验证邮箱作为备用（用于测试）
     this.verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "nicktangbusiness87@gmail.com";
   }
 
-  async testApiKey(): Promise<any> {
-    console.log("Testing Resend API key with verified domain");
+  async testApiKey(domain: string = "dreamplaneredu.com"): Promise<any> {
+    console.log(`Testing Resend API key with domain: ${domain}`);
     
     try {
-      // 使用您验证过的域名
+      // 使用指定的验证域名
       return await this.resend.emails.send({
-        from: `College Planning <reminder@${this.verifiedDomain}>`,
-        to: this.verifiedEmail, // 仍然发送到验证邮箱进行测试
+        from: `College Planning <reminder@${domain}>`,
+        to: this.verifiedEmail, // 发送到验证邮箱进行测试
         subject: "API Key Test",
         html: "<p>This is a test email to verify the API key and domain.</p>",
         text: "This is a test email to verify the API key and domain."
@@ -41,12 +41,12 @@ export class ResendEmailService implements EmailService {
     }
   }
 
-  async sendReminderEmail(to: string, subject: string, htmlContent: string): Promise<any> {
+  async sendReminderEmail(to: string, subject: string, htmlContent: string, domain: string = "dreamplaneredu.com"): Promise<any> {
     try {
-      console.log(`Sending email to ${to} from reminder@${this.verifiedDomain}`);
+      console.log(`Sending email to ${to} from reminder@${domain}`);
       
       const emailResult = await this.resend.emails.send({
-        from: `College Planning <reminder@${this.verifiedDomain}>`,  // 使用已验证的域名
+        from: `College Planning <reminder@${domain}>`,
         to: to,
         subject: subject,
         html: htmlContent,

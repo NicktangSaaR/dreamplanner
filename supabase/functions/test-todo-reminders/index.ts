@@ -11,6 +11,12 @@ serve(async (req) => {
   }
 
   try {
+    // 获取请求体
+    const requestBody = await req.json().catch(() => ({}));
+    const { studentId, debug, domain = "dreamplaneredu.com" } = requestBody;
+    
+    console.log("Request received with studentId:", studentId, "debug mode:", debug, "domain:", domain);
+    
     // 列出所有环境变量名称（不包含值）以便调试
     const envVars = Object.keys(Deno.env.toObject());
     console.log("Available environment variables:", envVars);
@@ -51,6 +57,15 @@ serve(async (req) => {
       );
     }
     
+    // 验证studentId
+    if (!studentId) {
+      console.error("No studentId provided");
+      return new Response(
+        JSON.stringify({ error: "Student ID is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     // 初始化服务
     try {
       const emailService = createEmailService(resendApiKey);
@@ -58,14 +73,41 @@ serve(async (req) => {
       
       // 测试API密钥和域名设置
       try {
-        const testResult = await emailService.testApiKey();
+        console.log(`Testing email service with domain: ${domain}`);
+        const testResult = await emailService.testApiKey(domain);
         console.log("API key validation test successful:", testResult);
       } catch (testError) {
         console.error("API key validation failed:", testError);
+        
+        // 检查是否是域名验证错误
+        const errorMessage = String(testError);
+        if (errorMessage.includes("from_address_not_allowed")) {
+          return new Response(
+            JSON.stringify({ 
+              error: `From address 'reminder@${domain}' is not allowed. Please verify your domain in Resend.`,
+              domain: domain,
+              details: errorMessage
+            }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        if (errorMessage.includes("validation")) {
+          return new Response(
+            JSON.stringify({ 
+              error: `Failed to validate API key with domain ${domain}`,
+              domain: domain,
+              details: errorMessage
+            }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
         return new Response(
           JSON.stringify({ 
-            error: "Failed to validate API key with your domain", 
-            details: String(testError)
+            error: "API key validation failed", 
+            domain: domain,
+            details: errorMessage
           }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -86,21 +128,6 @@ serve(async (req) => {
       
       const dbService = createDatabaseService(supabaseUrl, supabaseKey);
       console.log("Database service initialized successfully");
-      
-      // 获取请求体
-      const requestBody = await req.json().catch(() => ({}));
-      const { studentId, debug } = requestBody;
-      
-      console.log("Request received with studentId:", studentId, "debug mode:", debug);
-      
-      // 验证studentId
-      if (!studentId) {
-        console.error("No studentId provided");
-        return new Response(
-          JSON.stringify({ error: "Student ID is required" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
       
       // 获取todos
       console.log("Fetching uncompleted todos for student:", studentId);
@@ -162,12 +189,13 @@ serve(async (req) => {
       try {
         // 确定收件人
         const recipient = studentEmail || Deno.env.get("VERIFIED_EMAIL") || "nicktangbusiness87@gmail.com";
-        console.log(`Sending email to: ${recipient}`);
+        console.log(`Sending email to: ${recipient} using domain: ${domain}`);
         
         const emailResult = await emailService.sendReminderEmail(
           recipient,
           `待办事项提醒 - ${studentName}`,
-          htmlContent
+          htmlContent,
+          domain
         );
         
         // 如果发送成功但是发送到了备用邮箱而非学生邮箱
@@ -176,7 +204,8 @@ serve(async (req) => {
             JSON.stringify({ 
               success: true, 
               message: "提醒邮件已发送", 
-              note: "已使用验证域名，但由于测试目的发送到了验证邮箱而非学生邮箱"
+              note: "已使用验证域名，但由于测试目的发送到了验证邮箱而非学生邮箱",
+              domain: domain
             }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
@@ -185,16 +214,32 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             success: true, 
-            message: "提醒邮件已成功发送到学生邮箱"
+            message: "提醒邮件已成功发送到学生邮箱",
+            domain: domain
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       } catch (emailError) {
         console.error("Exception while sending email:", emailError);
+        
+        // 检查是否是域名验证错误
+        const errorMessage = String(emailError);
+        if (errorMessage.includes("from_address_not_allowed")) {
+          return new Response(
+            JSON.stringify({ 
+              error: `From address 'reminder@${domain}' is not allowed. Please verify your domain in Resend.`,
+              domain: domain,
+              details: errorMessage
+            }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
         return new Response(
           JSON.stringify({ 
             error: "Email sending exception", 
-            details: String(emailError) 
+            domain: domain,
+            details: errorMessage
           }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
