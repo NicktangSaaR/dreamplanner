@@ -88,14 +88,6 @@ export default function TodoSection() {
       
       console.log("Invoking Edge Function with studentId:", studentId);
       
-      // 首先获取Supabase项目信息以便调试
-      const { data: projectData } = await supabase.rpc('get_project_ref');
-      console.log("Supabase project reference:", projectData);
-      
-      // 获取函数列表以验证函数是否存在（仅调试用）
-      const { data: functions } = await supabase.functions.list();
-      console.log("Available functions:", functions?.map(f => f.name));
-      
       // 调用Edge Function
       const { data, error } = await supabase.functions.invoke('test-todo-reminders', {
         body: { studentId, debug: true }
