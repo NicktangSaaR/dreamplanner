@@ -18,8 +18,8 @@ serve(async (req) => {
     // 列出环境变量（安全地仅显示名称）以便调试
     console.log("Available environment variables:", Object.keys(Deno.env.toObject()));
     
-    // 检查API密钥 - 尝试多个可能的名称
-    const resendApiKey = Deno.env.get("RESEND_API_KEY") || Deno.env.get("Remind API");
+    // 检查API密钥 - 首先尝试"Remind API"，然后尝试"RESEND_API_KEY"
+    const resendApiKey = Deno.env.get("Remind API") || Deno.env.get("RESEND_API_KEY");
     
     // 安全地验证API密钥格式（不输出完整密钥）
     if (resendApiKey) {
