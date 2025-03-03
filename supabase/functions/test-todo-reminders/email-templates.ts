@@ -16,7 +16,7 @@ export function generateEmailContent(
     </li>
   `).join('');
   
-  // Create student email HTML template
+  // Create student email HTML template with requested format
   const studentHtmlContent = `
     <html>
       <head>
@@ -30,13 +30,11 @@ export function generateEmailContent(
       </head>
       <body>
         <div class="container">
-          <h1>待办事项提醒</h1>
-          <p>亲爱的 ${studentName},</p>
-          <p>请查看以下您需要完成的待办事项:</p>
+          <h1>Dreamplanner Weekly Reminders</h1>
+          <p>${studentName}, You have the following to-dos to be completed:</p>
           <ul>
             ${todoListHtml}
           </ul>
-          <p>请尽快完成这些待办事项，以保持您的申请进度。</p>
           <div class="footer">
             <p>此邮件由 DreamPlane Education 自动发送，请勿回复。</p>
           </div>
@@ -45,7 +43,7 @@ export function generateEmailContent(
     </html>
   `;
   
-  // Create counselor email HTML template
+  // Create counselor email HTML template with similar format
   const counselorHtmlContent = `
     <html>
       <head>
@@ -59,13 +57,11 @@ export function generateEmailContent(
       </head>
       <body>
         <div class="container">
-          <h1>学生待办事项提醒</h1>
-          <p>亲爱的 ${counselorName},</p>
-          <p>您的学生 ${studentName} 有以下未完成的待办事项:</p>
+          <h1>Dreamplanner Weekly Reminders</h1>
+          <p>${counselorName}, Your student ${studentName} has the following to-dos to be completed:</p>
           <ul>
             ${todoListHtml}
           </ul>
-          <p>这些提醒已经同时发送给了学生本人。</p>
           <div class="footer">
             <p>此邮件由 DreamPlane Education 自动发送，请勿回复。</p>
           </div>

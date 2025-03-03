@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.0'
 import { Resend } from 'npm:resend@2.0.0'
 
@@ -14,6 +15,8 @@ interface Todo {
   title: string
   completed: boolean
   author_id: string
+  due_date?: string
+  starred?: boolean
 }
 
 interface StudentProfile {
@@ -87,19 +90,22 @@ async function getUncompletedTodos(): Promise<{ [studentId: string]: Todo[] }> {
 function generateEmailContent(studentName: string, todos: Todo[]): string {
   let todoListHtml = ''
   todos.forEach(todo => {
-    todoListHtml += `<li style="margin-bottom: 8px;">${todo.title}</li>`
+    todoListHtml += `<li style="margin-bottom: 8px;">
+      <strong>${todo.title}</strong>
+      ${todo.due_date ? ` - Due: ${new Date(todo.due_date).toLocaleDateString()}` : ''}
+      ${todo.starred ? ' ⭐' : ''}
+    </li>`
   })
 
   return `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #4a5568;">Weekly Todo Reminder for ${studentName}</h2>
-      <p>The following tasks are still pending completion:</p>
+      <h1 style="color: #2563eb;">Dreamplanner Weekly Reminders</h1>
+      <p>${studentName}, You have the following to-dos to be completed:</p>
       <ul style="padding-left: 20px;">
         ${todoListHtml}
       </ul>
-      <p>Please log in to review and complete these tasks.</p>
       <p style="color: #718096; font-size: 14px; margin-top: 20px;">
-        This is an automated reminder from the College Planning System.
+        此邮件由 DreamPlane Education 自动发送，请勿回复。
       </p>
     </div>
   `
@@ -128,20 +134,40 @@ async function sendReminderEmails() {
       // Send email to student
       console.log(`Sending email to student: ${studentProfile.email}`)
       await resend.emails.send({
-        from: 'College Planning System <onboarding@resend.dev>',
+        from: 'Dreamplanner Weekly Reminders <reminder@dreamplaneredu.com>',
         to: [studentProfile.email],
-        subject: 'Weekly Todo Reminder',
+        subject: 'Dreamplanner Weekly Reminders',
         html: emailContent,
       })
       
       // Send email to counselor if exists
       if (counselorProfile && counselorProfile.email) {
         console.log(`Sending email to counselor: ${counselorProfile.email}`)
+        // Create counselor-specific content
+        const counselorEmailContent = `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #2563eb;">Dreamplanner Weekly Reminders</h1>
+            <p>${counselorProfile.full_name || 'Counselor'}, Your student ${studentName} has the following to-dos to be completed:</p>
+            <ul style="padding-left: 20px;">
+              ${todos.map(todo => `
+                <li style="margin-bottom: 8px;">
+                  <strong>${todo.title}</strong>
+                  ${todo.due_date ? ` - Due: ${new Date(todo.due_date).toLocaleDateString()}` : ''}
+                  ${todo.starred ? ' ⭐' : ''}
+                </li>
+              `).join('')}
+            </ul>
+            <p style="color: #718096; font-size: 14px; margin-top: 20px;">
+              此邮件由 DreamPlane Education 自动发送，请勿回复。
+            </p>
+          </div>
+        `
+        
         await resend.emails.send({
-          from: 'College Planning System <onboarding@resend.dev>',
+          from: 'Dreamplanner Weekly Reminders <reminder@dreamplaneredu.com>',
           to: [counselorProfile.email],
-          subject: `Todo Reminder for ${studentName}`,
-          html: emailContent,
+          subject: `Dreamplanner Weekly Reminders for ${studentName}`,
+          html: counselorEmailContent,
         })
       }
       
