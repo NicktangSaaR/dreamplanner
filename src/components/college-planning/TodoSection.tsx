@@ -1,19 +1,21 @@
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckSquare, Bell } from "lucide-react";
+import { CheckSquare, Bell, Loader2 } from "lucide-react";
 import TodoForm from "./todos/TodoForm";
 import BulkImportForm from "./todos/BulkImportForm";
 import TodoList from "./todos/TodoList";
 import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
 import { Button } from "@/components/ui/button";
 import { useTodoReminder } from "@/hooks/todos/useTodoReminder";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function TodoSection() {
   const { studentId } = useParams();
   const { profile } = useProfile();
+  const [isSendingReminder, setIsSendingReminder] = useState(false);
   const {
     todos,
     createTodo,
@@ -76,8 +78,20 @@ export default function TodoSection() {
     await deleteTodo.mutateAsync(id);
   }, [deleteTodo]);
 
+  const handleSendReminder = useCallback(async () => {
+    if (!studentId) return;
+    
+    setIsSendingReminder(true);
+    try {
+      await sendReminder();
+    } finally {
+      setIsSendingReminder(false);
+    }
+  }, [sendReminder, studentId]);
+
   // Only show the reminder button for counselors
   const isCounselor = profile?.user_type === 'counselor' || profile?.user_type === 'admin';
+  const hasUncompletedTodos = todos.some(todo => !todo.completed);
 
   return (
     <Card>
@@ -88,15 +102,37 @@ export default function TodoSection() {
             <CardTitle>To-Do List</CardTitle>
           </div>
           {isCounselor && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={sendReminder}
-              className="flex items-center gap-1"
-            >
-              <Bell className="h-4 w-4" />
-              发送提醒
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleSendReminder}
+                    className="flex items-center gap-1"
+                    disabled={isSendingReminder || !hasUncompletedTodos}
+                  >
+                    {isSendingReminder ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        发送中...
+                      </>
+                    ) : (
+                      <>
+                        <Bell className="h-4 w-4" />
+                        发送提醒
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {!hasUncompletedTodos ? 
+                    "没有未完成的待办事项可以提醒" : 
+                    "发送邮件提醒学生和辅导员未完成的待办事项"
+                  }
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </CardHeader>

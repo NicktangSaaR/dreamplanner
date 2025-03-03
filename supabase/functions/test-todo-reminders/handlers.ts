@@ -16,45 +16,28 @@ export async function processReminderRequest(requestBody: any) {
   const envVars = Object.keys(Deno.env.toObject());
   console.log("Available environment variables:", envVars);
   
-  // Try different API key name formats
-  const possibleKeyNames = [
-    "RESEND_API_KEY", 
-    "resend_api_key",
-    "Remind API", 
-    "REMIND_API", 
-    "remind_api"
-  ];
+  // Get Resend API key with proper error handling
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
   
-  let resendApiKey = null;
-  for (const keyName of possibleKeyNames) {
-    const value = Deno.env.get(keyName);
-    if (value) {
-      resendApiKey = value;
-      console.log(`Found API key with name: "${keyName}"`);
-      break;
-    }
+  if (!resendApiKey) {
+    console.error("RESEND_API_KEY environment variable is not set");
+    return { 
+      error: "Email service configuration is missing", 
+      details: "RESEND_API_KEY environment variable is not set. Please add it to your Supabase Edge Function secrets.",
+      availableEnvVars: envVars
+    };
   }
   
   // Safely validate API key format (without outputting the full key)
-  if (resendApiKey) {
-    console.log(`Found API key with prefix: ${resendApiKey.substring(0, 3)}***`);
-    console.log(`API key length: ${resendApiKey.length} characters`);
-    
-    // Check for correct prefix for Resend API keys
-    if (!resendApiKey.startsWith("re_")) {
-      console.error("API key has incorrect format. Resend API keys should start with 're_'");
-      return { 
-        error: "API key has incorrect format", 
-        details: "Resend API keys should start with 're_'. Please check your Supabase Edge Function secrets.",
-        availableEnvVars: envVars
-      };
-    }
-  } else {
-    console.error("No Resend API key found. Tried the following names:", possibleKeyNames);
+  console.log(`Found API key with prefix: ${resendApiKey.substring(0, 3)}***`);
+  console.log(`API key length: ${resendApiKey.length} characters`);
+  
+  // Check for correct prefix for Resend API keys
+  if (!resendApiKey.startsWith("re_")) {
+    console.error("API key has incorrect format. Resend API keys should start with 're_'");
     return { 
-      error: "Email service configuration is missing", 
-      details: "Could not find API key with any of the expected names. Please add RESEND_API_KEY to your Supabase Edge Function secrets.",
-      checkedNames: possibleKeyNames,
+      error: "API key has incorrect format", 
+      details: "Resend API keys should start with 're_'. Please check your Supabase Edge Function secrets.",
       availableEnvVars: envVars
     };
   }

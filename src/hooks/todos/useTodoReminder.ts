@@ -1,5 +1,5 @@
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { invokeReminderFunction } from "./services/todoReminderService";
 import { handleInvokeError } from "./utils/errorHandlers";
@@ -9,12 +9,16 @@ import { processResponse, showResponseToast } from "./utils/responseProcessor";
  * Custom hook to handle todo reminder functionality
  */
 export const useTodoReminder = (studentId: string | undefined) => {
+  const [isLoading, setIsLoading] = useState(false);
+  
   const sendReminder = useCallback(async () => {
     if (!studentId) {
       console.error("No student ID provided");
       toast.error("无法发送提醒：未找到学生ID");
       return;
     }
+    
+    setIsLoading(true);
     
     try {
       // Convert the toast loading ID to string to ensure type safety
@@ -51,8 +55,10 @@ export const useTodoReminder = (studentId: string | undefined) => {
       console.error("Error details:", JSON.stringify(err));
       toast.dismiss();
       toast.error(`发送提醒失败 (应用错误): ${err.message || JSON.stringify(err)}`);
+    } finally {
+      setIsLoading(false);
     }
   }, [studentId]);
 
-  return { sendReminder };
+  return { sendReminder, isLoading };
 };
