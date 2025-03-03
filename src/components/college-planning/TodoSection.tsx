@@ -95,8 +95,9 @@ export default function TodoSection() {
         toast.dismiss();
         
         // Check if the error might be related to missing API key
-        if (error.message.includes("500") || error.message.includes("non-2xx")) {
-          toast.error("发送提醒失败: 请确保已在Supabase中设置RESEND_API_KEY");
+        if (error.message.includes("500") || error.message.includes("non-2xx") || 
+            error.message.toLowerCase().includes("configuration")) {
+          toast.error("发送提醒失败: 请确保已在Supabase中设置Remind API或RESEND_API_KEY");
         } else {
           toast.error("发送提醒失败: " + (error.message || "请联系管理员检查Edge Function配置"));
         }
@@ -114,7 +115,7 @@ export default function TodoSection() {
     } catch (err) {
       console.error("Error in send reminder:", err);
       toast.dismiss();
-      toast.error("发送提醒失败，请确保已在Supabase Edge Function设置中添加RESEND_API_KEY");
+      toast.error("发送提醒失败，请确保已在Supabase Edge Function设置中添加Remind API或RESEND_API_KEY");
     }
   }, [studentId]);
 

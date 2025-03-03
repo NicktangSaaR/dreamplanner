@@ -15,18 +15,20 @@ serve(async (req) => {
   }
 
   try {
-    // Check if RESEND_API_KEY is available
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    // Check for API keys - try multiple possible names
+    const resendApiKey = Deno.env.get("RESEND_API_KEY") || Deno.env.get("Remind API");
     if (!resendApiKey) {
-      console.error("RESEND_API_KEY is not set");
+      console.error("No Resend API key found - checked RESEND_API_KEY and Remind API");
       return new Response(
         JSON.stringify({ 
           error: "Email service configuration is missing", 
-          details: "Please set RESEND_API_KEY in Supabase Edge Function secrets" 
+          details: "Please set RESEND_API_KEY or Remind API in Supabase Edge Function secrets" 
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    console.log("Found a valid Resend API key");
     
     // Initialize resend with the API key
     const resend = new Resend(resendApiKey);
@@ -190,6 +192,7 @@ serve(async (req) => {
       
       // Send email to student
       try {
+        console.log(`Attempting to send email to student ${student.email}`);
         const studentEmailPromise = resend.emails.send({
           from: "College Planning Assistant <noreply@resend.dev>",
           to: student.email,
@@ -240,6 +243,7 @@ serve(async (req) => {
         `;
         
         try {
+          console.log(`Attempting to send email to counselor ${counselor.email}`);
           const counselorEmailPromise = resend.emails.send({
             from: "College Planning Assistant <noreply@resend.dev>",
             to: counselor.email,
