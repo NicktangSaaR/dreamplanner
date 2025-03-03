@@ -101,7 +101,7 @@ export default function TodoSection() {
         
         // 提供更具体的错误信息
         if (error.message.includes("validation_error")) {
-          toast.error("Resend验证错误：您需要在Resend.com验证您的域名，或等待测试邮件发送至您的验证邮箱");
+          toast.error("Resend验证错误：域名验证失败，请确认已在Resend.com完成域名验证");
         } else if (error.message.includes("api_error")) {
           toast.error("API错误：Resend API密钥可能无效，请在Supabase Edge Function设置中检查密钥");
         } else if (error.message.includes("rate_limit")) {
@@ -120,7 +120,9 @@ export default function TodoSection() {
       if (data?.error) {
         // 处理Edge Function返回的错误
         if (data.error.includes("validation_error")) {
-          toast.warning("邮件发送受限：Resend要求验证域名或仅发送到已验证的邮箱地址");
+          toast.warning("邮件发送受限：请确认Resend.com已完成域名验证");
+        } else if (data.error.includes("domain")) {
+          toast.warning("域名验证错误：请确认dreamplaneredu.com已在Resend.com正确验证");
         } else {
           toast.error(`提醒发送失败: ${data.error}`);
         }
