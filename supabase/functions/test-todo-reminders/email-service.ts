@@ -14,31 +14,41 @@ export class ResendEmailService implements EmailService {
   private verifiedEmail: string;
 
   constructor(apiKey: string) {
+    console.log("Initializing ResendEmailService");
+    
     if (!apiKey) {
+      console.error("No Resend API key provided");
       throw new Error("No Resend API key provided");
     }
     
     if (apiKey.startsWith("re_") === false) {
+      console.error("Invalid Resend API key format. Key should start with 're_'");
       throw new Error("Invalid Resend API key format. Key should start with 're_'");
     }
     
+    console.log(`API key format validated, first 3 chars: ${apiKey.substring(0, 3)}, length: ${apiKey.length}`);
     this.resend = new Resend(apiKey);
+    
     // 默认已验证的域名
     this.verifiedDomain = "dreamplaneredu.com";
+    console.log(`Default verified domain set to: ${this.verifiedDomain}`);
+    
     // 安全地保存验证邮箱作为备用（用于测试）
     this.verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "nicktangbusiness87@gmail.com";
+    console.log(`Verified email for testing: ${this.verifiedEmail}`);
   }
 
   // 获取域名状态
   async getDomainStatus(domain: string = "dreamplaneredu.com"): Promise<any> {
     try {
-      // 此处只能模拟检查，Resend API 不直接提供检查域名状态的功能
       console.log(`Checking domain status for: ${domain}`);
       
       // 尝试发送测试邮件来检查域名
       return await this.testApiKey(domain);
     } catch (error) {
       console.error("Failed to check domain status:", error);
+      console.error("Error details:", JSON.stringify(error));
+      
       return { 
         error: true, 
         message: `Domain ${domain} check failed: ${error.message || JSON.stringify(error)}`,
@@ -50,9 +60,21 @@ export class ResendEmailService implements EmailService {
   async testApiKey(domain: string = "dreamplaneredu.com"): Promise<any> {
     console.log(`Testing Resend API key with domain: ${domain}`);
     
+    // 检查API密钥是否存在
+    const apiKey = Deno.env.get("RESEND_API_KEY");
+    if (!apiKey) {
+      console.error("RESEND_API_KEY environment variable is not set");
+      return {
+        error: true,
+        code: "missing_api_key",
+        message: "RESEND_API_KEY environment variable is not set"
+      };
+    }
+    
     try {
       // 检查 API 密钥前缀
-      if (!Deno.env.get("RESEND_API_KEY")?.startsWith("re_")) {
+      if (!apiKey.startsWith("re_")) {
+        console.error("Invalid API key format:", apiKey.substring(0, 3) + "***");
         return {
           error: true,
           code: "invalid_api_key_format",
@@ -60,6 +82,7 @@ export class ResendEmailService implements EmailService {
         };
       }
       
+      console.log(`Using from address for test: reminder@${domain}`);
       // 使用指定的验证域名
       const result = await this.resend.emails.send({
         from: `College Planning <reminder@${domain}>`,
@@ -69,9 +92,10 @@ export class ResendEmailService implements EmailService {
         text: "This is a test email to verify the API key and domain."
       });
       
-      console.log("Test email sent successfully:", JSON.stringify(result));
+      console.log("Test email send result:", JSON.stringify(result));
       
       if (result.error) {
+        console.error("Error in Resend API response:", result.error);
         return {
           error: true,
           code: result.error.code || "unknown_error",
@@ -116,7 +140,8 @@ export class ResendEmailService implements EmailService {
         error: true,
         code: errorCode,
         message: errorMessage,
-        details: JSON.stringify(error)
+        details: JSON.stringify(error),
+        time: new Date().toISOString()
       };
     }
   }
@@ -128,7 +153,7 @@ export class ResendEmailService implements EmailService {
       // 首先测试 API 密钥和域名
       const testResult = await this.testApiKey(domain);
       if (testResult.error) {
-        console.error("Pre-send test failed:", testResult);
+        console.error("Pre-send domain validation failed:", testResult);
         return testResult;
       }
       
@@ -194,7 +219,8 @@ export class ResendEmailService implements EmailService {
         error: true,
         code: errorCode,
         message: errorMessage,
-        details: JSON.stringify(error)
+        details: JSON.stringify(error),
+        time: new Date().toISOString()
       };
     }
   }
