@@ -1,7 +1,7 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { invokeReminderFunction } from "./services/todoReminderService";
+import { invokeReminderFunction, checkSupabaseConnectivity } from "./services/todoReminderService";
 import { handleInvokeError } from "./utils/errorHandlers";
 import { processResponse, showResponseToast } from "./utils/responseProcessor";
 
@@ -10,6 +10,7 @@ import { processResponse, showResponseToast } from "./utils/responseProcessor";
  */
 export const useTodoReminder = (studentId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   const sendReminder = useCallback(async () => {
     if (!studentId) {
@@ -19,12 +20,24 @@ export const useTodoReminder = (studentId: string | undefined) => {
     }
     
     setIsLoading(true);
+    setConnectionError(null);
     
     try {
       // Convert the toast loading ID to string to ensure type safety
       const toastId = toast.loading("发送提醒中...") as string;
       
       console.log("Invoking Edge Function with studentId:", studentId);
+      
+      // Check connectivity first
+      const isConnected = await checkSupabaseConnectivity();
+      if (!isConnected) {
+        toast.dismiss(toastId);
+        const errorMessage = "Supabase 项目可能处于休眠状态，请访问 Supabase 控制台激活项目后重试";
+        toast.error(errorMessage);
+        setConnectionError(errorMessage);
+        setIsLoading(false);
+        return;
+      }
       
       // Invoke the Edge Function with better error debugging
       try {
@@ -33,6 +46,18 @@ export const useTodoReminder = (studentId: string | undefined) => {
         
         console.log("Edge Function response:", data);
         console.log("Edge Function error:", error);
+        
+        // Handle connection error
+        if (error && error.isConnectionError) {
+          toast.dismiss(toastId);
+          const errorMessage = error.message || "无法连接到 Edge Function，请检查 Supabase 项目状态";
+          toast.error(errorMessage, {
+            description: "请尝试访问 Supabase 控制台以激活项目，然后重试",
+            duration: 5000
+          });
+          setConnectionError(errorMessage);
+          return;
+        }
         
         // Handle invoke error
         if (error) {
@@ -60,12 +85,14 @@ export const useTodoReminder = (studentId: string | undefined) => {
       } catch (fetchError) {
         console.error("Fetch error when invoking Edge Function:", fetchError);
         toast.dismiss(toastId);
-        toast.error(`无法连接到 Edge Function: ${JSON.stringify(fetchError)}`);
         
-        // Display troubleshooting guidance
-        setTimeout(() => {
-          toast.error("请确保 Supabase 项目处于活动状态，并检查网络连接");
-        }, 1000);
+        const errorMessage = "无法连接到 Edge Function，可能原因: 1) Supabase 项目休眠 2) 网络连接问题 3) Edge Function 部署问题";
+        toast.error(errorMessage, {
+          description: "请尝试访问 Supabase 控制台以激活项目，然后重试",
+          duration: 5000
+        });
+        
+        setConnectionError(errorMessage);
       }
     } catch (err: any) {
       console.error("Exception in send reminder:", err);
@@ -77,5 +104,5 @@ export const useTodoReminder = (studentId: string | undefined) => {
     }
   }, [studentId]);
 
-  return { sendReminder, isLoading };
+  return { sendReminder, isLoading, connectionError };
 };

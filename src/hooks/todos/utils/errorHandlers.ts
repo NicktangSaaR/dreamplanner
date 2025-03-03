@@ -6,6 +6,23 @@ export const handleInvokeError = (error: any): string => {
   console.error("Error sending reminder (invoke error):", error);
   console.error("Error details:", JSON.stringify(error));
   
+  // Check for connection errors
+  if (error.isConnectionError) {
+    console.error("Connection error detected:", error.message);
+    
+    // Show more helpful message
+    setTimeout(() => {
+      import("sonner").then(({ toast }) => {
+        toast.error("Edge Function 连接失败，可能原因: 1) Supabase 项目休眠 2) 网络连接问题 3) Edge Function 部署问题", {
+          description: "请确保 Supabase 项目处于活动状态，检查网络连接，并确认 Edge Function 已正确部署",
+          duration: 5000
+        });
+      });
+    }, 1000);
+    
+    return "无法连接到 Edge Function，请检查 Supabase 项目状态和网络连接";
+  }
+  
   // Check for FunctionsFetchError specifically
   if (error.name === "FunctionsFetchError") {
     console.error("FunctionsFetchError detected. This typically indicates a connection issue to the Edge Function.");
@@ -13,7 +30,10 @@ export const handleInvokeError = (error: any): string => {
     // Show more helpful message
     setTimeout(() => {
       import("sonner").then(({ toast }) => {
-        toast.error("Edge Function 连接失败，可能原因: 1) Supabase 项目休眠 2) 网络连接问题 3) Edge Function 部署问题");
+        toast.error("Edge Function 连接失败，可能原因: 1) Supabase 项目休眠 2) 网络连接问题 3) Edge Function 部署问题", {
+          description: "请尝试访问 Supabase 控制台以激活项目，然后重试",
+          duration: 5000
+        });
       });
     }, 1000);
     

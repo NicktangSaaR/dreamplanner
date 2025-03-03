@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckSquare, Bell, Loader2, AlertCircle } from "lucide-react";
+import { CheckSquare, Bell, Loader2, AlertCircle, RefreshCcw } from "lucide-react";
 import TodoForm from "./todos/TodoForm";
 import BulkImportForm from "./todos/BulkImportForm";
 import TodoList from "./todos/TodoList";
@@ -17,6 +17,7 @@ export default function TodoSection() {
   const { studentId } = useParams();
   const { profile } = useProfile();
   const [lastReminderSent, setLastReminderSent] = useState<Date | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
   const {
     todos,
     createTodo,
@@ -25,7 +26,7 @@ export default function TodoSection() {
     updateTodo,
     deleteTodo,
   } = useStudentTodos(studentId);
-  const { sendReminder, isLoading } = useTodoReminder(studentId);
+  const { sendReminder, isLoading, connectionError } = useTodoReminder(studentId);
 
   console.log("TodoSection - Current user type:", profile?.user_type);
   console.log("TodoSection - Student ID from params:", studentId);
@@ -89,13 +90,38 @@ export default function TodoSection() {
       console.log("Sending reminder for student:", studentId);
       await sendReminder();
       
-      // Record the time when reminder was sent
-      setLastReminderSent(new Date());
+      // Only record the time when reminder was successfully sent
+      if (!connectionError) {
+        setLastReminderSent(new Date());
+      }
     } catch (error) {
       console.error("Failed to send reminder:", error);
       toast.error("提醒发送失败，请稍后再试");
     }
-  }, [sendReminder, studentId]);
+  }, [sendReminder, studentId, connectionError]);
+
+  const handleRetryConnection = useCallback(async () => {
+    setIsRetrying(true);
+    try {
+      toast.info("正在尝试重新连接到 Supabase...");
+      // Import the check function to avoid circular dependencies
+      const { checkSupabaseConnectivity } = await import("@/hooks/todos/services/todoReminderService");
+      const isConnected = await checkSupabaseConnectivity();
+      
+      if (isConnected) {
+        toast.success("已成功连接到 Supabase");
+        // If connection is restored, try sending the reminder
+        handleSendReminder();
+      } else {
+        toast.error("无法连接到 Supabase，请确保项目处于活动状态");
+      }
+    } catch (error) {
+      console.error("Error checking connectivity:", error);
+      toast.error("检查连接时发生错误");
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [handleSendReminder]);
 
   // Only show the reminder button for counselors
   const isCounselor = profile?.user_type === 'counselor' || profile?.user_type === 'admin';
@@ -119,34 +145,87 @@ export default function TodoSection() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex flex-col items-end">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleSendReminder}
-                      className="flex items-center gap-1"
-                      disabled={isLoading || !hasUncompletedTodos}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          发送中...
-                        </>
-                      ) : (
-                        <>
+                    {connectionError ? (
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleRetryConnection}
+                          className="flex items-center gap-1 text-amber-500 hover:text-amber-600 border-amber-200"
+                          disabled={isRetrying}
+                        >
+                          {isRetrying ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              连接中...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCcw className="h-4 w-4" />
+                              重试连接
+                            </>
+                          )}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleSendReminder}
+                          className="flex items-center gap-1 opacity-50"
+                          disabled={true}
+                        >
                           <Bell className="h-4 w-4" />
                           发送提醒
-                        </>
-                      )}
-                    </Button>
-                    {lastReminderText && (
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleSendReminder}
+                        className="flex items-center gap-1"
+                        disabled={isLoading || !hasUncompletedTodos}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            发送中...
+                          </>
+                        ) : (
+                          <>
+                            <Bell className="h-4 w-4" />
+                            发送提醒
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    {lastReminderText && !connectionError && (
                       <span className="text-xs text-muted-foreground mt-1">
                         {lastReminderText}
+                      </span>
+                    )}
+                    {connectionError && (
+                      <span className="text-xs text-amber-500 mt-1">
+                        连接错误：请激活 Supabase 项目后重试
                       </span>
                     )}
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {!hasUncompletedTodos ? (
+                  {connectionError ? (
+                    <div className="max-w-xs">
+                      <div className="flex items-center gap-1 mb-1">
+                        <AlertCircle className="h-4 w-4 text-amber-500" />
+                        <span className="font-semibold">连接错误</span>
+                      </div>
+                      <p>无法连接到 Supabase Edge Function，可能原因:</p>
+                      <ul className="list-disc pl-4 mt-1 space-y-1 text-sm">
+                        <li>Supabase 项目处于休眠状态</li>
+                        <li>网络连接问题</li>
+                        <li>Edge Function 部署问题</li>
+                      </ul>
+                      <p className="mt-1 text-sm">请尝试访问 Supabase 控制台以激活项目，然后点击"重试连接"</p>
+                    </div>
+                  ) : !hasUncompletedTodos ? (
                     <div className="flex items-center gap-1">
                       <AlertCircle className="h-4 w-4" />
                       <span>没有未完成的待办事项可以提醒</span>
