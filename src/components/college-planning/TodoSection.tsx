@@ -99,19 +99,33 @@ export default function TodoSection() {
         console.error("Error sending reminder:", error);
         toast.dismiss();
         
-        // 提供更详细的错误信息
-        if (error.message.includes("500") || error.message.includes("non-2xx")) {
-          // 尝试验证API密钥问题
-          toast.error("发送提醒失败: API密钥可能配置有误或存在Resend账户限制，请检查Edge Function日志");
-        } else if (error.message.toLowerCase().includes("configuration")) {
-          toast.error("发送提醒失败: Edge Function配置问题，请确保API密钥正确设置");
+        // 提供更具体的错误信息
+        if (error.message.includes("validation_error")) {
+          toast.error("Resend验证错误：您需要在Resend.com验证您的域名，或等待测试邮件发送至您的验证邮箱");
+        } else if (error.message.includes("api_error")) {
+          toast.error("API错误：Resend API密钥可能无效，请在Supabase Edge Function设置中检查密钥");
+        } else if (error.message.includes("rate_limit")) {
+          toast.error("发送频率限制：请稍后再试");
+        } else if (error.message.includes("500") || error.message.includes("non-2xx")) {
+          toast.error("服务器错误：请检查Edge Function日志以获取详细信息");
         } else {
-          toast.error(`发送提醒失败: ${error.message || "未知错误，请查看控制台获取详细信息"}`);
+          toast.error(`发送提醒失败: ${error.message || "未知错误"}`);
         }
+        
         return;
       }
       
       toast.dismiss();
+      
+      if (data?.error) {
+        // 处理Edge Function返回的错误
+        if (data.error.includes("validation_error")) {
+          toast.warning("邮件发送受限：Resend要求验证域名或仅发送到已验证的邮箱地址");
+        } else {
+          toast.error(`提醒发送失败: ${data.error}`);
+        }
+        return;
+      }
       
       if (data?.note) {
         toast.success(`${data.message} (${data.note})`);
