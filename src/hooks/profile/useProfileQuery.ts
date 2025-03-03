@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/profile";
@@ -61,11 +62,12 @@ export const useProfileQuery = () => {
           instagram: socialMedia.instagram || "",
         } : null,
         interested_majors: interestedMajors,
-        career_interest_test: careerInterestTest
+        career_interest_test: careerInterestTest,
+        status: data.status
       };
 
       console.log("Profile data fetched:", transformedData);
       return transformedData;
     },
   });
-};
+}

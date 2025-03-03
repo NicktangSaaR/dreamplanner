@@ -1,4 +1,3 @@
-
 export interface Profile {
   id: string;
   user_type: string;
@@ -23,6 +22,7 @@ export interface Profile {
     primaryType: string;
   } | null;
   email?: string | null;
+  status?: string | null; // Add status field
 }
 
 export interface ProfileError {

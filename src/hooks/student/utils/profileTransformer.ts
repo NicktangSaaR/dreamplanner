@@ -13,6 +13,7 @@ export interface RawProfile {
   application_year: string | null;
   career_interest_test: any;
   email: string | null;
+  status: string | null;
   [key: string]: any;
 }
 
@@ -62,6 +63,7 @@ export const transformProfile = (rawProfile: RawProfile | null) => {
     application_year: rawProfile.application_year,
     career_interest_test: careerInterestTest,
     email: rawProfile.email,
+    status: rawProfile.status,
     created_at: rawProfile.created_at,
     updated_at: rawProfile.updated_at
   };
