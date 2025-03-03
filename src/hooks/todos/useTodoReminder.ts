@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -171,7 +172,8 @@ export const useTodoReminder = (studentId: string | undefined) => {
     }
     
     try {
-      const toastId = toast.loading("发送提醒中...");
+      // Fixed: Convert the toast loading ID to string to ensure type safety
+      const toastId = toast.loading("发送提醒中...") as string;
       
       // Invoke the Edge Function
       const result = await invokeReminderFunction(studentId);
