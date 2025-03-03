@@ -8,6 +8,7 @@ interface StudentProfile {
   grade: string | null;
   school: string | null;
   interested_majors: string[] | null;
+  status: string | null;
 }
 
 interface CounselorStudentRelationship {
@@ -34,7 +35,8 @@ export function useCounselorStudents() {
             full_name,
             grade,
             school,
-            interested_majors
+            interested_majors,
+            status
           )
         `)
         .eq('counselor_id', user.id);
@@ -54,7 +56,8 @@ export function useCounselorStudents() {
             full_name,
             grade,
             school,
-            interested_majors
+            interested_majors,
+            status
           )
         `)
         .eq('collaborator_id', user.id);

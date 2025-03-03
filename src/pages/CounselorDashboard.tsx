@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useCounselorStudents } from "@/hooks/useCounselorStudents";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, BrainCircuit } from "lucide-react";
+import { LogOut, User, BrainCircuit, CheckCircle } from "lucide-react";
 import StudentCard from "@/components/college-planning/StudentCard";
 import InviteStudentDialog from "@/components/college-planning/InviteStudentDialog";
 import { useState, useEffect } from "react";
@@ -13,6 +13,8 @@ export default function CounselorDashboard() {
   const navigate = useNavigate();
   const { data: students = [], isLoading, refetch } = useCounselorStudents();
   const [counselorId, setCounselorId] = useState('');
+  const [activeStudents, setActiveStudents] = useState<any[]>([]);
+  const [completedStudents, setCompletedStudents] = useState<any[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -51,6 +53,24 @@ export default function CounselorDashboard() {
     checkAuth();
   }, [navigate]);
 
+  // Group students by status when students data changes
+  useEffect(() => {
+    const active: any[] = [];
+    const completed: any[] = [];
+
+    students.forEach(relationship => {
+      const student = relationship.students;
+      if (student.status === 'Completed') {
+        completed.push(relationship);
+      } else {
+        active.push(relationship);
+      }
+    });
+
+    setActiveStudents(active);
+    setCompletedStudents(completed);
+  }, [students]);
+
   const handleStudentClick = (studentId: string) => {
     navigate(`/counselor-dashboard/student/${studentId}`);
   };
@@ -68,6 +88,11 @@ export default function CounselorDashboard() {
 
   const handleActivityBrainstorming = () => {
     window.open('https://chatgpt.com/g/g-67c3ae02ca70819186461af602529c0e-nick-activity-brainstromer', '_blank');
+  };
+
+  const handleStatusChange = async (studentId: string, status: string) => {
+    // Refetch the students data to update the grouping
+    await refetch();
   };
 
   if (isLoading) {
@@ -108,15 +133,40 @@ export default function CounselorDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {students.map((relationship) => (
-          <StudentCard
-            key={relationship.student_id}
-            student={relationship.students}
-            onClick={() => handleStudentClick(relationship.student_id)}
-          />
-        ))}
+      {/* Active Students Section */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Active Students ({activeStudents.length})</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {activeStudents.map((relationship) => (
+            <StudentCard
+              key={relationship.student_id}
+              student={relationship.students}
+              onClick={() => handleStudentClick(relationship.student_id)}
+              onStatusChange={handleStatusChange}
+            />
+          ))}
+        </div>
       </div>
+
+      {/* Completed Students Section */}
+      {completedStudents.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <h2 className="text-xl font-semibold">Completed Students ({completedStudents.length})</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {completedStudents.map((relationship) => (
+              <StudentCard
+                key={relationship.student_id}
+                student={relationship.students}
+                onClick={() => handleStudentClick(relationship.student_id)}
+                onStatusChange={handleStatusChange}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
