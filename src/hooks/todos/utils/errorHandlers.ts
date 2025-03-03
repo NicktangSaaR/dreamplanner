@@ -6,6 +6,20 @@ export const handleInvokeError = (error: any): string => {
   console.error("Error sending reminder (invoke error):", error);
   console.error("Error details:", JSON.stringify(error));
   
+  // Check for FunctionsFetchError specifically
+  if (error.name === "FunctionsFetchError") {
+    console.error("FunctionsFetchError detected. This typically indicates a connection issue to the Edge Function.");
+    
+    // Show more helpful message
+    setTimeout(() => {
+      import("sonner").then(({ toast }) => {
+        toast.error("Edge Function 连接失败，可能原因: 1) Supabase 项目休眠 2) 网络连接问题 3) Edge Function 部署问题");
+      });
+    }, 1000);
+    
+    return "无法连接到 Edge Function，请检查 Supabase 项目状态和网络连接";
+  }
+  
   // Check for non-2xx errors
   if (typeof error === 'object' && error.message) {
     if (error.message.includes("Edge Function returned a non-2xx status code")) {

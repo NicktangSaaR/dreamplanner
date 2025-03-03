@@ -1,21 +1,20 @@
-
 import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckSquare, Bell, Loader2 } from "lucide-react";
+import { CheckSquare, Bell, Loader2, AlertCircle } from "lucide-react";
 import TodoForm from "./todos/TodoForm";
 import BulkImportForm from "./todos/BulkImportForm";
 import TodoList from "./todos/TodoList";
-import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
 import { Button } from "@/components/ui/button";
 import { useTodoReminder } from "@/hooks/todos/useTodoReminder";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 export default function TodoSection() {
   const { studentId } = useParams();
   const { profile } = useProfile();
-  const [isSendingReminder, setIsSendingReminder] = useState(false);
+  const [lastReminderSent, setLastReminderSent] = useState<Date | null>(null);
   const {
     todos,
     createTodo,
@@ -24,7 +23,7 @@ export default function TodoSection() {
     updateTodo,
     deleteTodo,
   } = useStudentTodos(studentId);
-  const { sendReminder } = useTodoReminder(studentId);
+  const { sendReminder, isLoading } = useTodoReminder(studentId);
 
   console.log("TodoSection - Current user type:", profile?.user_type);
   console.log("TodoSection - Student ID from params:", studentId);
@@ -79,19 +78,31 @@ export default function TodoSection() {
   }, [deleteTodo]);
 
   const handleSendReminder = useCallback(async () => {
-    if (!studentId) return;
+    if (!studentId) {
+      toast.error("无法发送提醒：未找到学生ID");
+      return;
+    }
     
-    setIsSendingReminder(true);
     try {
+      console.log("Sending reminder for student:", studentId);
       await sendReminder();
-    } finally {
-      setIsSendingReminder(false);
+      
+      // Record the time when reminder was sent
+      setLastReminderSent(new Date());
+    } catch (error) {
+      console.error("Failed to send reminder:", error);
+      toast.error("提醒发送失败，请稍后再试");
     }
   }, [sendReminder, studentId]);
 
   // Only show the reminder button for counselors
   const isCounselor = profile?.user_type === 'counselor' || profile?.user_type === 'admin';
   const hasUncompletedTodos = todos.some(todo => !todo.completed);
+  
+  // Format the last reminder time
+  const lastReminderText = lastReminderSent 
+    ? `上次提醒发送时间: ${lastReminderSent.toLocaleString('zh-CN')}`
+    : null;
 
   return (
     <Card>
@@ -105,31 +116,45 @@ export default function TodoSection() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleSendReminder}
-                    className="flex items-center gap-1"
-                    disabled={isSendingReminder || !hasUncompletedTodos}
-                  >
-                    {isSendingReminder ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        发送中...
-                      </>
-                    ) : (
-                      <>
-                        <Bell className="h-4 w-4" />
-                        发送提醒
-                      </>
+                  <div className="flex flex-col items-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleSendReminder}
+                      className="flex items-center gap-1"
+                      disabled={isLoading || !hasUncompletedTodos}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          发送中...
+                        </>
+                      ) : (
+                        <>
+                          <Bell className="h-4 w-4" />
+                          发送提醒
+                        </>
+                      )}
+                    </Button>
+                    {lastReminderText && (
+                      <span className="text-xs text-muted-foreground mt-1">
+                        {lastReminderText}
+                      </span>
                     )}
-                  </Button>
+                  </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {!hasUncompletedTodos ? 
-                    "没有未完成的待办事项可以提醒" : 
-                    "发送邮件提醒学生和辅导员未完成的待办事项"
-                  }
+                  {!hasUncompletedTodos ? (
+                    <div className="flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>没有未完成的待办事项可以提醒</span>
+                    </div>
+                  ) : (
+                    <div>
+                      <p>发送邮件提醒学生和辅导员未完成的待办事项</p>
+                      <p className="text-xs mt-1">提醒将发送到学生和辅导员的邮箱</p>
+                    </div>
+                  )}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
