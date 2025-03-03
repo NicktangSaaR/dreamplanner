@@ -27,7 +27,7 @@ export const StatusBadge = ({ status }: StatusBadgeProps) => {
   };
 
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(status)}`}>
+    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${getStatusColor(status)} ml-1`}>
       {status}
     </span>
   );

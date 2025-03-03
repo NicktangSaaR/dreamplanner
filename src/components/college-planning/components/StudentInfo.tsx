@@ -20,8 +20,8 @@ export const StudentInfo = ({ student, status }: StudentInfoProps) => {
         <User className="h-5 w-5 text-primary" />
       </div>
       <div className="flex flex-col min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-base text-gray-900 truncate">
+        <div className="flex items-center flex-wrap gap-1">
+          <h3 className="font-semibold text-base text-gray-900 truncate max-w-[calc(100%-70px)]">
             {student.full_name}
           </h3>
           <StatusBadge status={status} />
