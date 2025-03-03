@@ -86,20 +86,35 @@ export default function TodoSection() {
     try {
       toast.loading("发送提醒中...");
       
+      console.log("Invoking Edge Function with studentId:", studentId);
+      
+      // 首先获取Supabase项目信息以便调试
+      const { data: projectData } = await supabase.rpc('get_project_ref');
+      console.log("Supabase project reference:", projectData);
+      
+      // 获取函数列表以验证函数是否存在（仅调试用）
+      const { data: functions } = await supabase.functions.list();
+      console.log("Available functions:", functions?.map(f => f.name));
+      
+      // 调用Edge Function
       const { data, error } = await supabase.functions.invoke('test-todo-reminders', {
-        body: { studentId }
+        body: { studentId, debug: true }
       });
+      
+      console.log("Function response:", data);
       
       if (error) {
         console.error("Error sending reminder:", error);
         toast.dismiss();
         
-        // Check if the error might be related to missing API key
-        if (error.message.includes("500") || error.message.includes("non-2xx") || 
-            error.message.toLowerCase().includes("configuration")) {
-          toast.error("发送提醒失败: 请确保已在Supabase中设置Remind API或RESEND_API_KEY");
+        // 提供更详细的错误信息
+        if (error.message.includes("500") || error.message.includes("non-2xx")) {
+          // 尝试验证API密钥问题
+          toast.error("发送提醒失败: API密钥可能配置有误，请检查以下几点：\n1. 确保Supabase中密钥名称为'Remind API'或'RESEND_API_KEY'\n2. 确保密钥值正确且有效\n3. 检查Edge Function日志获取更多信息");
+        } else if (error.message.toLowerCase().includes("configuration")) {
+          toast.error("发送提醒失败: Edge Function配置问题，请确保API密钥正确设置");
         } else {
-          toast.error("发送提醒失败: " + (error.message || "请联系管理员检查Edge Function配置"));
+          toast.error(`发送提醒失败: ${error.message || "未知错误，请查看控制台获取详细信息"}`);
         }
         return;
       }
@@ -109,13 +124,15 @@ export default function TodoSection() {
       
       if (data?.message === "No uncompleted todos to remind about") {
         toast.info("该学生没有未完成的待办事项");
-      } else {
+      } else if (data?.success) {
         toast.success("提醒邮件已发送");
+      } else {
+        toast.warning("操作完成，但返回了意外响应");
       }
     } catch (err) {
       console.error("Error in send reminder:", err);
       toast.dismiss();
-      toast.error("发送提醒失败，请确保已在Supabase Edge Function设置中添加Remind API或RESEND_API_KEY");
+      toast.error("发送提醒失败，请查看控制台获取详细错误信息");
     }
   }, [studentId]);
 

@@ -15,25 +15,49 @@ serve(async (req) => {
   }
 
   try {
-    // Check for API keys - try multiple possible names
+    // 列出环境变量（安全地仅显示名称）以便调试
+    console.log("Available environment variables:", Object.keys(Deno.env.toObject()));
+    
+    // 检查API密钥 - 尝试多个可能的名称
     const resendApiKey = Deno.env.get("RESEND_API_KEY") || Deno.env.get("Remind API");
-    if (!resendApiKey) {
+    
+    // 安全地验证API密钥格式（不输出完整密钥）
+    if (resendApiKey) {
+      console.log(`Found API key with prefix: ${resendApiKey.substring(0, 3)}***`);
+      console.log(`API key length: ${resendApiKey.length} characters`);
+      
+      if (!resendApiKey.startsWith("re_")) {
+        console.warn("Warning: API key doesn't start with 're_', which is typical for Resend API keys");
+      }
+    } else {
       console.error("No Resend API key found - checked RESEND_API_KEY and Remind API");
       return new Response(
         JSON.stringify({ 
           error: "Email service configuration is missing", 
-          details: "Please set RESEND_API_KEY or Remind API in Supabase Edge Function secrets" 
+          details: "Please set RESEND_API_KEY or Remind API in Supabase Edge Function secrets",
+          availableEnvVars: Object.keys(Deno.env.toObject()).join(", ")
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
-    console.log("Found a valid Resend API key");
+    // 初始化resend
+    let resend;
+    try {
+      resend = new Resend(resendApiKey);
+      console.log("Resend client initialized successfully");
+    } catch (initError) {
+      console.error("Failed to initialize Resend client:", initError);
+      return new Response(
+        JSON.stringify({ 
+          error: "Failed to initialize email service", 
+          details: String(initError) 
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
-    // Initialize resend with the API key
-    const resend = new Resend(resendApiKey);
-    
-    // Initialize Supabase client
+    // 初始化Supabase客户端
     const supabaseUrl = Deno.env.get("SUPABASE_URL") as string;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string;
     
@@ -49,14 +73,15 @@ serve(async (req) => {
     }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log("Supabase client initialized with URL:", supabaseUrl);
     
-    // Get the request body, which may contain a studentId
+    // 获取请求体
     const requestBody = await req.json().catch(() => ({}));
-    const { studentId } = requestBody;
+    const { studentId, debug } = requestBody;
     
-    console.log("Request received with studentId:", studentId);
+    console.log("Request received with studentId:", studentId, "debug mode:", debug);
     
-    // Validate studentId
+    // 验证studentId
     if (!studentId) {
       console.error("No studentId provided");
       return new Response(
@@ -65,7 +90,44 @@ serve(async (req) => {
       );
     }
     
-    // Fetch todos based on studentId
+    // 测试发送一封简单的邮件以验证API密钥
+    if (debug) {
+      try {
+        console.log("Debug mode: Testing API key with simple email");
+        const testEmail = "test@example.com"; // 仅用于测试，不会真正发送
+        
+        const testEmailResponse = await resend.emails.send({
+          from: "Test <onboarding@resend.dev>",
+          to: testEmail,
+          subject: "API Key Test",
+          html: "<p>This is a test email to verify the API key.</p>",
+        });
+        
+        console.log("Test email response:", testEmailResponse);
+        
+        if (testEmailResponse.error) {
+          return new Response(
+            JSON.stringify({ 
+              error: "API key validation failed", 
+              details: testEmailResponse.error
+            }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } catch (testError) {
+        console.error("API key validation failed:", testError);
+        return new Response(
+          JSON.stringify({ 
+            error: "Failed to validate API key", 
+            details: String(testError)
+          }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+    
+    // 获取todos
+    console.log("Fetching uncompleted todos for student:", studentId);
     const { data: todos, error: todosError } = await supabase
       .from("todos")
       .select(`
@@ -103,7 +165,7 @@ serve(async (req) => {
     
     console.log(`Found ${todos.length} uncompleted todos for student:`, studentId);
     
-    // Group todos by student
+    // 按学生分组todos
     const todosByStudent = todos.reduce((acc, todo) => {
       const studentId = todo.author_id;
       if (!acc[studentId]) {
@@ -116,7 +178,7 @@ serve(async (req) => {
       return acc;
     }, {});
     
-    // For each student, fetch their counselor
+    // 获取每个学生的辅导员
     for (const studentId in todosByStudent) {
       const { data: relationships, error: relError } = await supabase
         .from("counselor_student_relationships")
@@ -139,20 +201,20 @@ serve(async (req) => {
       todosByStudent[studentId].counselor = relationships?.counselor || null;
     }
     
-    console.log("Processed todos by student:", todosByStudent);
+    console.log("Processed todos by student:", Object.keys(todosByStudent).length, "students");
     
-    // Send emails for each student with their todos
+    // 为每个学生发送邮件
     const emailPromises = [];
     for (const studentId in todosByStudent) {
       const { student, counselor, todos } = todosByStudent[studentId];
       
-      // Skip if student doesn't have an email
+      // 如果学生没有邮箱则跳过
       if (!student?.email) {
         console.warn(`Student ${studentId} has no email. Skipping...`);
         continue;
       }
       
-      // Create todo list HTML
+      // 创建todo列表HTML
       const todoListHtml = todos.map(todo => `
         <li style="margin-bottom: 8px;">
           <strong>${todo.title}</strong>
@@ -161,7 +223,7 @@ serve(async (req) => {
         </li>
       `).join('');
       
-      // Create HTML template for email
+      // 创建邮件HTML模板
       const htmlContent = `
         <html>
           <head>
@@ -190,7 +252,7 @@ serve(async (req) => {
         </html>
       `;
       
-      // Send email to student
+      // 发送邮件给学生
       try {
         console.log(`Attempting to send email to student ${student.email}`);
         const studentEmailPromise = resend.emails.send({
@@ -209,10 +271,10 @@ serve(async (req) => {
         emailPromises.push(studentEmailPromise);
       } catch (emailError) {
         console.error(`Failed to send email to student ${student.email}:`, emailError);
-        // Continue with other emails even if one fails
+        // 即使一封邮件失败也继续发送其他邮件
       }
       
-      // If there's a counselor, send them a copy too
+      // 如果有辅导员，也给他们发送一份副本
       if (counselor?.email) {
         const counselorHtmlContent = `
           <html>
@@ -260,12 +322,12 @@ serve(async (req) => {
           emailPromises.push(counselorEmailPromise);
         } catch (emailError) {
           console.error(`Failed to send email to counselor ${counselor.email}:`, emailError);
-          // Continue with other emails even if one fails
+          // 即使一封邮件失败也继续发送其他邮件
         }
       }
     }
     
-    // Wait for all emails to be sent
+    // 等待所有邮件发送完成
     try {
       await Promise.all(emailPromises);
       console.log("All email reminders sent successfully");
@@ -276,14 +338,22 @@ serve(async (req) => {
     } catch (emailError) {
       console.error("Error sending some or all emails:", emailError);
       return new Response(
-        JSON.stringify({ error: "Some emails failed to send", details: String(emailError) }),
+        JSON.stringify({ 
+          error: "Some emails failed to send", 
+          details: String(emailError),
+          errorObject: JSON.stringify(emailError)
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
   } catch (error) {
     console.error("Error in test-todo-reminders function:", error);
     return new Response(
-      JSON.stringify({ error: String(error) }),
+      JSON.stringify({ 
+        error: String(error),
+        stack: error.stack,
+        message: error.message
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
