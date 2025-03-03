@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { processResponse } from './utils/responseProcessor';
+import { handleInvokeError } from './utils/errorHandlers';
 import { toast } from 'sonner';
 
 export const useTodoReminder = (studentId: string | undefined) => {
@@ -21,19 +22,33 @@ export const useTodoReminder = (studentId: string | undefined) => {
     try {
       console.log(`Sending reminder for student: ${studentId}`);
       
-      const { data, error } = await supabase.functions.invoke('test-todo-reminders', {
+      // Use a timeout to prevent the request from hanging indefinitely
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out')), 15000);
+      });
+      
+      // The actual request to the Edge Function
+      const edgeFunctionPromise = supabase.functions.invoke('test-todo-reminders', {
         body: { studentId }
       });
+      
+      // Race the timeout against the actual request
+      const { data, error } = await Promise.race([
+        edgeFunctionPromise,
+        timeoutPromise.then(() => {
+          throw { isConnectionError: true, message: "Connection timed out" };
+        })
+      ]) as any;
       
       console.log("Reminder response:", data);
       
       if (error) {
         console.error("Error from reminder function:", error);
         setConnectionError(true);
-        throw new Error(`Function error: ${error.message}`);
+        throw error;
       }
       
-      if (data.error) {
+      if (data?.error) {
         console.error("API error:", data.error, data.details);
         setConnectionError(true);
         throw new Error(data.error);
@@ -57,8 +72,16 @@ export const useTodoReminder = (studentId: string | undefined) => {
     } catch (err) {
       console.error("Exception in sendReminder:", err);
       setConnectionError(true);
-      // Directly handle the error here
-      toast.error(`Reminder failed: ${err.message || 'Unknown error'}`);
+      
+      // Use the specialized error handler for invoke errors
+      if (err.name === "FunctionsFetchError" || err.isConnectionError) {
+        const errorMessage = handleInvokeError(err);
+        toast.error(errorMessage);
+      } else {
+        // Handle other types of errors
+        toast.error(`提醒失败: ${err.message || '未知错误'}`);
+      }
+      
       throw err;
     } finally {
       setIsLoading(false);

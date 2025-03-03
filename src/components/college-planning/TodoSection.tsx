@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import TodoList from './todos/TodoList';
 import TodoForm from './todos/TodoForm';
 import BulkImportForm from './todos/BulkImportForm';
-import { ChevronDown, ChevronUp, SendIcon, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronUp, SendIcon, ExternalLink, RefreshCw } from 'lucide-react';
 import { useTodos } from '@/hooks/useTodos';
 import { useTodoReminder } from '@/hooks/todos/useTodoReminder';
 import { toast } from 'sonner';
@@ -59,12 +59,16 @@ const TodoSection = () => {
       await sendReminder();
     } catch (err) {
       console.error("Error sending reminder:", err);
-      toast.error(`发送提醒失败：${err.message || '未知错误'}`);
+      // Error is already handled in the hook
     }
   };
 
   const openSupabaseDashboard = () => {
     window.open('https://supabase.com/dashboard/project/fyxnuhqzgkzfuldqurej', '_blank');
+  };
+
+  const openEdgeFunctionLogs = () => {
+    window.open('https://supabase.com/dashboard/project/fyxnuhqzgkzfuldqurej/functions/test-todo-reminders/logs', '_blank');
   };
 
   // Format the last attempt time
@@ -222,6 +226,14 @@ const TodoSection = () => {
                     >
                       打开 Supabase <ExternalLink className="ml-1 h-3 w-3" />
                     </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-xs" 
+                      onClick={openEdgeFunctionLogs}
+                    >
+                      查看日志 <ExternalLink className="ml-1 h-3 w-3" />
+                    </Button>
                   </div>
                 </div>
               )}
@@ -233,8 +245,17 @@ const TodoSection = () => {
                 variant="outline"
                 size="sm"
               >
-                <SendIcon className="h-3.5 w-3.5" />
-                {isSendingReminder ? '发送中...' : '发送提醒邮件'}
+                {isSendingReminder ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    发送中...
+                  </>
+                ) : (
+                  <>
+                    <SendIcon className="h-3.5 w-3.5" />
+                    发送提醒邮件
+                  </>
+                )}
               </Button>
             </div>
           </CardFooter>
