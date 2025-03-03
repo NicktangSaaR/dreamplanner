@@ -15,11 +15,28 @@ serve(async (req) => {
   }
 
   try {
-    // 列出环境变量（安全地仅显示名称）以便调试
-    console.log("Available environment variables:", Object.keys(Deno.env.toObject()));
+    // 列出所有环境变量名称（不包含值）以便调试
+    const envVars = Object.keys(Deno.env.toObject());
+    console.log("Available environment variables:", envVars);
     
-    // 检查API密钥 - 首先尝试"Remind API"，然后尝试"RESEND_API_KEY"
-    const resendApiKey = Deno.env.get("Remind API") || Deno.env.get("RESEND_API_KEY");
+    // 尝试不同格式的API密钥名称（包括不同的大小写组合）
+    const possibleKeyNames = [
+      "Remind API", 
+      "REMIND_API", 
+      "remind_api",
+      "RESEND_API_KEY", 
+      "resend_api_key"
+    ];
+    
+    let resendApiKey = null;
+    for (const keyName of possibleKeyNames) {
+      const value = Deno.env.get(keyName);
+      if (value) {
+        resendApiKey = value;
+        console.log(`Found API key with name: "${keyName}"`);
+        break;
+      }
+    }
     
     // 安全地验证API密钥格式（不输出完整密钥）
     if (resendApiKey) {
@@ -30,12 +47,13 @@ serve(async (req) => {
         console.warn("Warning: API key doesn't start with 're_', which is typical for Resend API keys");
       }
     } else {
-      console.error("No Resend API key found - checked RESEND_API_KEY and Remind API");
+      console.error("No Resend API key found. Tried the following names:", possibleKeyNames);
       return new Response(
         JSON.stringify({ 
           error: "Email service configuration is missing", 
-          details: "Please set RESEND_API_KEY or Remind API in Supabase Edge Function secrets",
-          availableEnvVars: Object.keys(Deno.env.toObject()).join(", ")
+          details: "Could not find API key with any of the expected names",
+          checkedNames: possibleKeyNames,
+          availableEnvVars: envVars
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -90,40 +108,38 @@ serve(async (req) => {
       );
     }
     
-    // 测试发送一封简单的邮件以验证API密钥
-    if (debug) {
-      try {
-        console.log("Debug mode: Testing API key with simple email");
-        const testEmail = "test@example.com"; // 仅用于测试，不会真正发送
-        
-        const testEmailResponse = await resend.emails.send({
-          from: "Test <onboarding@resend.dev>",
-          to: testEmail,
-          subject: "API Key Test",
-          html: "<p>This is a test email to verify the API key.</p>",
-        });
-        
-        console.log("Test email response:", testEmailResponse);
-        
-        if (testEmailResponse.error) {
-          return new Response(
-            JSON.stringify({ 
-              error: "API key validation failed", 
-              details: testEmailResponse.error
-            }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-      } catch (testError) {
-        console.error("API key validation failed:", testError);
+    // 执行简单的测试来验证API密钥是否有效
+    try {
+      console.log("Performing basic API key validation test");
+      const testEmailResult = await resend.emails.send({
+        from: "Test <onboarding@resend.dev>",
+        to: "test@example.com", // 这只是一个测试，不会实际发送
+        subject: "API Key Test",
+        html: "<p>This is a test email to verify the API key.</p>",
+        text: "This is a test email to verify the API key."
+      });
+      
+      console.log("API key validation test response:", testEmailResult);
+      
+      if (testEmailResult.error) {
+        console.error("API key validation failed:", testEmailResult.error);
         return new Response(
           JSON.stringify({ 
-            error: "Failed to validate API key", 
-            details: String(testError)
+            error: "API key validation failed", 
+            details: testEmailResult.error
           }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+    } catch (testError) {
+      console.error("API key validation failed with exception:", testError);
+      return new Response(
+        JSON.stringify({ 
+          error: "Failed to validate API key", 
+          details: String(testError)
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
     
     // 获取todos
