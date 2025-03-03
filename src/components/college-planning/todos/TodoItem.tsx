@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,15 +27,49 @@ export default function TodoItem({
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState(todo.title);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleUpdate = async () => {
-    if (!editingTitle.trim()) return;
+    if (!editingTitle.trim() || isSubmitting) return;
+    
+    setIsSubmitting(true);
     try {
       await onUpdate(todo.id, editingTitle);
       setIsEditing(false);
       toast.success("Todo updated successfully");
     } catch (error) {
       toast.error("Failed to update todo");
+      console.error("Update error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    try {
+      await onToggleStatus(todo.id, !todo.completed);
+      // No need for toast here as the UI will update automatically
+    } catch (error) {
+      console.error("Failed to toggle status:", error);
+      toast.error("Failed to update todo status");
+    }
+  };
+
+  const handleToggleStarred = async () => {
+    try {
+      await onToggleStarred(todo.id, !todo.starred);
+    } catch (error) {
+      console.error("Failed to toggle starred:", error);
+      toast.error("Failed to update todo star status");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await onDelete(todo.id);
+    } catch (error) {
+      console.error("Failed to delete todo:", error);
+      toast.error("Failed to delete todo");
     }
   };
 
@@ -44,7 +79,8 @@ export default function TodoItem({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onToggleStatus(todo.id, !todo.completed)}
+          onClick={handleToggleStatus}
+          disabled={isSubmitting}
         >
           <Check className={`h-4 w-4 ${todo.completed ? "text-green-500" : "text-gray-300"}`} />
         </Button>
@@ -54,11 +90,12 @@ export default function TodoItem({
               value={editingTitle}
               onChange={(e) => setEditingTitle(e.target.value)}
               className="min-w-[200px]"
+              disabled={isSubmitting}
             />
-            <Button size="sm" onClick={handleUpdate}>
+            <Button size="sm" onClick={handleUpdate} disabled={isSubmitting}>
               <Check className="h-4 w-4" />
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
+            <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} disabled={isSubmitting}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -74,6 +111,7 @@ export default function TodoItem({
             variant="ghost"
             size="sm"
             onClick={() => setIsEditing(true)}
+            disabled={isSubmitting}
           >
             <Pencil className="h-4 w-4" />
           </Button>
@@ -81,7 +119,8 @@ export default function TodoItem({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onToggleStarred(todo.id, !todo.starred)}
+          onClick={handleToggleStarred}
+          disabled={isSubmitting}
         >
           {todo.starred ? (
             <Star className="h-4 w-4 text-yellow-400" />
@@ -92,7 +131,8 @@ export default function TodoItem({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onDelete(todo.id)}
+          onClick={handleDelete}
+          disabled={isSubmitting}
         >
           <Trash className="h-4 w-4 text-red-500" />
         </Button>

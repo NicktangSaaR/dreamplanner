@@ -78,30 +78,60 @@ const TodoSection = () => {
 
   // Create wrapper functions to match the expected prop types
   const handleToggleStatus = async (id: string, completed: boolean) => {
-    await toggleTodoStatus({ id, completed });
+    try {
+      await toggleTodoStatus.mutateAsync({ id, completed });
+    } catch (error) {
+      console.error("Failed to toggle todo status:", error);
+      toast.error("更新任务状态失败");
+    }
   };
 
   const handleToggleStarred = async (id: string, starred: boolean) => {
-    await toggleStarred({ id, starred });
+    try {
+      await toggleStarred.mutateAsync({ id, starred });
+    } catch (error) {
+      console.error("Failed to toggle todo starred:", error);
+      toast.error("更新任务星标状态失败");
+    }
   };
 
   const handleUpdateTodo = async (id: string, title: string) => {
-    await updateTodo({ id, title });
+    try {
+      await updateTodo.mutateAsync({ id, title });
+    } catch (error) {
+      console.error("Failed to update todo:", error);
+      toast.error("更新任务失败");
+    }
   };
 
   const handleDeleteTodo = async (id: string) => {
-    await deleteTodo(id);
+    try {
+      await deleteTodo.mutateAsync(id);
+    } catch (error) {
+      console.error("Failed to delete todo:", error);
+      toast.error("删除任务失败");
+    }
   };
 
   const handleCreateTodo = async (title: string) => {
     if (!studentId) return;
-    await createTodo({ title, authorId: studentId });
+    try {
+      await createTodo.mutateAsync({ title, authorId: studentId });
+    } catch (error) {
+      console.error("Failed to create todo:", error);
+      toast.error("创建任务失败");
+    }
   };
 
   const handleBulkImport = async (titles: string[]) => {
     if (!studentId) return;
     for (const title of titles) {
-      await createTodo({ title, authorId: studentId });
+      try {
+        await createTodo.mutateAsync({ title, authorId: studentId });
+      } catch (error) {
+        console.error(`Failed to import todo "${title}":`, error);
+        toast.error(`导入任务"${title}"失败`);
+      }
     }
   };
 

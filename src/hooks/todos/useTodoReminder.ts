@@ -57,7 +57,7 @@ export const useTodoReminder = (studentId: string | undefined) => {
     } catch (err) {
       console.error("Exception in sendReminder:", err);
       setConnectionError(true);
-      // Instead of using the non-existent handleError, we directly handle the error here
+      // Directly handle the error here
       toast.error(`Reminder failed: ${err.message || 'Unknown error'}`);
       throw err;
     } finally {
