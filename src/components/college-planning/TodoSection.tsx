@@ -108,16 +108,15 @@ export default function TodoSection() {
         console.error("Error details:", JSON.stringify(error));
         
         // 提供更具体的错误信息
-        if (error.message?.includes("validation_error") || error.message?.includes("from_address_not_allowed")) {
-          toast.error(`域名验证错误: 请确认 dreamplaneredu.com 已在Resend.com完成验证。详情: ${error.message}`);
-        } else if (error.message?.includes("api_error") || error.message?.includes("API key")) {
-          toast.error("API错误: Resend API密钥可能无效，请在Supabase Edge Function设置中检查密钥");
-        } else if (error.message?.includes("rate_limit")) {
-          toast.error("发送频率限制: 请稍后再试");
-        } else {
-          toast.error(`发送提醒失败 (系统错误): ${JSON.stringify(error)}`);
+        if (typeof error === 'object' && error.message) {
+          if (error.message.includes("Edge Function returned a non-2xx status code")) {
+            toast.error("服务器错误：Edge Function 返回了错误状态码，请检查 Supabase Edge Function 日志以获取详细信息");
+            return;
+          }
         }
         
+        // 通用错误处理
+        toast.error(`发送提醒失败 (系统错误): ${JSON.stringify(error)}`);
         return;
       }
       
@@ -126,25 +125,30 @@ export default function TodoSection() {
         console.error("Edge Function returned an error:", data.error);
         console.error("Error details:", JSON.stringify(data));
         
-        if (data.error.includes("from_address_not_allowed") || data.error.includes("validation")) {
-          toast.error(`域名验证错误: 请确认 ${data.domain || "dreamplaneredu.com"} 已在Resend.com正确验证。详情: ${data.details || data.error}`);
-        } else if (data.error.includes("domain")) {
-          toast.error(`域名错误: 请确认 ${data.domain || "dreamplaneredu.com"} 配置正确。详情: ${data.details || data.error}`);
-        } else if (data.error.includes("API key")) {
-          toast.error(`API密钥错误: 请检查Supabase Edge Function设置中的Resend API密钥。详情: ${data.details || data.error}`);
+        // 检查错误类型并提供具体信息
+        if (data.code === "from_address_not_allowed" || data.error.includes("from_address_not_allowed")) {
+          toast.error(`域名验证错误: 请确认 ${data.domain || "dreamplaneredu.com"} 已在Resend.com正确验证。请转到Resend.com查看您的验证域名`);
+        } else if (data.code === "unauthorized" || data.error.includes("unauthorized") || data.error.includes("API key")) {
+          toast.error(`API密钥错误: 请检查Supabase Edge Function设置中的Resend API密钥是否有效`);
+        } else if (data.code === "invalid_api_key_format" || data.error.includes("Invalid API key format")) {
+          toast.error(`API密钥格式错误: Resend API密钥应以're_'开头，请检查设置`);
         } else {
-          toast.error(`提醒发送失败 (业务错误): ${data.error}`);
+          toast.error(`提醒发送失败: ${data.message || data.error}`);
         }
         return;
       }
       
       // 处理成功响应
-      if (data?.note) {
-        toast.success(`${data.message} (${data.note})`);
+      if (data?.success) {
+        if (data?.note) {
+          toast.success(`${data.message} (${data.note})`);
+        } else if (data?.message) {
+          toast.success(data.message);
+        } else {
+          toast.success("提醒邮件已发送");
+        }
       } else if (data?.message === "No uncompleted todos to remind about") {
         toast.info("该学生没有未完成的待办事项");
-      } else if (data?.success) {
-        toast.success(data.message || "提醒邮件已发送");
       } else {
         toast.warning(`操作完成，但返回了意外响应: ${JSON.stringify(data)}`);
       }

@@ -5,6 +5,7 @@ import { corsHeaders } from "./cors.ts";
 export interface EmailService {
   sendReminderEmail(to: string, subject: string, htmlContent: string, domain?: string): Promise<any>;
   testApiKey(domain: string): Promise<any>;
+  getDomainStatus(domain: string): Promise<any>;
 }
 
 export class ResendEmailService implements EmailService {
@@ -16,6 +17,11 @@ export class ResendEmailService implements EmailService {
     if (!apiKey) {
       throw new Error("No Resend API key provided");
     }
+    
+    if (apiKey.startsWith("re_") === false) {
+      throw new Error("Invalid Resend API key format. Key should start with 're_'");
+    }
+    
     this.resend = new Resend(apiKey);
     // 默认已验证的域名
     this.verifiedDomain = "dreamplaneredu.com";
@@ -23,10 +29,37 @@ export class ResendEmailService implements EmailService {
     this.verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "nicktangbusiness87@gmail.com";
   }
 
+  // 获取域名状态
+  async getDomainStatus(domain: string = "dreamplaneredu.com"): Promise<any> {
+    try {
+      // 此处只能模拟检查，Resend API 不直接提供检查域名状态的功能
+      console.log(`Checking domain status for: ${domain}`);
+      
+      // 尝试发送测试邮件来检查域名
+      return await this.testApiKey(domain);
+    } catch (error) {
+      console.error("Failed to check domain status:", error);
+      return { 
+        error: true, 
+        message: `Domain ${domain} check failed: ${error.message || JSON.stringify(error)}`,
+        details: JSON.stringify(error)
+      };
+    }
+  }
+
   async testApiKey(domain: string = "dreamplaneredu.com"): Promise<any> {
     console.log(`Testing Resend API key with domain: ${domain}`);
     
     try {
+      // 检查 API 密钥前缀
+      if (!Deno.env.get("RESEND_API_KEY")?.startsWith("re_")) {
+        return {
+          error: true,
+          code: "invalid_api_key_format",
+          message: "Resend API key has incorrect format. It should start with 're_'."
+        };
+      }
+      
       // 使用指定的验证域名
       const result = await this.resend.emails.send({
         from: `College Planning <reminder@${domain}>`,
@@ -37,17 +70,67 @@ export class ResendEmailService implements EmailService {
       });
       
       console.log("Test email sent successfully:", JSON.stringify(result));
-      return result;
+      
+      if (result.error) {
+        return {
+          error: true,
+          code: result.error.code || "unknown_error",
+          message: result.error.message || "Unknown error testing API key",
+          details: JSON.stringify(result.error)
+        };
+      }
+      
+      return {
+        success: true,
+        message: "API key and domain validation successful",
+        id: result.id,
+        domain: domain
+      };
     } catch (error) {
       console.error("API key validation test failed:", error);
       console.error("Error details:", JSON.stringify(error));
-      throw error;
+      
+      // 解析和分类错误
+      let errorCode = "unknown_error";
+      let errorMessage = error.message || "Unknown error validating API key";
+      
+      if (typeof error === 'string') {
+        if (error.includes("from_address_not_allowed")) {
+          errorCode = "from_address_not_allowed";
+          errorMessage = `Domain ${domain} is not verified in your Resend account`;
+        } else if (error.includes("unauthorized")) {
+          errorCode = "unauthorized";
+          errorMessage = "Invalid API key or not authorized to use Resend API";
+        }
+      } else if (error.message) {
+        if (error.message.includes("from_address_not_allowed")) {
+          errorCode = "from_address_not_allowed";
+          errorMessage = `Domain ${domain} is not verified in your Resend account`;
+        } else if (error.message.includes("unauthorized")) {
+          errorCode = "unauthorized";
+          errorMessage = "Invalid API key or not authorized to use Resend API";
+        }
+      }
+      
+      return {
+        error: true,
+        code: errorCode,
+        message: errorMessage,
+        details: JSON.stringify(error)
+      };
     }
   }
 
   async sendReminderEmail(to: string, subject: string, htmlContent: string, domain: string = "dreamplaneredu.com"): Promise<any> {
     try {
       console.log(`Sending email to ${to} from reminder@${domain}`);
+      
+      // 首先测试 API 密钥和域名
+      const testResult = await this.testApiKey(domain);
+      if (testResult.error) {
+        console.error("Pre-send test failed:", testResult);
+        return testResult;
+      }
       
       // 显式创建完整的发件人地址
       const fromAddress = `College Planning <reminder@${domain}>`;
@@ -68,14 +151,51 @@ export class ResendEmailService implements EmailService {
       
       if (emailResult.error) {
         console.error("Error in Resend response:", emailResult.error);
-        throw new Error(JSON.stringify(emailResult.error));
+        return {
+          error: true,
+          code: emailResult.error.code || "send_failure",
+          message: emailResult.error.message || "Failed to send email",
+          details: JSON.stringify(emailResult.error)
+        };
       }
       
-      return emailResult;
+      return {
+        success: true,
+        message: "Email sent successfully",
+        id: emailResult.id
+      };
     } catch (error) {
       console.error("Exception while sending email:", error);
       console.error("Error details:", JSON.stringify(error));
-      throw error;
+      
+      // 解析和分类错误
+      let errorCode = "unknown_error";
+      let errorMessage = error.message || "Unknown error sending email";
+      
+      if (typeof error === 'string') {
+        if (error.includes("from_address_not_allowed")) {
+          errorCode = "from_address_not_allowed";
+          errorMessage = `Domain ${domain} is not verified in your Resend account`;
+        } else if (error.includes("unauthorized")) {
+          errorCode = "unauthorized";
+          errorMessage = "Invalid API key or not authorized to use Resend API";
+        }
+      } else if (error.message) {
+        if (error.message.includes("from_address_not_allowed")) {
+          errorCode = "from_address_not_allowed";
+          errorMessage = `Domain ${domain} is not verified in your Resend account`;
+        } else if (error.message.includes("unauthorized")) {
+          errorCode = "unauthorized";
+          errorMessage = "Invalid API key or not authorized to use Resend API";
+        }
+      }
+      
+      return {
+        error: true,
+        code: errorCode,
+        message: errorMessage,
+        details: JSON.stringify(error)
+      };
     }
   }
 }
