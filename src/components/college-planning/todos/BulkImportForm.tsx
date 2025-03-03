@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,9 +7,10 @@ import { toast } from "sonner";
 
 interface BulkImportFormProps {
   onImport: (titles: string[]) => Promise<void>;
+  onCancel: () => void;
 }
 
-export default function BulkImportForm({ onImport }: BulkImportFormProps) {
+export default function BulkImportForm({ onImport, onCancel }: BulkImportFormProps) {
   const [content, setContent] = useState("");
 
   const handleBulkImport = async () => {
@@ -23,6 +25,7 @@ export default function BulkImportForm({ onImport }: BulkImportFormProps) {
       await onImport(todoTitles);
       setContent("");
       toast.success(`Successfully imported ${todoTitles.length} todos!`);
+      onCancel(); // Close the bulk import form after successful import
     } catch (error) {
       console.error("Error importing todos:", error);
       toast.error("Failed to import todos. Please try again.");

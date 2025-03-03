@@ -2,7 +2,8 @@
 // Ensure we're using the correct import paths and utility functions
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { processResponse, handleError } from './utils/responseProcessor';
+import { processResponse } from './utils/responseProcessor';
+import { toast } from 'sonner';
 
 export const useTodoReminder = (studentId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -39,11 +40,25 @@ export const useTodoReminder = (studentId: string | undefined) => {
       }
       
       setConnectionError(false);
-      return processResponse(data);
+      const response = processResponse(data);
+      
+      // Show appropriate toast based on response type
+      if (response.type === 'success') {
+        toast.success(response.message);
+      } else if (response.type === 'error') {
+        toast.error(response.message);
+      } else if (response.type === 'warning') {
+        toast.warning(response.message);
+      } else if (response.type === 'info') {
+        toast.info(response.message);
+      }
+      
+      return response;
     } catch (err) {
       console.error("Exception in sendReminder:", err);
       setConnectionError(true);
-      handleError(err);
+      // Instead of using the non-existent handleError, we directly handle the error here
+      toast.error(`Reminder failed: ${err.message || 'Unknown error'}`);
       throw err;
     } finally {
       setIsLoading(false);

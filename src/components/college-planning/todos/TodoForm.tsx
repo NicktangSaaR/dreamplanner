@@ -1,3 +1,4 @@
+
 import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,12 +10,21 @@ interface TodoFormProps {
 
 export default function TodoForm({ onSubmit }: TodoFormProps) {
   const [newTodoTitle, setNewTodoTitle] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!newTodoTitle.trim()) return;
-    await onSubmit(newTodoTitle);
-    setNewTodoTitle("");
+    if (!newTodoTitle.trim() || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      await onSubmit(newTodoTitle);
+      setNewTodoTitle("");
+    } catch (error) {
+      console.error("Error submitting todo:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -25,9 +35,9 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
         placeholder="Add a new todo..."
         className="flex-1"
       />
-      <Button type="submit" size="sm">
+      <Button type="submit" size="sm" disabled={isSubmitting}>
         <Plus className="h-4 w-4 mr-2" />
-        Add
+        {isSubmitting ? "Adding..." : "Add"}
       </Button>
     </form>
   );

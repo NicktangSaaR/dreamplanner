@@ -76,6 +76,35 @@ const TodoSection = () => {
       hour12: false 
     }).format(lastAttempt) : null;
 
+  // Create wrapper functions to match the expected prop types
+  const handleToggleStatus = async (id: string, completed: boolean) => {
+    await toggleTodoStatus({ id, completed });
+  };
+
+  const handleToggleStarred = async (id: string, starred: boolean) => {
+    await toggleStarred({ id, starred });
+  };
+
+  const handleUpdateTodo = async (id: string, title: string) => {
+    await updateTodo({ id, title });
+  };
+
+  const handleDeleteTodo = async (id: string) => {
+    await deleteTodo(id);
+  };
+
+  const handleCreateTodo = async (title: string) => {
+    if (!studentId) return;
+    await createTodo({ title, authorId: studentId });
+  };
+
+  const handleBulkImport = async (titles: string[]) => {
+    if (!studentId) return;
+    for (const title of titles) {
+      await createTodo({ title, authorId: studentId });
+    }
+  };
+
   return (
     <Card className="mb-6 overflow-hidden">
       <CardHeader className="p-4 flex flex-row items-center justify-between border-b cursor-pointer" onClick={toggleExpanded}>
@@ -98,41 +127,41 @@ const TodoSection = () => {
               <TabsContent value="incomplete" className="p-4">
                 <TodoList
                   todos={incompleteTodos}
-                  toggleStatus={toggleTodoStatus}
-                  toggleStarred={toggleStarred}
-                  deleteTodo={deleteTodo}
-                  updateTodo={updateTodo}
+                  onToggleStatus={handleToggleStatus}
+                  onToggleStarred={handleToggleStarred}
+                  onDelete={handleDeleteTodo}
+                  onUpdate={handleUpdateTodo}
                 />
               </TabsContent>
               
               <TabsContent value="completed" className="p-4">
                 <TodoList
                   todos={completedTodos}
-                  toggleStatus={toggleTodoStatus}
-                  toggleStarred={toggleStarred}
-                  deleteTodo={deleteTodo}
-                  updateTodo={updateTodo}
+                  onToggleStatus={handleToggleStatus}
+                  onToggleStarred={handleToggleStarred}
+                  onDelete={handleDeleteTodo}
+                  onUpdate={handleUpdateTodo}
                 />
               </TabsContent>
               
               <TabsContent value="all" className="p-4">
                 <TodoList
                   todos={filteredTodos}
-                  toggleStatus={toggleTodoStatus}
-                  toggleStarred={toggleStarred}
-                  deleteTodo={deleteTodo}
-                  updateTodo={updateTodo}
+                  onToggleStatus={handleToggleStatus}
+                  onToggleStarred={handleToggleStarred}
+                  onDelete={handleDeleteTodo}
+                  onUpdate={handleUpdateTodo}
                 />
               </TabsContent>
             </Tabs>
             
             {!showBulkImport ? (
               <div className="p-4 border-t">
-                <TodoForm onSubmit={createTodo} studentId={studentId} />
+                <TodoForm onSubmit={handleCreateTodo} />
               </div>
             ) : (
               <div className="p-4 border-t">
-                <BulkImportForm studentId={studentId} onSubmit={createTodo} onCancel={toggleShowBulkImport} />
+                <BulkImportForm onImport={handleBulkImport} onCancel={toggleShowBulkImport} />
               </div>
             )}
           </CardContent>

@@ -1,3 +1,4 @@
+
 import { memo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import TodoItem from "./TodoItem";
@@ -20,16 +21,22 @@ const TodoList = memo(({
 }: TodoListProps) => (
   <ScrollArea className="h-[300px] w-full">
     <div className="p-4 space-y-2">
-      {todos.map((todo) => (
-        <TodoItem
-          key={todo.id}
-          todo={todo}
-          onToggleStatus={onToggleStatus}
-          onToggleStarred={onToggleStarred}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
-        />
-      ))}
+      {todos.length === 0 ? (
+        <div className="text-center text-gray-500 py-4">
+          No todos found
+        </div>
+      ) : (
+        todos.map((todo) => (
+          <TodoItem
+            key={todo.id}
+            todo={todo}
+            onToggleStatus={onToggleStatus}
+            onToggleStarred={onToggleStarred}
+            onUpdate={onUpdate}
+            onDelete={onDelete}
+          />
+        ))
+      )}
     </div>
   </ScrollArea>
 ));
