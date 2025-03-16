@@ -115,8 +115,12 @@ export const exportEvaluationToPDF = (evaluation: StudentEvaluation) => {
   const tableRows = criteriaColumns.map(column => {
     const score = evaluation[column];
     const label = getCriteriaLabel(column, universityType);
+    // Skip interview for UC System
+    if (universityType === 'ucSystem' && column === 'interview_score') {
+      return null;
+    }
     return [label, score];
-  });
+  }).filter(Boolean); // Remove null entries
   
   // Add total score
   tableRows.push([getCriteriaLabel('total_score', universityType), evaluation.total_score]);
@@ -161,17 +165,19 @@ export const exportEvaluationToPDF = (evaluation: StudentEvaluation) => {
     doc.text(`${label} (Score: ${score})`, 15, finalY);
     doc.setFont(undefined, 'normal');
     
-    // Add description with word wrapping
-    const splitDescription = doc.splitTextToSize(description, 180);
-    finalY += 5;
+    // Add description with improved word wrapping - maximize page width usage
+    const maxWidth = 180;
+    const splitDescription = doc.splitTextToSize(description, maxWidth);
+    finalY += 8; // Increase spacing between label and description
     doc.setFontSize(10);
     doc.text(splitDescription, 15, finalY);
     
-    // Update Y position for next criteria
-    finalY += splitDescription.length * 5 + 10;
+    // Update Y position for next criteria - ensure proper spacing
+    const textHeight = splitDescription.length * 5; // Calculate text height
+    finalY += textHeight + 12; // Add more spacing between criteria sections
   });
   
-  // Add comments section
+  // Add comments section with better formatting
   if (finalY > 240) {
     doc.addPage();
     finalY = 20;
@@ -182,11 +188,14 @@ export const exportEvaluationToPDF = (evaluation: StudentEvaluation) => {
   doc.text('Comments:', 15, finalY);
   doc.setFont(undefined, 'normal');
   
-  // Add comments with word wrapping
-  const splitComments = doc.splitTextToSize(evaluation.comments || 'None', 180);
+  // Add comments with improved word wrapping
+  const maxCommentWidth = 180;
+  const comments = evaluation.comments || 'None';
+  const splitComments = doc.splitTextToSize(comments, maxCommentWidth);
+  finalY += 8; // Better spacing
   doc.setFontSize(10);
-  doc.text(splitComments, 15, finalY + 10);
+  doc.text(splitComments, 15, finalY);
   
-  // Save the PDF
+  // Save the PDF with student name
   doc.save(`${evaluation.student_name}_US_University_Evaluation.pdf`);
 };
