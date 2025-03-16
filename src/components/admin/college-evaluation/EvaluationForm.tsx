@@ -4,13 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
-import { EvaluationCriteria } from "./types";
+import { EvaluationCriteria, StudentEvaluation } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import CriteriaField from "./components/CriteriaField";
 import CommentsField from "./components/CommentsField";
 import { calculateTotalScore } from "./utils/evaluationUtils";
+import { ExportPDFButton } from "./components/ExportPDFButton";
 
 interface EvaluationFormProps {
   studentId: string;
@@ -21,6 +22,7 @@ interface EvaluationFormProps {
 export default function EvaluationForm({ studentId, studentName, onSuccess }: EvaluationFormProps) {
   const { profile } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedEvaluation, setSubmittedEvaluation] = useState<StudentEvaluation | null>(null);
   
   const form = useForm<{
     criteria: EvaluationCriteria;
@@ -49,28 +51,34 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
     
     try {
       const totalScore = calculateTotalScore(values.criteria);
+      const evaluationDate = new Date().toISOString();
       
-      const { error } = await supabase
+      const evaluationData = {
+        student_id: studentId,
+        student_name: studentName,
+        evaluation_date: evaluationDate,
+        academics_score: values.criteria.academics,
+        extracurriculars_score: values.criteria.extracurriculars,
+        athletics_score: values.criteria.athletics,
+        personal_qualities_score: values.criteria.personalQualities,
+        recommendations_score: values.criteria.recommendations,
+        interview_score: values.criteria.interview,
+        comments: values.comments,
+        total_score: totalScore,
+        admin_id: profile.id
+      };
+      
+      const { data, error } = await supabase
         .from("student_evaluations")
-        .insert({
-          student_id: studentId,
-          student_name: studentName,
-          evaluation_date: new Date().toISOString(),
-          academics_score: values.criteria.academics,
-          extracurriculars_score: values.criteria.extracurriculars,
-          athletics_score: values.criteria.athletics,
-          personal_qualities_score: values.criteria.personalQualities,
-          recommendations_score: values.criteria.recommendations,
-          interview_score: values.criteria.interview,
-          comments: values.comments,
-          total_score: totalScore,
-          admin_id: profile.id
-        });
+        .insert(evaluationData)
+        .select()
+        .single();
       
       if (error) throw error;
       
+      setSubmittedEvaluation(data as StudentEvaluation);
       toast.success("评估表已成功创建");
-      form.reset();
+      
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Error creating evaluation:", error);
@@ -83,10 +91,17 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">哈佛大学本科录取评估表</CardTitle>
-        <CardDescription>
-          为 <span className="font-medium">{studentName}</span> 创建评估（评分标准：1为最高，6为最低）
-        </CardDescription>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="text-2xl font-bold">哈佛大学本科录取评估表</CardTitle>
+            <CardDescription>
+              为 <span className="font-medium">{studentName}</span> 创建评估（评分标准：1为最高，6为最低）
+            </CardDescription>
+          </div>
+          {submittedEvaluation && (
+            <ExportPDFButton evaluation={submittedEvaluation} />
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <Form {...form}>
