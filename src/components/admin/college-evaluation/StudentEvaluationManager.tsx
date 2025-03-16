@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -165,16 +166,16 @@ export default function StudentEvaluationManager() {
                 </TableHeader>
                 <TableBody>
                   {evaluations && evaluations.length > 0 ? (
-                    evaluations.map((eval) => (
-                      <TableRow key={eval.id}>
-                        <TableCell className="font-medium">{eval.student_name}</TableCell>
-                        <TableCell>{formatDate(eval.evaluation_date)}</TableCell>
-                        <TableCell className="font-semibold">{eval.total_score}</TableCell>
-                        <TableCell>{eval.academics_score}</TableCell>
-                        <TableCell>{eval.extracurriculars_score}</TableCell>
-                        <TableCell>{eval.awards_score}</TableCell>
-                        <TableCell>{eval.personal_qualities_score}</TableCell>
-                        <TableCell>{eval.essays_score}</TableCell>
+                    evaluations.map((evaluation) => (
+                      <TableRow key={evaluation.id}>
+                        <TableCell className="font-medium">{evaluation.student_name}</TableCell>
+                        <TableCell>{formatDate(evaluation.evaluation_date)}</TableCell>
+                        <TableCell className="font-semibold">{evaluation.total_score}</TableCell>
+                        <TableCell>{evaluation.academics_score}</TableCell>
+                        <TableCell>{evaluation.extracurriculars_score}</TableCell>
+                        <TableCell>{evaluation.awards_score}</TableCell>
+                        <TableCell>{evaluation.personal_qualities_score}</TableCell>
+                        <TableCell>{evaluation.essays_score}</TableCell>
                       </TableRow>
                     ))
                   ) : (
