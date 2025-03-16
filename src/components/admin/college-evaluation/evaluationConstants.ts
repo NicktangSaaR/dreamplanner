@@ -105,52 +105,52 @@ export const TOP30_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
 
 export const UC_SYSTEM_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
   academics: {
-    1: "GPA 4.0+（UC加权），多门UC认可的荣誉/AP/IB课程，CA州高中排名前9%。",
-    2: "GPA 3.8+（UC加权），多门UC认可的荣誉/AP/IB课程，州内优秀学术表现。",
-    3: "GPA 3.6-3.8（UC加权），有一些UC认可的荣誉/AP课程。",
-    4: "GPA 3.4-3.6（UC加权），少量荣誉/AP课程。",
-    5: "GPA 3.0-3.4（UC加权），仅满足UC最低A-G课程要求。",
-    6: "GPA <3.0（UC加权），可能不满足UC基本A-G课程要求。"
+    1: "GPA 4.3-4.5 (UC Capped Weighted), extensive number of UC-approved honors/AP/IB courses, in the top 9% of CA high school class.",
+    2: "GPA 4.0-4.3 (UC Capped Weighted), significant number of UC-approved honors/AP/IB courses, strong academic record within the state.",
+    3: "GPA 3.8-4.0 (UC Capped Weighted), good number of UC-approved honors/AP courses, solid academic performance.",
+    4: "GPA 3.6-3.8 (UC Capped Weighted), some honors/AP courses, meets UC academic requirements.",
+    5: "GPA 3.4-3.6 (UC Capped Weighted), minimal honors/AP courses, meets minimum UC academic requirements.",
+    6: "GPA <3.4 (UC Capped Weighted), may not fully satisfy UC's comprehensive review criteria."
   },
   extracurriculars: {
-    1: "参与长期且有深度的活动，展现领导力和主动性，加州级或区域级影响。",
-    2: "持续参与多项活动，有一定成就，对社区有积极贡献。",
-    3: "参与学校活动，有一些志愿者经历，展现责任感。",
-    4: "有少量活动参与，但缺乏深度或延续性。",
-    5: "课外活动有限，参与程度不高。",
-    6: "几乎无课外活动。"
+    1: "Significant, sustained involvement with depth and leadership impact at regional or state level. Shows initiative in creating opportunities.",
+    2: "Consistent involvement in multiple activities over time, showing leadership and positive impact in the community.",
+    3: "Active participation in school activities, some volunteer experience, demonstrates commitment.",
+    4: "Some activity involvement but lacks depth or continuity. Limited leadership experience.",
+    5: "Limited extracurricular activities with minimal engagement.",
+    6: "Very few or no extracurricular activities."
   },
   athletics: {
-    1: "加州州级或地区级认可的运动员成就。",
-    2: "学校运动队骨干成员，参与地区比赛。",
-    3: "校队成员，积极参与。",
-    4: "参与校内体育活动，但无竞赛经历。",
-    5: "有限的体育活动参与。",
-    6: "无体育活动经历。"
+    1: "State-level or regional athletic achievements recognized by UC coaches or recruitment.",
+    2: "Significant athletic contributions at the school or district level, potential recruit interest.",
+    3: "Regular participation in school athletics with demonstrated commitment.",
+    4: "Some athletics participation without competitive distinction.",
+    5: "Limited participation in sports or physical activities.",
+    6: "No athletic involvement."
   },
   personalQualities: {
-    1: "展现UC核心价值观：领导力、创造力、毅力、社区服务精神，有具体事例。",
-    2: "良好的个人品质，能够应对挑战，展现成长潜力。",
-    3: "有责任感，展现出自我认知和发展意愿。",
-    4: "基本的个人素养，但缺乏突出特点。",
-    5: "个人特质表现一般，缺乏明确方向。",
-    6: "个人陈述或表现中有问题。"
+    1: "Exceptional demonstration of UC's comprehensive review factors: creativity, intellectual curiosity, leadership, and resilience. Compelling personal insight questions.",
+    2: "Strong personal qualities aligned with UC values, meaningful contributions to community, clear goals.",
+    3: "Good character traits, shows responsibility and growth potential in personal insight questions.",
+    4: "Adequate personal qualities but lacks distinction. Basic personal insight questions.",
+    5: "Limited evidence of personal development or character strengths in application.",
+    6: "Concerning issues in personal character or minimal development shown in application materials."
   },
   recommendations: {
-    1: "个人见解展示（PIQ）回答突出，展现深度思考和自我认知。",
-    2: "PIQ回答优秀，清晰表达个人经历和特质。",
-    3: "PIQ回答良好，符合要求。",
-    4: "PIQ回答基本满足要求，但缺乏深度。",
-    5: "PIQ回答一般，未能充分展示个人特点。",
-    6: "PIQ回答不完整或质量较差。"
+    1: "Outstanding Personal Insight Questions (PIQs) that clearly demonstrate the student's unique strengths and contributions.",
+    2: "Strong PIQ responses that effectively communicate personal qualities and experiences.",
+    3: "Competent PIQ responses that meet expectations but may lack distinctive elements.",
+    4: "Adequate PIQ responses that fulfill basic requirements without depth.",
+    5: "Below average PIQ responses that miss opportunities to highlight strengths.",
+    6: "Poor quality PIQ responses with limited self-reflection or insight."
   },
   interview: {
-    1: "UC通常不进行面试，但申请者能通过其他方式出色展示自己。",
-    2: "通过个人陈述和活动展现良好沟通能力和思考深度。",
-    3: "个人表达和陈述能力中等偏上。",
-    4: "基本表达能力，但缺乏深度。",
-    5: "表达不够清晰或具体。",
-    6: "个人陈述存在明显问题。"
+    1: "UC does not conduct interviews, but the application demonstrates exceptional communication skills and self-presentation.",
+    2: "Application materials show excellent articulation of ideas and experiences.",
+    3: "Good communication through written materials, clear expression of thoughts.",
+    4: "Adequate self-expression in application materials.",
+    5: "Unclear or imprecise communication in application materials.",
+    6: "Poor communication skills evident in application materials."
   }
 };
 
@@ -166,3 +166,4 @@ export function getUniversityCriteriaDescriptions(universityType: UniversityType
       return IVY_LEAGUE_CRITERIA_DESCRIPTIONS;
   }
 }
+

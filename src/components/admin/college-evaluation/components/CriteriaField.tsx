@@ -23,6 +23,20 @@ export default function CriteriaField({
 }: CriteriaFieldProps) {
   const criteriaDescriptions = getUniversityCriteriaDescriptions(universityType);
   
+  // Get the appropriate label based on university type
+  const getAdjustedLabel = () => {
+    if (universityType === 'ucSystem') {
+      // Adjust labels for UC System
+      if (criteriaKey === 'recommendations') {
+        return "Personal Insight Questions (PIQs)";
+      }
+      if (criteriaKey === 'interview') {
+        return "Communication Skills (Application Materials)";
+      }
+    }
+    return label;
+  };
+
   const getCriteriaDescription = (score: ScoreValue): string => {
     return criteriaDescriptions[criteriaKey]?.[score] || "";
   };
@@ -33,7 +47,7 @@ export default function CriteriaField({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-lg font-semibold">{label}</FormLabel>
+          <FormLabel className="text-lg font-semibold">{getAdjustedLabel()}</FormLabel>
           <Select
             value={field.value.toString()}
             onValueChange={(value) => field.onChange(parseInt(value) as ScoreValue)}

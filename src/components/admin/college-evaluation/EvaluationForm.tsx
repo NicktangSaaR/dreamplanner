@@ -92,6 +92,20 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
     }
   };
   
+  // Helper function to get university type display name
+  const getUniversityTypeLabel = (type: UniversityType): string => {
+    switch (type) {
+      case 'ivyLeague':
+        return "常青藤大学";
+      case 'top30':
+        return "Top 20-30 大学";
+      case 'ucSystem':
+        return "UC系统大学";
+      default:
+        return "美国大学";
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -167,7 +181,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
             <CriteriaField 
               form={form} 
               name="criteria.recommendations" 
-              label="推荐信（Recommendations）" 
+              label={universityType === 'ucSystem' ? "个人陈述问题（PIQs）" : "推荐信（Recommendations）"} 
               criteriaKey="recommendations" 
               universityType={universityType}
             />
@@ -176,7 +190,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
             <CriteriaField 
               form={form} 
               name="criteria.interview" 
-              label="面试（Interview）" 
+              label={universityType === 'ucSystem' ? "沟通能力（申请材料）" : "面试（Interview）"} 
               criteriaKey="interview" 
               universityType={universityType}
             />
