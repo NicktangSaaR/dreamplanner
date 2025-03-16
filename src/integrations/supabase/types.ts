@@ -719,6 +719,62 @@ export type Database = {
         }
         Relationships: []
       }
+      student_evaluations: {
+        Row: {
+          academics_score: number
+          admin_id: string
+          awards_score: number
+          comments: string | null
+          created_at: string
+          essays_score: number
+          evaluation_date: string
+          extracurriculars_score: number
+          id: string
+          personal_qualities_score: number
+          student_id: string
+          student_name: string
+          total_score: number
+        }
+        Insert: {
+          academics_score: number
+          admin_id: string
+          awards_score: number
+          comments?: string | null
+          created_at?: string
+          essays_score: number
+          evaluation_date?: string
+          extracurriculars_score: number
+          id?: string
+          personal_qualities_score: number
+          student_id: string
+          student_name: string
+          total_score: number
+        }
+        Update: {
+          academics_score?: number
+          admin_id?: string
+          awards_score?: number
+          comments?: string | null
+          created_at?: string
+          essays_score?: number
+          evaluation_date?: string
+          extracurriculars_score?: number
+          id?: string
+          personal_qualities_score?: number
+          student_id?: string
+          student_name?: string
+          total_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_evaluations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_invitations: {
         Row: {
           counselor_id: string

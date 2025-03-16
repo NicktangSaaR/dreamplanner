@@ -52,19 +52,21 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
     try {
       const totalScore = calculateTotalScore(values.criteria);
       
-      const { error } = await supabase.from("student_evaluations").insert({
-        student_id: studentId,
-        student_name: studentName,
-        evaluation_date: new Date().toISOString(),
-        academics_score: values.criteria.academics,
-        extracurriculars_score: values.criteria.extracurriculars,
-        awards_score: values.criteria.awards,
-        personal_qualities_score: values.criteria.personalQualities,
-        essays_score: values.criteria.essays,
-        comments: values.comments,
-        total_score: totalScore,
-        admin_id: profile.id
-      });
+      const { error } = await supabase
+        .from("student_evaluations")
+        .insert({
+          student_id: studentId,
+          student_name: studentName,
+          evaluation_date: new Date().toISOString(),
+          academics_score: values.criteria.academics,
+          extracurriculars_score: values.criteria.extracurriculars,
+          awards_score: values.criteria.awards,
+          personal_qualities_score: values.criteria.personalQualities,
+          essays_score: values.criteria.essays,
+          comments: values.comments,
+          total_score: totalScore,
+          admin_id: profile.id
+        });
       
       if (error) throw error;
       

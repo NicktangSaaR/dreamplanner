@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,27 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, UserPlus } from "lucide-react";
 import EvaluationForm from "./EvaluationForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { StudentEvaluation } from "./types";
 
 interface Student {
   id: string;
   full_name: string;
   grade: string;
   school: string;
-}
-
-interface StudentEvaluation {
-  id: string;
-  student_id: string;
-  student_name: string;
-  evaluation_date: string;
-  academics_score: number;
-  extracurriculars_score: number;
-  awards_score: number;
-  personal_qualities_score: number;
-  essays_score: number;
-  total_score: number;
-  comments: string;
-  created_at: string;
 }
 
 export default function StudentEvaluationManager() {
