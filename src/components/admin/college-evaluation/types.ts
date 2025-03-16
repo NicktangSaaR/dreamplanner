@@ -2,6 +2,8 @@
 // Reversed scoring: 1 is highest, 6 is lowest
 export type ScoreValue = 1 | 2 | 3 | 4 | 5 | 6;
 
+export type UniversityType = 'ivyLeague' | 'top30' | 'ucSystem';
+
 export interface EvaluationCriteria {
   academics: ScoreValue;
   extracurriculars: ScoreValue;
@@ -25,6 +27,7 @@ export interface StudentEvaluation {
   total_score: number;
   comments: string;
   admin_id: string;
+  university_type?: UniversityType;
   created_at?: string;
 }
 

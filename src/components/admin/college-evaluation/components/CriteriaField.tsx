@@ -2,20 +2,29 @@
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScoreValue } from "../types";
+import { ScoreValue, UniversityType } from "../types";
 import { UseFormReturn } from "react-hook-form";
-import { CRITERIA_DESCRIPTIONS } from "../evaluationConstants";
+import { getUniversityCriteriaDescriptions } from "../evaluationConstants";
 
 interface CriteriaFieldProps {
   form: UseFormReturn<any>;
   name: string;
   label: string;
-  criteriaKey: keyof typeof CRITERIA_DESCRIPTIONS;
+  criteriaKey: string;
+  universityType: UniversityType;
 }
 
-export default function CriteriaField({ form, name, label, criteriaKey }: CriteriaFieldProps) {
+export default function CriteriaField({ 
+  form, 
+  name, 
+  label, 
+  criteriaKey,
+  universityType 
+}: CriteriaFieldProps) {
+  const criteriaDescriptions = getUniversityCriteriaDescriptions(universityType);
+  
   const getCriteriaDescription = (score: ScoreValue): string => {
-    return CRITERIA_DESCRIPTIONS[criteriaKey][score] || "";
+    return criteriaDescriptions[criteriaKey]?.[score] || "";
   };
 
   return (

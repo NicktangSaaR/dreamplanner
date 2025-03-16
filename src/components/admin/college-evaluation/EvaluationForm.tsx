@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
-import { EvaluationCriteria, StudentEvaluation } from "./types";
+import { EvaluationCriteria, StudentEvaluation, UniversityType } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
@@ -12,6 +12,8 @@ import CriteriaField from "./components/CriteriaField";
 import CommentsField from "./components/CommentsField";
 import { calculateTotalScore } from "./utils/evaluationUtils";
 import { ExportPDFButton } from "./components/ExportPDFButton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface EvaluationFormProps {
   studentId: string;
@@ -23,6 +25,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
   const { profile } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedEvaluation, setSubmittedEvaluation] = useState<StudentEvaluation | null>(null);
+  const [universityType, setUniversityType] = useState<UniversityType>("ivyLeague");
   
   const form = useForm<{
     criteria: EvaluationCriteria;
@@ -65,7 +68,8 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
         interview_score: values.criteria.interview,
         comments: values.comments,
         total_score: totalScore,
-        admin_id: profile.id
+        admin_id: profile.id,
+        university_type: universityType
       };
       
       const { data, error } = await supabase
@@ -93,7 +97,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle className="text-2xl font-bold">哈佛大学本科录取评估表</CardTitle>
+            <CardTitle className="text-2xl font-bold">美国本科录取评估表</CardTitle>
             <CardDescription>
               为 <span className="font-medium">{studentName}</span> 创建评估（评分标准：1为最高，6为最低）
             </CardDescription>
@@ -104,6 +108,23 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
         </div>
       </CardHeader>
       <CardContent>
+        <div className="mb-6">
+          <Label htmlFor="university-type">选择大学类型</Label>
+          <Select
+            value={universityType}
+            onValueChange={(value: UniversityType) => setUniversityType(value)}
+          >
+            <SelectTrigger id="university-type" className="w-full">
+              <SelectValue placeholder="选择大学类型" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ivyLeague">常青藤大学</SelectItem>
+              <SelectItem value="top30">Top 20-30 大学</SelectItem>
+              <SelectItem value="ucSystem">UC系统大学</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* Academics Section */}
@@ -112,6 +133,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
               name="criteria.academics" 
               label="学术表现（Academics）" 
               criteriaKey="academics" 
+              universityType={universityType}
             />
 
             {/* Extracurriculars Section */}
@@ -120,6 +142,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
               name="criteria.extracurriculars" 
               label="课外活动（Extracurriculars）" 
               criteriaKey="extracurriculars" 
+              universityType={universityType}
             />
 
             {/* Athletics Section */}
@@ -128,6 +151,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
               name="criteria.athletics" 
               label="运动（Athletics）" 
               criteriaKey="athletics" 
+              universityType={universityType}
             />
 
             {/* Personal Qualities Section */}
@@ -136,6 +160,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
               name="criteria.personalQualities" 
               label="个人特质（Personal Qualities）" 
               criteriaKey="personalQualities" 
+              universityType={universityType}
             />
 
             {/* Recommendations Section */}
@@ -144,6 +169,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
               name="criteria.recommendations" 
               label="推荐信（Recommendations）" 
               criteriaKey="recommendations" 
+              universityType={universityType}
             />
 
             {/* Interview Section */}
@@ -152,6 +178,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
               name="criteria.interview" 
               label="面试（Interview）" 
               criteriaKey="interview" 
+              universityType={universityType}
             />
 
             {/* Comments Section */}

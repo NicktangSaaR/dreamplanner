@@ -1,14 +1,30 @@
 
 import jsPDF from 'jspdf';
-import { StudentEvaluation } from "../types";
+import { StudentEvaluation, UniversityType } from "../types";
 import autoTable from 'jspdf-autotable';
+
+const getUniversityTypeDisplay = (type?: UniversityType): string => {
+  if (!type) return "General US University";
+  
+  switch (type) {
+    case 'ivyLeague':
+      return "Ivy League Universities";
+    case 'top30':
+      return "Top 20-30 Universities";
+    case 'ucSystem':
+      return "UC System Universities";
+    default:
+      return "General US University";
+  }
+};
 
 export const exportEvaluationToPDF = (evaluation: StudentEvaluation) => {
   const doc = new jsPDF();
   
   // Add title
   doc.setFontSize(18);
-  doc.text('Harvard University Undergraduate Admission Evaluation', 15, 20);
+  const universityTypeDisplay = getUniversityTypeDisplay(evaluation.university_type as UniversityType);
+  doc.text(`US Undergraduate Admission Evaluation - ${universityTypeDisplay}`, 15, 20);
   
   // Add student information
   doc.setFontSize(12);
@@ -43,5 +59,5 @@ export const exportEvaluationToPDF = (evaluation: StudentEvaluation) => {
   doc.text(splitComments, 15, finalY + 20);
   
   // Save the PDF
-  doc.save(`${evaluation.student_name}_Harvard_Evaluation.pdf`);
+  doc.save(`${evaluation.student_name}_US_University_Evaluation.pdf`);
 };

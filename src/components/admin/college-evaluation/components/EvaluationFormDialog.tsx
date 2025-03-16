@@ -20,7 +20,7 @@ export default function EvaluationFormDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>创建哈佛大学本科录取评估表</DialogTitle>
+          <DialogTitle>创建美国本科录取评估表</DialogTitle>
         </DialogHeader>
         {selectedStudent && (
           <EvaluationForm 
