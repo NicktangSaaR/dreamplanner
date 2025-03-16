@@ -22,7 +22,7 @@ export const ExportPDFButton = ({ evaluation, className }: ExportPDFButtonProps)
       className={className}
     >
       <FileText className="h-4 w-4 mr-2" />
-      导出PDF
+      Export PDF
     </Button>
   );
 };

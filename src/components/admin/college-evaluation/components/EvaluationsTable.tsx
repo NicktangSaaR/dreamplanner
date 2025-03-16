@@ -14,7 +14,7 @@ interface EvaluationsTableProps {
 export default function EvaluationsTable({ evaluations, isLoading }: EvaluationsTableProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('zh-CN');
+    return date.toLocaleDateString('en-US');
   };
 
   const handleExportPDF = (evaluation: StudentEvaluation) => {
@@ -24,29 +24,29 @@ export default function EvaluationsTable({ evaluations, isLoading }: Evaluations
   return (
     <Card>
       <CardHeader>
-        <CardTitle>已创建的评估表</CardTitle>
+        <CardTitle>Created Evaluations</CardTitle>
         <CardDescription>
-          查看所有已完成的学生评估记录（评分标准：1为最高，6为最低）
+          View all completed student evaluations (Scoring criteria: 1 is highest, 6 is lowest)
         </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-4">加载评估数据中...</div>
+          <div className="text-center py-4">Loading evaluation data...</div>
         ) : (
           <div className="border rounded-md">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>学生姓名</TableHead>
-                  <TableHead>评估日期</TableHead>
-                  <TableHead>总分（越低越好）</TableHead>
-                  <TableHead>学术</TableHead>
-                  <TableHead>课外</TableHead>
-                  <TableHead>运动</TableHead>
-                  <TableHead>个人素质</TableHead>
-                  <TableHead>推荐信</TableHead>
-                  <TableHead>面试</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>Student Name</TableHead>
+                  <TableHead>Evaluation Date</TableHead>
+                  <TableHead>Total Score (Lower is better)</TableHead>
+                  <TableHead>Academics</TableHead>
+                  <TableHead>Extracurriculars</TableHead>
+                  <TableHead>Athletics</TableHead>
+                  <TableHead>Personal Qualities</TableHead>
+                  <TableHead>Recommendations</TableHead>
+                  <TableHead>Interview</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -76,7 +76,7 @@ export default function EvaluationsTable({ evaluations, isLoading }: Evaluations
                 ) : (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center py-4">
-                      暂无评估数据
+                      No evaluation data available
                     </TableCell>
                   </TableRow>
                 )}
