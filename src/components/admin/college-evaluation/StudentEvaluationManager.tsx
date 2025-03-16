@@ -10,6 +10,7 @@ import { Search, UserPlus } from "lucide-react";
 import EvaluationForm from "./EvaluationForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { StudentEvaluation } from "./types";
+import { useUserStatus } from "@/hooks/useUserStatus";
 
 interface Student {
   id: string;
@@ -22,33 +23,46 @@ export default function StudentEvaluationManager() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { isAdmin } = useUserStatus();
 
   // Fetch students
   const { data: students, isLoading: isLoadingStudents } = useQuery({
     queryKey: ["students"],
     queryFn: async () => {
+      console.log("Fetching student data for evaluation manager");
       const { data, error } = await supabase
         .from("profiles")
         .select("id, full_name, grade, school")
         .eq("user_type", "student");
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching students:", error);
+        throw error;
+      }
+      console.log("Fetched students:", data);
       return data as Student[];
     },
+    enabled: isAdmin, // Only run query if user is admin
   });
 
   // Fetch existing evaluations
   const { data: evaluations, isLoading: isLoadingEvals, refetch: refetchEvaluations } = useQuery({
     queryKey: ["student-evaluations"],
     queryFn: async () => {
+      console.log("Fetching evaluation data");
       const { data, error } = await supabase
         .from("student_evaluations")
         .select("*")
         .order("created_at", { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching evaluations:", error);
+        throw error;
+      }
+      console.log("Fetched evaluations:", data);
       return data as StudentEvaluation[];
     },
+    enabled: isAdmin, // Only run query if user is admin
   });
 
   const filteredStudents = students?.filter(student => 
@@ -69,6 +83,10 @@ export default function StudentEvaluationManager() {
     const date = new Date(dateString);
     return date.toLocaleDateString('zh-CN');
   };
+
+  if (!isAdmin) {
+    return <div className="p-4 text-center">您没有访问该页面的权限</div>;
+  }
 
   return (
     <div className="space-y-8">
