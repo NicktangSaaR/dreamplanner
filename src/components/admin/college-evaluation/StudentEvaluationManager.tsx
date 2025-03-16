@@ -94,7 +94,7 @@ export default function StudentEvaluationManager() {
         <CardHeader>
           <CardTitle>学生评估管理</CardTitle>
           <CardDescription>
-            搜索学生并创建藤校（Ivy League）录取评估表
+            搜索学生并创建哈佛大学本科录取评估表
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -161,7 +161,7 @@ export default function StudentEvaluationManager() {
         <CardHeader>
           <CardTitle>已创建的评估表</CardTitle>
           <CardDescription>
-            查看所有已完成的学生评估记录
+            查看所有已完成的学生评估记录（评分标准：1为最高，6为最低）
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -174,12 +174,13 @@ export default function StudentEvaluationManager() {
                   <TableRow>
                     <TableHead>学生姓名</TableHead>
                     <TableHead>评估日期</TableHead>
-                    <TableHead>总分（满分30）</TableHead>
+                    <TableHead>总分（满分36）</TableHead>
                     <TableHead>学术</TableHead>
                     <TableHead>课外</TableHead>
-                    <TableHead>奖项</TableHead>
+                    <TableHead>运动</TableHead>
                     <TableHead>个人素质</TableHead>
-                    <TableHead>文书</TableHead>
+                    <TableHead>推荐信</TableHead>
+                    <TableHead>面试</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -191,14 +192,15 @@ export default function StudentEvaluationManager() {
                         <TableCell className="font-semibold">{evaluation.total_score}</TableCell>
                         <TableCell>{evaluation.academics_score}</TableCell>
                         <TableCell>{evaluation.extracurriculars_score}</TableCell>
-                        <TableCell>{evaluation.awards_score}</TableCell>
+                        <TableCell>{evaluation.athletics_score}</TableCell>
                         <TableCell>{evaluation.personal_qualities_score}</TableCell>
-                        <TableCell>{evaluation.essays_score}</TableCell>
+                        <TableCell>{evaluation.recommendations_score}</TableCell>
+                        <TableCell>{evaluation.interview_score}</TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-4">
+                      <TableCell colSpan={9} className="text-center py-4">
                         暂无评估数据
                       </TableCell>
                     </TableRow>
@@ -214,7 +216,7 @@ export default function StudentEvaluationManager() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>创建藤校录取评估表</DialogTitle>
+            <DialogTitle>创建哈佛大学本科录取评估表</DialogTitle>
           </DialogHeader>
           {selectedStudent && (
             <EvaluationForm 
