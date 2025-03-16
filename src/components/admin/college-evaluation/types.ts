@@ -27,3 +27,11 @@ export interface StudentEvaluation {
   admin_id: string;
   created_at?: string;
 }
+
+export interface CriteriaDescription {
+  [key: number]: string;
+}
+
+export interface CriteriaDescriptions {
+  [key: string]: CriteriaDescription;
+}
