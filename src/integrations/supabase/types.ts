@@ -723,14 +723,15 @@ export type Database = {
         Row: {
           academics_score: number
           admin_id: string
-          awards_score: number
+          athletics_score: number
           comments: string | null
           created_at: string
-          essays_score: number
           evaluation_date: string
           extracurriculars_score: number
           id: string
+          interview_score: number
           personal_qualities_score: number
+          recommendations_score: number
           student_id: string
           student_name: string
           total_score: number
@@ -738,14 +739,15 @@ export type Database = {
         Insert: {
           academics_score: number
           admin_id: string
-          awards_score: number
+          athletics_score?: number
           comments?: string | null
           created_at?: string
-          essays_score: number
           evaluation_date?: string
           extracurriculars_score: number
           id?: string
+          interview_score?: number
           personal_qualities_score: number
+          recommendations_score?: number
           student_id: string
           student_name: string
           total_score: number
@@ -753,14 +755,15 @@ export type Database = {
         Update: {
           academics_score?: number
           admin_id?: string
-          awards_score?: number
+          athletics_score?: number
           comments?: string | null
           created_at?: string
-          essays_score?: number
           evaluation_date?: string
           extracurriculars_score?: number
           id?: string
+          interview_score?: number
           personal_qualities_score?: number
+          recommendations_score?: number
           student_id?: string
           student_name?: string
           total_score?: number
