@@ -10,6 +10,7 @@ import QuestionBankManagement from "@/components/admin/QuestionBankManagement";
 import ProspectiveClientManagement from "@/components/admin/ProspectiveClientManagement";
 import ArticleManagement from "@/components/admin/ArticleManagement";
 import PlatformUpdateManagement from "@/components/admin/PlatformUpdateManagement";
+import CollegeEvaluationManagement from "@/components/admin/college-evaluation/CollegeEvaluationManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -63,6 +64,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="prospective-clients">Prospective Clients</TabsTrigger>
           <TabsTrigger value="articles">Articles</TabsTrigger>
           <TabsTrigger value="platform-updates">Platform Updates</TabsTrigger>
+          <TabsTrigger value="college-evaluations">College Evaluations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
@@ -83,6 +85,10 @@ export default function AdminDashboard() {
 
         <TabsContent value="platform-updates" className="space-y-4">
           <PlatformUpdateManagement />
+        </TabsContent>
+
+        <TabsContent value="college-evaluations" className="space-y-4">
+          <CollegeEvaluationManagement />
         </TabsContent>
       </Tabs>
     </div>
