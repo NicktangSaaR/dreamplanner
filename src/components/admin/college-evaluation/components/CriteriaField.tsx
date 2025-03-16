@@ -30,8 +30,12 @@ export default function CriteriaField({
       if (criteriaKey === 'recommendations') {
         return "Personal Insight Questions (PIQs)";
       }
+      if (criteriaKey === 'athletics') {
+        return "Personal Talents";
+      }
+      // Remove interview for UC System
       if (criteriaKey === 'interview') {
-        return "Communication Skills (Application Materials)";
+        return "Not Applicable for UC System";
       }
     }
     return label;
@@ -40,6 +44,11 @@ export default function CriteriaField({
   const getCriteriaDescription = (score: ScoreValue): string => {
     return criteriaDescriptions[criteriaKey]?.[score] || "";
   };
+
+  // Skip rendering if this is the interview field for UC System
+  if (universityType === 'ucSystem' && criteriaKey === 'interview') {
+    return null;
+  }
 
   return (
     <FormField

@@ -121,12 +121,12 @@ export const UC_SYSTEM_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
     6: "Very few or no extracurricular activities."
   },
   athletics: {
-    1: "State-level or regional athletic achievements recognized by UC coaches or recruitment.",
-    2: "Significant athletic contributions at the school or district level, potential recruit interest.",
-    3: "Regular participation in school athletics with demonstrated commitment.",
-    4: "Some athletics participation without competitive distinction.",
-    5: "Limited participation in sports or physical activities.",
-    6: "No athletic involvement."
+    1: "Exceptional talent or skill in a specific area (arts, music, leadership, etc.) with state or national recognition.",
+    2: "Strong development of a personal talent with awards or recognition at school or regional level.",
+    3: "Clear demonstration of talent development with consistent practice and improvement.",
+    4: "Some evidence of personal talent but limited recognition or achievement.",
+    5: "Basic development of a talent or skill without significant accomplishments.",
+    6: "No demonstrated personal talents or skills in application materials."
   },
   personalQualities: {
     1: "Exceptional demonstration of UC's comprehensive review factors: creativity, intellectual curiosity, leadership, and resilience. Compelling personal insight questions.",
@@ -145,12 +145,12 @@ export const UC_SYSTEM_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
     6: "Poor quality PIQ responses with limited self-reflection or insight."
   },
   interview: {
-    1: "UC does not conduct interviews, but the application demonstrates exceptional communication skills and self-presentation.",
-    2: "Application materials show excellent articulation of ideas and experiences.",
-    3: "Good communication through written materials, clear expression of thoughts.",
-    4: "Adequate self-expression in application materials.",
-    5: "Unclear or imprecise communication in application materials.",
-    6: "Poor communication skills evident in application materials."
+    1: "Not applicable for UC System",
+    2: "Not applicable for UC System",
+    3: "Not applicable for UC System",
+    4: "Not applicable for UC System",
+    5: "Not applicable for UC System",
+    6: "Not applicable for UC System"
   }
 };
 

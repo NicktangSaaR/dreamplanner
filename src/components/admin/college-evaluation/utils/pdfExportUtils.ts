@@ -24,8 +24,10 @@ const getCriteriaLabel = (key: string, universityType?: UniversityType): string 
     switch (key) {
       case 'recommendations_score':
         return 'Personal Insight Questions (PIQs)';
+      case 'athletics_score':
+        return 'Personal Talents';
       case 'interview_score':
-        return 'Communication Skills (Application Materials)';
+        return 'Not Applicable for UC System';
       default:
         break;
     }
@@ -64,19 +66,28 @@ export const exportEvaluationToPDF = (evaluation: StudentEvaluation) => {
   doc.text(`Student Name: ${evaluation.student_name}`, 15, 30);
   doc.text(`Evaluation Date: ${new Date(evaluation.evaluation_date).toLocaleDateString('en-US')}`, 15, 40);
   
+  // Prepare table rows based on university type
+  const tableRows = [
+    [getCriteriaLabel('academics_score', evaluation.university_type as UniversityType), evaluation.academics_score],
+    [getCriteriaLabel('extracurriculars_score', evaluation.university_type as UniversityType), evaluation.extracurriculars_score],
+    [getCriteriaLabel('athletics_score', evaluation.university_type as UniversityType), evaluation.athletics_score],
+    [getCriteriaLabel('personal_qualities_score', evaluation.university_type as UniversityType), evaluation.personal_qualities_score],
+    [getCriteriaLabel('recommendations_score', evaluation.university_type as UniversityType), evaluation.recommendations_score],
+  ];
+  
+  // Only include interview for non-UC System
+  if (evaluation.university_type !== 'ucSystem') {
+    tableRows.push([getCriteriaLabel('interview_score', evaluation.university_type as UniversityType), evaluation.interview_score]);
+  }
+  
+  // Add total score
+  tableRows.push([getCriteriaLabel('total_score', evaluation.university_type as UniversityType), evaluation.total_score]);
+  
   // Add scores table with appropriate labels based on university type
   autoTable(doc, {
     startY: 50,
     head: [['Evaluation Criteria', 'Score (1 is highest, 6 is lowest)']],
-    body: [
-      [getCriteriaLabel('academics_score', evaluation.university_type as UniversityType), evaluation.academics_score],
-      [getCriteriaLabel('extracurriculars_score', evaluation.university_type as UniversityType), evaluation.extracurriculars_score],
-      [getCriteriaLabel('athletics_score', evaluation.university_type as UniversityType), evaluation.athletics_score],
-      [getCriteriaLabel('personal_qualities_score', evaluation.university_type as UniversityType), evaluation.personal_qualities_score],
-      [getCriteriaLabel('recommendations_score', evaluation.university_type as UniversityType), evaluation.recommendations_score],
-      [getCriteriaLabel('interview_score', evaluation.university_type as UniversityType), evaluation.interview_score],
-      [getCriteriaLabel('total_score', evaluation.university_type as UniversityType), evaluation.total_score],
-    ],
+    body: tableRows,
     theme: 'grid',
     headStyles: { fillColor: [66, 139, 202], textColor: [255, 255, 255] },
     alternateRowStyles: { fillColor: [240, 240, 240] },

@@ -53,6 +53,11 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
     setIsSubmitting(true);
     
     try {
+      // For UC System, set interview score to a neutral value as it's not used
+      if (universityType === 'ucSystem') {
+        values.criteria.interview = 3; // Set to neutral value since it's not displayed
+      }
+      
       const totalScore = calculateTotalScore(values.criteria);
       const evaluationDate = new Date().toISOString();
       
@@ -159,11 +164,11 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
               universityType={universityType}
             />
 
-            {/* Athletics Section */}
+            {/* Athletics Section - for UC System, this becomes Personal Talents */}
             <CriteriaField 
               form={form} 
               name="criteria.athletics" 
-              label="运动（Athletics）" 
+              label={universityType === 'ucSystem' ? "个人特长（Personal Talents）" : "运动（Athletics）"} 
               criteriaKey="athletics" 
               universityType={universityType}
             />
@@ -186,11 +191,11 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
               universityType={universityType}
             />
 
-            {/* Interview Section */}
+            {/* Interview Section - don't show for UC System */}
             <CriteriaField 
               form={form} 
               name="criteria.interview" 
-              label={universityType === 'ucSystem' ? "沟通能力（申请材料）" : "面试（Interview）"} 
+              label="面试（Interview）" 
               criteriaKey="interview" 
               universityType={universityType}
             />
