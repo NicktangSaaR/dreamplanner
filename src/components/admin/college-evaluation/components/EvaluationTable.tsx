@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { FileText, Trash2 } from "lucide-react";
@@ -46,7 +45,6 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
         return;
       }
       
-      // Refresh data after successful deletion
       await queryClient.invalidateQueries({ queryKey: ["student-evaluations"] });
       toast.success("评估已成功删除");
     } catch (err) {
@@ -57,9 +55,7 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
     }
   };
 
-  // Function to get appropriate column label based on university type
   const getColumnLabel = (key: string, evaluation: StudentEvaluation): string => {
-    // Use the evaluation's stored university type if available
     const evalType = evaluation.university_type as UniversityType || universityType as UniversityType;
     
     if (evalType === 'ucSystem') {
@@ -93,56 +89,44 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
     }
   };
 
-  // Calculate maximum possible score for a specific evaluation
   const getMaxPossibleScore = (evaluation: StudentEvaluation): number => {
-    // Use evaluation's stored university type if available
     const evalType = evaluation.university_type as UniversityType || universityType as UniversityType;
     
-    // Standard max is 6 criteria × 6 points = 36
     let maxScore = 36;
     
-    // For UC System, we don't count interview (5 criteria × 6 points = 30)
     if (evalType === 'ucSystem') {
       maxScore = 30;
     }
     
-    // For Ivy League and Top30, exclude athletics if it's 4 or higher
     const isAthleticsExcluded = 
       (evalType === 'ivyLeague' || evalType === 'top30') && 
       evaluation.athletics_score >= 4;
     
     if (isAthleticsExcluded) {
-      maxScore -= 6; // Reduce max by 6 points (the max value of athletics)
+      maxScore -= 6;
     }
     
     return maxScore;
   };
 
-  // Format score as actual/maximum
   const formatScore = (score: number, maxScore: number): string => {
     return `${score}/${maxScore}`;
   };
 
-  // Calculate and format average score
   const formatAverageScore = (totalScore: number, maxScore: number): string => {
-    // Calculate how many criteria are used based on university type
     const evalType = universityType as UniversityType;
     
-    // Default number of criteria is 6
     let criteriaCount = 6;
     
-    // For UC System, we don't count interview (5 criteria)
     if (evalType === 'ucSystem') {
       criteriaCount = 5;
     }
     
-    const average = (totalScore / criteriaCount).toFixed(2);
-    const maxAverage = (maxScore / criteriaCount).toFixed(2);
+    const average = ((totalScore / criteriaCount)).toFixed(2);
     
-    return `${average}/${maxAverage}`;
+    return `${average}/6`;
   };
 
-  // Check if any evaluation is UC System
   const hasUcSystemEval = evaluations.some(e => (e.university_type || universityType) === 'ucSystem');
 
   return (
