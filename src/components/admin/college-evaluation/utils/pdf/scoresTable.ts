@@ -44,9 +44,9 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
   tableRows.push([getCriteriaLabel('total_score', evalType), `${evaluation.total_score}/${maxScore}`]);
   
   // Add scores table with appropriate labels based on university type
-  // Start at 75 to accommodate logo, company name, slogan and header
+  // Increase starting Y position to 85 to accommodate the header that will appear on every page
   autoTable(doc, {
-    startY: 75,
+    startY: 85,
     head: [['Evaluation Criteria', 'Score (1 is highest, 6 is lowest)']],
     body: tableRows,
     theme: 'grid',
