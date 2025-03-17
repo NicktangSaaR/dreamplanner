@@ -7,7 +7,7 @@ import EvaluationFormDialog from "./components/EvaluationFormDialog";
 import { useStudentsQuery, Student } from "./hooks/useStudentsQuery";
 import { useEvaluationsQuery } from "./hooks/useEvaluationsQuery";
 import { UniversityType } from "./types";
-import UniversityTypeTabs from "./components/UniversityTypeTabs";
+import { UniversityTypeTabs } from "./components/UniversityTypeTabs";
 
 export default function StudentEvaluationManager() {
   const [searchQuery, setSearchQuery] = useState("");
