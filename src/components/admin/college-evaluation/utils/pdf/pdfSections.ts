@@ -9,12 +9,15 @@ import { getCriteriaDescription, preparePdfTableRows } from '../criteriaUtils';
  * Adds student information and header to PDF document
  */
 export const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, universityType: UniversityType) => {
+  // Use the evaluation's stored university type if available
+  const evalType = evaluation.university_type || universityType;
+  
   // Set Times New Roman font for entire document
   doc.setFont("times", "normal");
   
   // Add title
   doc.setFontSize(18);
-  const universityTypeDisplay = getUniversityTypeDisplay(universityType);
+  const universityTypeDisplay = getUniversityTypeDisplay(evalType);
   doc.text(`US Undergraduate Admission Evaluation - ${universityTypeDisplay}`, 15, 20);
   
   // Add student information
@@ -27,16 +30,19 @@ export const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, uni
  * Adds scores table to PDF document
  */
 export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, universityType: UniversityType) => {
+  // Use the evaluation's stored university type if available
+  const evalType = evaluation.university_type || universityType;
+  
   // Get table rows
-  const tableRows = preparePdfTableRows(evaluation, universityType);
+  const tableRows = preparePdfTableRows(evaluation, evalType);
   
   // Check if athletics score should be excluded for Ivy League and Top30
   const athleticsScore = evaluation.athletics_score;
-  const isAthleticsExcluded = (universityType === 'ivyLeague' || universityType === 'top30') && athleticsScore >= 4;
+  const isAthleticsExcluded = (evalType === 'ivyLeague' || evalType === 'top30') && athleticsScore >= 4;
   
   // If athletics is excluded, add a note to the athletics row
   if (isAthleticsExcluded) {
-    const athleticsIndex = tableRows.findIndex(row => row[0] === getCriteriaLabel('athletics_score', universityType));
+    const athleticsIndex = tableRows.findIndex(row => row[0] === getCriteriaLabel('athletics_score', evalType));
     if (athleticsIndex !== -1) {
       tableRows[athleticsIndex][1] = `${athleticsScore} (Not included in total)`;
     }
@@ -46,7 +52,7 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
   let maxScore = 36; // Default: 6 criteria × 6 points
   
   // For UC System, we don't count interview (5 criteria × 6 points = 30)
-  if (universityType === 'ucSystem') {
+  if (evalType === 'ucSystem') {
     maxScore = 30;
   }
   
@@ -56,7 +62,7 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
   }
   
   // Add total score with max possible score
-  tableRows.push([getCriteriaLabel('total_score', universityType), `${evaluation.total_score}/${maxScore}`]);
+  tableRows.push([getCriteriaLabel('total_score', evalType), `${evaluation.total_score}/${maxScore}`]);
   
   // Add scores table with appropriate labels based on university type
   autoTable(doc, {
@@ -85,6 +91,9 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
  * Adds detailed criteria descriptions to PDF document
  */
 export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluation, universityType: UniversityType, startY: number) => {
+  // Use the evaluation's stored university type if available
+  const evalType = evaluation.university_type || universityType;
+  
   let finalY = startY + 10;
   
   // Add section header
@@ -103,20 +112,20 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
   ];
   
   // Only include interview for non-UC System
-  if (universityType !== 'ucSystem') {
+  if (evalType !== 'ucSystem') {
     criteriaColumns.push('interview_score');
   }
   
   // Loop through each criteria and add its description
   criteriaColumns.forEach(column => {
-    if (column === 'interview_score' && universityType === 'ucSystem') {
+    if (column === 'interview_score' && evalType === 'ucSystem') {
       return; // Skip interview for UC System
     }
     
     const criteriaKey = getCriteriaKeyFromColumn(column);
     const score = evaluation[column] as number;
-    const label = getCriteriaLabel(column, universityType);
-    const description = getCriteriaDescription(criteriaKey, score, universityType);
+    const label = getCriteriaLabel(column, evalType);
+    const description = getCriteriaDescription(criteriaKey, score, evalType);
     
     // Check if we need to add a new page
     if (finalY > 260) {

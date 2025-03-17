@@ -66,8 +66,9 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         interview_score: values.criteria.interview,
         comments: values.comments,
         total_score: totalScore,
-        admin_id: profile.id
-        // Removing university_type as it's not in the database schema
+        admin_id: profile.id,
+        // Add university_type to the evaluation data
+        university_type: universityType
       };
       
       const { data, error } = await supabase
@@ -78,19 +79,16 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
       
       if (error) throw error;
       
-      // Add universityType to submitted evaluation for PDF export
-      const evaluationWithType = {
-        ...data as StudentEvaluation,
-        university_type: universityType
-      };
+      // We no longer need to add university_type as it's now stored in the database
+      const evaluationWithType = data as StudentEvaluation;
       
       setSubmittedEvaluation(evaluationWithType);
-      toast.success("评估表已成功创建");
+      toast.success("Evaluation created successfully");
       
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Error creating evaluation:", error);
-      toast.error("创建评估表失败");
+      toast.error("Failed to create evaluation");
     } finally {
       setIsSubmitting(false);
     }

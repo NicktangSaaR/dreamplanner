@@ -6,9 +6,10 @@ import { generateEvaluationPdf } from "./pdf/pdfGenerator";
  * Exports evaluation to PDF and triggers download
  */
 export const exportEvaluationToPDF = (evaluation: StudentEvaluation) => {
+  // Ensure we're using the evaluation's university_type if available
   const universityType = evaluation.university_type as UniversityType || 'ivyLeague';
   
-  // Generate PDF document
+  // Generate PDF document with the correct university type
   const doc = generateEvaluationPdf(evaluation, universityType);
   
   // Save the PDF with student name

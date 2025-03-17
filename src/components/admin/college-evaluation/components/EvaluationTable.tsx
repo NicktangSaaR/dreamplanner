@@ -17,17 +17,24 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
   };
 
   const handleExportPDF = (evaluation: StudentEvaluation) => {
-    // Add default university type if not present
+    // Use the evaluation's stored university_type if available, otherwise fall back to the current tab's type
+    const evalUniversityType = evaluation.university_type || universityType as UniversityType || 'ivyLeague';
+    
+    // Ensure university_type is included in the evaluation
     const evaluationWithType = {
       ...evaluation,
-      university_type: evaluation.university_type || universityType as UniversityType || 'ivyLeague'
+      university_type: evalUniversityType
     };
+    
     exportEvaluationToPDF(evaluationWithType);
   };
 
   // Function to get appropriate column label based on university type
-  const getColumnLabel = (key: string, uniType?: UniversityType): string => {
-    if (uniType === 'ucSystem') {
+  const getColumnLabel = (key: string, evaluation: StudentEvaluation): string => {
+    // Use the evaluation's stored university type if available
+    const evalType = evaluation.university_type as UniversityType || universityType as UniversityType;
+    
+    if (evalType === 'ucSystem') {
       switch (key) {
         case 'recommendations':
           return "PIQs";
@@ -60,17 +67,20 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
 
   // Calculate maximum possible score for a specific evaluation
   const getMaxPossibleScore = (evaluation: StudentEvaluation): number => {
+    // Use evaluation's stored university type if available
+    const evalType = evaluation.university_type as UniversityType || universityType as UniversityType;
+    
     // Standard max is 6 criteria × 6 points = 36
     let maxScore = 36;
     
     // For UC System, we don't count interview (5 criteria × 6 points = 30)
-    if (universityType === 'ucSystem') {
+    if (evalType === 'ucSystem') {
       maxScore = 30;
     }
     
     // For Ivy League and Top30, exclude athletics if it's 4 or higher
     const isAthleticsExcluded = 
-      (universityType === 'ivyLeague' || universityType === 'top30') && 
+      (evalType === 'ivyLeague' || evalType === 'top30') && 
       evaluation.athletics_score >= 4;
     
     if (isAthleticsExcluded) {
@@ -85,6 +95,9 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
     return `${score}/${maxScore}`;
   };
 
+  // Check if any evaluation is UC System
+  const hasUcSystemEval = evaluations.some(e => (e.university_type || universityType) === 'ucSystem');
+
   return (
     <div className="border rounded-md">
       <Table>
@@ -95,16 +108,20 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
             <TableHead>Total Score</TableHead>
             <TableHead>Academics</TableHead>
             <TableHead>Extracurriculars</TableHead>
-            <TableHead>{universityType === 'ucSystem' ? 'Personal Talents' : 'Athletics'}</TableHead>
+            <TableHead>Athletics/Talents</TableHead>
             <TableHead>Personal Qualities</TableHead>
-            <TableHead>{universityType === 'ucSystem' ? 'Personal Insight Questions (PIQs)' : 'Recommendations'}</TableHead>
-            {universityType !== 'ucSystem' && <TableHead>Interview</TableHead>}
+            <TableHead>Recommendations/PIQs</TableHead>
+            {!hasUcSystemEval && <TableHead>Interview</TableHead>}
+            <TableHead>University Type</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {evaluations.map((evaluation) => {
             const maxScore = getMaxPossibleScore(evaluation);
+            const evalType = evaluation.university_type as UniversityType || universityType as UniversityType;
+            const isUcSystem = evalType === 'ucSystem';
+            
             return (
               <TableRow key={evaluation.id}>
                 <TableCell className="font-medium">{evaluation.student_name}</TableCell>
@@ -115,7 +132,13 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
                 <TableCell>{evaluation.athletics_score}/6</TableCell>
                 <TableCell>{evaluation.personal_qualities_score}/6</TableCell>
                 <TableCell>{evaluation.recommendations_score}/6</TableCell>
-                {universityType !== 'ucSystem' && <TableCell>{evaluation.interview_score}/6</TableCell>}
+                {!isUcSystem && <TableCell>{evaluation.interview_score}/6</TableCell>}
+                {isUcSystem ? null : <TableCell></TableCell>}
+                <TableCell>
+                  {evalType === 'ivyLeague' ? 'Ivy League' : 
+                   evalType === 'top30' ? 'Top 20-30' : 
+                   evalType === 'ucSystem' ? 'UC System' : 'Unknown'}
+                </TableCell>
                 <TableCell>
                   <Button 
                     variant="ghost" 
