@@ -63,13 +63,13 @@ export default function CriteriaField({
           >
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder="选择分数" />
+                <SelectValue placeholder="Select Score" />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
               {[1, 2, 3, 4, 5, 6].map((score) => (
                 <SelectItem key={score} value={score.toString()}>
-                  {score} 分{score === 1 ? "（最高）" : score === 6 ? "（最低）" : ""}
+                  Score: {score} {score === 1 ? "(Highest)" : score === 6 ? "(Lowest)" : ""}
                 </SelectItem>
               ))}
             </SelectContent>
