@@ -38,8 +38,8 @@ export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityT
     for (let i = 1; i <= doc.getNumberOfPages(); i++) {
       doc.setPage(i);
       
-      // Add header background with primary color that matches website theme
-      doc.setFillColor(99, 102, 241); // #6366F1 - primary color from tailwind config
+      // Add header with white background (instead of primary color)
+      doc.setFillColor(255, 255, 255); // White background
       doc.rect(0, 0, 210, 35, 'F');
       
       // Add logo (in top left corner)
@@ -49,16 +49,16 @@ export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityT
         console.error('Error adding logo to PDF:', err);
       }
       
-      // Add company name: "DreamPlanner" in white text
+      // Add company name: "DreamPlanner" in primary color instead of white
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
-      doc.setTextColor(255, 255, 255); // White text for contrast against primary background
+      doc.setTextColor(99, 102, 241); // #6366F1 - primary color from tailwind config
       doc.text("DreamPlanner", 40, 20);
       
-      // Add slogan below company name in lighter white
+      // Add slogan below company name in lighter primary color
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(240, 240, 240); // Slightly dimmer white for slogan
+      doc.setTextColor(136, 138, 243); // Slightly lighter version of primary color
       doc.text("Weave Your Dreams", 40, 25);
       
       // Reset text color to black for the rest of the document
