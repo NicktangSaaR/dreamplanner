@@ -3,7 +3,9 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { StudentEvaluation, UniversityType } from "../../types";
 import { getUniversityCriteriaDescriptions } from "../../evaluationConstants";
-import { getCriteriaKeyFromColumn } from './criteriaUtils';
+// Remove the conflicting import
+// import { getCriteriaKeyFromColumn } from './criteriaUtils';
+import { getCriteriaLabel } from '../displayUtils';
 
 /**
  * Adds criteria descriptions to the PDF document
@@ -143,5 +145,3 @@ export const preparePdfTableRows = (evaluation: any, universityType: UniversityT
     return [getCriteriaLabel(column, universityType), score];
   }).filter(Boolean); // Remove null entries
 };
-
-import { getUniversityTypeDisplay, getCriteriaLabel } from '../displayUtils';
