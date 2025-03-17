@@ -23,9 +23,9 @@ export default function EvaluationsTable({ evaluations, isLoading }: Evaluations
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Created Evaluations</CardTitle>
+        <CardTitle>Evaluations by University Type</CardTitle>
         <CardDescription>
-          View all completed student evaluations (Scoring criteria: 1 is highest, 6 is lowest)
+          View student evaluations organized by university category (Scoring criteria: 1 is highest, 6 is lowest)
         </CardDescription>
       </CardHeader>
       <CardContent>

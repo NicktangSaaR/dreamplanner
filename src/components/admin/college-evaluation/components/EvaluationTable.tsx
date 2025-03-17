@@ -112,7 +112,6 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
             <TableHead>Personal Qualities</TableHead>
             <TableHead>Recommendations/PIQs</TableHead>
             {!hasUcSystemEval && <TableHead>Interview</TableHead>}
-            <TableHead>University Type</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -133,12 +132,6 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
                 <TableCell>{evaluation.personal_qualities_score}/6</TableCell>
                 <TableCell>{evaluation.recommendations_score}/6</TableCell>
                 {!isUcSystem && <TableCell>{evaluation.interview_score}/6</TableCell>}
-                {isUcSystem ? null : <TableCell></TableCell>}
-                <TableCell>
-                  {evalType === 'ivyLeague' ? 'Ivy League' : 
-                   evalType === 'top30' ? 'Top 20-30' : 
-                   evalType === 'ucSystem' ? 'UC System' : 'Unknown'}
-                </TableCell>
                 <TableCell>
                   <Button 
                     variant="ghost" 
