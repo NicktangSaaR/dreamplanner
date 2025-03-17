@@ -23,7 +23,7 @@ export const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, st
   // Set font for comments content
   doc.setFont("helvetica", "normal");
   
-  // Add comments with improved word wrapping for multilingual support
+  // Add comments with improved word wrapping
   const maxCommentWidth = 180;
   const comments = evaluation.comments || 'None';
   

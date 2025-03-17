@@ -10,7 +10,7 @@ import { addCommentsSection } from './commentsSection';
  * Generates and returns a PDF document for the evaluation
  */
 export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityType: UniversityType): jsPDF => {
-  // Create PDF document with UTF-8 encoding support for international characters
+  // Create PDF document with standard encoding
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -19,8 +19,8 @@ export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityT
     compress: true
   });
   
-  // Use standard fonts that come with jsPDF instead of trying to load external fonts
-  // This ensures better compatibility and eliminates font loading errors
+  // Use only standard helvetica font which has good compatibility
+  // Avoid using any custom fonts which can cause encoding issues
   
   // Setup header function for all pages
   const addHeaderToAllPages = () => {

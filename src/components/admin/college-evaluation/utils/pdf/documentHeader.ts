@@ -22,5 +22,13 @@ export const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, uni
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
   doc.text(`Student Name: ${evaluation.student_name}`, 15, 60);
-  doc.text(`Evaluation Date: ${new Date(evaluation.evaluation_date).toLocaleDateString('en-US')}`, 15, 70);
+  
+  // Format date properly for display
+  const formattedDate = new Date(evaluation.evaluation_date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  doc.text(`Evaluation Date: ${formattedDate}`, 15, 70);
 };
