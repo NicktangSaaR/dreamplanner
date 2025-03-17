@@ -2,29 +2,7 @@
 import jsPDF from 'jspdf';
 import { StudentEvaluation, UniversityType } from "../../types";
 import { getCriteriaLabel } from '../displayUtils';
-import { getCriteriaDescription } from '../criteriaUtils';
-
-/**
- * Helper to get criteria key from column name
- */
-export const getCriteriaKeyFromColumn = (columnName: string): string => {
-  switch (columnName) {
-    case 'academics_score':
-      return 'academics';
-    case 'extracurriculars_score':
-      return 'extracurriculars';
-    case 'athletics_score':
-      return 'athletics';
-    case 'personal_qualities_score':
-      return 'personalQualities';
-    case 'recommendations_score':
-      return 'recommendations';
-    case 'interview_score':
-      return 'interview';
-    default:
-      return '';
-  }
-};
+import { getCriteriaDescription, getCriteriaKeyFromColumn } from '../criteriaUtils';
 
 /**
  * Adds detailed criteria descriptions to PDF document

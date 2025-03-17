@@ -1,7 +1,7 @@
 
 import { UniversityType } from "../types";
 import { getUniversityCriteriaDescriptions } from "../evaluationConstants";
-import { getCriteriaLabel, getCriteriaKeyFromColumn } from "./displayUtils";
+import { getCriteriaLabel } from "./displayUtils";
 
 /**
  * Gets criteria description for a specific score
@@ -13,6 +13,28 @@ export const getCriteriaDescription = (
 ): string => {
   const descriptions = getUniversityCriteriaDescriptions(universityType);
   return descriptions[criteriaKey]?.[score] || "";
+};
+
+/**
+ * Converts column name to criteria key
+ */
+export const getCriteriaKeyFromColumn = (columnName: string): string => {
+  switch (columnName) {
+    case 'academics_score':
+      return 'academics';
+    case 'extracurriculars_score':
+      return 'extracurriculars';
+    case 'athletics_score':
+      return 'athletics';
+    case 'personal_qualities_score':
+      return 'personalQualities';
+    case 'recommendations_score':
+      return 'recommendations';
+    case 'interview_score':
+      return 'interview';
+    default:
+      return '';
+  }
 };
 
 /**
@@ -41,7 +63,6 @@ export const preparePdfTableRows = (evaluation: any, universityType: UniversityT
       return null;
     }
     
-    // Fix: Import displayUtils at the top instead of using require
     return [getCriteriaLabel(column, universityType), score];
   }).filter(Boolean); // Remove null entries
 };
