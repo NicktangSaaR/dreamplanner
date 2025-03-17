@@ -9,6 +9,9 @@ import { getCriteriaDescription, preparePdfTableRows } from './criteriaUtils';
  * Adds student information and header to PDF document
  */
 const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, universityType: UniversityType) => {
+  // Set Times New Roman font for entire document
+  doc.setFont("times", "normal");
+  
   // Add title
   doc.setFontSize(18);
   const universityTypeDisplay = getUniversityTypeDisplay(universityType);
@@ -35,12 +38,25 @@ const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, universityTyp
   if (isAthleticsExcluded) {
     const athleticsIndex = tableRows.findIndex(row => row[0] === getCriteriaLabel('athletics_score', universityType));
     if (athleticsIndex !== -1) {
-      tableRows[athleticsIndex][1] = `${athleticsScore} (不计入总分)`;
+      tableRows[athleticsIndex][1] = `${athleticsScore} (Not included in total)`;
     }
   }
   
-  // Add total score
-  tableRows.push([getCriteriaLabel('total_score', universityType), evaluation.total_score]);
+  // Calculate max possible score
+  let maxScore = 36; // Default: 6 criteria × 6 points
+  
+  // For UC System, we don't count interview (5 criteria × 6 points = 30)
+  if (universityType === 'ucSystem') {
+    maxScore = 30;
+  }
+  
+  // For Ivy League and Top30, exclude athletics if it's 4 or higher
+  if (isAthleticsExcluded) {
+    maxScore -= 6; // Reduce max by 6 points (the max value of athletics)
+  }
+  
+  // Add total score with max possible score
+  tableRows.push([getCriteriaLabel('total_score', universityType), `${evaluation.total_score}/${maxScore}`]);
   
   // Add scores table with appropriate labels based on university type
   autoTable(doc, {
@@ -48,7 +64,16 @@ const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, universityTyp
     head: [['Evaluation Criteria', 'Score (1 is highest, 6 is lowest)']],
     body: tableRows,
     theme: 'grid',
-    headStyles: { fillColor: [66, 139, 202], textColor: [255, 255, 255] },
+    headStyles: { 
+      fillColor: [66, 139, 202], 
+      textColor: [255, 255, 255],
+      font: 'times',
+      fontStyle: 'bold' 
+    },
+    styles: {
+      font: 'times',
+      fontStyle: 'normal'
+    },
     alternateRowStyles: { fillColor: [240, 240, 240] },
   });
   
@@ -64,6 +89,7 @@ const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluation, univ
   
   // Add section header
   doc.setFontSize(14);
+  doc.setFont("times", "bold");
   doc.text('Detailed Scoring Criteria Descriptions:', 15, finalY);
   finalY += 20;
   
@@ -95,13 +121,14 @@ const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluation, univ
     // Check if we need to add a new page
     if (finalY > 260) {
       doc.addPage();
+      doc.setFont("times", "normal"); // Ensure font is set for new page
       finalY = 20;
     }
     
     doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
+    doc.setFont("times", "bold");
     doc.text(`${label} (Score: ${score})`, 15, finalY);
-    doc.setFont(undefined, 'normal');
+    doc.setFont("times", "normal");
     
     // Add description with improved word wrapping - maximize page width usage
     const maxWidth = 180;
@@ -127,13 +154,14 @@ const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, startY: n
   // Add new page if needed
   if (finalY > 240) {
     doc.addPage();
+    doc.setFont("times", "normal"); // Ensure font is set for new page
     finalY = 20;
   }
   
   doc.setFontSize(14);
-  doc.setFont(undefined, 'bold');
+  doc.setFont("times", "bold");
   doc.text('Comments:', 15, finalY);
-  doc.setFont(undefined, 'normal');
+  doc.setFont("times", "normal");
   
   // Add comments with improved word wrapping
   const maxCommentWidth = 180;
@@ -148,6 +176,7 @@ const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, startY: n
  * Generates and saves PDF for evaluation
  */
 export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityType: UniversityType): jsPDF => {
+  // Create PDF document with Times New Roman font
   const doc = new jsPDF();
   
   // Add special note about athletics scoring for Ivy League and Top30
@@ -160,8 +189,8 @@ export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityT
   // Add special note about athletics scoring if applicable
   if (isAthleticsExcluded) {
     doc.setFontSize(10);
-    doc.setFont(undefined, 'italic');
-    doc.text('* 注意: 对于常青藤和Top20-30大学，体育分数4分及以上不计入总分。', 15, 45);
+    doc.setFont("times", "italic");
+    doc.text('* Note: For Ivy League and Top20-30 universities, athletics scores of 4 or higher are not included in the total score.', 15, 45);
   }
   
   const afterTableY = addScoresTable(doc, evaluation, universityType);
