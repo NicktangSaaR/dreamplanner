@@ -65,8 +65,8 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         interview_score: values.criteria.interview,
         comments: values.comments,
         total_score: totalScore,
-        admin_id: profile.id
-        // Removed university_type field as it doesn't exist in the database
+        admin_id: profile.id,
+        university_type: universityType  // Store university type in the database
       };
       
       const { data, error } = await supabase
