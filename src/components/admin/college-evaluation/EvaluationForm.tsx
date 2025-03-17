@@ -73,8 +73,8 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
         interview_score: values.criteria.interview,
         comments: values.comments,
         total_score: totalScore,
-        admin_id: profile.id,
-        university_type: universityType
+        admin_id: profile.id
+        // Removed university_type field as it doesn't exist in the database
       };
       
       const { data, error } = await supabase
@@ -85,7 +85,13 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
       
       if (error) throw error;
       
-      setSubmittedEvaluation(data as StudentEvaluation);
+      // Add universityType to submitted evaluation for PDF export
+      const evaluationWithType = {
+        ...data as StudentEvaluation,
+        university_type: universityType
+      };
+      
+      setSubmittedEvaluation(evaluationWithType);
       toast.success("评估表已成功创建");
       
       if (onSuccess) onSuccess();
