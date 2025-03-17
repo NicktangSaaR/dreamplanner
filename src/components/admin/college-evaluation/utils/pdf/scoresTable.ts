@@ -4,6 +4,7 @@ import autoTable from 'jspdf-autotable';
 import { StudentEvaluation, UniversityType } from "../../types";
 import { getCriteriaLabel } from '../displayUtils';
 import { preparePdfTableRows } from './criteriaUtils';
+import { getCoreTotalScore, getTraditionalTotalScore } from '../scoringUtils';
 
 /**
  * Adds scores table to PDF document
@@ -27,28 +28,40 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
     }
   }
   
-  // Add the admission factors scores - removed Chinese text
+  // Add the admission factors scores
   const admissionFactorsRows = [
     ["Academic Excellence", evaluation.academic_excellence_score || 3],
     ["Impact & Leadership", evaluation.impact_leadership_score || 3],
     ["Unique Personal Narrative", evaluation.unique_narrative_score || 3],
   ];
   
-  // Calculate max possible score
-  let maxScore = 36; // Default: 6 criteria × 6 points
+  // Calculate core score
+  const coreScore = getCoreTotalScore(evaluation);
+  
+  // Add core total score
+  admissionFactorsRows.push(["Core Total Score", `${coreScore}/18`]);
+  
+  // Calculate max possible score for traditional criteria
+  let traditionalMaxScore = 36; // Default: 6 criteria × 6 points
   
   // For UC System, we don't count interview (5 criteria × 6 points = 30)
   if (evalType === 'ucSystem') {
-    maxScore = 30;
+    traditionalMaxScore = 30;
   }
   
   // For Ivy League and Top30, exclude athletics if it's 4 or higher
   if (isAthleticsExcluded) {
-    maxScore -= 6; // Reduce max by 6 points (the max value of athletics)
+    traditionalMaxScore -= 6; // Reduce max by 6 points (the max value of athletics)
   }
   
-  // Add points for the admission factors (3 criteria × 6 points = 18)
-  maxScore += 18;
+  // Calculate traditional score
+  const traditionalScore = getTraditionalTotalScore(evaluation, evalType);
+  
+  // Total max score includes both traditional and core criteria
+  const maxScore = traditionalMaxScore + 18;
+  
+  // Add traditional total score to traditional rows
+  traditionalTableRows.push(["Traditional Total Score", `${traditionalScore}/${traditionalMaxScore}`]);
   
   // Add total score with max possible score
   const totalRow = [getCriteriaLabel('total_score', evalType), `${evaluation.total_score}/${maxScore}`];

@@ -31,6 +31,45 @@ export const getMaxPossibleScore = (evaluation: StudentEvaluation, universityTyp
 };
 
 /**
+ * Gets the core total score (the three core admission factors)
+ */
+export const getCoreTotalScore = (evaluation: StudentEvaluation): number => {
+  const academicExcellence = evaluation.academic_excellence_score || 3;
+  const impactLeadership = evaluation.impact_leadership_score || 3;
+  const uniqueNarrative = evaluation.unique_narrative_score || 3;
+  
+  return academicExcellence + impactLeadership + uniqueNarrative;
+};
+
+/**
+ * Gets the traditional total score (excluding the three core admission factors)
+ */
+export const getTraditionalTotalScore = (evaluation: StudentEvaluation, universityType: UniversityType | string): number => {
+  const evalType = evaluation.university_type as UniversityType || universityType as UniversityType;
+  
+  // Calculate traditional score components
+  let traditionalScore = 
+    evaluation.academics_score + 
+    evaluation.extracurriculars_score + 
+    evaluation.athletics_score + 
+    evaluation.personal_qualities_score + 
+    evaluation.recommendations_score + 
+    evaluation.interview_score;
+  
+  // Adjust for UC system (no interview)
+  if (evalType === 'ucSystem') {
+    traditionalScore -= evaluation.interview_score;
+  }
+  
+  // Adjust for athletics exclusion for Ivy League and Top30
+  if ((evalType === 'ivyLeague' || evalType === 'top30') && evaluation.athletics_score >= 4) {
+    traditionalScore -= evaluation.athletics_score;
+  }
+  
+  return traditionalScore;
+};
+
+/**
  * Format score as actual/maximum
  */
 export const formatScore = (score: number, maxScore: number): string => {

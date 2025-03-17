@@ -1,5 +1,6 @@
 
 import { EvaluationCriteria, UniversityType } from "../types";
+import { getCoreTotalScore, getTraditionalTotalScore } from "./scoringUtils";
 
 /**
  * Calculate total evaluation score based on criteria scores
@@ -8,7 +9,14 @@ import { EvaluationCriteria, UniversityType } from "../types";
 export const calculateTotalScore = (criteria: EvaluationCriteria, universityType: UniversityType): number => {
   console.log("Calculating score for university type:", universityType);
   
-  // First convert all traditional scores to an array for easier manipulation
+  // Calculate core scores
+  const coreScores = [
+    criteria.academicExcellence,
+    criteria.impactLeadership,
+    criteria.uniqueNarrative
+  ];
+  
+  // Calculate traditional scores
   const traditionalScores = [
     criteria.academics,
     criteria.extracurriculars,
@@ -30,22 +38,17 @@ export const calculateTotalScore = (criteria: EvaluationCriteria, universityType
     traditionalScores.splice(2, 1);
   }
   
-  // Add the new admission factors scores
-  const admissionFactorsScores = [
-    criteria.academicExcellence,
-    criteria.impactLeadership,
-    criteria.uniqueNarrative
-  ];
+  // Sum core scores
+  const coreTotal = coreScores.reduce((sum, score) => sum + score, 0);
   
   // Sum traditional scores
   const traditionalTotal = traditionalScores.reduce((sum, score) => sum + score, 0);
   
-  // Sum admission factors scores
-  const admissionFactorsTotal = admissionFactorsScores.reduce((sum, score) => sum + score, 0);
-  
   // Calculate final score - we count both traditional criteria and admission factors
-  const totalScore = traditionalTotal + admissionFactorsTotal;
+  const totalScore = traditionalTotal + coreTotal;
   
-  console.log("Total score:", totalScore, "from traditional scores:", traditionalScores, "and admission factors:", admissionFactorsScores);
+  console.log("Total score:", totalScore, "from traditional scores:", traditionalScores, "core scores:", coreScores);
+  console.log("Core total:", coreTotal, "Traditional total:", traditionalTotal);
+  
   return totalScore;
 };

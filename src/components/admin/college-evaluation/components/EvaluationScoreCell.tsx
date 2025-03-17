@@ -1,6 +1,6 @@
 
 import { StudentEvaluation, UniversityType } from "../types";
-import { formatAverageScore, formatScore, getMaxPossibleScore } from "../utils/scoringUtils";
+import { formatAverageScore, formatScore, getMaxPossibleScore, getCoreTotalScore, getTraditionalTotalScore } from "../utils/scoringUtils";
 
 interface EvaluationScoreCellProps {
   evaluation: StudentEvaluation;
@@ -8,7 +8,12 @@ interface EvaluationScoreCellProps {
 }
 
 export const EvaluationScoreCell = ({ evaluation, universityType }: EvaluationScoreCellProps) => {
-  const maxScore = getMaxPossibleScore(evaluation, universityType);
+  const evalType = evaluation.university_type as UniversityType || universityType as UniversityType;
+  const maxScore = getMaxPossibleScore(evaluation, evalType);
+  
+  // Get the core and traditional separate scores
+  const coreScore = getCoreTotalScore(evaluation);
+  const traditionalScore = getTraditionalTotalScore(evaluation, evalType);
   
   return (
     <div>
@@ -16,7 +21,7 @@ export const EvaluationScoreCell = ({ evaluation, universityType }: EvaluationSc
         {formatScore(evaluation.total_score, maxScore)}
       </div>
       <div className="text-xs text-gray-500">
-        Avg: {formatAverageScore(evaluation.total_score, universityType)}
+        Core: {coreScore}/18 | Trad: {traditionalScore}/{maxScore - 18}
       </div>
     </div>
   );
