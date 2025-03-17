@@ -123,6 +123,25 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
     return `${score}/${maxScore}`;
   };
 
+  // Calculate and format average score
+  const formatAverageScore = (totalScore: number, maxScore: number): string => {
+    // Calculate how many criteria are used based on university type
+    const evalType = universityType as UniversityType;
+    
+    // Default number of criteria is 6
+    let criteriaCount = 6;
+    
+    // For UC System, we don't count interview (5 criteria)
+    if (evalType === 'ucSystem') {
+      criteriaCount = 5;
+    }
+    
+    const average = (totalScore / criteriaCount).toFixed(2);
+    const maxAverage = (maxScore / criteriaCount).toFixed(2);
+    
+    return `${average}/${maxAverage}`;
+  };
+
   // Check if any evaluation is UC System
   const hasUcSystemEval = evaluations.some(e => (e.university_type || universityType) === 'ucSystem');
 
@@ -135,7 +154,7 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
               <TableHead>Student Name</TableHead>
               <TableHead>Evaluation Date</TableHead>
               <TableHead>University Type</TableHead>
-              <TableHead>Total Score</TableHead>
+              <TableHead>Total Score (Total/Average)</TableHead>
               <TableHead>Academics</TableHead>
               <TableHead>Extracurriculars</TableHead>
               <TableHead>Athletics/Talents</TableHead>
@@ -156,7 +175,13 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
                   <TableCell className="font-medium">{evaluation.student_name}</TableCell>
                   <TableCell>{formatDate(evaluation.evaluation_date)}</TableCell>
                   <TableCell>{evalType}</TableCell>
-                  <TableCell className="font-semibold">{formatScore(evaluation.total_score, maxScore)}</TableCell>
+                  <TableCell className="font-semibold">
+                    {formatScore(evaluation.total_score, maxScore)}
+                    <br />
+                    <span className="text-xs text-gray-500">
+                      Avg: {formatAverageScore(evaluation.total_score, maxScore)}
+                    </span>
+                  </TableCell>
                   <TableCell>{evaluation.academics_score}/6</TableCell>
                   <TableCell>{evaluation.extracurriculars_score}/6</TableCell>
                   <TableCell>{evaluation.athletics_score}/6</TableCell>
