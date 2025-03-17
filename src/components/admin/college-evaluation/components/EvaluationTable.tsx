@@ -20,7 +20,7 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
     // Add default university type if not present
     const evaluationWithType = {
       ...evaluation,
-      university_type: evaluation.university_type || 'ivyLeague'
+      university_type: evaluation.university_type || universityType as UniversityType || 'ivyLeague'
     };
     exportEvaluationToPDF(evaluationWithType);
   };

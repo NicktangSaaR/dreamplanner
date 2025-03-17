@@ -1,7 +1,7 @@
 
 import { UniversityType } from "../types";
 import { getUniversityCriteriaDescriptions } from "../evaluationConstants";
-import { getCriteriaKeyFromColumn } from "./displayUtils";
+import { getCriteriaLabel, getCriteriaKeyFromColumn } from "./displayUtils";
 
 /**
  * Gets criteria description for a specific score
@@ -28,7 +28,7 @@ export const preparePdfTableRows = (evaluation: any, universityType: UniversityT
     'recommendations_score'
   ];
   
-  // Only include interview for non-UC System
+  // Only Include Interview For Non-UC System
   if (universityType !== 'ucSystem') {
     criteriaColumns.push('interview_score');
   }
@@ -41,8 +41,7 @@ export const preparePdfTableRows = (evaluation: any, universityType: UniversityT
       return null;
     }
     
-    // Import from displayUtils to avoid circular dependencies
-    const { getCriteriaLabel } = require('./displayUtils');
+    // Fix: Import displayUtils at the top instead of using require
     return [getCriteriaLabel(column, universityType), score];
   }).filter(Boolean); // Remove null entries
 };

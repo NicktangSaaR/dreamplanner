@@ -2,7 +2,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { StudentEvaluation, UniversityType } from "../types";
-import { getUniversityTypeDisplay, getCriteriaLabel, getCriteriaKeyFromColumn } from './displayUtils';
+import { getUniversityTypeDisplay, getCriteriaLabel } from './displayUtils';
 import { getCriteriaDescription, preparePdfTableRows } from './criteriaUtils';
 
 /**
