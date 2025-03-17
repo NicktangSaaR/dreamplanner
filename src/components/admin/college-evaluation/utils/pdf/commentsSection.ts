@@ -11,17 +11,17 @@ export const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, st
   // Add new page if needed - ensure enough space for header
   if (finalY > 240) {
     doc.addPage();
-    doc.setFont("helvetica"); // Ensure font is set for new page
+    doc.setFont("NotoSansSC"); // Ensure font is set for new page
     finalY = 45; // Start content lower on new pages to account for header area
   }
   
   // Set font for the section header
   doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("NotoSansSC", "bold");
   doc.text('Comments:', 15, finalY);
   
   // Set font for comments content
-  doc.setFont("helvetica", "normal");
+  doc.setFont("NotoSansSC", "normal");
   
   // Add comments with improved word wrapping for multilingual support
   const maxCommentWidth = 180;

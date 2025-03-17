@@ -1,136 +1,281 @@
 
+import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
-import CriteriaField from "./CriteriaField";
-import { UniversityType } from "../types";
-import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
+import { EvaluationCriteria, UniversityType } from "../types";
+import { Badge } from "@/components/ui/badge";
 
 interface EvaluationCriteriaFieldsProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<{
+    criteria: EvaluationCriteria;
+    comments: string;
+  }>;
   universityType: UniversityType;
-  criteriaType?: "core" | "traditional" | "all";
+  criteriaType: "core" | "traditional";
 }
 
-export default function EvaluationCriteriaFields({ 
-  form, 
+export default function EvaluationCriteriaFields({
+  form,
   universityType,
-  criteriaType = "all"
+  criteriaType
 }: EvaluationCriteriaFieldsProps) {
-  // Render core admission criteria (the three main factors)
-  if (criteriaType === "core" || criteriaType === "all") {
-    return (
-      <>
-        {criteriaType === "all" && (
-          <>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">核心录取三要素评估</h3>
-              <p className="text-sm text-gray-500 mb-3">These three factors are critical for Ivy League admissions</p>
-            </div>
-          </>
-        )}
-        
-        {/* Academic Excellence */}
-        <CriteriaField 
-          form={form} 
-          name="criteria.academicExcellence" 
-          label="Academic Excellence (学术卓越)" 
-          criteriaKey="academicExcellence" 
-          universityType={universityType}
-        />
-
-        {/* Impact & Leadership */}
-        <CriteriaField 
-          form={form} 
-          name="criteria.impactLeadership" 
-          label="Impact & Leadership (影响力和领导力)" 
-          criteriaKey="impactLeadership" 
-          universityType={universityType}
-        />
-
-        {/* Unique Personal Narrative */}
-        <CriteriaField 
-          form={form} 
-          name="criteria.uniqueNarrative" 
-          label="Unique Personal Narrative (个人特色和独特故事)" 
-          criteriaKey="uniqueNarrative" 
-          universityType={universityType}
-        />
-        
-        {criteriaType === "all" && <Separator className="my-6" />}
-      </>
-    );
-  }
-
-  // Render traditional evaluation criteria
-  if (criteriaType === "traditional" || criteriaType === "all") {
-    return (
-      <>
-        {criteriaType === "all" && (
-          <>
-            <div className="mb-2">
-              <h3 className="text-lg font-semibold mb-2">传统评估要素</h3>
-              <p className="text-sm text-gray-500 mb-3">Traditional evaluation criteria</p>
-            </div>
-          </>
-        )}
-
-        {/* Academics Section */}
-        <CriteriaField 
-          form={form} 
-          name="criteria.academics" 
-          label="Academics" 
-          criteriaKey="academics" 
-          universityType={universityType}
-        />
-
-        {/* Extracurriculars Section */}
-        <CriteriaField 
-          form={form} 
-          name="criteria.extracurriculars" 
-          label="Extracurriculars" 
-          criteriaKey="extracurriculars" 
-          universityType={universityType}
-        />
-
-        {/* Athletics Section - for UC System, this becomes Personal Talents */}
-        <CriteriaField 
-          form={form} 
-          name="criteria.athletics" 
-          label={universityType === 'ucSystem' ? "Personal Talents" : "Athletics"} 
-          criteriaKey="athletics" 
-          universityType={universityType}
-        />
-
-        {/* Personal Qualities Section */}
-        <CriteriaField 
-          form={form} 
-          name="criteria.personalQualities" 
-          label="Personal Qualities" 
-          criteriaKey="personalQualities" 
-          universityType={universityType}
-        />
-
-        {/* Recommendations Section */}
-        <CriteriaField 
-          form={form} 
-          name="criteria.recommendations" 
-          label={universityType === 'ucSystem' ? "Personal Insight Questions (PIQs)" : "Recommendations"} 
-          criteriaKey="recommendations" 
-          universityType={universityType}
-        />
-
-        {/* Interview Section - don't show for UC System */}
-        {universityType !== 'ucSystem' && (
-          <CriteriaField 
-            form={form} 
-            name="criteria.interview" 
-            label="Interview" 
-            criteriaKey="interview" 
-            universityType={universityType}
+  // Determine which criteria fields to show based on the type
+  const renderCoreCriteria = criteriaType === "core";
+  const renderTraditionalCriteria = criteriaType === "traditional";
+  
+  // Map score to label (1 is highest, 6 is lowest)
+  const getScoreLabel = (value: number) => {
+    switch (value) {
+      case 1: return "Outstanding";
+      case 2: return "Excellent";
+      case 3: return "Very Good";
+      case 4: return "Good";
+      case 5: return "Average";
+      case 6: return "Below Average";
+      default: return "Not Rated";
+    }
+  };
+  
+  return (
+    <div className="space-y-4">
+      {/* Core Admission Factors */}
+      {renderCoreCriteria && (
+        <>
+          <FormField
+            control={form.control}
+            name="criteria.academicExcellence"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex justify-between">
+                  <FormLabel>
+                    Academic Excellence <Badge className="ml-1">学术卓越</Badge>
+                  </FormLabel>
+                  <span className="text-sm font-medium">
+                    {field.value}: {getScoreLabel(field.value)}
+                  </span>
+                </div>
+                <FormControl>
+                  <Slider
+                    min={1}
+                    max={6}
+                    step={1}
+                    defaultValue={[field.value]}
+                    onValueChange={(values) => field.onChange(values[0])}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
           />
-        )}
-      </>
-    );
-  }
 
-  return null;
+          <FormField
+            control={form.control}
+            name="criteria.impactLeadership"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex justify-between">
+                  <FormLabel>
+                    Impact & Leadership <Badge className="ml-1">影响力和领导力</Badge>
+                  </FormLabel>
+                  <span className="text-sm font-medium">
+                    {field.value}: {getScoreLabel(field.value)}
+                  </span>
+                </div>
+                <FormControl>
+                  <Slider
+                    min={1}
+                    max={6}
+                    step={1}
+                    defaultValue={[field.value]}
+                    onValueChange={(values) => field.onChange(values[0])}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="criteria.uniqueNarrative"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex justify-between">
+                  <FormLabel>
+                    Unique Personal Narrative <Badge className="ml-1">个人特色和独特故事</Badge>
+                  </FormLabel>
+                  <span className="text-sm font-medium">
+                    {field.value}: {getScoreLabel(field.value)}
+                  </span>
+                </div>
+                <FormControl>
+                  <Slider
+                    min={1}
+                    max={6}
+                    step={1}
+                    defaultValue={[field.value]}
+                    onValueChange={(values) => field.onChange(values[0])}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </>
+      )}
+      
+      {/* Traditional Criteria */}
+      {renderTraditionalCriteria && (
+        <>
+          <FormField
+            control={form.control}
+            name="criteria.academics"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex justify-between">
+                  <FormLabel>Academics</FormLabel>
+                  <span className="text-sm font-medium">
+                    {field.value}: {getScoreLabel(field.value)}
+                  </span>
+                </div>
+                <FormControl>
+                  <Slider
+                    min={1}
+                    max={6}
+                    step={1}
+                    defaultValue={[field.value]}
+                    onValueChange={(values) => field.onChange(values[0])}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="criteria.extracurriculars"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex justify-between">
+                  <FormLabel>Extracurriculars</FormLabel>
+                  <span className="text-sm font-medium">
+                    {field.value}: {getScoreLabel(field.value)}
+                  </span>
+                </div>
+                <FormControl>
+                  <Slider
+                    min={1}
+                    max={6}
+                    step={1}
+                    defaultValue={[field.value]}
+                    onValueChange={(values) => field.onChange(values[0])}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="criteria.athletics"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex justify-between">
+                  <FormLabel>
+                    {universityType === 'ucSystem' ? 'Personal Talents' : 'Athletics'}
+                  </FormLabel>
+                  <span className="text-sm font-medium">
+                    {field.value}: {getScoreLabel(field.value)}
+                  </span>
+                </div>
+                <FormControl>
+                  <Slider
+                    min={1}
+                    max={6}
+                    step={1}
+                    defaultValue={[field.value]}
+                    onValueChange={(values) => field.onChange(values[0])}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="criteria.personalQualities"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex justify-between">
+                  <FormLabel>Personal Qualities</FormLabel>
+                  <span className="text-sm font-medium">
+                    {field.value}: {getScoreLabel(field.value)}
+                  </span>
+                </div>
+                <FormControl>
+                  <Slider
+                    min={1}
+                    max={6}
+                    step={1}
+                    defaultValue={[field.value]}
+                    onValueChange={(values) => field.onChange(values[0])}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="criteria.recommendations"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex justify-between">
+                  <FormLabel>
+                    {universityType === 'ucSystem' ? 'Personal Insight Questions (PIQs)' : 'Recommendations'}
+                  </FormLabel>
+                  <span className="text-sm font-medium">
+                    {field.value}: {getScoreLabel(field.value)}
+                  </span>
+                </div>
+                <FormControl>
+                  <Slider
+                    min={1}
+                    max={6}
+                    step={1}
+                    defaultValue={[field.value]}
+                    onValueChange={(values) => field.onChange(values[0])}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          {/* Only show Interview for non-UC System universities */}
+          {universityType !== 'ucSystem' && (
+            <FormField
+              control={form.control}
+              name="criteria.interview"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex justify-between">
+                    <FormLabel>Interview</FormLabel>
+                    <span className="text-sm font-medium">
+                      {field.value}: {getScoreLabel(field.value)}
+                    </span>
+                  </div>
+                  <FormControl>
+                    <Slider
+                      min={1}
+                      max={6}
+                      step={1}
+                      defaultValue={[field.value]}
+                      onValueChange={(values) => field.onChange(values[0])}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
 }
