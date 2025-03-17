@@ -15,7 +15,7 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
   
   // Add section header
   doc.setFontSize(14);
-  doc.setFont("times", "bold");
+  doc.setFont("Helvetica", "bold");
   doc.text('Detailed Scoring Criteria Descriptions:', 15, finalY);
   finalY += 20;
   
@@ -47,14 +47,14 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
     // Check if we need to add a new page
     if (finalY > 260) {
       doc.addPage();
-      doc.setFont("times", "normal"); // Ensure font is set for new page
+      doc.setFont("Helvetica", "normal"); // Ensure font is set for new page
       finalY = 20;
     }
     
     doc.setFontSize(12);
-    doc.setFont("times", "bold");
+    doc.setFont("Helvetica", "bold");
     doc.text(`${label} (Score: ${score})`, 15, finalY);
-    doc.setFont("times", "normal");
+    doc.setFont("Helvetica", "normal");
     
     // Add description with improved word wrapping - maximize page width usage
     const maxWidth = 180;

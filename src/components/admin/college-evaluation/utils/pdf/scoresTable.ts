@@ -52,11 +52,11 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
     headStyles: { 
       fillColor: [66, 139, 202], 
       textColor: [255, 255, 255],
-      font: 'times',
+      font: 'Helvetica',
       fontStyle: 'bold' 
     },
     styles: {
-      font: 'times',
+      font: 'Helvetica',
       fontStyle: 'normal'
     },
     alternateRowStyles: { fillColor: [240, 240, 240] },

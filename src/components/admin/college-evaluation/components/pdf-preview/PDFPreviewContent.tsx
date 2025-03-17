@@ -11,7 +11,7 @@ export const PDFPreviewContent = ({ pdfDataUrl, isLoading }: PDFPreviewContentPr
     return (
       <div className="p-8 text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-        <p>Generating PDF preview...</p>
+        <p>生成PDF预览中...</p>
       </div>
     );
   }
@@ -21,14 +21,15 @@ export const PDFPreviewContent = ({ pdfDataUrl, isLoading }: PDFPreviewContentPr
       <iframe 
         src={pdfDataUrl} 
         className="w-full h-[65vh] border-0"
-        title="PDF Preview" 
+        title="PDF预览" 
+        sandbox="allow-scripts allow-same-origin"
       />
     );
   }
   
   return (
     <div className="p-8 text-center">
-      <p>Unable to generate preview</p>
+      <p>无法生成预览</p>
     </div>
   );
 };

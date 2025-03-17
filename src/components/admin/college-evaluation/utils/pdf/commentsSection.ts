@@ -11,14 +11,14 @@ export const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, st
   // Add new page if needed
   if (finalY > 240) {
     doc.addPage();
-    doc.setFont("times", "normal"); // Ensure font is set for new page
+    doc.setFont("Helvetica", "normal"); // Ensure font is set for new page
     finalY = 20;
   }
   
   doc.setFontSize(14);
-  doc.setFont("times", "bold");
+  doc.setFont("Helvetica", "bold");
   doc.text('Comments:', 15, finalY);
-  doc.setFont("times", "normal");
+  doc.setFont("Helvetica", "normal");
   
   // Add comments with improved word wrapping
   const maxCommentWidth = 180;

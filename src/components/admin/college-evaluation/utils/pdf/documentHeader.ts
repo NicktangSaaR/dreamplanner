@@ -10,8 +10,8 @@ export const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, uni
   // Use the evaluation's stored university type if available
   const evalType = evaluation.university_type || universityType;
   
-  // Set Times New Roman font for entire document
-  doc.setFont("times", "normal");
+  // Set standard font for entire document
+  doc.setFont("Helvetica", "normal");
   
   // Add title
   doc.setFontSize(18);
