@@ -2,7 +2,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState } from "react";
 import { StudentEvaluation, UniversityType } from "../types";
-import { getColumnLabel } from "../utils/displayUtils";
+import { getCriteriaLabel } from "../utils/displayUtils";
 import { EvaluationRow } from "./EvaluationRow";
 
 interface EvaluationTableProps {
