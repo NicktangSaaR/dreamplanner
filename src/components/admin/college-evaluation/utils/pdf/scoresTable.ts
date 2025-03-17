@@ -27,11 +27,11 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
     }
   }
   
-  // Add the admission factors scores
+  // Add the admission factors scores - removed Chinese text
   const admissionFactorsRows = [
-    ["Academic Excellence (学术卓越)", evaluation.academic_excellence_score || 3],
-    ["Impact & Leadership (影响力和领导力)", evaluation.impact_leadership_score || 3],
-    ["Unique Personal Narrative (个人特色和独特故事)", evaluation.unique_narrative_score || 3],
+    ["Academic Excellence", evaluation.academic_excellence_score || 3],
+    ["Impact & Leadership", evaluation.impact_leadership_score || 3],
+    ["Unique Personal Narrative", evaluation.unique_narrative_score || 3],
   ];
   
   // Calculate max possible score
@@ -56,7 +56,7 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
   // Add admission factors table with appropriate labels
   autoTable(doc, {
     startY: 90,
-    head: [['核心录取三要素 (Core Admission Factors)', 'Score (1 is highest, 6 is lowest)']],
+    head: [['Core Admission Factors', 'Score (1 is highest, 6 is lowest)']],
     body: admissionFactorsRows,
     theme: 'grid',
     headStyles: { 

@@ -45,7 +45,7 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
   doc.setFontSize(12);
   doc.text("Core Admission Factors Descriptions:", 15, currentY);
   currentY += 8;
-  doc.setFont("helvetica");
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   
   // First add descriptions for admission factors
@@ -77,11 +77,11 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
     doc.setFont("helvetica", "bold");
     let label = criteriaColumn;
     if (criteriaColumn === 'academic_excellence_score') {
-      label = "Academic Excellence (学术卓越)";
+      label = "Academic Excellence";
     } else if (criteriaColumn === 'impact_leadership_score') {
-      label = "Impact & Leadership (影响力和领导力)";
+      label = "Impact & Leadership";
     } else if (criteriaColumn === 'unique_narrative_score') {
-      label = "Unique Personal Narrative (个人特色和独特故事)";
+      label = "Unique Personal Narrative";
     }
     
     doc.text(`${label} - Score ${score}:`, 15, currentY);
@@ -90,14 +90,14 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     
-    // Use proper text splitting to handle Chinese and English characters
+    // Use proper text splitting to handle text characters
     const maxWidth = 180;
     const splitText = doc.splitTextToSize(description, maxWidth);
     currentY += 5;
     doc.text(splitText, 15, currentY);
     
     // Calculate height of text based on number of lines
-    const lineHeight = 4.5; // Slightly increased line height for better Chinese text rendering
+    const lineHeight = 4.5; // Appropriate line height for text rendering
     currentY += (splitText.length * lineHeight) + 8; // Add extra spacing between criteria
   }
   
@@ -113,7 +113,7 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
   doc.setFontSize(12);
   doc.text("Traditional Evaluation Criteria Descriptions:", 15, currentY);
   currentY += 8;
-  doc.setFont("helvetica");
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   
   // Add each traditional criteria description
@@ -158,14 +158,14 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     
-    // Use proper text splitting to handle Chinese and English characters
+    // Use proper text splitting to handle text characters
     const maxWidth = 180;
     const splitText = doc.splitTextToSize(description, maxWidth);
     currentY += 5;
     doc.text(splitText, 15, currentY);
     
     // Calculate height of text based on number of lines
-    const lineHeight = 4.5; // Slightly increased line height for better Chinese text rendering
+    const lineHeight = 4.5; // Appropriate line height for text rendering
     currentY += (splitText.length * lineHeight) + 8; // Add extra spacing between criteria
   }
   

@@ -20,8 +20,8 @@ export const usePDFPreview = (evaluation: StudentEvaluation, isOpen: boolean) =>
       } catch (error) {
         console.error('Error generating PDF preview:', error);
         setError(error instanceof Error ? error : new Error('Failed to generate PDF preview'));
-        toast.error('生成PDF预览时出错', {
-          description: '请尝试直接下载PDF查看'
+        toast.error('Error generating PDF preview', {
+          description: 'Please try downloading the PDF directly'
         });
       } finally {
         setIsLoading(false);
