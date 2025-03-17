@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import { StudentEvaluation } from "../types";
-import { exportEvaluationToPDF } from "../utils/pdfExportUtils";
+import { exportEvaluationToPDF } from "../utils/pdf";
 
 interface ExportPDFButtonProps {
   evaluation: StudentEvaluation;

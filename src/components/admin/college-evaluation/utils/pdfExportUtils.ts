@@ -1,6 +1,6 @@
 
 import { StudentEvaluation, UniversityType } from "../types";
-import { generateEvaluationPdf } from "./pdf/pdfGenerator";
+import { generateEvaluationPdf } from "./pdf";
 
 /**
  * Exports evaluation to PDF and triggers download

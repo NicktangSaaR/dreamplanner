@@ -1,6 +1,10 @@
 
-import { generateEvaluationPdf } from './pdfGenerator';
 import { StudentEvaluation, UniversityType } from "../../types";
+import { generateEvaluationPdf } from './pdfGenerator';
+import { addDocumentHeader } from './documentHeader';
+import { addScoresTable } from './scoresTable';
+import { addCriteriaDescriptions } from './criteriaUtils';
+import { addCommentsSection } from './commentsSection';
 
 /**
  * Exports evaluation to PDF and triggers download
@@ -15,6 +19,11 @@ export const exportEvaluationToPDF = (evaluation: StudentEvaluation) => {
   doc.save(`${evaluation.student_name}_US_University_Evaluation.pdf`);
 };
 
-// Re-export components
-export * from './pdfGenerator';
-export * from './pdfSections';
+// Re-export components for easier access
+export { 
+  generateEvaluationPdf,
+  addDocumentHeader,
+  addScoresTable,
+  addCriteriaDescriptions,
+  addCommentsSection
+};

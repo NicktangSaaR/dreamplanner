@@ -1,12 +1,10 @@
 
 import jsPDF from 'jspdf';
 import { StudentEvaluation, UniversityType } from "../../types";
-import { 
-  addDocumentHeader, 
-  addScoresTable, 
-  addCriteriaDescriptions, 
-  addCommentsSection 
-} from './pdfSections';
+import { addDocumentHeader } from './documentHeader'; 
+import { addScoresTable } from './scoresTable';
+import { addCriteriaDescriptions } from './criteriaUtils';
+import { addCommentsSection } from './commentsSection';
 
 /**
  * Generates and returns a PDF document for the evaluation
