@@ -11,7 +11,7 @@ export const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, uni
   const evalType = evaluation.university_type || universityType;
   
   // Ensure font is set properly for header
-  doc.setFont("NotoSansSC", "bold");
+  doc.setFont("helvetica", "bold");
   
   // Add title (center aligned) with increased top margin to make room for the header
   doc.setFontSize(18);
@@ -20,7 +20,7 @@ export const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, uni
   
   // Add student information with increased top margin
   doc.setFontSize(12);
-  doc.setFont("NotoSansSC", "normal");
+  doc.setFont("helvetica", "normal");
   doc.text(`Student Name: ${evaluation.student_name}`, 15, 60);
   doc.text(`Evaluation Date: ${new Date(evaluation.evaluation_date).toLocaleDateString('en-US')}`, 15, 70);
 };

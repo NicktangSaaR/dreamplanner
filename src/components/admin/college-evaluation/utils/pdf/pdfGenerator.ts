@@ -19,12 +19,8 @@ export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityT
     compress: true
   });
   
-  // Add NotoSansSC font which has good support for Chinese characters
-  doc.addFont('https://fonts.gstatic.com/s/notosanssc/v36/k3kXo84MPvpLmixcA63oeALhLOCT-xWNm8Hqd37g1OkDRZe7lR4sg1IzSy-MNbE.ttf', 'NotoSansSC', 'normal');
-  doc.addFont('https://fonts.gstatic.com/s/notosanssc/v36/k3kIo84MPvpLmixcA63oeALi3aAXcDVkV6J-JE77N6Q.ttf', 'NotoSansSC', 'bold');
-  
-  // Set default font to NotoSansSC for better Chinese character support
-  doc.setFont('NotoSansSC');
+  // Use standard fonts that come with jsPDF instead of trying to load external fonts
+  // This ensures better compatibility and eliminates font loading errors
   
   // Setup header function for all pages
   const addHeaderToAllPages = () => {
@@ -45,13 +41,13 @@ export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityT
       
       // Add company name: "DreamPlanner" in primary color instead of white
       doc.setFontSize(16);
-      doc.setFont("NotoSansSC", "bold");
+      doc.setFont("helvetica", "bold");
       doc.setTextColor(99, 102, 241); // #6366F1 - primary color from tailwind config
       doc.text("DreamPlanner", 40, 20);
       
       // Add slogan below company name in lighter primary color
       doc.setFontSize(9);
-      doc.setFont("NotoSansSC", "normal");
+      doc.setFont("helvetica", "normal");
       doc.setTextColor(136, 138, 243); // Slightly lighter version of primary color
       doc.text("Weave Your Dreams", 40, 25);
       
@@ -78,7 +74,7 @@ export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityT
   // Add special note about athletics scoring if applicable
   if (isAthleticsExcluded) {
     doc.setFontSize(10);
-    doc.setFont("NotoSansSC", "italic");
+    doc.setFont("helvetica", "italic");
     doc.text('* Note: For Ivy League and Top20-30 universities, athletics scores of 4 or higher are not included in the total score.', 15, 75);
   }
   
