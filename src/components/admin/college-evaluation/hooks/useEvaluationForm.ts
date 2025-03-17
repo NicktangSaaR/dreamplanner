@@ -58,6 +58,7 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
       const totalScore = calculateTotalScore(values.criteria, universityType);
       const evaluationDate = new Date().toISOString();
       
+      // Remove the new fields that aren't in the database yet
       const evaluationData = {
         student_id: studentId,
         student_name: studentName,
@@ -68,10 +69,6 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         personal_qualities_score: values.criteria.personalQualities,
         recommendations_score: values.criteria.recommendations,
         interview_score: values.criteria.interview,
-        // Add new admission factors scores
-        academic_excellence_score: values.criteria.academicExcellence,
-        impact_leadership_score: values.criteria.impactLeadership,
-        unique_narrative_score: values.criteria.uniqueNarrative,
         comments: values.comments,
         total_score: totalScore,
         admin_id: profile.id,

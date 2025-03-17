@@ -9,14 +9,17 @@ import UniversityTypeSelector from "./components/UniversityTypeSelector";
 import EvaluationCriteriaFields from "./components/EvaluationCriteriaFields";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useEffect } from "react";
 
 interface EvaluationFormProps {
   studentId: string;
   studentName: string;
   onSuccess?: () => void;
+  onError?: (message: string) => void;
 }
 
-export default function EvaluationForm({ studentId, studentName, onSuccess }: EvaluationFormProps) {
+export default function EvaluationForm({ studentId, studentName, onSuccess, onError }: EvaluationFormProps) {
   const { 
     form, 
     isSubmitting, 
@@ -29,6 +32,18 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
     studentName,
     onSuccess
   });
+
+  // Handle form submission with error catching
+  const onSubmit = async (values: any) => {
+    try {
+      await handleSubmit(values);
+    } catch (error) {
+      console.error("Error in form submission:", error);
+      if (onError) {
+        onError("Failed to create evaluation. Please try again later.");
+      }
+    }
+  };
 
   return (
     <Card className="w-full">
@@ -52,7 +67,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
         />
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <ScrollArea className="h-[60vh]">
               <ResizablePanelGroup direction="horizontal" className="min-h-[500px]">
                 {/* Core Criteria Section - Left Panel */}
