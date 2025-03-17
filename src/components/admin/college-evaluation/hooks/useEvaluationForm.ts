@@ -50,7 +50,8 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         values.criteria.interview = 3; // Set to neutral value since it's not displayed
       }
       
-      const totalScore = calculateTotalScore(values.criteria);
+      // Pass university type to calculateTotalScore to apply specific scoring rules
+      const totalScore = calculateTotalScore(values.criteria, universityType);
       const evaluationDate = new Date().toISOString();
       
       const evaluationData = {

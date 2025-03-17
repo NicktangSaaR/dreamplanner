@@ -27,6 +27,18 @@ const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, universityTyp
   // Get table rows
   const tableRows = preparePdfTableRows(evaluation, universityType);
   
+  // Check if athletics score should be excluded for Ivy League and Top30
+  const athleticsScore = evaluation.athletics_score;
+  const isAthleticsExcluded = (universityType === 'ivyLeague' || universityType === 'top30') && athleticsScore >= 4;
+  
+  // If athletics is excluded, add a note to the athletics row
+  if (isAthleticsExcluded) {
+    const athleticsIndex = tableRows.findIndex(row => row[0] === getCriteriaLabel('athletics_score', universityType));
+    if (athleticsIndex !== -1) {
+      tableRows[athleticsIndex][1] = `${athleticsScore} (不计入总分)`;
+    }
+  }
+  
   // Add total score
   tableRows.push([getCriteriaLabel('total_score', universityType), evaluation.total_score]);
   
@@ -138,8 +150,20 @@ const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, startY: n
 export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityType: UniversityType): jsPDF => {
   const doc = new jsPDF();
   
+  // Add special note about athletics scoring for Ivy League and Top30
+  const athleticsScore = evaluation.athletics_score;
+  const isAthleticsExcluded = (universityType === 'ivyLeague' || universityType === 'top30') && athleticsScore >= 4;
+  
   // Add document sections
   addDocumentHeader(doc, evaluation, universityType);
+  
+  // Add special note about athletics scoring if applicable
+  if (isAthleticsExcluded) {
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'italic');
+    doc.text('* 注意: 对于常青藤和Top20-30大学，体育分数4分及以上不计入总分。', 15, 45);
+  }
+  
   const afterTableY = addScoresTable(doc, evaluation, universityType);
   const afterDescriptionsY = addCriteriaDescriptions(doc, evaluation, universityType, afterTableY);
   addCommentsSection(doc, evaluation, afterDescriptionsY);
