@@ -51,7 +51,7 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
     body: tableRows,
     theme: 'grid',
     headStyles: { 
-      fillColor: [66, 139, 202], 
+      fillColor: [99, 102, 241], // Updated to match website primary color #6366F1
       textColor: [255, 255, 255],
       font: 'helvetica',
       fontStyle: 'bold' 
