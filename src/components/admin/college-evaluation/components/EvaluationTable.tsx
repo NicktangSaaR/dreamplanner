@@ -1,10 +1,13 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { StudentEvaluation, UniversityType } from "../types";
 import { PDFPreviewDialog } from "./PDFPreviewDialog";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface EvaluationTableProps {
   evaluations: StudentEvaluation[];
@@ -14,6 +17,8 @@ interface EvaluationTableProps {
 export const EvaluationTable = ({ evaluations, universityType }: EvaluationTableProps) => {
   const [selectedEvaluation, setSelectedEvaluation] = useState<StudentEvaluation | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -23,6 +28,33 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
   const handleExportPDF = (evaluation: StudentEvaluation) => {
     setSelectedEvaluation(evaluation);
     setShowPreview(true);
+  };
+
+  const handleDeleteEvaluation = async (evaluationId: string) => {
+    try {
+      setDeletingId(evaluationId);
+      const { error } = await supabase
+        .from("student_evaluations")
+        .delete()
+        .eq("id", evaluationId);
+      
+      if (error) {
+        console.error("Error deleting evaluation:", error);
+        toast.error("删除评估失败", {
+          description: error.message
+        });
+        return;
+      }
+      
+      // Refresh data after successful deletion
+      await queryClient.invalidateQueries({ queryKey: ["student-evaluations"] });
+      toast.success("评估已成功删除");
+    } catch (err) {
+      console.error("Unexpected error during deletion:", err);
+      toast.error("删除过程中发生错误");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   // Function to get appropriate column label based on university type
@@ -131,7 +163,7 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
                   <TableCell>{evaluation.personal_qualities_score}/6</TableCell>
                   <TableCell>{evaluation.recommendations_score}/6</TableCell>
                   {!isUcSystem && <TableCell>{evaluation.interview_score}/6</TableCell>}
-                  <TableCell>
+                  <TableCell className="flex gap-2">
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -139,6 +171,16 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
                       title="Export Evaluation as PDF"
                     >
                       <FileText className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteEvaluation(evaluation.id)}
+                      disabled={deletingId === evaluation.id}
+                      title="Delete Evaluation"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
