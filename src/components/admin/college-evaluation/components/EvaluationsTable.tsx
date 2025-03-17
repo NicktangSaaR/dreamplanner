@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import { StudentEvaluation, UniversityType } from "../types";
-import { exportEvaluationToPDF } from "../utils/pdfExportUtils";
+import { exportEvaluationToPDF, getUniversityTypeDisplay } from "../utils/pdfExportUtils";
 
 interface EvaluationsTableProps {
   evaluations: StudentEvaluation[] | null | undefined;
@@ -24,22 +24,6 @@ export default function EvaluationsTable({ evaluations, isLoading }: Evaluations
       university_type: evaluation.university_type || 'ivyLeague'
     };
     exportEvaluationToPDF(evaluationWithType);
-  };
-
-  // Helper function to get university type display name
-  const getUniversityTypeDisplay = (type?: UniversityType): string => {
-    if (!type) return "Ivy League";
-    
-    switch (type) {
-      case 'ivyLeague':
-        return "Ivy League";
-      case 'top30':
-        return "Top 20-30";
-      case 'ucSystem':
-        return "UC System";
-      default:
-        return "Ivy League";
-    }
   };
 
   // Function to get appropriate column label based on university type
