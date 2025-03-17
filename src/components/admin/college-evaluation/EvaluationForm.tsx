@@ -7,6 +7,8 @@ import CommentsField from "./components/CommentsField";
 import { ExportPDFButton } from "./components/ExportPDFButton";
 import UniversityTypeSelector from "./components/UniversityTypeSelector";
 import EvaluationCriteriaFields from "./components/EvaluationCriteriaFields";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 interface EvaluationFormProps {
   studentId: string;
@@ -51,13 +53,54 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <EvaluationCriteriaFields 
-              form={form} 
-              universityType={universityType} 
-            />
-
-            {/* Comments Section */}
-            <CommentsField form={form} />
+            <ScrollArea className="h-[60vh]">
+              <ResizablePanelGroup direction="horizontal" className="min-h-[500px]">
+                {/* Core Criteria Section - Left Panel */}
+                <ResizablePanel defaultSize={50} minSize={30}>
+                  <div className="p-4 h-full">
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold mb-2">核心录取三要素评估</h3>
+                      <p className="text-sm text-gray-500 mb-3">These three factors are critical for Ivy League admissions</p>
+                      
+                      {/* Academic Excellence */}
+                      <div className="space-y-4">
+                        <EvaluationCriteriaFields 
+                          form={form} 
+                          universityType={universityType}
+                          criteriaType="core"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </ResizablePanel>
+                
+                {/* Resizable Handle */}
+                <ResizableHandle withHandle />
+                
+                {/* Traditional Criteria Section - Right Panel */}
+                <ResizablePanel defaultSize={50} minSize={30}>
+                  <div className="p-4 h-full">
+                    <div className="mb-2">
+                      <h3 className="text-lg font-semibold mb-2">传统评估要素</h3>
+                      <p className="text-sm text-gray-500 mb-3">Traditional evaluation criteria</p>
+                      
+                      <div className="space-y-4">
+                        <EvaluationCriteriaFields 
+                          form={form} 
+                          universityType={universityType}
+                          criteriaType="traditional"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+              
+              {/* Comments Section */}
+              <div className="p-4">
+                <CommentsField form={form} />
+              </div>
+            </ScrollArea>
 
             <div className="pt-4">
               <Button type="submit" disabled={isSubmitting} className="w-full">

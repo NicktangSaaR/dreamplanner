@@ -18,7 +18,7 @@ export default function EvaluationFormDialog({
 }: EvaluationFormDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Create US Undergraduate Admission Evaluation</DialogTitle>
         </DialogHeader>
