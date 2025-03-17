@@ -2,8 +2,9 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
+import { useState } from "react";
 import { StudentEvaluation, UniversityType } from "../types";
-import { exportEvaluationToPDF } from "../utils/pdfExportUtils";
+import { PDFPreviewDialog } from "./PDFPreviewDialog";
 
 interface EvaluationTableProps {
   evaluations: StudentEvaluation[];
@@ -11,22 +12,17 @@ interface EvaluationTableProps {
 }
 
 export const EvaluationTable = ({ evaluations, universityType }: EvaluationTableProps) => {
+  const [selectedEvaluation, setSelectedEvaluation] = useState<StudentEvaluation | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US');
   };
 
   const handleExportPDF = (evaluation: StudentEvaluation) => {
-    // Use the evaluation's stored university_type if available, otherwise fall back to the current tab's type
-    const evalUniversityType = evaluation.university_type || universityType as UniversityType || 'ivyLeague';
-    
-    // Ensure university_type is included in the evaluation
-    const evaluationWithType = {
-      ...evaluation,
-      university_type: evalUniversityType
-    };
-    
-    exportEvaluationToPDF(evaluationWithType);
+    setSelectedEvaluation(evaluation);
+    setShowPreview(true);
   };
 
   // Function to get appropriate column label based on university type
@@ -99,54 +95,64 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
   const hasUcSystemEval = evaluations.some(e => (e.university_type || universityType) === 'ucSystem');
 
   return (
-    <div className="border rounded-md">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Student Name</TableHead>
-            <TableHead>Evaluation Date</TableHead>
-            <TableHead>Total Score</TableHead>
-            <TableHead>Academics</TableHead>
-            <TableHead>Extracurriculars</TableHead>
-            <TableHead>Athletics/Talents</TableHead>
-            <TableHead>Personal Qualities</TableHead>
-            <TableHead>Recommendations/PIQs</TableHead>
-            {!hasUcSystemEval && <TableHead>Interview</TableHead>}
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {evaluations.map((evaluation) => {
-            const maxScore = getMaxPossibleScore(evaluation);
-            const evalType = evaluation.university_type as UniversityType || universityType as UniversityType;
-            const isUcSystem = evalType === 'ucSystem';
-            
-            return (
-              <TableRow key={evaluation.id}>
-                <TableCell className="font-medium">{evaluation.student_name}</TableCell>
-                <TableCell>{formatDate(evaluation.evaluation_date)}</TableCell>
-                <TableCell className="font-semibold">{formatScore(evaluation.total_score, maxScore)}</TableCell>
-                <TableCell>{evaluation.academics_score}/6</TableCell>
-                <TableCell>{evaluation.extracurriculars_score}/6</TableCell>
-                <TableCell>{evaluation.athletics_score}/6</TableCell>
-                <TableCell>{evaluation.personal_qualities_score}/6</TableCell>
-                <TableCell>{evaluation.recommendations_score}/6</TableCell>
-                {!isUcSystem && <TableCell>{evaluation.interview_score}/6</TableCell>}
-                <TableCell>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleExportPDF(evaluation)}
-                    title="Export Evaluation as PDF"
-                  >
-                    <FileText className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+    <>
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Student Name</TableHead>
+              <TableHead>Evaluation Date</TableHead>
+              <TableHead>Total Score</TableHead>
+              <TableHead>Academics</TableHead>
+              <TableHead>Extracurriculars</TableHead>
+              <TableHead>Athletics/Talents</TableHead>
+              <TableHead>Personal Qualities</TableHead>
+              <TableHead>Recommendations/PIQs</TableHead>
+              {!hasUcSystemEval && <TableHead>Interview</TableHead>}
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {evaluations.map((evaluation) => {
+              const maxScore = getMaxPossibleScore(evaluation);
+              const evalType = evaluation.university_type as UniversityType || universityType as UniversityType;
+              const isUcSystem = evalType === 'ucSystem';
+              
+              return (
+                <TableRow key={evaluation.id}>
+                  <TableCell className="font-medium">{evaluation.student_name}</TableCell>
+                  <TableCell>{formatDate(evaluation.evaluation_date)}</TableCell>
+                  <TableCell className="font-semibold">{formatScore(evaluation.total_score, maxScore)}</TableCell>
+                  <TableCell>{evaluation.academics_score}/6</TableCell>
+                  <TableCell>{evaluation.extracurriculars_score}/6</TableCell>
+                  <TableCell>{evaluation.athletics_score}/6</TableCell>
+                  <TableCell>{evaluation.personal_qualities_score}/6</TableCell>
+                  <TableCell>{evaluation.recommendations_score}/6</TableCell>
+                  {!isUcSystem && <TableCell>{evaluation.interview_score}/6</TableCell>}
+                  <TableCell>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleExportPDF(evaluation)}
+                      title="Export Evaluation as PDF"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {selectedEvaluation && (
+        <PDFPreviewDialog
+          isOpen={showPreview}
+          onOpenChange={setShowPreview}
+          evaluation={selectedEvaluation}
+        />
+      )}
+    </>
   );
 };
