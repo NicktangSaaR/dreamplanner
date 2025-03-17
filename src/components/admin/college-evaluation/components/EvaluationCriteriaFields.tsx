@@ -1,9 +1,11 @@
 
-import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 import { Slider } from "@/components/ui/slider";
-import { EvaluationCriteria, UniversityType } from "../types";
+import { EvaluationCriteria, UniversityType, ScoreValue } from "../types";
 import { Badge } from "@/components/ui/badge";
+import { getUniversityCriteriaDescriptions } from "../evaluationConstants";
+import { getCriteriaKeyFromColumn } from "../utils/pdf/criteriaUtils";
 
 interface EvaluationCriteriaFieldsProps {
   form: UseFormReturn<{
@@ -23,6 +25,9 @@ export default function EvaluationCriteriaFields({
   const renderCoreCriteria = criteriaType === "core";
   const renderTraditionalCriteria = criteriaType === "traditional";
   
+  // Load criteria descriptions based on university type
+  const criteriaDescriptions = getUniversityCriteriaDescriptions(universityType);
+  
   // Map score to label (1 is highest, 6 is lowest)
   const getScoreLabel = (value: number) => {
     switch (value) {
@@ -34,6 +39,11 @@ export default function EvaluationCriteriaFields({
       case 6: return "Below Average";
       default: return "Not Rated";
     }
+  };
+  
+  // Get description for a specific criteria and score
+  const getDescription = (criteriaKey: string, score: ScoreValue): string => {
+    return criteriaDescriptions[criteriaKey]?.[score] || "";
   };
   
   return (
@@ -48,7 +58,7 @@ export default function EvaluationCriteriaFields({
               <FormItem>
                 <div className="flex justify-between">
                   <FormLabel>
-                    Academic Excellence <Badge className="ml-1">学术卓越</Badge>
+                    Academic Excellence <Badge className="ml-1">Academic Excellence</Badge>
                   </FormLabel>
                   <span className="text-sm font-medium">
                     {field.value}: {getScoreLabel(field.value)}
@@ -63,6 +73,9 @@ export default function EvaluationCriteriaFields({
                     onValueChange={(values) => field.onChange(values[0])}
                   />
                 </FormControl>
+                <FormDescription className="text-xs mt-1 text-foreground/70">
+                  {getDescription('academicExcellence', field.value as ScoreValue)}
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -74,7 +87,7 @@ export default function EvaluationCriteriaFields({
               <FormItem>
                 <div className="flex justify-between">
                   <FormLabel>
-                    Impact & Leadership <Badge className="ml-1">影响力和领导力</Badge>
+                    Impact & Leadership <Badge className="ml-1">Impact & Leadership</Badge>
                   </FormLabel>
                   <span className="text-sm font-medium">
                     {field.value}: {getScoreLabel(field.value)}
@@ -89,6 +102,9 @@ export default function EvaluationCriteriaFields({
                     onValueChange={(values) => field.onChange(values[0])}
                   />
                 </FormControl>
+                <FormDescription className="text-xs mt-1 text-foreground/70">
+                  {getDescription('impactLeadership', field.value as ScoreValue)}
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -100,7 +116,7 @@ export default function EvaluationCriteriaFields({
               <FormItem>
                 <div className="flex justify-between">
                   <FormLabel>
-                    Unique Personal Narrative <Badge className="ml-1">个人特色和独特故事</Badge>
+                    Unique Personal Narrative <Badge className="ml-1">Unique Narrative</Badge>
                   </FormLabel>
                   <span className="text-sm font-medium">
                     {field.value}: {getScoreLabel(field.value)}
@@ -115,6 +131,9 @@ export default function EvaluationCriteriaFields({
                     onValueChange={(values) => field.onChange(values[0])}
                   />
                 </FormControl>
+                <FormDescription className="text-xs mt-1 text-foreground/70">
+                  {getDescription('uniqueNarrative', field.value as ScoreValue)}
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -144,6 +163,9 @@ export default function EvaluationCriteriaFields({
                     onValueChange={(values) => field.onChange(values[0])}
                   />
                 </FormControl>
+                <FormDescription className="text-xs mt-1 text-foreground/70">
+                  {getDescription('academics', field.value as ScoreValue)}
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -168,6 +190,9 @@ export default function EvaluationCriteriaFields({
                     onValueChange={(values) => field.onChange(values[0])}
                   />
                 </FormControl>
+                <FormDescription className="text-xs mt-1 text-foreground/70">
+                  {getDescription('extracurriculars', field.value as ScoreValue)}
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -194,6 +219,9 @@ export default function EvaluationCriteriaFields({
                     onValueChange={(values) => field.onChange(values[0])}
                   />
                 </FormControl>
+                <FormDescription className="text-xs mt-1 text-foreground/70">
+                  {getDescription('athletics', field.value as ScoreValue)}
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -218,6 +246,9 @@ export default function EvaluationCriteriaFields({
                     onValueChange={(values) => field.onChange(values[0])}
                   />
                 </FormControl>
+                <FormDescription className="text-xs mt-1 text-foreground/70">
+                  {getDescription('personalQualities', field.value as ScoreValue)}
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -244,6 +275,9 @@ export default function EvaluationCriteriaFields({
                     onValueChange={(values) => field.onChange(values[0])}
                   />
                 </FormControl>
+                <FormDescription className="text-xs mt-1 text-foreground/70">
+                  {getDescription('recommendations', field.value as ScoreValue)}
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -270,6 +304,9 @@ export default function EvaluationCriteriaFields({
                       onValueChange={(values) => field.onChange(values[0])}
                     />
                   </FormControl>
+                  <FormDescription className="text-xs mt-1 text-foreground/70">
+                    {getDescription('interview', field.value as ScoreValue)}
+                  </FormDescription>
                 </FormItem>
               )}
             />

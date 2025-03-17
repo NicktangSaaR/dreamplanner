@@ -74,7 +74,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess, onEr
                 <ResizablePanel defaultSize={50} minSize={30}>
                   <div className="p-4 h-full">
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold mb-2">核心录取三要素评估</h3>
+                      <h3 className="text-lg font-semibold mb-2">Core Admission Factors Assessment</h3>
                       <p className="text-sm text-gray-500 mb-3">These three factors are critical for Ivy League admissions</p>
                       
                       {/* Academic Excellence */}
@@ -96,7 +96,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess, onEr
                 <ResizablePanel defaultSize={50} minSize={30}>
                   <div className="p-4 h-full">
                     <div className="mb-2">
-                      <h3 className="text-lg font-semibold mb-2">传统评估要素</h3>
+                      <h3 className="text-lg font-semibold mb-2">Traditional Evaluation Criteria</h3>
                       <p className="text-sm text-gray-500 mb-3">Traditional evaluation criteria</p>
                       
                       <div className="space-y-4">
