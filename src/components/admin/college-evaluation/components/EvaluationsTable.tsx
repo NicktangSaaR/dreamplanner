@@ -1,60 +1,63 @@
 
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableHead, TableHeader, TableRow, TableCell } from "@/components/ui/table";
 import { StudentEvaluation, UniversityType } from "../types";
-import { useState } from "react";
-import { UniversityTypeTabs } from "./UniversityTypeTabs";
-import { EvaluationSection } from "./EvaluationSection";
-import { groupEvaluationsByType, getUniqueUniversityTypes } from "../utils/evaluationGroupingUtils";
+import { EvaluationRow } from "./EvaluationRow";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface EvaluationsTableProps {
-  evaluations: StudentEvaluation[] | null | undefined;
-  isLoading: boolean;
+  evaluations: StudentEvaluation[];
+  universityType: UniversityType;
 }
 
-export default function EvaluationsTable({ evaluations, isLoading }: EvaluationsTableProps) {
-  // Add state to track active university type tab
-  const [activeTab, setActiveTab] = useState<UniversityType | 'all'>('all');
-
-  const groupedEvaluations = groupEvaluationsByType(evaluations);
+export default function EvaluationsTable({ evaluations, universityType }: EvaluationsTableProps) {
+  const isUcSystem = universityType === 'ucSystem';
   
-  // Get all university types present in evaluations
-  const universityTypes = getUniqueUniversityTypes(evaluations);
-
+  if (evaluations.length === 0) {
+    return <p className="text-center py-4 text-gray-500">No evaluations found.</p>;
+  }
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Evaluations by University Type</CardTitle>
-        <CardDescription>
-          View student evaluations organized by university category (Scoring criteria: 1 is highest, 6 is lowest)
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="text-center py-4">Loading evaluation data...</div>
-        ) : evaluations && evaluations.length > 0 ? (
-          <div className="space-y-6">
-            <UniversityTypeTabs 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab} 
-              universityTypes={universityTypes} 
-            />
-            
-            {activeTab === 'all' ? (
-              // Render sections for each university type
-              Object.entries(groupedEvaluations).map(([type, evals]) => (
-                <EvaluationSection key={type} type={type} evaluations={evals} />
-              ))
-            ) : (
-              // Render only the active tab's evaluations
-              groupedEvaluations[activeTab] && (
-                <EvaluationSection type={activeTab} evaluations={groupedEvaluations[activeTab]} />
-              )
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-4">No evaluation data available</div>
-        )}
-      </CardContent>
-    </Card>
+    <div className="border rounded-md">
+      <div className="p-4 bg-white border-b">
+        <h3 className="text-lg font-semibold">Evaluations by University Type</h3>
+        <p className="text-sm text-gray-500">
+          Viewing {evaluations.length} evaluation{evaluations.length !== 1 ? 's' : ''} for {universityType === 'ivyLeague' ? 'Ivy League' : universityType === 'top30' ? 'Top 20-30' : 'UC System'} universities
+        </p>
+      </div>
+
+      <ScrollArea className="h-[600px]">
+        <Table>
+          <TableHeader className="bg-gray-50 sticky top-0">
+            <TableRow>
+              <TableCell className="font-semibold">Student</TableCell>
+              <TableCell className="font-semibold">Date</TableCell>
+              <TableCell className="font-semibold">Type</TableCell>
+              <TableCell className="font-semibold">Score</TableCell>
+              {/* New admission factors */}
+              <TableCell className="font-semibold">Academic Excellence</TableCell>
+              <TableCell className="font-semibold">Impact & Leadership</TableCell>
+              <TableCell className="font-semibold">Unique Narrative</TableCell>
+              {/* Traditional criteria */}
+              <TableCell className="font-semibold">Academics</TableCell>
+              <TableCell className="font-semibold">Extracurriculars</TableCell>
+              <TableCell className="font-semibold">Athletics</TableCell>
+              <TableCell className="font-semibold">Personal Qualities</TableCell>
+              <TableCell className="font-semibold">Recommendations</TableCell>
+              {!isUcSystem && <TableCell className="font-semibold">Interview</TableCell>}
+              <TableCell className="font-semibold">Actions</TableCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {evaluations.map((evaluation) => (
+              <EvaluationRow
+                key={evaluation.id}
+                evaluation={evaluation}
+                universityType={universityType}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
+    </div>
   );
 }

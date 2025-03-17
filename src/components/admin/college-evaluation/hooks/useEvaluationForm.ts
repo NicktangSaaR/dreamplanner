@@ -30,7 +30,11 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         athletics: 3,
         personalQualities: 3,
         recommendations: 3,
-        interview: 3
+        interview: 3,
+        // New admission factors with default values
+        academicExcellence: 3,
+        impactLeadership: 3,
+        uniqueNarrative: 3
       },
       comments: ""
     }
@@ -64,10 +68,14 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         personal_qualities_score: values.criteria.personalQualities,
         recommendations_score: values.criteria.recommendations,
         interview_score: values.criteria.interview,
+        // Add new admission factors scores
+        academic_excellence_score: values.criteria.academicExcellence,
+        impact_leadership_score: values.criteria.impactLeadership,
+        unique_narrative_score: values.criteria.uniqueNarrative,
         comments: values.comments,
         total_score: totalScore,
         admin_id: profile.id,
-        university_type: universityType // Ensure this is being saved properly
+        university_type: universityType
       };
       
       console.log("Saving evaluation with university type:", universityType);

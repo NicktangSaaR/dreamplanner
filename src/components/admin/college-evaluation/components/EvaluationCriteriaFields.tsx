@@ -2,6 +2,7 @@
 import { UseFormReturn } from "react-hook-form";
 import CriteriaField from "./CriteriaField";
 import { UniversityType } from "../types";
+import { Separator } from "@/components/ui/separator";
 
 interface EvaluationCriteriaFieldsProps {
   form: UseFormReturn<any>;
@@ -11,6 +12,45 @@ interface EvaluationCriteriaFieldsProps {
 export default function EvaluationCriteriaFields({ form, universityType }: EvaluationCriteriaFieldsProps) {
   return (
     <>
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">核心录取三要素评估</h3>
+        <p className="text-sm text-gray-500 mb-3">These three factors are critical for Ivy League admissions</p>
+        
+        {/* Academic Excellence */}
+        <CriteriaField 
+          form={form} 
+          name="criteria.academicExcellence" 
+          label="Academic Excellence (学术卓越)" 
+          criteriaKey="academicExcellence" 
+          universityType={universityType}
+        />
+
+        {/* Impact & Leadership */}
+        <CriteriaField 
+          form={form} 
+          name="criteria.impactLeadership" 
+          label="Impact & Leadership (影响力和领导力)" 
+          criteriaKey="impactLeadership" 
+          universityType={universityType}
+        />
+
+        {/* Unique Personal Narrative */}
+        <CriteriaField 
+          form={form} 
+          name="criteria.uniqueNarrative" 
+          label="Unique Personal Narrative (个人特色和独特故事)" 
+          criteriaKey="uniqueNarrative" 
+          universityType={universityType}
+        />
+      </div>
+
+      <Separator className="my-6" />
+      
+      <div className="mb-2">
+        <h3 className="text-lg font-semibold mb-2">传统评估要素</h3>
+        <p className="text-sm text-gray-500 mb-3">Traditional evaluation criteria</p>
+      </div>
+
       {/* Academics Section */}
       <CriteriaField 
         form={form} 

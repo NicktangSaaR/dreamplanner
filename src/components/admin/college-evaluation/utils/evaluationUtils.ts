@@ -8,8 +8,8 @@ import { EvaluationCriteria, UniversityType } from "../types";
 export const calculateTotalScore = (criteria: EvaluationCriteria, universityType: UniversityType): number => {
   console.log("Calculating score for university type:", universityType);
   
-  // First convert all scores to an array for easier manipulation
-  const scoreArray = [
+  // First convert all traditional scores to an array for easier manipulation
+  const traditionalScores = [
     criteria.academics,
     criteria.extracurriculars,
     criteria.athletics,
@@ -21,18 +21,31 @@ export const calculateTotalScore = (criteria: EvaluationCriteria, universityType
   // For UC System - don't count interview scores
   if (universityType === 'ucSystem') {
     // Remove interview score (last item)
-    scoreArray.pop();
+    traditionalScores.pop();
   }
   
   // For Ivy League and Top30 - don't count athletics if score is 4 or higher (not competitive)
   if ((universityType === 'ivyLeague' || universityType === 'top30') && criteria.athletics >= 4) {
     // Find index of athletics (it's at position 2 in our array) and remove it
-    scoreArray.splice(2, 1);
+    traditionalScores.splice(2, 1);
   }
   
-  // Sum all remaining scores
-  const totalScore = scoreArray.reduce((sum, score) => sum + score, 0);
+  // Add the new admission factors scores
+  const admissionFactorsScores = [
+    criteria.academicExcellence,
+    criteria.impactLeadership,
+    criteria.uniqueNarrative
+  ];
   
-  console.log("Total score:", totalScore, "from scores:", scoreArray);
+  // Sum traditional scores
+  const traditionalTotal = traditionalScores.reduce((sum, score) => sum + score, 0);
+  
+  // Sum admission factors scores
+  const admissionFactorsTotal = admissionFactorsScores.reduce((sum, score) => sum + score, 0);
+  
+  // Calculate final score - we count both traditional criteria and admission factors
+  const totalScore = traditionalTotal + admissionFactorsTotal;
+  
+  console.log("Total score:", totalScore, "from traditional scores:", traditionalScores, "and admission factors:", admissionFactorsScores);
   return totalScore;
 };

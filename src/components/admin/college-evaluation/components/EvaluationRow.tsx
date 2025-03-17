@@ -14,6 +14,11 @@ export const EvaluationRow = ({ evaluation, universityType }: EvaluationRowProps
   const evalType = evaluation.university_type as UniversityType || universityType as UniversityType;
   const isUcSystem = evalType === 'ucSystem';
   
+  // Get additional scores with fallback values 
+  const academicExcellence = evaluation.academic_excellence_score || 3;
+  const impactLeadership = evaluation.impact_leadership_score || 3;
+  const uniqueNarrative = evaluation.unique_narrative_score || 3;
+  
   return (
     <TableRow>
       <TableCell className="font-medium">{evaluation.student_name}</TableCell>
@@ -25,6 +30,9 @@ export const EvaluationRow = ({ evaluation, universityType }: EvaluationRowProps
           universityType={universityType} 
         />
       </TableCell>
+      <TableCell>{academicExcellence}/6</TableCell>
+      <TableCell>{impactLeadership}/6</TableCell>
+      <TableCell>{uniqueNarrative}/6</TableCell>
       <TableCell>{evaluation.academics_score}/6</TableCell>
       <TableCell>{evaluation.extracurriculars_score}/6</TableCell>
       <TableCell>{evaluation.athletics_score}/6</TableCell>

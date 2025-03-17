@@ -11,6 +11,10 @@ export interface EvaluationCriteria {
   personalQualities: ScoreValue;
   recommendations: ScoreValue;
   interview: ScoreValue;
+  // New admission factors
+  academicExcellence: ScoreValue;
+  impactLeadership: ScoreValue;
+  uniqueNarrative: ScoreValue;
 }
 
 export interface StudentEvaluation {
@@ -24,6 +28,10 @@ export interface StudentEvaluation {
   personal_qualities_score: number;
   recommendations_score: number;
   interview_score: number;
+  // New admission factors scores
+  academic_excellence_score?: number;
+  impact_leadership_score?: number;
+  unique_narrative_score?: number;
   total_score: number;
   comments: string;
   admin_id: string;

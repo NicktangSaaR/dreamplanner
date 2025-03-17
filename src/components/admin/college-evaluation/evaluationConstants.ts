@@ -49,6 +49,31 @@ export const IVY_LEAGUE_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
     4: "Average interview performance. Fails to demonstrate special personal charm or strengths.",
     5: "Poor interview performance. Unable to express themselves effectively or lacks knowledge about the school.",
     6: "Terrible interview performance. Possibly shows disrespect to the interviewer, lacks enthusiasm, or has communication issues."
+  },
+  // New admission factors
+  academicExcellence: {
+    1: "Exceptional academic excellence. Top GPA with most challenging courses. National/international academic competition wins (AMC/AIME, USNCO, ISEF, USACO). Published research or significant research experience.",
+    2: "Outstanding academic profile. Near-perfect GPA, full load of AP/IB courses, high standardized test scores. National level academic achievements or substantive research projects.",
+    3: "Strong academic record. High GPA with challenging coursework. Some state/regional academic competitions. Basic research experience.",
+    4: "Good academic standing. Above average GPA with some advanced courses. Limited academic competition participation. No research experience.",
+    5: "Average academic profile. Standard coursework with few honors/AP classes. No academic competitions or specialized academic pursuits.",
+    6: "Below average academic profile. Basic curriculum with no advanced coursework. No academic distinctions."
+  },
+  impactLeadership: {
+    1: "Transformative impact and leadership. Founded organizations/initiatives with measurable national/international impact. Innovative entrepreneurial projects addressing major social issues.",
+    2: "Significant leadership positions with demonstrated impact. Led major school/community initiatives creating substantial positive change. Developed innovative solutions to community challenges.",
+    3: "Good leadership experience. Held positions in established organizations and contributed to meaningful projects. Some evidence of innovation or initiative.",
+    4: "Basic leadership roles with limited impact. Standard participation in clubs/activities with some responsibility but minimal innovation.",
+    5: "Minimal leadership experience. Participated in activities without taking initiative or creating change.",
+    6: "No leadership experience or meaningful impact in any area."
+  },
+  uniqueNarrative: {
+    1: "Compelling, unique personal story that significantly shapes identity and perspective. Extraordinary challenges overcome or exceptional life experiences. Authentic passion projects outside standard activities.",
+    2: "Strong personal narrative with distinctive elements. Clear thread of authentic interests across activities. Uncommon experiences or perspectives well-articulated.",
+    3: "Good personal story with some unique elements. Consistent interests with some personalized projects. Some distinctive experiences.",
+    4: "Standard personal narrative. Common interests and typical high school experiences. Limited unique perspectives.",
+    5: "Undeveloped personal story. Disconnected activities without clear narrative. Generic experiences without reflection.",
+    6: "No discernible personal narrative. Generic profile without distinctive elements or authentic voice."
   }
 };
 
@@ -100,6 +125,31 @@ export const TOP30_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
     4: "Average interview performance, lacking depth of thought.",
     5: "Inadequate interview preparation, incomplete answers.",
     6: "Poor interview performance, communication issues or inability to fully present oneself."
+  },
+  // New admission factors 
+  academicExcellence: {
+    1: "Outstanding academics with significant achievements. Top GPA with rigorous coursework, excellent standardized scores, regional/national academic competition awards.",
+    2: "Very strong academics. High GPA, many AP/IB courses, high test scores, some academic distinctions or research experience.",
+    3: "Strong academic record. Good GPA with challenging courses, good test scores, some academic involvement beyond classwork.",
+    4: "Solid academics. Above average GPA, some advanced courses, average test scores for selective institutions.",
+    5: "Average academics. Standard coursework with few advanced classes, below target test scores for selective schools.",
+    6: "Below average academics for selective institutions. Basic curriculum, low standardized scores."
+  },
+  impactLeadership: {
+    1: "Significant leadership roles with demonstrated impact. Created or transformed organizations/initiatives with measurable results.",
+    2: "Strong leadership positions in school or community with clear contributions. Led meaningful projects with positive outcomes.",
+    3: "Good leadership experience. Held officer positions in established organizations and contributed to projects.",
+    4: "Some leadership experience. Minor positions in organizations with limited scope of responsibility.",
+    5: "Limited leadership. Member participation without taking initiative or leading others.",
+    6: "No meaningful leadership experience in any context."
+  },
+  uniqueNarrative: {
+    1: "Distinctive personal story with compelling elements. Clear passion and authenticity across application. Unique perspectives or experiences.",
+    2: "Good personal narrative with some distinctive qualities. Coherent thread of interests. Some uncommon experiences.",
+    3: "Decent personal story. Some consistency in interests and activities with personal touches.",
+    4: "Basic personal narrative. Common interests and typical high school experiences.",
+    5: "Underdeveloped personal story. Limited reflection on experiences or disconnected activities.",
+    6: "Generic profile without distinctive elements or authentic voice."
   }
 };
 
@@ -151,6 +201,31 @@ export const UC_SYSTEM_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
     4: "Not applicable for UC System",
     5: "Not applicable for UC System",
     6: "Not applicable for UC System"
+  },
+  // New admission factors
+  academicExcellence: {
+    1: "Exceptional academic record. Top UC weighted GPA (4.3+), extensive UC-approved honors/AP/IB courses. State/national academic achievements.",
+    2: "Outstanding academics. High UC GPA (4.0-4.3), numerous AP/honors courses, strong test scores (if submitted), some academic distinctions.",
+    3: "Strong academic profile. Good UC GPA (3.8-4.0), solid college prep curriculum with some honors/AP courses.",
+    4: "Satisfactory academics. Competitive UC GPA (3.6-3.8), standard college prep courses with few advanced classes.",
+    5: "Basic academic record. Minimum UC GPA requirements (3.4-3.6), few or no honors/AP courses.",
+    6: "Below standard academics for UC system. GPA below 3.4, basic curriculum without rigor."
+  },
+  impactLeadership: {
+    1: "Exceptional impact and leadership. Created or significantly transformed organizations with measurable community impact. Innovative solutions to social issues.",
+    2: "Strong leadership with meaningful impact. Important roles in school/community with demonstrated positive outcomes.",
+    3: "Good leadership experience. Active roles in organizations with some positive contributions to community.",
+    4: "Basic leadership. Some responsibility in standard activities with limited scope or impact.",
+    5: "Minimal leadership. Participation in activities without initiative or change-making.",
+    6: "No leadership experience or community impact demonstrated."
+  },
+  uniqueNarrative: {
+    1: "Compelling personal story that enriches campus diversity. Exceptional PIQ responses showing authenticity, reflection and personal growth.",
+    2: "Strong personal narrative with distinctive elements. PIQs effectively communicate unique perspectives and experiences.",
+    3: "Good personal story with some unique elements. PIQs show self-awareness and consistent interests.",
+    4: "Adequate personal narrative. Standard PIQ responses that meet requirements but lack distinction.",
+    5: "Basic personal story. PIQs that minimally address prompts without depth or insight.",
+    6: "Undeveloped personal narrative. Weak PIQs that fail to communicate personal qualities or perspectives."
   }
 };
 
@@ -166,4 +241,3 @@ export function getUniversityCriteriaDescriptions(universityType: UniversityType
       return IVY_LEAGUE_CRITERIA_DESCRIPTIONS;
   }
 }
-

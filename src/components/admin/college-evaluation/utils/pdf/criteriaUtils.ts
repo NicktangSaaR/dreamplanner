@@ -3,16 +3,14 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { StudentEvaluation, UniversityType } from "../../types";
 import { getUniversityCriteriaDescriptions } from "../../evaluationConstants";
-// Remove the conflicting import
-// import { getCriteriaKeyFromColumn } from './criteriaUtils';
 import { getCriteriaLabel } from '../displayUtils';
 
 /**
  * Adds criteria descriptions to the PDF document
  */
 export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluation, universityType: UniversityType, startY: number) => {
-  // Define which criteria to include based on university type
-  const criteriaToInclude = [
+  // Define which traditional criteria to include based on university type
+  const traditionalCriteria = [
     'academics_score',
     'extracurriculars_score',
     'athletics_score',
@@ -22,8 +20,15 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
   
   // Only include interview for non-UC System
   if (universityType !== 'ucSystem') {
-    criteriaToInclude.push('interview_score');
+    traditionalCriteria.push('interview_score');
   }
+  
+  // Define admission factors criteria
+  const admissionFactorsCriteria = [
+    'academic_excellence_score',
+    'impact_leadership_score',
+    'unique_narrative_score'
+  ];
   
   // Skip athletics for Ivy League and Top30 if score >= 4
   const athleticsScore = evaluation.athletics_score;
@@ -36,33 +41,105 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
   let currentY = startY + 10; // Add some spacing after the table
   
   // Set the font size and style
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("Core Admission Factors Descriptions:", 15, currentY);
+  currentY += 8;
   doc.setFont("helvetica");
   doc.setFontSize(10);
   
-  // Add each criteria description
-  criteriaToInclude.forEach(criteriaColumn => {
-    // Skip athletics if excluded
-    if (criteriaColumn === 'athletics_score' && isAthleticsExcluded) {
-      return;
-    }
-    
-    // Skip interview for UC System
-    if (universityType === 'ucSystem' && criteriaColumn === 'interview_score') {
-      return;
-    }
-    
-    const score = evaluation[criteriaColumn];
+  // First add descriptions for admission factors
+  for (const criteriaColumn of admissionFactorsCriteria) {
+    // Get the score - default to 3 if not available
+    const score = evaluation[criteriaColumn] || 3;
     const criteriaKey = getCriteriaKeyFromColumn(criteriaColumn);
     
-    if (!criteriaKey || !score) {
-      return;
+    if (!criteriaKey) {
+      continue;
     }
     
     // Get description for this score
     const description = descriptions[criteriaKey]?.[score];
     
     if (!description) {
-      return;
+      continue;
+    }
+    
+    // Check if we need a new page
+    if (currentY > 240) {
+      doc.addPage();
+      doc.setFont("helvetica", "bold"); // Reset font for new page
+      currentY = 45; // Start content lower on new pages to account for header area
+    }
+    
+    // Add criteria name
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    let label = criteriaColumn;
+    if (criteriaColumn === 'academic_excellence_score') {
+      label = "Academic Excellence (学术卓越)";
+    } else if (criteriaColumn === 'impact_leadership_score') {
+      label = "Impact & Leadership (影响力和领导力)";
+    } else if (criteriaColumn === 'unique_narrative_score') {
+      label = "Unique Personal Narrative (个人特色和独特故事)";
+    }
+    
+    doc.text(`${label} - Score ${score}:`, 15, currentY);
+    
+    // Add description with proper line breaks
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    
+    // Use proper text splitting to handle Chinese and English characters
+    const maxWidth = 180;
+    const splitText = doc.splitTextToSize(description, maxWidth);
+    currentY += 5;
+    doc.text(splitText, 15, currentY);
+    
+    // Calculate height of text based on number of lines
+    const lineHeight = 4.5; // Slightly increased line height for better Chinese text rendering
+    currentY += (splitText.length * lineHeight) + 8; // Add extra spacing between criteria
+  }
+  
+  // Add separator before traditional criteria
+  currentY += 5;
+  doc.setDrawColor(220, 220, 220); // Light gray line
+  doc.setLineWidth(0.5);
+  doc.line(15, currentY, 195, currentY);
+  currentY += 10;
+  
+  // Add title for traditional criteria
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("Traditional Evaluation Criteria Descriptions:", 15, currentY);
+  currentY += 8;
+  doc.setFont("helvetica");
+  doc.setFontSize(10);
+  
+  // Add each traditional criteria description
+  for (const criteriaColumn of traditionalCriteria) {
+    // Skip athletics if excluded
+    if (criteriaColumn === 'athletics_score' && isAthleticsExcluded) {
+      continue;
+    }
+    
+    // Skip interview for UC System
+    if (universityType === 'ucSystem' && criteriaColumn === 'interview_score') {
+      continue;
+    }
+    
+    const score = evaluation[criteriaColumn];
+    const criteriaKey = getCriteriaKeyFromColumn(criteriaColumn);
+    
+    if (!criteriaKey || !score) {
+      continue;
+    }
+    
+    // Get description for this score
+    const description = descriptions[criteriaKey]?.[score];
+    
+    if (!description) {
+      continue;
     }
     
     // Check if we need a new page
@@ -90,7 +167,7 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
     // Calculate height of text based on number of lines
     const lineHeight = 4.5; // Slightly increased line height for better Chinese text rendering
     currentY += (splitText.length * lineHeight) + 8; // Add extra spacing between criteria
-  });
+  }
   
   return currentY;
 };
@@ -112,6 +189,12 @@ export const getCriteriaKeyFromColumn = (columnName: string): string => {
       return 'recommendations';
     case 'interview_score':
       return 'interview';
+    case 'academic_excellence_score':
+      return 'academicExcellence';
+    case 'impact_leadership_score':
+      return 'impactLeadership';
+    case 'unique_narrative_score':
+      return 'uniqueNarrative';
     default:
       return '';
   }
