@@ -8,6 +8,7 @@ import { useStudentsQuery, Student } from "./hooks/useStudentsQuery";
 import { useEvaluationsQuery } from "./hooks/useEvaluationsQuery";
 import { UniversityType } from "./types";
 import { UniversityTypeTabs } from "./components/UniversityTypeTabs";
+import { getUniqueUniversityTypes } from "./utils/evaluationGroupingUtils";
 
 export default function StudentEvaluationManager() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +40,9 @@ export default function StudentEvaluationManager() {
     refetchEvaluations();
   };
 
+  // Get unique university types from evaluations
+  const universityTypes = getUniqueUniversityTypes(evaluations);
+
   if (!isAdmin) {
     return <div className="p-4 text-center">您没有访问该页面的权限</div>;
   }
@@ -57,8 +61,9 @@ export default function StudentEvaluationManager() {
       {/* University Type Selector */}
       <div className="mb-4">
         <UniversityTypeTabs
-          activeType={activeUniversityType}
-          onChange={setActiveUniversityType}
+          activeTab={activeUniversityType}
+          setActiveTab={setActiveUniversityType}
+          universityTypes={[...universityTypes]}
         />
       </div>
 

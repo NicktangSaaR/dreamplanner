@@ -6,7 +6,7 @@ import { getUniversityTypeDisplay } from "../utils/displayUtils";
 interface UniversityTypeTabsProps {
   activeTab: UniversityType | 'all';
   setActiveTab: (tab: UniversityType | 'all') => void;
-  universityTypes: (UniversityType | string)[];
+  universityTypes: (UniversityType | 'all')[];
 }
 
 export const UniversityTypeTabs = ({ 
