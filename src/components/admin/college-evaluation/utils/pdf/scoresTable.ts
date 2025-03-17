@@ -57,14 +57,8 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
   // Calculate traditional score
   const traditionalScore = getTraditionalTotalScore(evaluation, evalType);
   
-  // Total max score includes both traditional and core criteria
-  const maxScore = traditionalMaxScore + 18;
-  
   // Add traditional total score to traditional rows
   traditionalTableRows.push(["Traditional Total Score", `${traditionalScore}/${traditionalMaxScore}`]);
-  
-  // Add total score with max possible score
-  const totalRow = [getCriteriaLabel('total_score', evalType), `${evaluation.total_score}/${maxScore}`];
   
   // Add admission factors table with appropriate labels
   autoTable(doc, {
@@ -106,23 +100,6 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
       fontStyle: 'normal'
     },
     alternateRowStyles: { fillColor: [240, 240, 240] }
-  });
-  
-  // Get the Y position after the traditional criteria table
-  const traditionalTableEndY = (doc as any).lastAutoTable?.finalY || 220;
-  
-  // Add total score table
-  autoTable(doc, {
-    startY: traditionalTableEndY + 5,
-    body: [totalRow],
-    theme: 'grid',
-    styles: {
-      font: 'helvetica',
-      fontStyle: 'bold',
-      halign: 'center',
-      fillColor: [230, 230, 250]
-    },
-    margin: { left: 50, right: 50 } // Center the total score table
   });
   
   // Return the final Y position
