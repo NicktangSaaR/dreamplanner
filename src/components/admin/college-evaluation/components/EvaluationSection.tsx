@@ -1,6 +1,6 @@
 
 import { StudentEvaluation, UniversityType } from "../types";
-import { getUniversityTypeDisplay } from "../utils/pdfExportUtils";
+import { getUniversityTypeDisplay } from "../utils/displayUtils";
 import { EvaluationTable } from "./EvaluationTable";
 
 interface EvaluationSectionProps {

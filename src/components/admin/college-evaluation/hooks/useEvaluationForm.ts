@@ -50,7 +50,7 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         values.criteria.interview = 3; // Set to neutral value since it's not displayed
       }
       
-      // Pass university type to calculateTotalScore to apply specific scoring rules
+      // Calculate total score using the selected university type
       const totalScore = calculateTotalScore(values.criteria, universityType);
       const evaluationDate = new Date().toISOString();
       
@@ -67,8 +67,7 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         comments: values.comments,
         total_score: totalScore,
         admin_id: profile.id,
-        // Add university_type to the evaluation data
-        university_type: universityType
+        university_type: universityType // Ensure this is being saved properly
       };
       
       console.log("Saving evaluation with university type:", universityType);
@@ -79,11 +78,14 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
       
-      // We no longer need to add university_type as it's now stored in the database
       const evaluationWithType = data as StudentEvaluation;
       
+      console.log("Successfully saved evaluation:", evaluationWithType);
       setSubmittedEvaluation(evaluationWithType);
       toast.success("Evaluation created successfully");
       

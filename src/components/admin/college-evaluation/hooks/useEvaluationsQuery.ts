@@ -17,7 +17,7 @@ export const useEvaluationsQuery = (isAdmin: boolean) => {
         console.error("Error fetching evaluations:", error);
         throw error;
       }
-      console.log("Fetched evaluations:", data);
+      console.log("Fetched evaluations with university types:", data);
       return data as StudentEvaluation[];
     },
     enabled: isAdmin, // Only run query if user is admin

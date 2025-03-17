@@ -735,6 +735,7 @@ export type Database = {
           student_id: string
           student_name: string
           total_score: number
+          university_type: string | null
         }
         Insert: {
           academics_score: number
@@ -751,6 +752,7 @@ export type Database = {
           student_id: string
           student_name: string
           total_score: number
+          university_type?: string | null
         }
         Update: {
           academics_score?: number
@@ -767,6 +769,7 @@ export type Database = {
           student_id?: string
           student_name?: string
           total_score?: number
+          university_type?: string | null
         }
         Relationships: [
           {

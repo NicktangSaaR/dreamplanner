@@ -102,6 +102,7 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
             <TableRow>
               <TableHead>Student Name</TableHead>
               <TableHead>Evaluation Date</TableHead>
+              <TableHead>University Type</TableHead>
               <TableHead>Total Score</TableHead>
               <TableHead>Academics</TableHead>
               <TableHead>Extracurriculars</TableHead>
@@ -122,6 +123,7 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
                 <TableRow key={evaluation.id}>
                   <TableCell className="font-medium">{evaluation.student_name}</TableCell>
                   <TableCell>{formatDate(evaluation.evaluation_date)}</TableCell>
+                  <TableCell>{evalType}</TableCell>
                   <TableCell className="font-semibold">{formatScore(evaluation.total_score, maxScore)}</TableCell>
                   <TableCell>{evaluation.academics_score}/6</TableCell>
                   <TableCell>{evaluation.extracurriculars_score}/6</TableCell>

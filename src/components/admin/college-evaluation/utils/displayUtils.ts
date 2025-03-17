@@ -2,11 +2,9 @@
 import { UniversityType } from "../types";
 
 /**
- * Converts university type to human-readable display text
+ * Get display name for university type
  */
-export const getUniversityTypeDisplay = (type?: UniversityType): string => {
-  if (!type) return "US University";
-  
+export const getUniversityTypeDisplay = (type: string | UniversityType): string => {
   switch (type) {
     case 'ivyLeague':
       return "Ivy League University";
@@ -14,66 +12,54 @@ export const getUniversityTypeDisplay = (type?: UniversityType): string => {
       return "Top 20-30 University";
     case 'ucSystem':
       return "UC System University";
+    case 'all':
+      return "All Universities";
     default:
       return "US University";
   }
 };
 
 /**
- * Gets appropriate criteria label based on university type
+ * Get column label based on university type
  */
-export const getCriteriaLabel = (key: string, universityType?: UniversityType): string => {
+export const getCriteriaLabel = (key: string, universityType: UniversityType | string): string => {
   if (universityType === 'ucSystem') {
-    switch (key) {
+    switch(key) {
       case 'recommendations_score':
-        return 'Personal Insight Questions (PIQs)';
+        return "PIQs Score";
       case 'athletics_score':
-        return 'Personal Talents';
+        return "Personal Talents Score";
       case 'interview_score':
-        return 'Not Applicable for UC System';
+        return "N/A";
+      case 'total_score':
+        return "Total Score";
+      case 'academics_score':
+        return "Academics Score";
+      case 'extracurriculars_score':
+        return "Extracurriculars Score";
+      case 'personal_qualities_score':
+        return "Personal Qualities Score";
       default:
-        break;
+        return key.replace('_score', '').replace(/_/g, ' ');
     }
   }
   
-  switch (key) {
-    case 'academics_score':
-      return 'Academics';
-    case 'extracurriculars_score':
-      return 'Extracurriculars';
-    case 'athletics_score':
-      return 'Athletics';
-    case 'personal_qualities_score':
-      return 'Personal Qualities';
-    case 'recommendations_score':
-      return 'Recommendations';
-    case 'interview_score':
-      return 'Interview';
+  switch(key) {
     case 'total_score':
-      return 'Total Score';
-    default:
-      return key;
-  }
-};
-
-/**
- * Converts database column name to criteria key
- */
-export const getCriteriaKeyFromColumn = (columnName: string): string => {
-  switch (columnName) {
+      return "Total Score";
     case 'academics_score':
-      return 'academics';
+      return "Academics Score";
     case 'extracurriculars_score':
-      return 'extracurriculars';
+      return "Extracurriculars Score";
     case 'athletics_score':
-      return 'athletics';
+      return "Athletics Score";
     case 'personal_qualities_score':
-      return 'personalQualities';
+      return "Personal Qualities Score";
     case 'recommendations_score':
-      return 'recommendations';
+      return "Recommendations Score";
     case 'interview_score':
-      return 'interview';
+      return "Interview Score";
     default:
-      return '';
+      return key.replace('_score', '').replace(/_/g, ' ');
   }
 };
