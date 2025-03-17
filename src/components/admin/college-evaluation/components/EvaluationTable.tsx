@@ -58,6 +58,33 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
     }
   };
 
+  // Calculate maximum possible score for a specific evaluation
+  const getMaxPossibleScore = (evaluation: StudentEvaluation): number => {
+    // Standard max is 6 criteria × 6 points = 36
+    let maxScore = 36;
+    
+    // For UC System, we don't count interview (5 criteria × 6 points = 30)
+    if (universityType === 'ucSystem') {
+      maxScore = 30;
+    }
+    
+    // For Ivy League and Top30, exclude athletics if it's 4 or higher
+    const isAthleticsExcluded = 
+      (universityType === 'ivyLeague' || universityType === 'top30') && 
+      evaluation.athletics_score >= 4;
+    
+    if (isAthleticsExcluded) {
+      maxScore -= 6; // Reduce max by 6 points (the max value of athletics)
+    }
+    
+    return maxScore;
+  };
+
+  // Format score as actual/maximum
+  const formatScore = (score: number, maxScore: number): string => {
+    return `${score}/${maxScore}`;
+  };
+
   return (
     <div className="border rounded-md">
       <Table>
@@ -76,29 +103,32 @@ export const EvaluationTable = ({ evaluations, universityType }: EvaluationTable
           </TableRow>
         </TableHeader>
         <TableBody>
-          {evaluations.map((evaluation) => (
-            <TableRow key={evaluation.id}>
-              <TableCell className="font-medium">{evaluation.student_name}</TableCell>
-              <TableCell>{formatDate(evaluation.evaluation_date)}</TableCell>
-              <TableCell className="font-semibold">{evaluation.total_score}</TableCell>
-              <TableCell>{evaluation.academics_score}</TableCell>
-              <TableCell>{evaluation.extracurriculars_score}</TableCell>
-              <TableCell>{evaluation.athletics_score}</TableCell>
-              <TableCell>{evaluation.personal_qualities_score}</TableCell>
-              <TableCell>{evaluation.recommendations_score}</TableCell>
-              {universityType !== 'ucSystem' && <TableCell>{evaluation.interview_score}</TableCell>}
-              <TableCell>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => handleExportPDF(evaluation)}
-                  title="Export Evaluation as PDF"
-                >
-                  <FileText className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {evaluations.map((evaluation) => {
+            const maxScore = getMaxPossibleScore(evaluation);
+            return (
+              <TableRow key={evaluation.id}>
+                <TableCell className="font-medium">{evaluation.student_name}</TableCell>
+                <TableCell>{formatDate(evaluation.evaluation_date)}</TableCell>
+                <TableCell className="font-semibold">{formatScore(evaluation.total_score, maxScore)}</TableCell>
+                <TableCell>{evaluation.academics_score}/6</TableCell>
+                <TableCell>{evaluation.extracurriculars_score}/6</TableCell>
+                <TableCell>{evaluation.athletics_score}/6</TableCell>
+                <TableCell>{evaluation.personal_qualities_score}/6</TableCell>
+                <TableCell>{evaluation.recommendations_score}/6</TableCell>
+                {universityType !== 'ucSystem' && <TableCell>{evaluation.interview_score}/6</TableCell>}
+                <TableCell>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleExportPDF(evaluation)}
+                    title="Export Evaluation as PDF"
+                  >
+                    <FileText className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
