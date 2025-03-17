@@ -7,10 +7,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface EvaluationsTableProps {
   evaluations: StudentEvaluation[];
   universityType: UniversityType;
+  isLoading?: boolean;
 }
 
-export default function EvaluationsTable({ evaluations, universityType }: EvaluationsTableProps) {
+export default function EvaluationsTable({ evaluations, universityType, isLoading }: EvaluationsTableProps) {
   const isUcSystem = universityType === 'ucSystem';
+  
+  if (isLoading) {
+    return <p className="text-center py-4 text-gray-500">Loading evaluations...</p>;
+  }
   
   if (evaluations.length === 0) {
     return <p className="text-center py-4 text-gray-500">No evaluations found.</p>;

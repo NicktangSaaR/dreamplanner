@@ -6,11 +6,13 @@ import EvaluationsTable from "./components/EvaluationsTable";
 import EvaluationFormDialog from "./components/EvaluationFormDialog";
 import { useStudentsQuery, Student } from "./hooks/useStudentsQuery";
 import { useEvaluationsQuery } from "./hooks/useEvaluationsQuery";
+import { UniversityType } from "./types";
 
 export default function StudentEvaluationManager() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeUniversityType, setActiveUniversityType] = useState<UniversityType>('ivyLeague');
   const { isAdmin } = useUserStatus();
 
   // Fetch students using the custom hook
@@ -55,6 +57,7 @@ export default function StudentEvaluationManager() {
       <EvaluationsTable 
         evaluations={evaluations}
         isLoading={isLoadingEvals}
+        universityType={activeUniversityType}
       />
 
       {/* Evaluation Form Dialog */}

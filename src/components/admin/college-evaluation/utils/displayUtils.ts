@@ -75,3 +75,10 @@ export const formatUniversityType = (type: UniversityType | string): string => {
       return type.toString();
   }
 };
+
+/**
+ * Get display name for a university type
+ */
+export const getUniversityTypeDisplay = (type: UniversityType): string => {
+  return formatUniversityType(type);
+};
