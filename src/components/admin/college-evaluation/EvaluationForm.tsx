@@ -33,9 +33,9 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle className="text-2xl font-bold">美国本科录取评估表</CardTitle>
+            <CardTitle className="text-2xl font-bold">US Undergraduate Admission Evaluation</CardTitle>
             <CardDescription>
-              为 <span className="font-medium">{studentName}</span> 创建评估（评分标准：1为最高，6为最低）
+              Create an evaluation for <span className="font-medium">{studentName}</span> (Scoring: 1 is highest, 6 is lowest)
             </CardDescription>
           </div>
           {submittedEvaluation && (
@@ -61,7 +61,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
 
             <div className="pt-4">
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? "提交中..." : "提交评估"}
+                {isSubmitting ? "Submitting..." : "Submit Evaluation"}
               </Button>
             </div>
           </form>

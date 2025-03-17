@@ -15,7 +15,7 @@ export default function EvaluationCriteriaFields({ form, universityType }: Evalu
       <CriteriaField 
         form={form} 
         name="criteria.academics" 
-        label="学术表现（Academics）" 
+        label="Academics" 
         criteriaKey="academics" 
         universityType={universityType}
       />
@@ -24,7 +24,7 @@ export default function EvaluationCriteriaFields({ form, universityType }: Evalu
       <CriteriaField 
         form={form} 
         name="criteria.extracurriculars" 
-        label="课外活动（Extracurriculars）" 
+        label="Extracurriculars" 
         criteriaKey="extracurriculars" 
         universityType={universityType}
       />
@@ -33,7 +33,7 @@ export default function EvaluationCriteriaFields({ form, universityType }: Evalu
       <CriteriaField 
         form={form} 
         name="criteria.athletics" 
-        label={universityType === 'ucSystem' ? "个人特长（Personal Talents）" : "运动（Athletics）"} 
+        label={universityType === 'ucSystem' ? "Personal Talents" : "Athletics"} 
         criteriaKey="athletics" 
         universityType={universityType}
       />
@@ -42,7 +42,7 @@ export default function EvaluationCriteriaFields({ form, universityType }: Evalu
       <CriteriaField 
         form={form} 
         name="criteria.personalQualities" 
-        label="个人特质（Personal Qualities）" 
+        label="Personal Qualities" 
         criteriaKey="personalQualities" 
         universityType={universityType}
       />
@@ -51,7 +51,7 @@ export default function EvaluationCriteriaFields({ form, universityType }: Evalu
       <CriteriaField 
         form={form} 
         name="criteria.recommendations" 
-        label={universityType === 'ucSystem' ? "个人陈述问题（PIQs）" : "推荐信（Recommendations）"} 
+        label={universityType === 'ucSystem' ? "Personal Insight Questions (PIQs)" : "Recommendations"} 
         criteriaKey="recommendations" 
         universityType={universityType}
       />
@@ -60,7 +60,7 @@ export default function EvaluationCriteriaFields({ form, universityType }: Evalu
       <CriteriaField 
         form={form} 
         name="criteria.interview" 
-        label="面试（Interview）" 
+        label="Interview" 
         criteriaKey="interview" 
         universityType={universityType}
       />

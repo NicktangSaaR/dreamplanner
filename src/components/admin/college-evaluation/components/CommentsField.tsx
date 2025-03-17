@@ -15,10 +15,10 @@ export default function CommentsField({ form }: CommentsFieldProps) {
       name="comments"
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-lg font-semibold">评估意见</FormLabel>
+          <FormLabel className="text-lg font-semibold">Evaluation Comments</FormLabel>
           <FormControl>
             <Textarea
-              placeholder="请输入对该学生申请情况的整体评估和建议..."
+              placeholder="Enter an overall evaluation and recommendations for this student's application..."
               className="min-h-32"
               {...field}
             />

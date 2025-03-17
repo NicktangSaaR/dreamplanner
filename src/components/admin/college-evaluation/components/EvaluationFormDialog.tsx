@@ -20,12 +20,12 @@ export default function EvaluationFormDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>创建美国本科录取评估表</DialogTitle>
+          <DialogTitle>Create US Undergraduate Admission Evaluation</DialogTitle>
         </DialogHeader>
         {selectedStudent && (
           <EvaluationForm 
             studentId={selectedStudent.id} 
-            studentName={selectedStudent.full_name || "未知学生"}
+            studentName={selectedStudent.full_name || "Unknown Student"}
             onSuccess={onSuccess}
           />
         )}
