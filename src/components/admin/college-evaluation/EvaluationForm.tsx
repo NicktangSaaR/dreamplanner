@@ -1,19 +1,12 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { useForm } from "react-hook-form";
-import { EvaluationCriteria, StudentEvaluation, UniversityType } from "./types";
-import { supabase } from "@/integrations/supabase/client";
-import { useProfile } from "@/hooks/useProfile";
-import { toast } from "sonner";
-import CriteriaField from "./components/CriteriaField";
+import { useEvaluationForm } from "./hooks/useEvaluationForm";
 import CommentsField from "./components/CommentsField";
-import { calculateTotalScore } from "./utils/evaluationUtils";
 import { ExportPDFButton } from "./components/ExportPDFButton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import UniversityTypeSelector from "./components/UniversityTypeSelector";
+import EvaluationCriteriaFields from "./components/EvaluationCriteriaFields";
 
 interface EvaluationFormProps {
   studentId: string;
@@ -22,100 +15,18 @@ interface EvaluationFormProps {
 }
 
 export default function EvaluationForm({ studentId, studentName, onSuccess }: EvaluationFormProps) {
-  const { profile } = useProfile();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittedEvaluation, setSubmittedEvaluation] = useState<StudentEvaluation | null>(null);
-  const [universityType, setUniversityType] = useState<UniversityType>("ivyLeague");
-  
-  const form = useForm<{
-    criteria: EvaluationCriteria;
-    comments: string;
-  }>({
-    defaultValues: {
-      criteria: {
-        academics: 3,
-        extracurriculars: 3,
-        athletics: 3,
-        personalQualities: 3,
-        recommendations: 3,
-        interview: 3
-      },
-      comments: ""
-    }
+  const { 
+    form, 
+    isSubmitting, 
+    universityType, 
+    setUniversityType,
+    submittedEvaluation,
+    handleSubmit 
+  } = useEvaluationForm({
+    studentId,
+    studentName,
+    onSuccess
   });
-
-  const handleSubmit = async (values: { criteria: EvaluationCriteria; comments: string }) => {
-    if (!profile?.id) {
-      toast.error("管理员身份验证失败");
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      // For UC System, set interview score to a neutral value as it's not used
-      if (universityType === 'ucSystem') {
-        values.criteria.interview = 3; // Set to neutral value since it's not displayed
-      }
-      
-      const totalScore = calculateTotalScore(values.criteria);
-      const evaluationDate = new Date().toISOString();
-      
-      const evaluationData = {
-        student_id: studentId,
-        student_name: studentName,
-        evaluation_date: evaluationDate,
-        academics_score: values.criteria.academics,
-        extracurriculars_score: values.criteria.extracurriculars,
-        athletics_score: values.criteria.athletics,
-        personal_qualities_score: values.criteria.personalQualities,
-        recommendations_score: values.criteria.recommendations,
-        interview_score: values.criteria.interview,
-        comments: values.comments,
-        total_score: totalScore,
-        admin_id: profile.id
-        // Removed university_type field as it doesn't exist in the database
-      };
-      
-      const { data, error } = await supabase
-        .from("student_evaluations")
-        .insert(evaluationData)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Add universityType to submitted evaluation for PDF export
-      const evaluationWithType = {
-        ...data as StudentEvaluation,
-        university_type: universityType
-      };
-      
-      setSubmittedEvaluation(evaluationWithType);
-      toast.success("评估表已成功创建");
-      
-      if (onSuccess) onSuccess();
-    } catch (error) {
-      console.error("Error creating evaluation:", error);
-      toast.error("创建评估表失败");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  // Helper function to get university type display name
-  const getUniversityTypeLabel = (type: UniversityType): string => {
-    switch (type) {
-      case 'ivyLeague':
-        return "常青藤大学";
-      case 'top30':
-        return "Top 20-30 大学";
-      case 'ucSystem':
-        return "UC系统大学";
-      default:
-        return "美国大学";
-    }
-  };
 
   return (
     <Card className="w-full">
@@ -133,77 +44,16 @@ export default function EvaluationForm({ studentId, studentName, onSuccess }: Ev
         </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-6">
-          <Label htmlFor="university-type">选择大学类型</Label>
-          <Select
-            value={universityType}
-            onValueChange={(value: UniversityType) => setUniversityType(value)}
-          >
-            <SelectTrigger id="university-type" className="w-full">
-              <SelectValue placeholder="选择大学类型" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ivyLeague">常青藤大学</SelectItem>
-              <SelectItem value="top30">Top 20-30 大学</SelectItem>
-              <SelectItem value="ucSystem">UC系统大学</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <UniversityTypeSelector 
+          value={universityType} 
+          onChange={setUniversityType} 
+        />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {/* Academics Section */}
-            <CriteriaField 
+            <EvaluationCriteriaFields 
               form={form} 
-              name="criteria.academics" 
-              label="学术表现（Academics）" 
-              criteriaKey="academics" 
-              universityType={universityType}
-            />
-
-            {/* Extracurriculars Section */}
-            <CriteriaField 
-              form={form} 
-              name="criteria.extracurriculars" 
-              label="课外活动（Extracurriculars）" 
-              criteriaKey="extracurriculars" 
-              universityType={universityType}
-            />
-
-            {/* Athletics Section - for UC System, this becomes Personal Talents */}
-            <CriteriaField 
-              form={form} 
-              name="criteria.athletics" 
-              label={universityType === 'ucSystem' ? "个人特长（Personal Talents）" : "运动（Athletics）"} 
-              criteriaKey="athletics" 
-              universityType={universityType}
-            />
-
-            {/* Personal Qualities Section */}
-            <CriteriaField 
-              form={form} 
-              name="criteria.personalQualities" 
-              label="个人特质（Personal Qualities）" 
-              criteriaKey="personalQualities" 
-              universityType={universityType}
-            />
-
-            {/* Recommendations Section */}
-            <CriteriaField 
-              form={form} 
-              name="criteria.recommendations" 
-              label={universityType === 'ucSystem' ? "个人陈述问题（PIQs）" : "推荐信（Recommendations）"} 
-              criteriaKey="recommendations" 
-              universityType={universityType}
-            />
-
-            {/* Interview Section - don't show for UC System */}
-            <CriteriaField 
-              form={form} 
-              name="criteria.interview" 
-              label="面试（Interview）" 
-              criteriaKey="interview" 
-              universityType={universityType}
+              universityType={universityType} 
             />
 
             {/* Comments Section */}
