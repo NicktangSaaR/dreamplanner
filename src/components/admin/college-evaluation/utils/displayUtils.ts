@@ -5,17 +5,17 @@ import { UniversityType } from "../types";
  * Converts university type to human-readable display text
  */
 export const getUniversityTypeDisplay = (type?: UniversityType): string => {
-  if (!type) return "General US University";
+  if (!type) return "美国大学";
   
   switch (type) {
     case 'ivyLeague':
-      return "Ivy League Universities";
+      return "常青藤大学";
     case 'top30':
-      return "Top 20-30 Universities";
+      return "Top 20-30 大学";
     case 'ucSystem':
-      return "UC System Universities";
+      return "UC系统大学";
     default:
-      return "General US University";
+      return "美国大学";
   }
 };
 
