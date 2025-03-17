@@ -119,13 +119,15 @@ export default function EvaluationCriteriaFields({
         />
 
         {/* Interview Section - don't show for UC System */}
-        <CriteriaField 
-          form={form} 
-          name="criteria.interview" 
-          label="Interview" 
-          criteriaKey="interview" 
-          universityType={universityType}
-        />
+        {universityType !== 'ucSystem' && (
+          <CriteriaField 
+            form={form} 
+            name="criteria.interview" 
+            label="Interview" 
+            criteriaKey="interview" 
+            universityType={universityType}
+          />
+        )}
       </>
     );
   }
