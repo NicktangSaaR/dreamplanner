@@ -11,7 +11,7 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
   // Use the evaluation's stored university type if available
   const evalType = evaluation.university_type || universityType;
   
-  let finalY = startY + 10;
+  let finalY = startY + 15; // Add extra spacing after the table
   
   // Add section header
   doc.setFontSize(14);
@@ -44,11 +44,11 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
     const label = getCriteriaLabel(column, evalType);
     const description = getCriteriaDescription(criteriaKey, score, evalType);
     
-    // Check if we need to add a new page
-    if (finalY > 260) {
+    // Check if we need to add a new page - leave extra space for header on new pages
+    if (finalY > 250) {
       doc.addPage();
       doc.setFont("Helvetica", "normal"); // Ensure font is set for new page
-      finalY = 20;
+      finalY = 45; // Start content lower on new pages to account for header area
     }
     
     doc.setFontSize(12);

@@ -6,13 +6,13 @@ import { StudentEvaluation } from "../../types";
  * Adds comments section to PDF document
  */
 export const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, startY: number) => {
-  let finalY = startY;
+  let finalY = startY + 10; // Add extra space before comments section
   
-  // Add new page if needed
+  // Add new page if needed - ensure enough space for header
   if (finalY > 240) {
     doc.addPage();
     doc.setFont("Helvetica", "normal"); // Ensure font is set for new page
-    finalY = 20;
+    finalY = 45; // Start content lower on new pages to account for header area
   }
   
   doc.setFontSize(14);
@@ -24,7 +24,7 @@ export const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, st
   const maxCommentWidth = 180;
   const comments = evaluation.comments || 'None';
   const splitComments = doc.splitTextToSize(comments, maxCommentWidth);
-  finalY += 8; // Better spacing
+  finalY += 10; // Better spacing between header and content
   doc.setFontSize(10);
   doc.text(splitComments, 15, finalY);
 };

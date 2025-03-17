@@ -17,11 +17,11 @@ export const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, uni
   doc.setFontSize(18);
   doc.setFont("Helvetica", "bold");
   const universityTypeDisplay = getUniversityTypeDisplay(evalType);
-  doc.text(`US Undergraduate Admission Evaluation - ${universityTypeDisplay}`, 105, 40, { align: 'center' });
+  doc.text(`US Undergraduate Admission Evaluation - ${universityTypeDisplay}`, 105, 45, { align: 'center' });
   
   // Add student information with increased top margin
   doc.setFontSize(12);
   doc.setFont("Helvetica", "normal");
-  doc.text(`Student Name: ${evaluation.student_name}`, 15, 55);
-  doc.text(`Evaluation Date: ${new Date(evaluation.evaluation_date).toLocaleDateString('en-US')}`, 15, 65);
+  doc.text(`Student Name: ${evaluation.student_name}`, 15, 60);
+  doc.text(`Evaluation Date: ${new Date(evaluation.evaluation_date).toLocaleDateString('en-US')}`, 15, 70);
 };
