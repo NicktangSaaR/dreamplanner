@@ -3,7 +3,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { StudentEvaluation, UniversityType } from "../../types";
 import { getCriteriaLabel } from '../displayUtils';
-import { preparePdfTableRows } from '../criteriaUtils';
+import { preparePdfTableRows } from './criteriaUtils';
 
 /**
  * Adds scores table to PDF document
@@ -53,11 +53,11 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
     headStyles: { 
       fillColor: [66, 139, 202], 
       textColor: [255, 255, 255],
-      font: 'Helvetica',
+      font: 'helvetica',
       fontStyle: 'bold' 
     },
     styles: {
-      font: 'Helvetica',
+      font: 'helvetica',
       fontStyle: 'normal'
     },
     alternateRowStyles: { fillColor: [240, 240, 240] },

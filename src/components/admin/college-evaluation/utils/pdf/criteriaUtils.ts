@@ -35,8 +35,9 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
   // Start position for criteria descriptions
   let currentY = startY + 10; // Add some spacing after the table
   
-  // Ensure font is set correctly for handling Chinese characters
-  doc.setFont("Helvetica", "normal");
+  // Set the font size and style
+  doc.setFont("helvetica");
+  doc.setFontSize(10);
   
   // Add each criteria description
   criteriaToInclude.forEach(criteriaColumn => {
@@ -67,28 +68,28 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
     // Check if we need a new page
     if (currentY > 240) {
       doc.addPage();
-      doc.setFont("Helvetica", "normal"); // Reset font for new page
+      doc.setFont("helvetica", "bold"); // Reset font for new page
       currentY = 45; // Start content lower on new pages to account for header area
     }
     
     // Add criteria name
     doc.setFontSize(11);
-    doc.setFont("Helvetica", "bold");
-    doc.text(`${criteriaKey} - Score ${score}:`, 15, currentY);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${getCriteriaLabel(criteriaColumn, universityType)} - Score ${score}:`, 15, currentY);
     
-    // Add description with proper line breaks (for Chinese text)
+    // Add description with proper line breaks
     doc.setFontSize(9);
-    doc.setFont("Helvetica", "normal");
+    doc.setFont("helvetica", "normal");
     
-    // Use proper text splitting to handle Chinese characters
+    // Use proper text splitting to handle Chinese and English characters
     const maxWidth = 180;
     const splitText = doc.splitTextToSize(description, maxWidth);
     currentY += 5;
     doc.text(splitText, 15, currentY);
     
     // Calculate height of text based on number of lines
-    const lineHeight = 4; // Approximate line height in mm
-    currentY += (splitText.length * lineHeight) + 5; // Add extra spacing between criteria
+    const lineHeight = 4.5; // Slightly increased line height for better Chinese text rendering
+    currentY += (splitText.length * lineHeight) + 8; // Add extra spacing between criteria
   });
   
   return currentY;
