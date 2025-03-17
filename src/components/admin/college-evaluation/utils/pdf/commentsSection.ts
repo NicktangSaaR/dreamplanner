@@ -15,16 +15,24 @@ export const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, st
     finalY = 45; // Start content lower on new pages to account for header area
   }
   
+  // Set font for the section header
   doc.setFontSize(14);
   doc.setFont("Helvetica", "bold");
   doc.text('Comments:', 15, finalY);
+  
+  // Set font for comments content
   doc.setFont("Helvetica", "normal");
   
-  // Add comments with improved word wrapping
+  // Add comments with improved word wrapping for multilingual support
   const maxCommentWidth = 180;
   const comments = evaluation.comments || 'None';
+  
+  // Use splitTextToSize for proper text wrapping
   const splitComments = doc.splitTextToSize(comments, maxCommentWidth);
   finalY += 10; // Better spacing between header and content
+  
   doc.setFontSize(10);
   doc.text(splitComments, 15, finalY);
+  
+  return finalY + (splitComments.length * 5); // Return the final Y position
 };

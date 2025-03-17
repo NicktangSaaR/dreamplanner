@@ -10,7 +10,7 @@ export const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, uni
   // Use the evaluation's stored university type if available
   const evalType = evaluation.university_type || universityType;
   
-  // Set standard font for entire document
+  // Ensure font is set properly for header
   doc.setFont("Helvetica", "normal");
   
   // Add title (center aligned) with increased top margin to make room for the header
