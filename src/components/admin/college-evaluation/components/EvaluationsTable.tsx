@@ -35,22 +35,17 @@ export default function EvaluationsTable({ evaluations, universityType, isLoadin
           <Table>
             <TableHeader className="bg-gray-50 sticky top-0 z-10">
               <TableRow>
-                <TableCell className="font-semibold">Student</TableCell>
-                <TableCell className="font-semibold">Date</TableCell>
-                <TableCell className="font-semibold">Type</TableCell>
-                <TableCell className="font-semibold">Score</TableCell>
-                {/* New admission factors */}
-                <TableCell className="font-semibold">Academic Excellence</TableCell>
-                <TableCell className="font-semibold">Impact & Leadership</TableCell>
-                <TableCell className="font-semibold">Unique Narrative</TableCell>
-                {/* Traditional criteria */}
-                <TableCell className="font-semibold">Academics</TableCell>
-                <TableCell className="font-semibold">Extracurriculars</TableCell>
-                <TableCell className="font-semibold">Athletics</TableCell>
-                <TableCell className="font-semibold">Personal Qualities</TableCell>
-                <TableCell className="font-semibold">Recommendations</TableCell>
-                {!isUcSystem && <TableCell className="font-semibold">Interview</TableCell>}
-                <TableCell className="font-semibold">Actions</TableCell>
+                <TableHead className="font-semibold">Student</TableHead>
+                <TableHead className="font-semibold">Date</TableHead>
+                <TableHead className="font-semibold">Type</TableHead>
+                <TableHead className="font-semibold">Score</TableHead>
+                <TableHead className="font-semibold">Academics</TableHead>
+                <TableHead className="font-semibold">Extracurriculars</TableHead>
+                <TableHead className="font-semibold">Athletics</TableHead>
+                <TableHead className="font-semibold">Personal Qualities</TableHead>
+                <TableHead className="font-semibold">Recommendations</TableHead>
+                {!isUcSystem && <TableHead className="font-semibold">Interview</TableHead>}
+                <TableHead className="font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

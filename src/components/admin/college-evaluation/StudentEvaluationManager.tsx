@@ -43,6 +43,12 @@ export default function StudentEvaluationManager() {
   // Get unique university types from evaluations
   const universityTypes = getUniqueUniversityTypes(evaluations);
 
+  const handleTabChange = (tab: UniversityType | 'all') => {
+    if (tab !== 'all') {
+      setActiveUniversityType(tab);
+    }
+  };
+
   if (!isAdmin) {
     return <div className="p-4 text-center">您没有访问该页面的权限</div>;
   }
@@ -62,7 +68,7 @@ export default function StudentEvaluationManager() {
       <div className="mb-4">
         <UniversityTypeTabs
           activeTab={activeUniversityType}
-          setActiveTab={setActiveUniversityType}
+          setActiveTab={handleTabChange}
           universityTypes={[...universityTypes]}
         />
       </div>
