@@ -1,8 +1,6 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useState } from "react";
 import { StudentEvaluation, UniversityType } from "../types";
-import { getCriteriaLabel } from "../utils/displayUtils";
 import { EvaluationRow } from "./EvaluationRow";
 
 interface EvaluationTableProps {
@@ -11,24 +9,28 @@ interface EvaluationTableProps {
 }
 
 export const EvaluationTable = ({ evaluations, universityType }: EvaluationTableProps) => {
-  const hasUcSystemEval = evaluations.some(e => (e.university_type || universityType) === 'ucSystem');
+  const isUcSystem = universityType === 'ucSystem';
+  
+  if (evaluations.length === 0) {
+    return <p className="text-center py-4 text-gray-500">No evaluations found for this type.</p>;
+  }
 
   return (
-    <div className="border rounded-md">
+    <div className="border rounded-md overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Student Name</TableHead>
-            <TableHead>Evaluation Date</TableHead>
-            <TableHead>University Type</TableHead>
-            <TableHead>Total Score (Total/Average)</TableHead>
-            <TableHead>Academics</TableHead>
-            <TableHead>Extracurriculars</TableHead>
-            <TableHead>Athletics/Talents</TableHead>
-            <TableHead>Personal Qualities</TableHead>
-            <TableHead>Recommendations/PIQs</TableHead>
-            {!hasUcSystemEval && <TableHead>Interview</TableHead>}
-            <TableHead>Actions</TableHead>
+            <TableHead className="font-semibold">Student Name</TableHead>
+            <TableHead className="font-semibold">Evaluation Date</TableHead>
+            <TableHead className="font-semibold">University Type</TableHead>
+            <TableHead className="font-semibold">Total Score (Total/Average)</TableHead>
+            <TableHead className="font-semibold">Academics</TableHead>
+            <TableHead className="font-semibold">Extracurriculars</TableHead>
+            <TableHead className="font-semibold">Athletics/Talents</TableHead>
+            <TableHead className="font-semibold">Personal Qualities</TableHead>
+            <TableHead className="font-semibold">Recommendations/PIQs</TableHead>
+            {!isUcSystem && <TableHead className="font-semibold">Interview</TableHead>}
+            <TableHead className="font-semibold">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

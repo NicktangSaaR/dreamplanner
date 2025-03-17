@@ -16,21 +16,14 @@ export const UniversityTypeTabs = ({
 }: UniversityTypeTabsProps) => {
   return (
     <div className="flex flex-wrap gap-2 mb-4">
-      <Button
-        variant={activeTab === 'all' ? 'default' : 'outline'}
-        onClick={() => setActiveTab('all')}
-        size="sm"
-      >
-        All Evaluations
-      </Button>
       {universityTypes.map(type => (
         <Button
           key={type}
           variant={activeTab === type ? 'default' : 'outline'}
-          onClick={() => setActiveTab(type as UniversityType)}
+          onClick={() => setActiveTab(type)}
           size="sm"
         >
-          {getUniversityTypeDisplay(type as UniversityType)}
+          {type === 'all' ? 'All Evaluations' : getUniversityTypeDisplay(type as UniversityType)}
         </Button>
       ))}
     </div>
