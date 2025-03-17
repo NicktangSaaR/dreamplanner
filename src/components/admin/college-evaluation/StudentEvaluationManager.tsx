@@ -7,6 +7,7 @@ import EvaluationFormDialog from "./components/EvaluationFormDialog";
 import { useStudentsQuery, Student } from "./hooks/useStudentsQuery";
 import { useEvaluationsQuery } from "./hooks/useEvaluationsQuery";
 import { UniversityType } from "./types";
+import UniversityTypeTabs from "./components/UniversityTypeTabs";
 
 export default function StudentEvaluationManager() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,7 +44,7 @@ export default function StudentEvaluationManager() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="w-full max-w-full space-y-6">
       {/* Student Search Section */}
       <StudentSearchSection 
         students={students}
@@ -53,12 +54,22 @@ export default function StudentEvaluationManager() {
         onSelectStudent={handleSelectStudent}
       />
 
+      {/* University Type Selector */}
+      <div className="mb-4">
+        <UniversityTypeTabs
+          activeType={activeUniversityType}
+          onChange={setActiveUniversityType}
+        />
+      </div>
+
       {/* Evaluations Table */}
-      <EvaluationsTable 
-        evaluations={evaluations}
-        isLoading={isLoadingEvals}
-        universityType={activeUniversityType}
-      />
+      <div className="w-full overflow-x-auto">
+        <EvaluationsTable 
+          evaluations={evaluations}
+          isLoading={isLoadingEvals}
+          universityType={activeUniversityType}
+        />
+      </div>
 
       {/* Evaluation Form Dialog */}
       <EvaluationFormDialog

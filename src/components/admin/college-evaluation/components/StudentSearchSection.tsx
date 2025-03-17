@@ -30,20 +30,24 @@ export default function StudentSearchSection({
 }: StudentSearchSectionProps) {
   const filteredStudents = students?.filter(student => student.full_name?.toLowerCase().includes(searchQuery.toLowerCase())) || [];
 
-  return <Card>
-      <CardHeader>
+  return (
+    <Card className="w-full">
+      <CardHeader className="pb-3">
         <CardTitle>Student Evaluation Management</CardTitle>
         <CardDescription>Search for students and create US college admission evaluations</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex gap-4 mb-6">
+        <div className="flex gap-4 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input type="search" placeholder="Search student name..." className="pl-8" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
           </div>
         </div>
 
-        {isLoading ? <div className="text-center py-4">Loading student data...</div> : <div className="border rounded-md">
+        {isLoading ? (
+          <div className="text-center py-4">Loading student data...</div>
+        ) : (
+          <div className="border rounded-md overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -54,7 +58,9 @@ export default function StudentSearchSection({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredStudents.length > 0 ? filteredStudents.map(student => <TableRow key={student.id}>
+                {filteredStudents.length > 0 ? (
+                  filteredStudents.map(student => (
+                    <TableRow key={student.id}>
                       <TableCell className="font-medium">{student.full_name || "Unknown"}</TableCell>
                       <TableCell>{student.grade || "Unknown"}</TableCell>
                       <TableCell>{student.school || "Unknown"}</TableCell>
@@ -64,14 +70,20 @@ export default function StudentSearchSection({
                           Create Evaluation
                         </Button>
                       </TableCell>
-                    </TableRow>) : <TableRow>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
                     <TableCell colSpan={4} className="text-center py-4">
                       {searchQuery ? "No matching students found" : "No student data available"}
                     </TableCell>
-                  </TableRow>}
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
-          </div>}
+          </div>
+        )}
       </CardContent>
-    </Card>;
+    </Card>
+  );
 }
