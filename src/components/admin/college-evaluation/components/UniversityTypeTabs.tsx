@@ -21,7 +21,7 @@ export const UniversityTypeTabs = ({
         onClick={() => setActiveTab('all')}
         size="sm"
       >
-        所有评估
+        All Evaluations
       </Button>
       {universityTypes.map(type => (
         <Button
