@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { UniversityType } from "../types";
-import { getUniversityTypeDisplay } from "../utils/pdfExportUtils";
+import { getUniversityTypeDisplay } from "../utils/displayUtils";
 
 interface UniversityTypeTabsProps {
   activeTab: UniversityType | 'all';
@@ -15,7 +15,7 @@ export const UniversityTypeTabs = ({
   universityTypes 
 }: UniversityTypeTabsProps) => {
   return (
-    <div className="flex space-x-2 mb-4">
+    <div className="flex flex-wrap gap-2 mb-4">
       <Button
         variant={activeTab === 'all' ? 'default' : 'outline'}
         onClick={() => setActiveTab('all')}
