@@ -14,7 +14,7 @@ export const EvaluationSection = ({ type, evaluations }: EvaluationSectionProps)
       <h3 className="text-lg font-medium">{getUniversityTypeDisplay(type as UniversityType)}</h3>
       <EvaluationTable 
         evaluations={evaluations} 
-        universityType={type} 
+        universityType={type as UniversityType} 
       />
     </div>
   );

@@ -71,6 +71,8 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         university_type: universityType
       };
       
+      console.log("Saving evaluation with university type:", universityType);
+      
       const { data, error } = await supabase
         .from("student_evaluations")
         .insert(evaluationData)
