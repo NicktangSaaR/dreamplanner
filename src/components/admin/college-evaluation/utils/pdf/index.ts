@@ -1,6 +1,6 @@
 
-import { StudentEvaluation, UniversityType } from "../types";
-import { generateEvaluationPdf } from "./pdf/pdfGenerator";
+import { generateEvaluationPdf } from './pdfGenerator';
+import { StudentEvaluation, UniversityType } from "../../types";
 
 /**
  * Exports evaluation to PDF and triggers download
@@ -15,6 +15,6 @@ export const exportEvaluationToPDF = (evaluation: StudentEvaluation) => {
   doc.save(`${evaluation.student_name}_US_University_Evaluation.pdf`);
 };
 
-// Re-export utility functions for easier access
-export * from './displayUtils';
-export * from './criteriaUtils';
+// Re-export components
+export * from './pdfGenerator';
+export * from './pdfSections';

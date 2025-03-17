@@ -1,14 +1,14 @@
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { StudentEvaluation, UniversityType } from "../types";
-import { getUniversityTypeDisplay, getCriteriaLabel, getCriteriaKeyFromColumn } from './displayUtils';
-import { getCriteriaDescription, preparePdfTableRows } from './criteriaUtils';
+import { StudentEvaluation, UniversityType } from "../../types";
+import { getUniversityTypeDisplay, getCriteriaLabel } from '../displayUtils';
+import { getCriteriaDescription, preparePdfTableRows } from '../criteriaUtils';
 
 /**
  * Adds student information and header to PDF document
  */
-const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, universityType: UniversityType) => {
+export const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, universityType: UniversityType) => {
   // Set Times New Roman font for entire document
   doc.setFont("times", "normal");
   
@@ -26,7 +26,7 @@ const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, university
 /**
  * Adds scores table to PDF document
  */
-const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, universityType: UniversityType) => {
+export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, universityType: UniversityType) => {
   // Get table rows
   const tableRows = preparePdfTableRows(evaluation, universityType);
   
@@ -84,7 +84,7 @@ const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, universityTyp
 /**
  * Adds detailed criteria descriptions to PDF document
  */
-const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluation, universityType: UniversityType, startY: number) => {
+export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluation, universityType: UniversityType, startY: number) => {
   let finalY = startY + 10;
   
   // Add section header
@@ -148,7 +148,7 @@ const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluation, univ
 /**
  * Adds comments section to PDF document
  */
-const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, startY: number) => {
+export const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, startY: number) => {
   let finalY = startY;
   
   // Add new page if needed
@@ -173,29 +173,23 @@ const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, startY: n
 };
 
 /**
- * Generates and saves PDF for evaluation
+ * Helper to get criteria key from column name
  */
-export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityType: UniversityType): jsPDF => {
-  // Create PDF document with Times New Roman font
-  const doc = new jsPDF();
-  
-  // Add special note about athletics scoring for Ivy League and Top30
-  const athleticsScore = evaluation.athletics_score;
-  const isAthleticsExcluded = (universityType === 'ivyLeague' || universityType === 'top30') && athleticsScore >= 4;
-  
-  // Add document sections
-  addDocumentHeader(doc, evaluation, universityType);
-  
-  // Add special note about athletics scoring if applicable
-  if (isAthleticsExcluded) {
-    doc.setFontSize(10);
-    doc.setFont("times", "italic");
-    doc.text('* Note: For Ivy League and Top20-30 universities, athletics scores of 4 or higher are not included in the total score.', 15, 45);
+export const getCriteriaKeyFromColumn = (columnName: string): string => {
+  switch (columnName) {
+    case 'academics_score':
+      return 'academics';
+    case 'extracurriculars_score':
+      return 'extracurriculars';
+    case 'athletics_score':
+      return 'athletics';
+    case 'personal_qualities_score':
+      return 'personalQualities';
+    case 'recommendations_score':
+      return 'recommendations';
+    case 'interview_score':
+      return 'interview';
+    default:
+      return '';
   }
-  
-  const afterTableY = addScoresTable(doc, evaluation, universityType);
-  const afterDescriptionsY = addCriteriaDescriptions(doc, evaluation, universityType, afterTableY);
-  addCommentsSection(doc, evaluation, afterDescriptionsY);
-  
-  return doc;
 };
