@@ -3,103 +3,103 @@ import { CriteriaDescriptions, UniversityType } from "./types";
 
 export const IVY_LEAGUE_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
   academics: {
-    1: "学术顶尖，极具竞争力。GPA 4.0+（未加权），最具挑战性的课程（最多AP/IB课程），SAT 1580+/ACT 35-36，可能有学术论文、国际科研奖项或奥赛金牌。",
-    2: "学术非常强。GPA 3.9-4.0，AP/IB课程9+，SAT 1550+/ACT 34+，在全国级学术竞赛中有优秀成绩或有科研经历。",
-    3: "学术优秀，符合常青藤录取标准。GPA 3.8-3.9，AP/IB课程7+，SAT 1500+/ACT 33+，可能在州级学术竞赛中获奖或有较强的学术活动。",
-    4: "学术具备竞争力，但未达顶尖水平。GPA 3.7-3.8，修过一定数量的高级课程，SAT 1450+/ACT 31+，但没有学术竞赛或研究经历。",
-    5: "学术低于常青藤平均录取者水平。GPA 3.5-3.7，课程挑战性一般，SAT 1300-1450，学术表现一般，缺乏学术突破。",
-    6: "学术远低于录取标准。GPA <3.5，课程挑战性低，SAT <1300，无学术亮点。"
+    1: "Outstanding academic profile. GPA 4.0+ (unweighted), most challenging courses (maximum AP/IB courses), SAT 1580+/ACT 35-36, potential academic papers, international research awards, or Olympiad gold medals.",
+    2: "Very strong academic profile. GPA 3.9-4.0, 9+ AP/IB courses, SAT 1550+/ACT 34+, excellent performance in national academic competitions or research experience.",
+    3: "Excellent academic profile, meets Ivy League standards. GPA 3.8-3.9, 7+ AP/IB courses, SAT 1500+/ACT 33+, possible state-level academic awards or strong academic activities.",
+    4: "Competitive academics, but not top tier. GPA 3.7-3.8, some advanced courses, SAT 1450+/ACT 31+, but lacks academic competitions or research experience.",
+    5: "Below average Ivy League applicant. GPA 3.5-3.7, ordinary course rigor, SAT 1300-1450, average academic performance, lacking academic distinction.",
+    6: "Well below admission standards. GPA <3.5, low course rigor, SAT <1300, no academic highlights."
   },
   extracurriculars: {
-    1: "全国或国际级影响力。创办或领导全国性组织，在国际级比赛（ISEF、奥赛等）获奖，或在社交/公益/创业方面有广泛社会影响。",
-    2: "州级或全国级影响力。担任重要领导职位（如全国性组织创始人、学生会主席），在全国竞赛中获奖（DECA、FBLA、AMC 10/12 金奖）。",
-    3: "学校或地区级影响力。担任学生组织主席或领导（如校报主编、体育队长），或在州级比赛中获奖（州级科学展、州级辩论赛冠军）。",
-    4: "持续参与但影响力有限。在学校组织中积极参与但未担任领导角色，或在地方性竞赛有一定成绩。",
-    5: "参与度较低。加入了一些俱乐部或志愿活动但无长期投入或领导力。",
-    6: "课外活动无亮点。几乎无活动参与，或仅在高年级加入一些俱乐部但未投入。"
+    1: "National or international impact. Founded or led national organizations, won international competitions (ISEF, Olympiads), or made significant social impact through social/charitable/entrepreneurial work.",
+    2: "State or national level impact. Held important leadership positions (e.g., founder of national organization, student body president), won national competitions (DECA, FBLA, AMC 10/12 gold).",
+    3: "School or regional impact. Served as chair or leader of student organizations (e.g., newspaper editor-in-chief, sports team captain), or won state competitions (state science fair, state debate champion).",
+    4: "Consistent participation but limited impact. Active in school organizations but without leadership roles, or has some achievements in local competitions.",
+    5: "Low participation. Joined some clubs or volunteer activities but without long-term commitment or leadership.",
+    6: "No extracurricular highlights. Almost no activity participation, or only joined some clubs in later grades without commitment."
   },
   athletics: {
-    1: "NCAA级别运动员，有体育教练推荐。可能是全国或州级冠军，被常青藤体育队认可。",
-    2: "优秀运动员，在州级或全国比赛中表现突出。可能是全州最佳球员，或在全国性体育赛事中获得奖项。",
-    3: "高中校队主力选手，在地方比赛中有成绩。",
-    4: "普通校队成员，未获显著奖项。",
-    5: "参加过体育活动，但无正式校队经验。",
-    6: "无运动参与。"
+    1: "NCAA level athlete with coach recommendation. Possibly a national or state champion, recognized by Ivy League athletic teams.",
+    2: "Excellent athlete with outstanding performance in state or national competitions. Possibly a state MVP or award recipient in national sporting events.",
+    3: "Key player on high school team with achievements in local competitions.",
+    4: "Regular team member without significant awards.",
+    5: "Participated in sports activities but without formal team experience.",
+    6: "No athletic participation."
   },
   personalQualities: {
-    1: "极具人格魅力、领导力、影响力。可能是社区变革者、创新者，在推荐信和个人文书中展现出色的使命感和社会责任感。",
-    2: "展现卓越的领导力和人格魅力。推荐信和个人文书高度评价其影响力和团队合作精神。",
-    3: "良好的人格品质和领导力。展现出较强的责任心和团队合作能力。",
-    4: "普通个性，无明显领导力或影响力。推荐信评价较好，但缺乏突出特点。",
-    5: "个性较弱，缺乏领导力或影响力。推荐信普通，没有展现出个人特色。",
-    6: "个性存在问题。推荐信可能有负面评价，表现出不成熟或缺乏团队精神。"
+    1: "Exceptional charisma, leadership, and influence. Possibly a community change-maker, innovator, showing outstanding sense of mission and social responsibility in recommendations and personal essays.",
+    2: "Demonstrates excellent leadership and charisma. Recommendation letters and personal essays highly praise their influence and team spirit.",
+    3: "Good personal qualities and leadership. Shows strong sense of responsibility and teamwork abilities.",
+    4: "Average personality, no obvious leadership or influence. Good recommendation letters but lacks distinctive characteristics.",
+    5: "Weak personality, lacking leadership or influence. Ordinary recommendation letters without personal uniqueness.",
+    6: "Personality issues. Recommendation letters may contain negative evaluations, showing immaturity or lack of team spirit."
   },
   recommendations: {
-    1: "教师认为申请者是他们职业生涯中最杰出的学生之一。推荐信极力称赞，给出具体例证。",
-    2: "推荐信非常强烈。展现申请者的领导力、人格魅力，给予高度评价。",
-    3: "推荐信良好。对申请者给予正面评价，但缺乏独特性。",
-    4: "推荐信普通。评价虽正面，但没有强调申请者的卓越之处。",
-    5: "推荐信较弱。仅为一般评价，未能体现申请者亮点。",
-    6: "推荐信有负面信息或非常普通。"
+    1: "Teachers consider the applicant one of the most outstanding students in their career. Strongly supportive recommendations with specific examples.",
+    2: "Very strong recommendation letters. Showcase applicant's leadership, charisma, and provide high evaluations.",
+    3: "Good recommendation letters. Positive evaluations but lack uniqueness.",
+    4: "Average recommendation letters. Positive but don't emphasize the applicant's excellence.",
+    5: "Weak recommendation letters. Only general evaluations without highlighting applicant strengths.",
+    6: "Recommendation letters contain negative information or are very ordinary."
   },
   interview: {
-    1: "面试表现极其出色。展现极强的沟通能力、亲和力、思辨能力，给人留下深刻印象。",
-    2: "面试表现优秀。展现领导力、热情和对学校的极大兴趣。",
-    3: "面试表现良好。交流流畅，但未特别突出。",
-    4: "面试表现一般。未展现特别的个人魅力或优势。",
-    5: "面试表现较差。未能有效表达自己，或对学校缺乏了解。",
-    6: "面试表现糟糕。可能出现不尊重面试官、缺乏热情或沟通不畅等问题。"
+    1: "Exceptional interview performance. Demonstrates strong communication skills, approachability, critical thinking, and leaves a profound impression.",
+    2: "Excellent interview performance. Shows leadership, enthusiasm, and strong interest in the school.",
+    3: "Good interview performance. Communicates fluently but doesn't particularly stand out.",
+    4: "Average interview performance. Fails to demonstrate special personal charm or strengths.",
+    5: "Poor interview performance. Unable to express themselves effectively or lacks knowledge about the school.",
+    6: "Terrible interview performance. Possibly shows disrespect to the interviewer, lacks enthusiasm, or has communication issues."
   }
 };
 
 export const TOP30_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
   academics: {
-    1: "学术非常强。GPA 3.9+，AP/IB课程7+，SAT 1500+/ACT 33+，可能在全国级学术竞赛中有成绩。",
-    2: "学术优秀。GPA 3.8-3.9，AP/IB课程5-7，SAT 1450+/ACT 31+，有特色的学术项目经历。",
-    3: "学术良好，GPA 3.7-3.8，AP/IB课程4+，SAT 1400+/ACT 30+，学术表现稳定。",
-    4: "学术中上。GPA 3.6-3.7，有一些AP/IB课程，SAT 1350+/ACT 28+，缺乏明显的学术特色。",
-    5: "学术一般。GPA 3.3-3.6，少量高级课程，SAT 1250-1350，学业表现平平。",
-    6: "学术低于录取标准。GPA <3.3，基础课程，SAT <1250，学业成绩不足。"
+    1: "Very strong academics. GPA 3.9+, 7+ AP/IB courses, SAT 1500+/ACT 33+, possibly with achievements in national academic competitions.",
+    2: "Excellent academics. GPA 3.8-3.9, 5-7 AP/IB courses, SAT 1450+/ACT 31+, distinctive academic project experience.",
+    3: "Good academics. GPA 3.7-3.8, 4+ AP/IB courses, SAT 1400+/ACT 30+, stable academic performance.",
+    4: "Above average academics. GPA 3.6-3.7, some AP/IB courses, SAT 1350+/ACT 28+, lacking obvious academic distinctions.",
+    5: "Average academics. GPA 3.3-3.6, few advanced courses, SAT 1250-1350, mediocre academic performance.",
+    6: "Below admission standards. GPA <3.3, basic courses, SAT <1250, insufficient academic achievement."
   },
   extracurriculars: {
-    1: "州级或全国级影响力。担任重要领导职位，在区域或全国竞赛中获奖。",
-    2: "学校或地区级领导力，在地区活动中表现突出，有持续性项目参与。",
-    3: "校内活动积极参与者，可能有地区级竞赛经历，但影响力有限。",
-    4: "参与多项活动，但未担任领导角色或取得明显成就。",
-    5: "课外活动很少，无长期投入或显著表现。",
-    6: "几乎没有课外活动参与经历。"
+    1: "State or national level impact. Important leadership positions, awards in regional or national competitions.",
+    2: "School or regional leadership, outstanding performance in regional activities, continuous project participation.",
+    3: "Active participant in school activities, possibly with regional competition experience, but limited impact.",
+    4: "Participates in multiple activities but without leadership roles or significant achievements.",
+    5: "Very few extracurricular activities, no long-term commitment or significant performance.",
+    6: "Almost no extracurricular activity experience."
   },
   athletics: {
-    1: "校队优秀运动员，可能在区域比赛中获奖。",
-    2: "学校代表队成员，积极参与比赛。",
-    3: "校队普通成员，有运动经历。",
-    4: "参与校内非正式运动活动。",
-    5: "很少参与体育活动。",
-    6: "无体育经历。"
+    1: "Excellent school team athlete, possibly with awards in regional competitions.",
+    2: "School representative team member, actively participates in competitions.",
+    3: "Regular team member with athletic experience.",
+    4: "Participates in informal school sports activities.",
+    5: "Rarely participates in sports activities.",
+    6: "No athletic experience."
   },
   personalQualities: {
-    1: "展现出色的领导力和创新精神，推荐信中有具体事例证明。",
-    2: "个性鲜明，有一定领导能力，在团队中表现积极。",
-    3: "良好的团队合作能力，积极参与社区活动。",
-    4: "性格稳定，但无突出特点。",
-    5: "个性较内向，参与度不高。",
-    6: "人际交往或团队合作存在困难。"
+    1: "Demonstrates outstanding leadership and innovation, with specific examples in recommendation letters.",
+    2: "Distinctive personality, some leadership ability, active in teams.",
+    3: "Good teamwork ability, actively participates in community activities.",
+    4: "Stable personality but no outstanding characteristics.",
+    5: "More introverted personality, low participation.",
+    6: "Difficulties in interpersonal communication or teamwork."
   },
   recommendations: {
-    1: "推荐信很强，提及具体优点和成就。",
-    2: "推荐信正面，有力支持申请。",
-    3: "推荐信良好，但可能缺乏具体例证。",
-    4: "推荐信中规中矩，无特别亮点。",
-    5: "推荐信较弱或过于笼统。",
-    6: "推荐信内容平平或含有负面评价。"
+    1: "Strong recommendation letters mentioning specific strengths and achievements.",
+    2: "Positive recommendation letters strongly supporting the application.",
+    3: "Good recommendation letters but possibly lacking specific examples.",
+    4: "Standard recommendation letters without special highlights.",
+    5: "Weak or overly general recommendation letters.",
+    6: "Mediocre recommendation letters or containing negative evaluations."
   },
   interview: {
-    1: "面试表现优秀，展现清晰的思路和良好的沟通能力。",
-    2: "面试表现良好，能够自信表达。",
-    3: "面试中等水平，回答基本问题无障碍。",
-    4: "面试表现一般，缺乏深度思考。",
-    5: "面试准备不足，回答不完整。",
-    6: "面试表现差，沟通不畅或未能充分展示自己。"
+    1: "Excellent interview performance showing clear thinking and good communication skills.",
+    2: "Good interview performance, able to express confidently.",
+    3: "Average interview level, no obstacles in answering basic questions.",
+    4: "Average interview performance, lacking depth of thought.",
+    5: "Inadequate interview preparation, incomplete answers.",
+    6: "Poor interview performance, communication issues or inability to fully present oneself."
   }
 };
 
