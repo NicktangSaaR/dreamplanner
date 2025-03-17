@@ -28,7 +28,7 @@ export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityT
   if (isAthleticsExcluded) {
     doc.setFontSize(10);
     doc.setFont("Helvetica", "italic");
-    doc.text('* Note: For Ivy League and Top20-30 universities, athletics scores of 4 or higher are not included in the total score.', 15, 45);
+    doc.text('* Note: For Ivy League and Top20-30 universities, athletics scores of 4 or higher are not included in the total score.', 15, 65);
   }
   
   const afterTableY = addScoresTable(doc, evaluation, universityType);

@@ -18,12 +18,14 @@ export const PDFPreviewContent = ({ pdfDataUrl, isLoading }: PDFPreviewContentPr
   
   if (pdfDataUrl) {
     return (
-      <iframe 
-        src={pdfDataUrl} 
-        className="w-full h-[65vh] border-0"
-        title="PDF预览" 
-        sandbox="allow-scripts allow-same-origin"
-      />
+      <object 
+        data={pdfDataUrl} 
+        type="application/pdf"
+        className="w-full h-[65vh]"
+        title="PDF预览"
+      >
+        <p>您的浏览器无法显示PDF，<a href={pdfDataUrl} target="_blank" rel="noopener noreferrer">点击此处下载</a></p>
+      </object>
     );
   }
   
