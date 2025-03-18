@@ -58,7 +58,7 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
       const totalScore = calculateTotalScore(values.criteria, universityType);
       const evaluationDate = new Date().toISOString();
       
-      // Remove the new fields that aren't in the database yet
+      // Include core admission factors scores in the evaluation data
       const evaluationData = {
         student_id: studentId,
         student_name: studentName,
@@ -69,6 +69,10 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         personal_qualities_score: values.criteria.personalQualities,
         recommendations_score: values.criteria.recommendations,
         interview_score: values.criteria.interview,
+        // Save the core admission factors scores
+        academic_excellence_score: values.criteria.academicExcellence,
+        impact_leadership_score: values.criteria.impactLeadership,
+        unique_narrative_score: values.criteria.uniqueNarrative,
         comments: values.comments,
         total_score: totalScore,
         admin_id: profile.id,
@@ -76,6 +80,11 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
       };
       
       console.log("Saving evaluation with university type:", universityType);
+      console.log("Saving core factors scores:", {
+        academic_excellence: values.criteria.academicExcellence,
+        impact_leadership: values.criteria.impactLeadership,
+        unique_narrative: values.criteria.uniqueNarrative
+      });
       
       const { data, error } = await supabase
         .from("student_evaluations")
