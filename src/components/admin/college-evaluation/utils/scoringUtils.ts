@@ -2,71 +2,81 @@
 import { StudentEvaluation, UniversityType } from "../types";
 
 /**
- * Get maximum possible score for a university type
+ * Checks if the evaluation has core criteria fields
  */
-export function getMaxPossibleScore(evaluation: StudentEvaluation, universityType: UniversityType): number {
-  // Base score is always 5 categories * 6 maximum points
-  let maxScore = 5 * 6;
-  
-  // For non-UC schools, add interview score (6 more points)
-  if (universityType !== 'ucSystem') {
-    maxScore += 6;
-  }
-  
-  // Add the core evaluation criteria (3 fields * 6 max points)
-  // Check if the core scores exist in the evaluation
-  if (hasCoreCriteria(evaluation)) {
-    maxScore += 3 * 6;
-  }
-  
-  return maxScore;
-}
+export const hasCoreCriteria = (evaluation: StudentEvaluation): boolean => {
+  return evaluation.academic_excellence_score !== undefined 
+    && evaluation.impact_leadership_score !== undefined
+    && evaluation.unique_narrative_score !== undefined;
+};
 
 /**
- * Check if the evaluation has core criteria scores
+ * Gets the total score for core admission factors
  */
-export function hasCoreCriteria(evaluation: StudentEvaluation): boolean {
-  return (
-    typeof evaluation.academic_excellence_score !== 'undefined' &&
-    typeof evaluation.impact_leadership_score !== 'undefined' &&
-    typeof evaluation.unique_narrative_score !== 'undefined'
-  );
-}
-
-/**
- * Get the total score for core factors only
- */
-export function getCoreTotalScore(evaluation: StudentEvaluation): number {
-  // If core scores don't exist, return 0
+export const getCoreTotalScore = (evaluation: StudentEvaluation): number => {
+  // If the core scores don't exist, return 0
   if (!hasCoreCriteria(evaluation)) {
     return 0;
   }
   
-  // Sum the core scores
-  return (
-    (evaluation.academic_excellence_score || 0) +
-    (evaluation.impact_leadership_score || 0) +
-    (evaluation.unique_narrative_score || 0)
-  );
-}
+  // Sum core scores (or default to 3 if missing)
+  return (evaluation.academic_excellence_score || 3) 
+    + (evaluation.impact_leadership_score || 3) 
+    + (evaluation.unique_narrative_score || 3);
+};
 
 /**
- * Get the total score for traditional factors only
+ * Gets the total score for traditional criteria
  */
-export function getTraditionalTotalScore(evaluation: StudentEvaluation, universityType: UniversityType): number {
-  let traditionalScores = [
-    evaluation.academics_score,
-    evaluation.extracurriculars_score,
-    evaluation.athletics_score,
-    evaluation.personal_qualities_score,
-    evaluation.recommendations_score
-  ];
+export const getTraditionalTotalScore = (evaluation: StudentEvaluation, universityType: UniversityType): number => {
+  let totalScore = 0;
   
-  // Add interview score for non-UC System schools
-  if (universityType !== 'ucSystem') {
-    traditionalScores.push(evaluation.interview_score);
+  // Add all traditional scores
+  totalScore += evaluation.academics_score;
+  totalScore += evaluation.extracurriculars_score;
+  totalScore += evaluation.personal_qualities_score;
+  totalScore += evaluation.recommendations_score;
+  
+  // For Ivy League and Top30, don't count athletics if score is 4 or higher
+  const isAthleticsExcluded = (universityType === 'ivyLeague' || universityType === 'top30') 
+    && evaluation.athletics_score >= 4;
+    
+  if (!isAthleticsExcluded) {
+    totalScore += evaluation.athletics_score;
   }
   
-  // Sum all scores
-  return traditionalScores.reduce((sum, score) => sum + (score || 0), 0);
-}
+  // For non-UC System universities, include interview score
+  if (universityType !== 'ucSystem') {
+    totalScore += evaluation.interview_score;
+  }
+  
+  return totalScore;
+};
+
+/**
+ * Gets the maximum possible score for this evaluation
+ */
+export const getMaxPossibleScore = (evaluation: StudentEvaluation, universityType: UniversityType): number => {
+  // Start with base max score: 6 traditional criteria x 6 points each = 36
+  let maxScore = 36;
+  
+  // For UC System, we don't count interview (5 criteria x 6 points = 30)
+  if (universityType === 'ucSystem') {
+    maxScore = 30;
+  }
+  
+  // For Ivy League and Top30, exclude athletics if it's 4 or higher
+  const isAthleticsExcluded = (universityType === 'ivyLeague' || universityType === 'top30') 
+    && evaluation.athletics_score >= 4;
+    
+  if (isAthleticsExcluded) {
+    maxScore -= 6; // Reduce max by 6 points (the max value of athletics)
+  }
+  
+  // If core criteria exist, add their max possible score (3 criteria x 6 points each = 18)
+  if (hasCoreCriteria(evaluation)) {
+    maxScore += 18;
+  }
+  
+  return maxScore;
+};
