@@ -28,13 +28,14 @@ export default function EvaluationFormDialog({
   
   const handleError = (message: string) => {
     setError(message);
+    console.error("Evaluation creation error:", message);
   };
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Create US Undergraduate Admission Evaluation</DialogTitle>
+          <DialogTitle>创建美本录取评估</DialogTitle>
         </DialogHeader>
         
         {error && (

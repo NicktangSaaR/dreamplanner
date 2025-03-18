@@ -16,7 +16,7 @@ export const EvaluationScoreCell = ({ evaluation, universityType }: EvaluationSc
   const traditionalScore = getTraditionalTotalScore(evaluation, evalType);
   
   return (
-    <div className="flex items-center space-x-3">
+    <div className="flex flex-col space-y-1">
       <div className="text-sm">
         <span className="font-semibold">Core:</span> {coreScore}/18
       </div>

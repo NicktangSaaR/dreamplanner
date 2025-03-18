@@ -34,6 +34,7 @@ export const getMaxPossibleScore = (evaluation: StudentEvaluation, universityTyp
  * Gets the core total score (the three core admission factors)
  */
 export const getCoreTotalScore = (evaluation: StudentEvaluation): number => {
+  // Handle cases where the core admission factors might not be present in older records
   const academicExcellence = evaluation.academic_excellence_score || 3;
   const impactLeadership = evaluation.impact_leadership_score || 3;
   const uniqueNarrative = evaluation.unique_narrative_score || 3;

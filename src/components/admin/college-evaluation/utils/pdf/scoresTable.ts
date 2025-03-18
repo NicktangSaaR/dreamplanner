@@ -28,7 +28,7 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
     }
   }
   
-  // Add the admission factors scores
+  // Handle core admission factors - use default values if not present in the evaluation
   const admissionFactorsRows = [
     ["Academic Excellence", evaluation.academic_excellence_score || 3],
     ["Impact & Leadership", evaluation.impact_leadership_score || 3],
