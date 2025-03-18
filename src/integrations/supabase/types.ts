@@ -721,6 +721,7 @@ export type Database = {
       }
       student_evaluations: {
         Row: {
+          academic_excellence_score: number | null
           academics_score: number
           admin_id: string
           athletics_score: number
@@ -729,15 +730,18 @@ export type Database = {
           evaluation_date: string
           extracurriculars_score: number
           id: string
+          impact_leadership_score: number | null
           interview_score: number
           personal_qualities_score: number
           recommendations_score: number
           student_id: string
           student_name: string
           total_score: number
+          unique_narrative_score: number | null
           university_type: string | null
         }
         Insert: {
+          academic_excellence_score?: number | null
           academics_score: number
           admin_id: string
           athletics_score?: number
@@ -746,15 +750,18 @@ export type Database = {
           evaluation_date?: string
           extracurriculars_score: number
           id?: string
+          impact_leadership_score?: number | null
           interview_score?: number
           personal_qualities_score: number
           recommendations_score?: number
           student_id: string
           student_name: string
           total_score: number
+          unique_narrative_score?: number | null
           university_type?: string | null
         }
         Update: {
+          academic_excellence_score?: number | null
           academics_score?: number
           admin_id?: string
           athletics_score?: number
@@ -763,12 +770,14 @@ export type Database = {
           evaluation_date?: string
           extracurriculars_score?: number
           id?: string
+          impact_leadership_score?: number | null
           interview_score?: number
           personal_qualities_score?: number
           recommendations_score?: number
           student_id?: string
           student_name?: string
           total_score?: number
+          unique_narrative_score?: number | null
           university_type?: string | null
         }
         Relationships: [
