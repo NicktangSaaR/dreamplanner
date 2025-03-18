@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { EvaluationCriteria, StudentEvaluation, UniversityType } from "../types";
+import { EvaluationCriteria, StudentEvaluation, UniversityType, ScoreValue } from "../types";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -31,6 +31,12 @@ export function useEvaluationForm({
     (existingEvaluation?.university_type as UniversityType) || "ivyLeague"
   );
   
+  // Helper function to ensure a valid ScoreValue
+  const ensureValidScore = (score: number | undefined): ScoreValue => {
+    if (score === undefined) return 3 as ScoreValue;
+    return (Math.min(Math.max(1, score), 6)) as ScoreValue;
+  };
+  
   // Initialize the form with default values or existing evaluation data
   const form = useForm<{
     criteria: EvaluationCriteria;
@@ -38,16 +44,16 @@ export function useEvaluationForm({
   }>({
     defaultValues: {
       criteria: {
-        academics: existingEvaluation?.academics_score || 3,
-        extracurriculars: existingEvaluation?.extracurriculars_score || 3,
-        athletics: existingEvaluation?.athletics_score || 3,
-        personalQualities: existingEvaluation?.personal_qualities_score || 3,
-        recommendations: existingEvaluation?.recommendations_score || 3,
-        interview: existingEvaluation?.interview_score || 3,
+        academics: ensureValidScore(existingEvaluation?.academics_score),
+        extracurriculars: ensureValidScore(existingEvaluation?.extracurriculars_score),
+        athletics: ensureValidScore(existingEvaluation?.athletics_score),
+        personalQualities: ensureValidScore(existingEvaluation?.personal_qualities_score),
+        recommendations: ensureValidScore(existingEvaluation?.recommendations_score),
+        interview: ensureValidScore(existingEvaluation?.interview_score),
         // Core admission factors
-        academicExcellence: existingEvaluation?.academic_excellence_score || 3,
-        impactLeadership: existingEvaluation?.impact_leadership_score || 3,
-        uniqueNarrative: existingEvaluation?.unique_narrative_score || 3
+        academicExcellence: ensureValidScore(existingEvaluation?.academic_excellence_score),
+        impactLeadership: ensureValidScore(existingEvaluation?.impact_leadership_score),
+        uniqueNarrative: ensureValidScore(existingEvaluation?.unique_narrative_score)
       },
       comments: existingEvaluation?.comments || ""
     }
@@ -58,16 +64,16 @@ export function useEvaluationForm({
     if (existingEvaluation && isEditing) {
       form.reset({
         criteria: {
-          academics: existingEvaluation.academics_score,
-          extracurriculars: existingEvaluation.extracurriculars_score,
-          athletics: existingEvaluation.athletics_score,
-          personalQualities: existingEvaluation.personal_qualities_score,
-          recommendations: existingEvaluation.recommendations_score,
-          interview: existingEvaluation.interview_score,
+          academics: ensureValidScore(existingEvaluation.academics_score),
+          extracurriculars: ensureValidScore(existingEvaluation.extracurriculars_score),
+          athletics: ensureValidScore(existingEvaluation.athletics_score),
+          personalQualities: ensureValidScore(existingEvaluation.personal_qualities_score),
+          recommendations: ensureValidScore(existingEvaluation.recommendations_score),
+          interview: ensureValidScore(existingEvaluation.interview_score),
           // Core admission factors
-          academicExcellence: existingEvaluation.academic_excellence_score || 3,
-          impactLeadership: existingEvaluation.impact_leadership_score || 3,
-          uniqueNarrative: existingEvaluation.unique_narrative_score || 3
+          academicExcellence: ensureValidScore(existingEvaluation.academic_excellence_score),
+          impactLeadership: ensureValidScore(existingEvaluation.impact_leadership_score),
+          uniqueNarrative: ensureValidScore(existingEvaluation.unique_narrative_score)
         },
         comments: existingEvaluation.comments || ""
       });
