@@ -11,9 +11,10 @@ interface UseEvaluationFormProps {
   studentId: string;
   studentName: string;
   onSuccess?: () => void;
+  onError?: (message: string) => void;
 }
 
-export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEvaluationFormProps) {
+export function useEvaluationForm({ studentId, studentName, onSuccess, onError }: UseEvaluationFormProps) {
   const { profile } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedEvaluation, setSubmittedEvaluation] = useState<StudentEvaluation | null>(null);
@@ -43,6 +44,7 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
   const handleSubmit = async (values: { criteria: EvaluationCriteria; comments: string }) => {
     if (!profile?.id) {
       toast.error("管理员身份验证失败");
+      if (onError) onError("管理员身份验证失败");
       return;
     }
 
@@ -72,13 +74,18 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         comments: values.comments,
         total_score: totalScore,
         admin_id: profile.id,
-        university_type: universityType
+        university_type: universityType,
+        // Add core admission factors to the initial insert
+        academic_excellence_score: values.criteria.academicExcellence,
+        impact_leadership_score: values.criteria.impactLeadership,
+        unique_narrative_score: values.criteria.uniqueNarrative
       };
       
       console.log("Saving evaluation with university type:", universityType);
+      console.log("Saving full evaluation data:", evaluationData);
       
-      // Try first without the new core factors fields in case the DB schema hasn't been updated
-      let result = await supabase
+      // Insert the evaluation with all fields
+      const result = await supabase
         .from("student_evaluations")
         .insert(evaluationData)
         .select()
@@ -86,26 +93,7 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
       
       // If the insert was successful
       if (!result.error) {
-        console.log("Successfully saved evaluation with standard fields");
-        
-        // Now let's try to update with the core admission factors
-        // This approach allows us to work with both old and new DB schemas
-        const coreFactorsData = {
-          academic_excellence_score: values.criteria.academicExcellence,
-          impact_leadership_score: values.criteria.impactLeadership,
-          unique_narrative_score: values.criteria.uniqueNarrative
-        };
-        
-        console.log("Updating with core factors:", coreFactorsData);
-        
-        // Try to update with the core factors (will fail silently if columns don't exist)
-        const updateResult = await supabase
-          .from("student_evaluations")
-          .update(coreFactorsData)
-          .eq("id", result.data.id)
-          .select();
-          
-        console.log("Core factors update result:", updateResult);
+        console.log("Successfully saved evaluation with all fields");
         
         const evaluationWithType = result.data as StudentEvaluation;
         setSubmittedEvaluation(evaluationWithType);
@@ -114,11 +102,45 @@ export function useEvaluationForm({ studentId, studentName, onSuccess }: UseEval
         if (onSuccess) onSuccess();
       } else {
         console.error("Failed to insert evaluation:", result.error);
-        toast.error("创建评估失败: " + result.error.message);
+        
+        // If the error is due to missing columns, try again with just the base fields
+        if (result.error.message.includes('column') && result.error.message.includes('does not exist')) {
+          console.log("Trying to insert without core factors due to schema mismatch");
+          
+          // Remove core factors from the data object
+          const baseEvaluationData = { ...evaluationData };
+          delete baseEvaluationData.academic_excellence_score;
+          delete baseEvaluationData.impact_leadership_score;
+          delete baseEvaluationData.unique_narrative_score;
+          
+          // Try again with just base fields
+          const fallbackResult = await supabase
+            .from("student_evaluations")
+            .insert(baseEvaluationData)
+            .select()
+            .single();
+            
+          if (!fallbackResult.error) {
+            console.log("Successfully saved evaluation with base fields only");
+            const evaluationWithType = fallbackResult.data as StudentEvaluation;
+            setSubmittedEvaluation(evaluationWithType);
+            toast.success("评估创建成功 (不包含核心因素)");
+            
+            if (onSuccess) onSuccess();
+          } else {
+            console.error("Failed to insert base evaluation:", fallbackResult.error);
+            toast.error("创建评估失败: " + fallbackResult.error.message);
+            if (onError) onError("创建评估失败: " + fallbackResult.error.message);
+          }
+        } else {
+          toast.error("创建评估失败: " + result.error.message);
+          if (onError) onError("创建评估失败: " + result.error.message);
+        }
       }
     } catch (error) {
       console.error("Error creating evaluation:", error);
       toast.error("创建评估失败");
+      if (onError) onError("创建评估失败: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsSubmitting(false);
     }
