@@ -1,12 +1,13 @@
 
 import { Button } from "@/components/ui/button";
-import { FileText, Trash2 } from "lucide-react";
+import { FileText, Trash2, Pencil } from "lucide-react";
 import { useState } from "react";
 import { StudentEvaluation } from "../types";
 import { PDFPreviewDialog } from "./PDFPreviewDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import EditEvaluationDialog from "./EditEvaluationDialog";
 
 interface EvaluationActionsProps {
   evaluation: StudentEvaluation;
@@ -14,11 +15,22 @@ interface EvaluationActionsProps {
 
 export const EvaluationActions = ({ evaluation }: EvaluationActionsProps) => {
   const [showPreview, setShowPreview] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const queryClient = useQueryClient();
 
   const handleExportPDF = () => {
     setShowPreview(true);
+  };
+
+  const handleEditEvaluation = () => {
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["student-evaluations"] });
+    toast.success("评估已成功更新");
+    setShowEditDialog(false);
   };
 
   const handleDeleteEvaluation = async () => {
@@ -53,6 +65,14 @@ export const EvaluationActions = ({ evaluation }: EvaluationActionsProps) => {
         <Button 
           variant="ghost" 
           size="sm" 
+          onClick={handleEditEvaluation}
+          title="Edit Evaluation"
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
           onClick={handleExportPDF}
           title="Export Evaluation as PDF"
         >
@@ -75,6 +95,15 @@ export const EvaluationActions = ({ evaluation }: EvaluationActionsProps) => {
           isOpen={showPreview}
           onOpenChange={setShowPreview}
           evaluation={evaluation}
+        />
+      )}
+
+      {showEditDialog && (
+        <EditEvaluationDialog
+          isOpen={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          evaluation={evaluation}
+          onSuccess={handleUpdateSuccess}
         />
       )}
     </>

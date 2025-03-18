@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { EvaluationCriteria, StudentEvaluation, UniversityType } from "../types";
 import { useProfile } from "@/hooks/useProfile";
@@ -10,36 +10,74 @@ import { calculateTotalScore } from "../utils/evaluationUtils";
 interface UseEvaluationFormProps {
   studentId: string;
   studentName: string;
+  existingEvaluation?: StudentEvaluation;
+  isEditing?: boolean;
   onSuccess?: () => void;
   onError?: (message: string) => void;
 }
 
-export function useEvaluationForm({ studentId, studentName, onSuccess, onError }: UseEvaluationFormProps) {
+export function useEvaluationForm({ 
+  studentId, 
+  studentName, 
+  existingEvaluation,
+  isEditing = false,
+  onSuccess, 
+  onError 
+}: UseEvaluationFormProps) {
   const { profile } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedEvaluation, setSubmittedEvaluation] = useState<StudentEvaluation | null>(null);
-  const [universityType, setUniversityType] = useState<UniversityType>("ivyLeague");
+  const [universityType, setUniversityType] = useState<UniversityType>(
+    (existingEvaluation?.university_type as UniversityType) || "ivyLeague"
+  );
   
+  // Initialize the form with default values or existing evaluation data
   const form = useForm<{
     criteria: EvaluationCriteria;
     comments: string;
   }>({
     defaultValues: {
       criteria: {
-        academics: 3,
-        extracurriculars: 3,
-        athletics: 3,
-        personalQualities: 3,
-        recommendations: 3,
-        interview: 3,
-        // New admission factors with default values
-        academicExcellence: 3,
-        impactLeadership: 3,
-        uniqueNarrative: 3
+        academics: existingEvaluation?.academics_score || 3,
+        extracurriculars: existingEvaluation?.extracurriculars_score || 3,
+        athletics: existingEvaluation?.athletics_score || 3,
+        personalQualities: existingEvaluation?.personal_qualities_score || 3,
+        recommendations: existingEvaluation?.recommendations_score || 3,
+        interview: existingEvaluation?.interview_score || 3,
+        // Core admission factors
+        academicExcellence: existingEvaluation?.academic_excellence_score || 3,
+        impactLeadership: existingEvaluation?.impact_leadership_score || 3,
+        uniqueNarrative: existingEvaluation?.unique_narrative_score || 3
       },
-      comments: ""
+      comments: existingEvaluation?.comments || ""
     }
   });
+
+  // Update form values when existingEvaluation changes
+  useEffect(() => {
+    if (existingEvaluation && isEditing) {
+      form.reset({
+        criteria: {
+          academics: existingEvaluation.academics_score,
+          extracurriculars: existingEvaluation.extracurriculars_score,
+          athletics: existingEvaluation.athletics_score,
+          personalQualities: existingEvaluation.personal_qualities_score,
+          recommendations: existingEvaluation.recommendations_score,
+          interview: existingEvaluation.interview_score,
+          // Core admission factors
+          academicExcellence: existingEvaluation.academic_excellence_score || 3,
+          impactLeadership: existingEvaluation.impact_leadership_score || 3,
+          uniqueNarrative: existingEvaluation.unique_narrative_score || 3
+        },
+        comments: existingEvaluation.comments || ""
+      });
+      
+      // Set the university type
+      if (existingEvaluation.university_type) {
+        setUniversityType(existingEvaluation.university_type as UniversityType);
+      }
+    }
+  }, [existingEvaluation, isEditing, form]);
 
   const handleSubmit = async (values: { criteria: EvaluationCriteria; comments: string }) => {
     if (!profile?.id) {
@@ -60,11 +98,11 @@ export function useEvaluationForm({ studentId, studentName, onSuccess, onError }
       const totalScore = calculateTotalScore(values.criteria, universityType);
       const evaluationDate = new Date().toISOString();
       
-      // Create base evaluation data - includes only standard fields
+      // Create evaluation data
       const evaluationData = {
         student_id: studentId,
         student_name: studentName,
-        evaluation_date: evaluationDate,
+        evaluation_date: isEditing ? (existingEvaluation?.evaluation_date || evaluationDate) : evaluationDate,
         academics_score: values.criteria.academics,
         extracurriculars_score: values.criteria.extracurriculars,
         athletics_score: values.criteria.athletics,
@@ -73,40 +111,55 @@ export function useEvaluationForm({ studentId, studentName, onSuccess, onError }
         interview_score: values.criteria.interview,
         comments: values.comments,
         total_score: totalScore,
-        admin_id: profile.id,
+        admin_id: isEditing ? (existingEvaluation?.admin_id || profile.id) : profile.id,
         university_type: universityType,
-        // Add core admission factors to the initial insert
+        // Core admission factors
         academic_excellence_score: values.criteria.academicExcellence,
         impact_leadership_score: values.criteria.impactLeadership,
         unique_narrative_score: values.criteria.uniqueNarrative
       };
       
-      console.log("Saving evaluation with university type:", universityType);
-      console.log("Saving full evaluation data:", evaluationData);
+      let result;
       
-      // Attempt to insert with all fields first
-      let result = await supabase
-        .from("student_evaluations")
-        .insert(evaluationData)
-        .select()
-        .single();
-      
-      // If there's an error related to missing columns
-      if (result.error && result.error.message.includes('column') && result.error.message.includes('does not exist')) {
-        console.log("Database schema does not have core factor columns, trying with base fields only");
+      if (isEditing && existingEvaluation) {
+        console.log("Updating evaluation with id:", existingEvaluation.id);
+        console.log("Update data:", evaluationData);
         
-        // Create a copy of evaluation data without the core factors
-        const baseEvaluationData = { ...evaluationData };
-        delete baseEvaluationData.academic_excellence_score;
-        delete baseEvaluationData.impact_leadership_score;
-        delete baseEvaluationData.unique_narrative_score;
-        
-        // Try again with just base fields
+        // Update existing evaluation
         result = await supabase
           .from("student_evaluations")
-          .insert(baseEvaluationData)
+          .update(evaluationData)
+          .eq("id", existingEvaluation.id)
           .select()
           .single();
+      } else {
+        console.log("Creating new evaluation with university type:", universityType);
+        console.log("New evaluation data:", evaluationData);
+        
+        // Insert new evaluation
+        result = await supabase
+          .from("student_evaluations")
+          .insert(evaluationData)
+          .select()
+          .single();
+          
+        // If there's an error related to missing columns
+        if (result.error && result.error.message.includes('column') && result.error.message.includes('does not exist')) {
+          console.log("Database schema does not have core factor columns, trying with base fields only");
+          
+          // Create a copy of evaluation data without the core factors
+          const baseEvaluationData = { ...evaluationData };
+          delete baseEvaluationData.academic_excellence_score;
+          delete baseEvaluationData.impact_leadership_score;
+          delete baseEvaluationData.unique_narrative_score;
+          
+          // Try again with just base fields
+          result = await supabase
+            .from("student_evaluations")
+            .insert(baseEvaluationData)
+            .select()
+            .single();
+        }
       }
       
       // Handle final result
@@ -114,18 +167,18 @@ export function useEvaluationForm({ studentId, studentName, onSuccess, onError }
         console.log("Successfully saved evaluation");
         const evaluationWithType = result.data as StudentEvaluation;
         setSubmittedEvaluation(evaluationWithType);
-        toast.success("评估创建成功");
+        toast.success(isEditing ? "评估已更新成功" : "评估创建成功");
         
         if (onSuccess) onSuccess();
       } else {
-        console.error("Failed to insert evaluation:", result.error);
-        toast.error("创建评估失败: " + result.error.message);
-        if (onError) onError("创建评估失败: " + result.error.message);
+        console.error(isEditing ? "Failed to update evaluation:" : "Failed to insert evaluation:", result.error);
+        toast.error(isEditing ? "更新评估失败: " + result.error.message : "创建评估失败: " + result.error.message);
+        if (onError) onError(isEditing ? "更新评估失败: " + result.error.message : "创建评估失败: " + result.error.message);
       }
     } catch (error) {
-      console.error("Error creating evaluation:", error);
-      toast.error("创建评估失败");
-      if (onError) onError("创建评估失败: " + (error instanceof Error ? error.message : String(error)));
+      console.error(isEditing ? "Error updating evaluation:" : "Error creating evaluation:", error);
+      toast.error(isEditing ? "更新评估失败" : "创建评估失败");
+      if (onError) onError(isEditing ? "更新评估失败: " + (error instanceof Error ? error.message : String(error)) : "创建评估失败: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsSubmitting(false);
     }

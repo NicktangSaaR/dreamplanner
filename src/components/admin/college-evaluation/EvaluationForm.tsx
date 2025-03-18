@@ -11,15 +11,25 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEffect, useState } from "react";
+import { StudentEvaluation } from "./types";
 
 interface EvaluationFormProps {
   studentId: string;
   studentName: string;
   onSuccess?: () => void;
   onError?: (message: string) => void;
+  existingEvaluation?: StudentEvaluation;
+  isEditing?: boolean;
 }
 
-export default function EvaluationForm({ studentId, studentName, onSuccess, onError }: EvaluationFormProps) {
+export default function EvaluationForm({ 
+  studentId, 
+  studentName, 
+  onSuccess, 
+  onError,
+  existingEvaluation,
+  isEditing = false
+}: EvaluationFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const { 
@@ -32,6 +42,8 @@ export default function EvaluationForm({ studentId, studentName, onSuccess, onEr
   } = useEvaluationForm({
     studentId,
     studentName,
+    existingEvaluation,
+    isEditing,
     onSuccess,
     onError: (message) => {
       setErrorMessage(message);
@@ -51,7 +63,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess, onEr
       await handleSubmit(values);
     } catch (error) {
       console.error("Error in form submission:", error);
-      const message = "Failed to create evaluation. Please try again later.";
+      const message = "Failed to " + (isEditing ? "update" : "create") + " evaluation. Please try again later.";
       setErrorMessage(message);
       if (onError) {
         onError(message);
@@ -66,7 +78,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess, onEr
           <div>
             <CardTitle className="text-2xl font-bold">US Undergraduate Admission Evaluation</CardTitle>
             <CardDescription>
-              Create an evaluation for <span className="font-medium">{studentName}</span> (Scoring: 1 is highest, 6 is lowest)
+              {isEditing ? "Update" : "Create"} an evaluation for <span className="font-medium">{studentName}</span> (Scoring: 1 is highest, 6 is lowest)
             </CardDescription>
           </div>
           {submittedEvaluation && (
@@ -138,7 +150,7 @@ export default function EvaluationForm({ studentId, studentName, onSuccess, onEr
 
             <div className="pt-4">
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? "Submitting..." : "Submit Evaluation"}
+                {isSubmitting ? "Submitting..." : isEditing ? "Update Evaluation" : "Submit Evaluation"}
               </Button>
             </div>
           </form>
