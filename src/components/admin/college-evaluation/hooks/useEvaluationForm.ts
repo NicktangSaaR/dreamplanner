@@ -84,17 +84,34 @@ export function useEvaluationForm({ studentId, studentName, onSuccess, onError }
       console.log("Saving evaluation with university type:", universityType);
       console.log("Saving full evaluation data:", evaluationData);
       
-      // Insert the evaluation with all fields
-      const result = await supabase
+      // Attempt to insert with all fields first
+      let result = await supabase
         .from("student_evaluations")
         .insert(evaluationData)
         .select()
         .single();
       
-      // If the insert was successful
-      if (!result.error) {
-        console.log("Successfully saved evaluation with all fields");
+      // If there's an error related to missing columns
+      if (result.error && result.error.message.includes('column') && result.error.message.includes('does not exist')) {
+        console.log("Database schema does not have core factor columns, trying with base fields only");
         
+        // Create a copy of evaluation data without the core factors
+        const baseEvaluationData = { ...evaluationData };
+        delete baseEvaluationData.academic_excellence_score;
+        delete baseEvaluationData.impact_leadership_score;
+        delete baseEvaluationData.unique_narrative_score;
+        
+        // Try again with just base fields
+        result = await supabase
+          .from("student_evaluations")
+          .insert(baseEvaluationData)
+          .select()
+          .single();
+      }
+      
+      // Handle final result
+      if (!result.error) {
+        console.log("Successfully saved evaluation");
         const evaluationWithType = result.data as StudentEvaluation;
         setSubmittedEvaluation(evaluationWithType);
         toast.success("评估创建成功");
@@ -102,40 +119,8 @@ export function useEvaluationForm({ studentId, studentName, onSuccess, onError }
         if (onSuccess) onSuccess();
       } else {
         console.error("Failed to insert evaluation:", result.error);
-        
-        // If the error is due to missing columns, try again with just the base fields
-        if (result.error.message.includes('column') && result.error.message.includes('does not exist')) {
-          console.log("Trying to insert without core factors due to schema mismatch");
-          
-          // Remove core factors from the data object
-          const baseEvaluationData = { ...evaluationData };
-          delete baseEvaluationData.academic_excellence_score;
-          delete baseEvaluationData.impact_leadership_score;
-          delete baseEvaluationData.unique_narrative_score;
-          
-          // Try again with just base fields
-          const fallbackResult = await supabase
-            .from("student_evaluations")
-            .insert(baseEvaluationData)
-            .select()
-            .single();
-            
-          if (!fallbackResult.error) {
-            console.log("Successfully saved evaluation with base fields only");
-            const evaluationWithType = fallbackResult.data as StudentEvaluation;
-            setSubmittedEvaluation(evaluationWithType);
-            toast.success("评估创建成功 (不包含核心因素)");
-            
-            if (onSuccess) onSuccess();
-          } else {
-            console.error("Failed to insert base evaluation:", fallbackResult.error);
-            toast.error("创建评估失败: " + fallbackResult.error.message);
-            if (onError) onError("创建评估失败: " + fallbackResult.error.message);
-          }
-        } else {
-          toast.error("创建评估失败: " + result.error.message);
-          if (onError) onError("创建评估失败: " + result.error.message);
-        }
+        toast.error("创建评估失败: " + result.error.message);
+        if (onError) onError("创建评估失败: " + result.error.message);
       }
     } catch (error) {
       console.error("Error creating evaluation:", error);

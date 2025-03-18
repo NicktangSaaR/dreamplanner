@@ -10,7 +10,7 @@ import EvaluationCriteriaFields from "./components/EvaluationCriteriaFields";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface EvaluationFormProps {
   studentId: string;
@@ -20,6 +20,8 @@ interface EvaluationFormProps {
 }
 
 export default function EvaluationForm({ studentId, studentName, onSuccess, onError }: EvaluationFormProps) {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
   const { 
     form, 
     isSubmitting, 
@@ -30,17 +32,29 @@ export default function EvaluationForm({ studentId, studentName, onSuccess, onEr
   } = useEvaluationForm({
     studentId,
     studentName,
-    onSuccess
+    onSuccess,
+    onError: (message) => {
+      setErrorMessage(message);
+      if (onError) onError(message);
+    }
   });
+
+  // Clear error when changing university type
+  useEffect(() => {
+    setErrorMessage(null);
+  }, [universityType]);
 
   // Handle form submission with error catching
   const onSubmit = async (values: any) => {
+    setErrorMessage(null);
     try {
       await handleSubmit(values);
     } catch (error) {
       console.error("Error in form submission:", error);
+      const message = "Failed to create evaluation. Please try again later.";
+      setErrorMessage(message);
       if (onError) {
-        onError("Failed to create evaluation. Please try again later.");
+        onError(message);
       }
     }
   };
@@ -61,6 +75,12 @@ export default function EvaluationForm({ studentId, studentName, onSuccess, onEr
         </div>
       </CardHeader>
       <CardContent>
+        {errorMessage && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
+        
         <UniversityTypeSelector 
           value={universityType} 
           onChange={setUniversityType} 
@@ -77,7 +97,6 @@ export default function EvaluationForm({ studentId, studentName, onSuccess, onEr
                       <h3 className="text-lg font-semibold mb-2">Core Admission Factors Assessment</h3>
                       <p className="text-sm text-gray-500 mb-3">These three factors are critical for Ivy League admissions</p>
                       
-                      {/* Academic Excellence */}
                       <div className="space-y-4">
                         <EvaluationCriteriaFields 
                           form={form} 
