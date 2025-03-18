@@ -32,9 +32,6 @@ export const EvaluationScoreCell = ({ evaluation, universityType }: EvaluationSc
       <div className="text-sm">
         <span className="font-semibold">Trad:</span> {traditionalScore}/{maxTraditionalScore}
       </div>
-      <div className="text-sm font-medium">
-        <span className="font-semibold">Total:</span> {evaluation.total_score}/{maxScore}
-      </div>
     </div>
   );
 };
