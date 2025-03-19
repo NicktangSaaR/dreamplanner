@@ -16,18 +16,6 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
   // Get table rows for traditional criteria
   const traditionalTableRows = preparePdfTableRows(evaluation, evalType);
   
-  // Check if athletics score should be excluded for Ivy League and Top30
-  const athleticsScore = evaluation.athletics_score;
-  const isAthleticsExcluded = (evalType === 'ivyLeague' || evalType === 'top30') && athleticsScore >= 4;
-  
-  // If athletics is excluded, add a note to the athletics row
-  if (isAthleticsExcluded) {
-    const athleticsIndex = traditionalTableRows.findIndex(row => row[0] === getCriteriaLabel('athletics_score', evalType));
-    if (athleticsIndex !== -1) {
-      traditionalTableRows[athleticsIndex][1] = `${athleticsScore} (Not included in total)`;
-    }
-  }
-  
   // Handle core admission factors - use default values if not present in the evaluation
   const admissionFactorsRows = [
     ["Academic Excellence", evaluation.academic_excellence_score || 3],
@@ -47,11 +35,6 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
   // For UC System, we don't count interview (5 criteria × 6 points = 30)
   if (evalType === 'ucSystem') {
     traditionalMaxScore = 30;
-  }
-  
-  // For Ivy League and Top30, exclude athletics if it's 4 or higher
-  if (isAthleticsExcluded) {
-    traditionalMaxScore -= 6; // Reduce max by 6 points (the max value of athletics)
   }
   
   // Calculate traditional score

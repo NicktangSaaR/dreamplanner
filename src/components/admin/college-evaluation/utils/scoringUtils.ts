@@ -34,16 +34,9 @@ export const getTraditionalTotalScore = (evaluation: StudentEvaluation, universi
   // Add all traditional scores
   totalScore += evaluation.academics_score;
   totalScore += evaluation.extracurriculars_score;
+  totalScore += evaluation.athletics_score; // Always include Talents & Abilities score
   totalScore += evaluation.personal_qualities_score;
   totalScore += evaluation.recommendations_score;
-  
-  // For Ivy League and Top30, don't count athletics if score is 4 or higher
-  const isAthleticsExcluded = (universityType === 'ivyLeague' || universityType === 'top30') 
-    && evaluation.athletics_score >= 4;
-    
-  if (!isAthleticsExcluded) {
-    totalScore += evaluation.athletics_score;
-  }
   
   // For non-UC System universities, include interview score
   if (universityType !== 'ucSystem') {
@@ -63,14 +56,6 @@ export const getMaxPossibleScore = (evaluation: StudentEvaluation, universityTyp
   // For UC System, we don't count interview (5 criteria x 6 points = 30)
   if (universityType === 'ucSystem') {
     maxScore = 30;
-  }
-  
-  // For Ivy League and Top30, exclude athletics if it's 4 or higher
-  const isAthleticsExcluded = (universityType === 'ivyLeague' || universityType === 'top30') 
-    && evaluation.athletics_score >= 4;
-    
-  if (isAthleticsExcluded) {
-    maxScore -= 6; // Reduce max by 6 points (the max value of athletics)
   }
   
   // If core criteria exist, add their max possible score (3 criteria x 6 points each = 18)

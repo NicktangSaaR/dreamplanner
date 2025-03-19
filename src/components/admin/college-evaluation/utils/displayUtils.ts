@@ -9,7 +9,7 @@ export const getCriteriaLabel = (criteriaKey: string, universityType: University
   if (universityType === 'ucSystem') {
     switch (criteriaKey) {
       case 'athletics_score':
-        return 'Personal Talents';
+        return 'Talents & Abilities';
       case 'recommendations_score':
         return 'Personal Insight Questions (PIQs)';
       case 'interview_score':
@@ -40,7 +40,7 @@ const getStandardCriteriaLabel = (criteriaKey: string): string => {
     case 'extracurriculars_score':
       return 'Extracurriculars';
     case 'athletics_score':
-      return 'Athletics';
+      return 'Talents & Abilities';
     case 'personal_qualities_score':
       return 'Personal Qualities';
     case 'recommendations_score':

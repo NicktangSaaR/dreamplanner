@@ -204,7 +204,7 @@ export default function EvaluationCriteriaFields({
               <FormItem>
                 <div className="flex justify-between">
                   <FormLabel>
-                    {universityType === 'ucSystem' ? 'Personal Talents' : 'Athletics'}
+                    Talents & Abilities
                   </FormLabel>
                   <span className="text-sm font-medium">
                     {field.value}: {getScoreLabel(field.value)}

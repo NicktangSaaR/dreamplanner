@@ -20,7 +20,7 @@ export const calculateTotalScore = (criteria: EvaluationCriteria, universityType
   const traditionalScores = [
     criteria.academics,
     criteria.extracurriculars,
-    criteria.athletics,
+    criteria.athletics, // Always include Talents & Abilities score
     criteria.personalQualities,
     criteria.recommendations,
     criteria.interview
@@ -30,12 +30,6 @@ export const calculateTotalScore = (criteria: EvaluationCriteria, universityType
   if (universityType === 'ucSystem') {
     // Remove interview score (last item)
     traditionalScores.pop();
-  }
-  
-  // For Ivy League and Top30 - don't count athletics if score is 4 or higher (not competitive)
-  if ((universityType === 'ivyLeague' || universityType === 'top30') && criteria.athletics >= 4) {
-    // Find index of athletics (it's at position 2 in our array) and remove it
-    traditionalScores.splice(2, 1);
   }
   
   // Sum core scores
