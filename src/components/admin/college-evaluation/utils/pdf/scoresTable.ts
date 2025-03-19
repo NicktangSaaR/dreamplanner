@@ -3,7 +3,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { StudentEvaluation, UniversityType } from "../../types";
 import { getCriteriaLabel } from '../displayUtils';
-import { preparePdfTableRows } from './criteriaUtils';
+import { preparePdfTableRows } from './criteriaKeyMapping';
 import { getCoreTotalScore, getTraditionalTotalScore } from '../scoringUtils';
 
 /**
