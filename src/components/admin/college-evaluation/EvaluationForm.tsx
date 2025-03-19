@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,6 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/componen
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEffect, useState } from "react";
 import { StudentEvaluation } from "./types";
-
 interface EvaluationFormProps {
   studentId: string;
   studentName: string;
@@ -21,31 +19,29 @@ interface EvaluationFormProps {
   existingEvaluation?: StudentEvaluation;
   isEditing?: boolean;
 }
-
-export default function EvaluationForm({ 
-  studentId, 
-  studentName, 
-  onSuccess, 
+export default function EvaluationForm({
+  studentId,
+  studentName,
+  onSuccess,
   onError,
   existingEvaluation,
   isEditing = false
 }: EvaluationFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
-  const { 
-    form, 
-    isSubmitting, 
-    universityType, 
+  const {
+    form,
+    isSubmitting,
+    universityType,
     setUniversityType,
     submittedEvaluation,
-    handleSubmit 
+    handleSubmit
   } = useEvaluationForm({
     studentId,
     studentName,
     existingEvaluation,
     isEditing,
     onSuccess,
-    onError: (message) => {
+    onError: message => {
       setErrorMessage(message);
       if (onError) onError(message);
     }
@@ -70,9 +66,7 @@ export default function EvaluationForm({
       }
     }
   };
-
-  return (
-    <Card className="w-full">
+  return <Card className="w-full">
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
@@ -81,22 +75,15 @@ export default function EvaluationForm({
               {isEditing ? "Update" : "Create"} an evaluation for <span className="font-medium">{studentName}</span> (Scoring: 1 is highest, 6 is lowest)
             </CardDescription>
           </div>
-          {submittedEvaluation && (
-            <ExportPDFButton evaluation={submittedEvaluation} />
-          )}
+          {submittedEvaluation && <ExportPDFButton evaluation={submittedEvaluation} />}
         </div>
       </CardHeader>
       <CardContent>
-        {errorMessage && (
-          <Alert variant="destructive" className="mb-4">
+        {errorMessage && <Alert variant="destructive" className="mb-4">
             <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        )}
+          </Alert>}
         
-        <UniversityTypeSelector 
-          value={universityType} 
-          onChange={setUniversityType} 
-        />
+        <UniversityTypeSelector value={universityType} onChange={setUniversityType} />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -106,15 +93,11 @@ export default function EvaluationForm({
                 <ResizablePanel defaultSize={50} minSize={30}>
                   <div className="p-4 h-full">
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold mb-2">Core Admission Factors Assessment</h3>
+                      <h3 className="text-lg font-semibold mb-2">DreamPlanner's 3 Cores</h3>
                       <p className="text-sm text-gray-500 mb-3">These three factors are critical for Ivy League admissions</p>
                       
                       <div className="space-y-4">
-                        <EvaluationCriteriaFields 
-                          form={form} 
-                          universityType={universityType}
-                          criteriaType="core"
-                        />
+                        <EvaluationCriteriaFields form={form} universityType={universityType} criteriaType="core" />
                       </div>
                     </div>
                   </div>
@@ -131,11 +114,7 @@ export default function EvaluationForm({
                       <p className="text-sm text-gray-500 mb-3">Traditional evaluation criteria</p>
                       
                       <div className="space-y-4">
-                        <EvaluationCriteriaFields 
-                          form={form} 
-                          universityType={universityType}
-                          criteriaType="traditional"
-                        />
+                        <EvaluationCriteriaFields form={form} universityType={universityType} criteriaType="traditional" />
                       </div>
                     </div>
                   </div>
@@ -156,6 +135,5 @@ export default function EvaluationForm({
           </form>
         </Form>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
