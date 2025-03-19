@@ -52,11 +52,11 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
     headStyles: { 
       fillColor: [99, 102, 241], // Updated to match website primary color #6366F1
       textColor: [255, 255, 255],
-      font: 'helvetica',
+      font: 'NotoSansSC',
       fontStyle: 'bold' 
     },
     styles: {
-      font: 'helvetica',
+      font: 'NotoSansSC',
       fontStyle: 'normal'
     },
     alternateRowStyles: { fillColor: [240, 240, 240] },
@@ -75,11 +75,11 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
     headStyles: { 
       fillColor: [99, 102, 241], // Updated to match website primary color #6366F1
       textColor: [255, 255, 255],
-      font: 'helvetica',
+      font: 'NotoSansSC',
       fontStyle: 'bold' 
     },
     styles: {
-      font: 'helvetica',
+      font: 'NotoSansSC',
       fontStyle: 'normal'
     },
     alternateRowStyles: { fillColor: [240, 240, 240] }

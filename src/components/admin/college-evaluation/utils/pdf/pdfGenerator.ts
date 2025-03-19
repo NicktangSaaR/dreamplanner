@@ -6,10 +6,13 @@ import { addScoresTable } from './scoresTable';
 import { addCriteriaDescriptions } from './criteriaUtils';
 import { addCommentsSection } from './commentsSection';
 
+// Add Chinese font support
+import { loadChineseFont } from './fontUtils';
+
 /**
  * Generates and returns a PDF document for the evaluation
  */
-export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityType: UniversityType): jsPDF => {
+export const generateEvaluationPdf = async (evaluation: StudentEvaluation, universityType: UniversityType): Promise<jsPDF> => {
   // Create PDF document with standard encoding
   const doc = new jsPDF({
     orientation: "portrait",
@@ -19,8 +22,8 @@ export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityT
     compress: true
   });
   
-  // Use only standard helvetica font which has good compatibility
-  // Avoid using any custom fonts which can cause encoding issues
+  // Load Chinese font support before rendering content
+  await loadChineseFont(doc);
   
   // Setup header function for all pages
   const addHeaderToAllPages = () => {
@@ -59,7 +62,7 @@ export const generateEvaluationPdf = (evaluation: StudentEvaluation, universityT
   
   // Add special note about athletics scoring for Ivy League and Top30
   const athleticsScore = evaluation.athletics_score;
-  const isAthleticsExcluded = (universityType === 'ivyLeague' || universityType === 'top30') && athleticsScore >= 4;
+  const isAthleticsExcluded = false; // Talents & Abilities is now always included
   
   // Add document sections with adjusted Y positions to account for header spacing
   addDocumentHeader(doc, evaluation, universityType);

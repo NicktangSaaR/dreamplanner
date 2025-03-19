@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { StudentEvaluation, UniversityType } from "../../types";
@@ -30,9 +29,8 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
     'unique_narrative_score'
   ];
   
-  // Skip athletics for Ivy League and Top30 if score >= 4
-  const athleticsScore = evaluation.athletics_score;
-  const isAthleticsExcluded = (universityType === 'ivyLeague' || universityType === 'top30') && athleticsScore >= 4;
+  // Talents & Abilities is now always included
+  const isAthleticsExcluded = false;
   
   // Get criteria descriptions for this university type
   const descriptions = getUniversityCriteriaDescriptions(universityType);
@@ -40,12 +38,12 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
   // Start position for criteria descriptions
   let currentY = startY + 10; // Add some spacing after the table
   
-  // Set the font size and style
-  doc.setFont("helvetica", "bold");
+  // Set the font size and style - using NotoSansSC to support Chinese
+  doc.setFont("NotoSansSC", "bold");
   doc.setFontSize(12);
   doc.text("Core Admission Factors Descriptions:", 15, currentY);
   currentY += 8;
-  doc.setFont("helvetica", "normal");
+  doc.setFont("NotoSansSC", "normal");
   doc.setFontSize(10);
   
   // First add descriptions for admission factors
@@ -68,13 +66,13 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
     // Check if we need a new page
     if (currentY > 240) {
       doc.addPage();
-      doc.setFont("helvetica", "bold"); // Reset font for new page
+      doc.setFont("NotoSansSC", "bold"); // Reset font for new page with Chinese support
       currentY = 45; // Start content lower on new pages to account for header area
     }
     
     // Add criteria name
     doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
+    doc.setFont("NotoSansSC", "bold");
     let label = criteriaColumn;
     if (criteriaColumn === 'academic_excellence_score') {
       label = "Academic Excellence";
@@ -88,7 +86,7 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
     
     // Add description with proper line breaks
     doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("NotoSansSC", "normal");
     
     // Use proper text splitting to handle text characters
     const maxWidth = 180;
@@ -109,11 +107,11 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
   currentY += 10;
   
   // Add title for traditional criteria
-  doc.setFont("helvetica", "bold");
+  doc.setFont("NotoSansSC", "bold");
   doc.setFontSize(12);
   doc.text("Traditional Evaluation Criteria Descriptions:", 15, currentY);
   currentY += 8;
-  doc.setFont("helvetica", "normal");
+  doc.setFont("NotoSansSC", "normal");
   doc.setFontSize(10);
   
   // Add each traditional criteria description
@@ -145,18 +143,18 @@ export const addCriteriaDescriptions = (doc: jsPDF, evaluation: StudentEvaluatio
     // Check if we need a new page
     if (currentY > 240) {
       doc.addPage();
-      doc.setFont("helvetica", "bold"); // Reset font for new page
+      doc.setFont("NotoSansSC", "bold"); // Reset font for new page with Chinese support
       currentY = 45; // Start content lower on new pages to account for header area
     }
     
     // Add criteria name
     doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
+    doc.setFont("NotoSansSC", "bold");
     doc.text(`${getCriteriaLabel(criteriaColumn, universityType)} - Score ${score}:`, 15, currentY);
     
     // Add description with proper line breaks
     doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("NotoSansSC", "normal");
     
     // Use proper text splitting to handle text characters
     const maxWidth = 180;

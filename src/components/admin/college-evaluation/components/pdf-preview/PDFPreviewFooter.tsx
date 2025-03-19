@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Download, X } from "lucide-react";
 import { StudentEvaluation } from "../../types";
 import { exportEvaluationToPDF } from "../../utils/pdf";
+import { useState } from "react";
 
 interface PDFPreviewFooterProps {
   evaluation: StudentEvaluation;
@@ -11,8 +12,15 @@ interface PDFPreviewFooterProps {
 }
 
 export const PDFPreviewFooter = ({ evaluation, onClose, isLoading }: PDFPreviewFooterProps) => {
-  const handleDownload = () => {
-    exportEvaluationToPDF(evaluation);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      await exportEvaluationToPDF(evaluation);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -28,11 +36,11 @@ export const PDFPreviewFooter = ({ evaluation, onClose, isLoading }: PDFPreviewF
       
       <Button 
         onClick={handleDownload} 
-        disabled={isLoading}
+        disabled={isLoading || isDownloading}
         size="sm"
       >
         <Download className="h-4 w-4 mr-2" />
-        Download PDF
+        {isDownloading ? 'Preparing PDF...' : 'Download PDF'}
       </Button>
     </div>
   );
