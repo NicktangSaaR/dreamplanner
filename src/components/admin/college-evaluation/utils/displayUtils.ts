@@ -1,3 +1,4 @@
+
 import { UniversityType } from "../types";
 import { sanitizeText } from "./pdf/fontUtils";
 
@@ -9,17 +10,17 @@ export const getCriteriaLabel = (criteriaKey: string, universityType: University
   if (universityType === 'ucSystem') {
     switch (criteriaKey) {
       case 'athletics_score':
-        return sanitizeText('Talents & Abilities (艺术、音乐、体育等)');
+        return 'Talents & Abilities';
       case 'recommendations_score':
         return 'Personal Insight Questions (PIQs)';
       case 'interview_score':
         return 'Not Applicable';
       case 'academic_excellence_score':
-        return sanitizeText('Academic Excellence (学术卓越)');
+        return 'Academic Excellence';
       case 'impact_leadership_score':
-        return sanitizeText('Impact & Leadership (影响力和领导力)');
+        return 'Impact & Leadership';
       case 'unique_narrative_score':
-        return sanitizeText('Unique Personal Narrative (个人特色和独特故事)');
+        return 'Unique Personal Narrative';
       default:
         // Use standard labels for other criteria
         return getStandardCriteriaLabel(criteriaKey);
@@ -40,7 +41,7 @@ const getStandardCriteriaLabel = (criteriaKey: string): string => {
     case 'extracurriculars_score':
       return 'Extracurriculars';
     case 'athletics_score':
-      return sanitizeText('Talents & Abilities (艺术、音乐、体育等)');
+      return 'Talents & Abilities';
     case 'personal_qualities_score':
       return 'Personal Qualities';
     case 'recommendations_score':
@@ -50,13 +51,13 @@ const getStandardCriteriaLabel = (criteriaKey: string): string => {
     case 'total_score':
       return 'Total Score';
     case 'academic_excellence_score':
-      return sanitizeText('Academic Excellence (学术卓越)');
+      return 'Academic Excellence';
     case 'impact_leadership_score':
-      return sanitizeText('Impact & Leadership (影响力和领导力)');
+      return 'Impact & Leadership';
     case 'unique_narrative_score':
-      return sanitizeText('Unique Personal Narrative (个人特色和独特故事)');
+      return 'Unique Personal Narrative';
     default:
-      return sanitizeText(criteriaKey.replace('_score', '').replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()));
+      return criteriaKey.replace('_score', '').replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   }
 };
 
