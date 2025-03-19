@@ -4,6 +4,7 @@ import { StudentEvaluation, UniversityType } from "../../types";
 import { getUniversityCriteriaDescriptions } from "../../evaluationConstants";
 import { getCriteriaLabel } from '../displayUtils';
 import { getCriteriaKeyFromColumn } from './criteriaKeyMapping';
+import { applyDocumentFont } from './fontUtils';
 
 /**
  * Adds core admission factors descriptions to the PDF document
@@ -24,11 +25,11 @@ export const addCoreAdmissionFactorsDescriptions = (
   // Get criteria descriptions for this university type
   const descriptions = getUniversityCriteriaDescriptions(universityType);
   
-  doc.setFont("NotoSansSC", "bold");
+  applyDocumentFont(doc, 'bold');
   doc.setFontSize(12);
   doc.text("Core Admission Factors Descriptions:", 15, currentY);
   currentY += 8;
-  doc.setFont("NotoSansSC", "normal");
+  applyDocumentFont(doc, 'normal');
   doc.setFontSize(10);
   
   // First add descriptions for admission factors
@@ -51,13 +52,13 @@ export const addCoreAdmissionFactorsDescriptions = (
     // Check if we need a new page
     if (currentY > 240) {
       doc.addPage();
-      doc.setFont("NotoSansSC", "bold"); // Reset font for new page with Chinese support
+      applyDocumentFont(doc, 'bold'); 
       currentY = 45; // Start content lower on new pages to account for header area
     }
     
     // Add criteria name
     doc.setFontSize(11);
-    doc.setFont("NotoSansSC", "bold");
+    applyDocumentFont(doc, 'bold');
     let label = criteriaColumn;
     if (criteriaColumn === 'academic_excellence_score') {
       label = "Academic Excellence";
@@ -71,7 +72,7 @@ export const addCoreAdmissionFactorsDescriptions = (
     
     // Add description with proper line breaks
     doc.setFontSize(9);
-    doc.setFont("NotoSansSC", "normal");
+    applyDocumentFont(doc, 'normal');
     
     // Use proper text splitting to handle text characters
     const maxWidth = 180;
@@ -124,11 +125,11 @@ export const addTraditionalCriteriaDescriptions = (
   currentY += 10;
   
   // Add title for traditional criteria
-  doc.setFont("NotoSansSC", "bold");
+  applyDocumentFont(doc, 'bold');
   doc.setFontSize(12);
   doc.text("Traditional Evaluation Criteria Descriptions:", 15, currentY);
   currentY += 8;
-  doc.setFont("NotoSansSC", "normal");
+  applyDocumentFont(doc, 'normal');
   doc.setFontSize(10);
   
   // Add each traditional criteria description
@@ -160,18 +161,18 @@ export const addTraditionalCriteriaDescriptions = (
     // Check if we need a new page
     if (currentY > 240) {
       doc.addPage();
-      doc.setFont("NotoSansSC", "bold"); // Reset font for new page with Chinese support
+      applyDocumentFont(doc, 'bold');
       currentY = 45; // Start content lower on new pages to account for header area
     }
     
     // Add criteria name
     doc.setFontSize(11);
-    doc.setFont("NotoSansSC", "bold");
+    applyDocumentFont(doc, 'bold');
     doc.text(`${getCriteriaLabel(criteriaColumn, universityType)} - Score ${score}:`, 15, currentY);
     
     // Add description with proper line breaks
     doc.setFontSize(9);
-    doc.setFont("NotoSansSC", "normal");
+    applyDocumentFont(doc, 'normal');
     
     // Use proper text splitting to handle text characters
     const maxWidth = 180;

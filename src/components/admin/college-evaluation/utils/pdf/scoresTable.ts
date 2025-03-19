@@ -5,6 +5,7 @@ import { StudentEvaluation, UniversityType } from "../../types";
 import { getCriteriaLabel } from '../displayUtils';
 import { preparePdfTableRows } from './criteriaKeyMapping';
 import { getCoreTotalScore, getTraditionalTotalScore } from '../scoringUtils';
+import { applyDocumentFont } from './fontUtils';
 
 /**
  * Adds scores table to PDF document
@@ -52,11 +53,11 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
     headStyles: { 
       fillColor: [99, 102, 241], // Updated to match website primary color #6366F1
       textColor: [255, 255, 255],
-      font: 'NotoSansSC',
+      font: 'helvetica',
       fontStyle: 'bold' 
     },
     styles: {
-      font: 'NotoSansSC',
+      font: 'helvetica',
       fontStyle: 'normal'
     },
     alternateRowStyles: { fillColor: [240, 240, 240] },
@@ -75,11 +76,11 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
     headStyles: { 
       fillColor: [99, 102, 241], // Updated to match website primary color #6366F1
       textColor: [255, 255, 255],
-      font: 'NotoSansSC',
+      font: 'helvetica',
       fontStyle: 'bold' 
     },
     styles: {
-      font: 'NotoSansSC',
+      font: 'helvetica',
       fontStyle: 'normal'
     },
     alternateRowStyles: { fillColor: [240, 240, 240] }

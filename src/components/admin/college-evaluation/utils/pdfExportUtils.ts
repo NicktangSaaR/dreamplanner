@@ -10,7 +10,7 @@ export const exportEvaluationToPDF = async (evaluation: StudentEvaluation) => {
   const universityType = evaluation.university_type as UniversityType || 'ivyLeague';
   
   try {
-    // Generate PDF document with the correct university type
+    // Generate PDF document with the correct university type and await it
     const doc = await generateEvaluationPdf(evaluation, universityType);
     
     // Save the PDF with student name

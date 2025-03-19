@@ -1,38 +1,43 @@
 
 import jsPDF from 'jspdf';
 import { StudentEvaluation } from "../../types";
+import { applyDocumentFont } from './fontUtils';
 
 /**
  * Adds comments section to PDF document
  */
-export const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, startY: number) => {
-  let finalY = startY + 10; // Add extra space before comments section
-  
-  // Add new page if needed - ensure enough space for header
-  if (finalY > 240) {
+export const addCommentsSection = (doc: jsPDF, evaluation: StudentEvaluation, currentY: number) => {
+  // Check if we need a new page for comments
+  if (currentY > 220) {
     doc.addPage();
-    doc.setFont("NotoSansSC"); // Ensure font is set for new page to support Chinese
-    finalY = 45; // Start content lower on new pages to account for header area
+    currentY = 45; // Start content lower on new pages to account for header area
   }
   
-  // Set font for the section header
-  doc.setFontSize(14);
-  doc.setFont("NotoSansSC", "bold");
-  doc.text('Comments:', 15, finalY);
+  // Add separator
+  doc.setDrawColor(220, 220, 220); // Light gray line
+  doc.setLineWidth(0.5);
+  doc.line(15, currentY, 195, currentY);
+  currentY += 10;
   
-  // Set font for comments content
-  doc.setFont("NotoSansSC", "normal");
+  // Add comments title
+  applyDocumentFont(doc, 'bold');
+  doc.setFontSize(12);
+  doc.text("Counselor Comments:", 15, currentY);
+  currentY += 8;
   
-  // Add comments with improved word wrapping
-  const maxCommentWidth = 180;
-  const comments = evaluation.comments || 'None';
+  // Get comments from evaluation
+  const comments = evaluation.comments || "";
   
-  // Use splitTextToSize for proper text wrapping with CJK character support
-  const splitComments = doc.splitTextToSize(comments, maxCommentWidth);
-  finalY += 10; // Better spacing between header and content
-  
+  // Add comments with proper line breaks
+  applyDocumentFont(doc, 'normal');
   doc.setFontSize(10);
-  doc.text(splitComments, 15, finalY);
   
-  return finalY + (splitComments.length * 5); // Return the final Y position
+  if (comments.trim() === "") {
+    doc.text("No comments provided.", 15, currentY);
+  } else {
+    // Split long text to fit on page width
+    const maxWidth = 180;
+    const splitText = doc.splitTextToSize(comments, maxWidth);
+    doc.text(splitText, 15, currentY);
+  }
 };

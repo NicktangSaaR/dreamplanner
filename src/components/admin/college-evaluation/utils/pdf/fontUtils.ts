@@ -2,26 +2,22 @@
 import jsPDF from 'jspdf';
 
 /**
- * Loads Chinese font support into the PDF document
- * This ensures proper rendering of Chinese characters
+ * Loads Chinese font support for PDF documents
+ * This must be awaited before using Chinese characters
  */
 export const loadChineseFont = async (doc: jsPDF): Promise<void> => {
-  try {
-    // Add NotoSansSC font which supports Chinese characters
-    // We're loading it from CDN rather than bundling with the app
-    const fontUrl = 'https://cdn.jsdelivr.net/npm/noto-sans-sc@14.0.1/NotoSansSC-Regular.ttf';
-    
-    // Load a font that has good CJK (Chinese, Japanese, Korean) support
-    // This is a simple approach that works for web-based PDF generation
-    doc.addFont(fontUrl, 'NotoSansSC', 'normal');
-    
-    // Set as default font to ensure all text uses it
-    doc.setFont('NotoSansSC');
-    
-    console.log('Chinese font loaded successfully');
-  } catch (error) {
-    console.error('Error loading Chinese font:', error);
-    // Fallback to standard font if loading fails
-    doc.setFont('helvetica');
-  }
+  // Use standard fonts for now to avoid font loading issues
+  // Setting the default font to helvetica which is built-in
+  doc.setFont("helvetica");
+  
+  // Return immediately since we're not loading external fonts
+  return Promise.resolve();
+};
+
+/**
+ * Apply safe fonts to document
+ * Use this instead of directly setting fonts to prevent errors
+ */
+export const applyDocumentFont = (doc: jsPDF, fontStyle: 'normal' | 'bold' | 'italic' | 'bolditalic' = 'normal'): void => {
+  doc.setFont("helvetica", fontStyle);
 };

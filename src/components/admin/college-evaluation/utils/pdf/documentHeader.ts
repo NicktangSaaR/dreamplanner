@@ -2,6 +2,7 @@
 import jsPDF from 'jspdf';
 import { StudentEvaluation, UniversityType } from "../../types";
 import { getUniversityTypeDisplay } from '../displayUtils';
+import { applyDocumentFont } from './fontUtils';
 
 /**
  * Adds student information and header to PDF document
@@ -11,7 +12,7 @@ export const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, uni
   const evalType = evaluation.university_type || universityType;
   
   // Ensure font is set properly for header
-  doc.setFont("NotoSansSC", "bold");
+  applyDocumentFont(doc, 'bold');
   
   // Add title (center aligned) with increased top margin to make room for the header
   doc.setFontSize(18);
@@ -20,7 +21,7 @@ export const addDocumentHeader = (doc: jsPDF, evaluation: StudentEvaluation, uni
   
   // Add student information with increased top margin
   doc.setFontSize(12);
-  doc.setFont("NotoSansSC", "normal");
+  applyDocumentFont(doc, 'normal');
   doc.text(`Student Name: ${evaluation.student_name}`, 15, 60);
   
   // Format date properly for display
