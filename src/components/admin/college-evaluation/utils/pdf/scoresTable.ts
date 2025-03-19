@@ -24,25 +24,23 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
     ['Unique Personal Narrative', evaluation.unique_narrative_score || 3],
   ];
   
-  // Calculate core score
+  // Calculate core score and average
   const coreScore = getCoreTotalScore(evaluation);
+  const coreCount = 3; // Always 3 core criteria
+  const coreAverage = Math.round((coreScore / coreCount) * 100) / 100;
   
-  // Add core total score
-  admissionFactorsRows.push(['Core Total Score', `${coreScore}/18`]);
+  // Add core average score
+  admissionFactorsRows.push(['Core Average Score', coreAverage]);
   
-  // Calculate max possible score for traditional criteria
-  let traditionalMaxScore = 36; // Default: 6 criteria × 6 points
+  // Calculate traditional criteria count
+  const traditionalCount = evalType === 'ucSystem' ? 5 : 6; // 5 criteria for UC, 6 for others
   
-  // For UC System, we don't count interview (5 criteria × 6 points = 30)
-  if (evalType === 'ucSystem') {
-    traditionalMaxScore = 30;
-  }
-  
-  // Calculate traditional score
+  // Calculate traditional score and average
   const traditionalScore = getTraditionalTotalScore(evaluation, evalType);
+  const traditionalAverage = Math.round((traditionalScore / traditionalCount) * 100) / 100;
   
-  // Add traditional total score to traditional rows
-  traditionalTableRows.push(['Traditional Total Score', `${traditionalScore}/${traditionalMaxScore}`]);
+  // Add traditional average score to traditional rows
+  traditionalTableRows.push(['Traditional Average Score', traditionalAverage]);
   
   // Add admission factors table with appropriate labels
   autoTable(doc, {

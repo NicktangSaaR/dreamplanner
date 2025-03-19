@@ -1,6 +1,7 @@
 
 import { UniversityType } from "../../types";
 import { getCriteriaLabel } from '../displayUtils';
+import { sanitizeText } from './fontUtils';
 
 /**
  * Converts column name to criteria key
@@ -56,8 +57,8 @@ export const preparePdfTableRows = (evaluation: any, universityType: UniversityT
       return null;
     }
     
-    // Get label
-    const label = getCriteriaLabel(column, universityType);
+    // Get label and ensure proper text sanitization
+    const label = sanitizeText(getCriteriaLabel(column, universityType));
     return [label, score];
   }).filter(Boolean); // Remove null entries
 };
