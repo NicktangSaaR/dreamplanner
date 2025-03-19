@@ -5,7 +5,7 @@ import { StudentEvaluation, UniversityType } from "../../types";
 import { getCriteriaLabel } from '../displayUtils';
 import { preparePdfTableRows } from './criteriaKeyMapping';
 import { getCoreTotalScore, getTraditionalTotalScore } from '../scoringUtils';
-import { applyDocumentFont } from './fontUtils';
+import { applyDocumentFont, sanitizeText } from './fontUtils';
 
 /**
  * Adds scores table to PDF document
@@ -19,16 +19,16 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
   
   // Handle core admission factors - use default values if not present in the evaluation
   const admissionFactorsRows = [
-    ["Academic Excellence", evaluation.academic_excellence_score || 3],
-    ["Impact & Leadership", evaluation.impact_leadership_score || 3],
-    ["Unique Personal Narrative", evaluation.unique_narrative_score || 3],
+    [sanitizeText("Academic Excellence"), evaluation.academic_excellence_score || 3],
+    [sanitizeText("Impact & Leadership"), evaluation.impact_leadership_score || 3],
+    [sanitizeText("Unique Personal Narrative"), evaluation.unique_narrative_score || 3],
   ];
   
   // Calculate core score
   const coreScore = getCoreTotalScore(evaluation);
   
   // Add core total score
-  admissionFactorsRows.push(["Core Total Score", `${coreScore}/18`]);
+  admissionFactorsRows.push([sanitizeText("Core Total Score"), `${coreScore}/18`]);
   
   // Calculate max possible score for traditional criteria
   let traditionalMaxScore = 36; // Default: 6 criteria × 6 points
@@ -42,12 +42,12 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
   const traditionalScore = getTraditionalTotalScore(evaluation, evalType);
   
   // Add traditional total score to traditional rows
-  traditionalTableRows.push(["Traditional Total Score", `${traditionalScore}/${traditionalMaxScore}`]);
+  traditionalTableRows.push([sanitizeText("Traditional Total Score"), `${traditionalScore}/${traditionalMaxScore}`]);
   
   // Add admission factors table with appropriate labels
   autoTable(doc, {
     startY: 90,
-    head: [['Core Admission Factors', 'Score (1 is highest, 6 is lowest)']],
+    head: [[sanitizeText('Core Admission Factors'), sanitizeText('Score (1 is highest, 6 is lowest)')]],
     body: admissionFactorsRows,
     theme: 'grid',
     headStyles: { 
@@ -70,7 +70,7 @@ export const addScoresTable = (doc: jsPDF, evaluation: StudentEvaluation, univer
   // Add traditional criteria table
   autoTable(doc, {
     startY: admissionTableEndY + 10, // Add some space between tables
-    head: [['Traditional Evaluation Criteria', 'Score (1 is highest, 6 is lowest)']],
+    head: [[sanitizeText('Traditional Evaluation Criteria'), sanitizeText('Score (1 is highest, 6 is lowest)')]],
     body: traditionalTableRows,
     theme: 'grid',
     headStyles: { 

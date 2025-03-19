@@ -1,6 +1,7 @@
 
 import { UniversityType } from "../../types";
 import { getCriteriaLabel } from '../displayUtils';
+import { sanitizeText } from './fontUtils';
 
 /**
  * Converts column name to criteria key
@@ -48,7 +49,7 @@ export const preparePdfTableRows = (evaluation: any, universityType: UniversityT
     criteriaColumns.push('interview_score');
   }
   
-  // Map columns to table rows
+  // Map columns to table rows with sanitized text
   return criteriaColumns.map(column => {
     const score = evaluation[column];
     // Skip interview for UC System
@@ -56,6 +57,8 @@ export const preparePdfTableRows = (evaluation: any, universityType: UniversityT
       return null;
     }
     
-    return [getCriteriaLabel(column, universityType), score];
+    // Get label and ensure it's properly sanitized
+    const label = getCriteriaLabel(column, universityType);
+    return [label, score];
   }).filter(Boolean); // Remove null entries
 };
