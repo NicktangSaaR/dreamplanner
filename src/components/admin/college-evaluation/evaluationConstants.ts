@@ -1,4 +1,3 @@
-
 import { CriteriaDescriptions, UniversityType } from "./types";
 
 export const IVY_LEAGUE_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
@@ -19,12 +18,12 @@ export const IVY_LEAGUE_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
     6: "No extracurricular highlights. Almost no activity participation, or only joined some clubs in later grades without commitment."
   },
   athletics: {
-    1: "NCAA level athlete with coach recommendation. Possibly a national or state champion, recognized by Ivy League athletic teams.",
-    2: "Excellent athlete with outstanding performance in state or national competitions. Possibly a state MVP or award recipient in national sporting events.",
-    3: "Key player on high school team with achievements in local competitions.",
-    4: "Regular team member without significant awards.",
-    5: "Participated in sports activities but without formal team experience.",
-    6: "No athletic participation."
+    1: "Exceptional talent in arts, music, sports, or other specialized abilities with recognition at national or international level. Possibly national awards in arts, music competitions, sports championships, or other talent showcases.",
+    2: "Outstanding development of talents in arts, music, sports, or other areas with significant achievements at state or regional level. Recognition by prestigious programs or high-level competitive placements.",
+    3: "Strong skills in arts, music, sports, or other talents with consistent development and some recognition in local or school competitions.",
+    4: "Good development of a talent or skill with participation in formal programs or competitions, but without significant awards or recognition.",
+    5: "Basic participation in arts, music, sports, or other talent areas without significant development or achievements.",
+    6: "Little to no participation in arts, music, sports, or talent development activities."
   },
   personalQualities: {
     1: "Exceptional charisma, leadership, and influence. Possibly a community change-maker, innovator, showing outstanding sense of mission and social responsibility in recommendations and personal essays.",
@@ -95,12 +94,12 @@ export const TOP30_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
     6: "Almost no extracurricular activity experience."
   },
   athletics: {
-    1: "Excellent school team athlete, possibly with awards in regional competitions.",
-    2: "School representative team member, actively participates in competitions.",
-    3: "Regular team member with athletic experience.",
-    4: "Participates in informal school sports activities.",
-    5: "Rarely participates in sports activities.",
-    6: "No athletic experience."
+    1: "Exceptional talent in arts, music, sports, or other unique skills with regional or state-level recognition. Significant achievements in competitions or performances.",
+    2: "Strong development of talents in arts, music, sports, or other areas with consistent recognition at school or local level.",
+    3: "Good skills in a particular talent area with participation in formal programs and evidence of progression.",
+    4: "Some development of artistic, musical, athletic, or other talents with participation in school-based activities.",
+    5: "Limited participation in talent development activities with minimal progression or achievement.",
+    6: "No significant participation in arts, music, sports, or other talent development activities."
   },
   personalQualities: {
     1: "Demonstrates outstanding leadership and innovation, with specific examples in recommendation letters.",
@@ -171,12 +170,12 @@ export const UC_SYSTEM_CRITERIA_DESCRIPTIONS: CriteriaDescriptions = {
     6: "Very few or no extracurricular activities."
   },
   athletics: {
-    1: "Exceptional talent or skill in a specific area (arts, music, leadership, etc.) with state or national recognition.",
-    2: "Strong development of a personal talent with awards or recognition at school or regional level.",
-    3: "Clear demonstration of talent development with consistent practice and improvement.",
-    4: "Some evidence of personal talent but limited recognition or achievement.",
-    5: "Basic development of a talent or skill without significant accomplishments.",
-    6: "No demonstrated personal talents or skills in application materials."
+    1: "Exceptional development of talent in arts, music, sports, writing, or any specialized skill with significant achievements or recognition in state or national competitions/showcases.",
+    2: "Strong talent development in arts, music, sports, or other specialized skills with recognition at regional or competitive local level.",
+    3: "Good development of talents or skills with consistent participation and some recognition in school or community settings.",
+    4: "Some evidence of talent development in arts, music, sports, or other areas with basic participation in organized activities.",
+    5: "Limited development of talents with minimal formal participation or training.",
+    6: "No significant talent development or participation in arts, music, sports, or other specialized skill areas."
   },
   personalQualities: {
     1: "Exceptional demonstration of UC's comprehensive review factors: creativity, intellectual curiosity, leadership, and resilience. Compelling personal insight questions.",
