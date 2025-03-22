@@ -1,6 +1,6 @@
 
-import { Note } from "../types/note";
-import NoteCard from "../NoteCard";
+import { Note } from "@/hooks/notes/types";
+import NoteCard from "./NoteCard";
 
 interface NotesListProps {
   notes: Note[];
