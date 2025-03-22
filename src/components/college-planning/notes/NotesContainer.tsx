@@ -8,6 +8,7 @@ import NotesList from "./NotesList";
 import { Note } from "@/hooks/notes/types";
 import { useNotes } from "@/hooks/useNotes";
 import SharedFolderSection from "../student-summary/SharedFolderSection";
+import NotesCard from "./NotesCard"; // Add missing import
 
 interface NotesContainerProps {
   onNotesChange?: (notes: Note[]) => void;
