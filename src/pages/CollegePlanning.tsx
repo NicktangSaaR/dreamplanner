@@ -57,6 +57,7 @@ export default function CollegePlanning() {
             onCoursesChange={handleCoursesChange}
             onActivitiesChange={setActivities}
             onNotesChange={setNotes}
+            studentId={profile?.id || ''}
           />
         </div>
       </div>
