@@ -4,6 +4,7 @@ import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import DashboardTabs from "@/components/college-planning/DashboardTabs";
 import { QueryClient } from "@tanstack/react-query";
+import SharedFolderSection from "@/components/college-planning/student-summary/SharedFolderSection";
 
 interface DashboardContentProps {
   studentId: string;
@@ -51,6 +52,11 @@ export default function DashboardContent({
                 queryClient.setQueryData(["student-notes", studentId], newNotes);
               }}
             />
+          </div>
+          
+          {/* Add the Shared Folder Section */}
+          <div className="mt-8">
+            <SharedFolderSection studentId={studentId} />
           </div>
         </div>
       </div>
