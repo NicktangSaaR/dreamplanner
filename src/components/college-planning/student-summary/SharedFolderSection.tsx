@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,23 +5,36 @@ import { toast } from "sonner";
 import SharedFolderCard from "../SharedFolderCard";
 import SharedFolderDialog from "../SharedFolderDialog";
 import { checkCounselorAccess } from "@/hooks/student/utils/counselorAccess";
+import { useProfile } from "@/hooks/useProfile";
 
 export default function SharedFolderSection({ studentId }: { studentId: string }) {
   const [isEditingFolder, setIsEditingFolder] = useState(false);
   const queryClient = useQueryClient();
   const [hasAccess, setHasAccess] = useState(false);
+  const { profile } = useProfile();
 
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const hasAccess = await checkCounselorAccess(studentId, user.id);
-      setHasAccess(hasAccess);
+      // If the user is viewing their own profile, they should have access
+      if (studentId === user.id) {
+        setHasAccess(true);
+        return;
+      }
+
+      // Otherwise, check if they are a counselor with access
+      const hasCounselorAccess = await checkCounselorAccess(studentId, user.id);
+      setHasAccess(hasCounselorAccess);
     };
 
     checkAccess();
   }, [studentId]);
+
+  console.log("SharedFolderSection - studentId:", studentId);
+  console.log("SharedFolderSection - hasAccess:", hasAccess);
+  console.log("SharedFolderSection - Current user profile:", profile);
 
   const { data: sharedFolder, isLoading } = useQuery({
     queryKey: ["shared-folder", studentId],
@@ -39,6 +51,7 @@ export default function SharedFolderSection({ studentId }: { studentId: string }
         console.error("Error fetching shared folder:", error);
         return null;
       }
+      console.log("SharedFolderSection - folder data:", data);
       return data;
     },
   });
@@ -72,10 +85,7 @@ export default function SharedFolderSection({ studentId }: { studentId: string }
     }
   };
 
-  if (!hasAccess) {
-    return null;
-  }
-
+  // Always show the shared folder section, regardless of access
   return (
     <>
       <SharedFolderCard

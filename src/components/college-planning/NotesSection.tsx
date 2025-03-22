@@ -66,6 +66,7 @@ export default function NotesSection({ onNotesChange, studentId: propStudentId }
 
   return (
     <div className="space-y-6">
+      {/* Notes Section */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -95,9 +96,11 @@ export default function NotesSection({ onNotesChange, studentId: propStudentId }
         </CardContent>
       </Card>
 
-      {/* Shared Folder Section */}
+      {/* Shared Folder Section - Always render if we have a student ID */}
       {effectiveStudentId && (
-        <SharedFolderSection studentId={effectiveStudentId} />
+        <div className="mt-6">
+          <SharedFolderSection studentId={effectiveStudentId} />
+        </div>
       )}
 
       <NoteDialog
