@@ -12,53 +12,55 @@ import SharedFolderSection from "./student-summary/SharedFolderSection";
 
 interface NotesSectionProps {
   onNotesChange?: (notes: Note[]) => void;
+  studentId?: string;
 }
 
-export default function NotesSection({ onNotesChange }: NotesSectionProps) {
+export default function NotesSection({ onNotesChange, studentId: propStudentId }: NotesSectionProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const { studentId } = useParams();
-  const { notes, createNote, updateNote, deleteNote, handleTogglePin, handleToggleStar } = useNotes(studentId);
+  const { studentId: urlStudentId } = useParams();
+  const effectiveStudentId = propStudentId || urlStudentId;
+  const { notes, createNote, updateNote, deleteNote, handleTogglePin, handleToggleStar } = useNotes(effectiveStudentId);
 
-  console.log("NotesSection - studentId:", studentId);
+  console.log("NotesSection - studentId:", effectiveStudentId);
   console.log("NotesSection - notes:", notes);
 
   const handleCreateNote = async (data: { title: string; content: string }) => {
-    if (!studentId) return;
+    if (!effectiveStudentId) return;
     
-    await createNote(data, studentId);
+    await createNote(data, effectiveStudentId);
     setIsDialogOpen(false);
     if (onNotesChange) onNotesChange(notes);
   };
 
   const handleEditNote = async (data: { title: string; content: string }) => {
-    if (!editingNote || !studentId) return;
+    if (!editingNote || !effectiveStudentId) return;
     
     await updateNote({
       ...editingNote,
       title: data.title,
       content: data.content,
-    }, studentId);
+    }, effectiveStudentId);
     
     setEditingNote(null);
     if (onNotesChange) onNotesChange(notes);
   };
 
   const handleDeleteNote = async (note: Note) => {
-    if (!studentId) return;
+    if (!effectiveStudentId) return;
     await deleteNote(note.id);
     if (onNotesChange) onNotesChange(notes);
   };
 
   const handleTogglePinNote = async (note: Note) => {
-    if (!studentId) return;
-    await handleTogglePin(note, studentId);
+    if (!effectiveStudentId) return;
+    await handleTogglePin(note, effectiveStudentId);
     if (onNotesChange) onNotesChange(notes);
   };
 
   const handleToggleStarNote = async (note: Note) => {
-    if (!studentId) return;
-    await handleToggleStar(note, studentId);
+    if (!effectiveStudentId) return;
+    await handleToggleStar(note, effectiveStudentId);
     if (onNotesChange) onNotesChange(notes);
   };
 
@@ -93,9 +95,9 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
         </CardContent>
       </Card>
 
-      {/* Add Shared Folder Section with the current studentId */}
-      {studentId && (
-        <SharedFolderSection studentId={studentId} />
+      {/* Add Shared Folder Section */}
+      {effectiveStudentId && (
+        <SharedFolderSection studentId={effectiveStudentId} />
       )}
 
       <NoteDialog

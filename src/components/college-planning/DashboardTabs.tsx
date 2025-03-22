@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AcademicsSection from "./AcademicsSection";
 import ExtracurricularSection from "./ExtracurricularSection";
@@ -11,6 +12,7 @@ interface DashboardTabsProps {
   onCoursesChange: (courses: Course[]) => void;
   onActivitiesChange: (activities: any[]) => void;
   onNotesChange: (notes: any[]) => void;
+  studentId: string;
 }
 
 export default function DashboardTabs({
@@ -18,6 +20,7 @@ export default function DashboardTabs({
   onCoursesChange,
   onActivitiesChange,
   onNotesChange,
+  studentId,
 }: DashboardTabsProps) {
   console.log("DashboardTabs - Received courses:", courses);
 
@@ -65,7 +68,10 @@ export default function DashboardTabs({
         <ExtracurricularSection onActivitiesChange={onActivitiesChange} />
       </TabsContent>
       <TabsContent value="notes">
-        <NotesSection onNotesChange={onNotesChange} />
+        <NotesSection 
+          onNotesChange={onNotesChange} 
+          studentId={studentId}
+        />
       </TabsContent>
       <TabsContent value="todos">
         <TodoSection />
