@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface CounselorCheckProps {
   studentId: string;
@@ -11,6 +13,7 @@ interface CounselorCheckProps {
 
 export default function CounselorCheck({ studentId, onCounselorCheck }: CounselorCheckProps) {
   const { toast } = useToast();
+  const navigate = useNavigate(); // Initialize the navigate function from useNavigate hook
   
   const { data: counselorRelationship, isSuccess: isCounselorCheckComplete } = useQuery({
     queryKey: ["counselor-relationship", studentId],
@@ -63,11 +66,7 @@ export default function CounselorCheck({ studentId, onCounselorCheck }: Counselo
         });
       }
     }
-  }, [counselorRelationship, isCounselorCheckComplete, onCounselorCheck, toast]);
+  }, [counselorRelationship, isCounselorCheckComplete, onCounselorCheck, toast, navigate]);
 
   return null;
 }
-
-// Import Button to avoid type error
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
