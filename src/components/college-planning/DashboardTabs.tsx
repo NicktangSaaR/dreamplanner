@@ -23,6 +23,7 @@ export default function DashboardTabs({
   studentId,
 }: DashboardTabsProps) {
   console.log("DashboardTabs - Received courses:", courses);
+  console.log("DashboardTabs - Received studentId:", studentId);
 
   return (
     <Tabs defaultValue="academics" className="w-full">
