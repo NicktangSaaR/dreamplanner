@@ -93,10 +93,9 @@ export default function NotesSection({ onNotesChange }: NotesSectionProps) {
         </CardContent>
       </Card>
 
+      {/* Add Shared Folder Section with the current studentId */}
       {studentId && (
-        <Card>
-          <SharedFolderSection studentId={studentId} />
-        </Card>
+        <SharedFolderSection studentId={studentId} />
       )}
 
       <NoteDialog
