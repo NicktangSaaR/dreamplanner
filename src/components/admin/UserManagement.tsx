@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AssociateCounselorDialog } from "./user-management/AssociateCounselorDialog";
 
 interface EditableUser {
   id: string;
@@ -34,6 +35,7 @@ const UserManagement = () => {
     email: "",
   });
   const [userToDelete, setUserToDelete] = useState<{id: string; name: string | null; type: string} | null>(null);
+  const [studentForCounselor, setStudentForCounselor] = useState<{id: string; name: string | null} | null>(null);
 
   const { data: users = [], isLoading, refetch } = useUsersQuery();
   const { 
@@ -128,6 +130,13 @@ const UserManagement = () => {
     }
   };
 
+  const handleAssociateCounselor = (studentId: string, studentName: string | null) => {
+    setStudentForCounselor({
+      id: studentId,
+      name: studentName,
+    });
+  };
+
   if (isLoading) {
     return <div>Loading users...</div>;
   }
@@ -152,6 +161,7 @@ const UserManagement = () => {
         onUpdateType={handleUpdateUserType}
         onFormChange={handleFormChange}
         onVerifyUser={handleVerifyUser}
+        onAssociateCounselor={handleAssociateCounselor}
       />
 
       <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
@@ -173,6 +183,18 @@ const UserManagement = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {studentForCounselor && (
+        <AssociateCounselorDialog
+          open={!!studentForCounselor}
+          onOpenChange={(open) => {
+            if (!open) setStudentForCounselor(null);
+          }}
+          studentId={studentForCounselor.id}
+          studentName={studentForCounselor.name}
+          onCounselorAssociated={refetch}
+        />
+      )}
     </div>
   );
 };
