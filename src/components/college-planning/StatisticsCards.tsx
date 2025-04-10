@@ -3,12 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, BookOpen, CheckCircle2, ListTodo, StickyNote, Star } from "lucide-react";
 import { calculateGPA } from "./academics/GradeCalculator";
 import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
+import { useState } from "react";
+import { GPACalculationType } from "./academics/GPATypeSelector";
 
 interface StatisticsCardsProps {
   courses: Array<{
     grade: string;
     course_type: string;
     grade_type?: string;
+    grade_level?: string;
   }>;
   activities: Array<{
     timeCommitment: string;
@@ -16,11 +19,12 @@ interface StatisticsCardsProps {
   notes: Array<{
     date: string;
   }>;
-  studentId: string; // Add studentId prop
+  studentId: string;
 }
 
 export default function StatisticsCards({ courses, activities, notes, studentId }: StatisticsCardsProps) {
   console.log("StatisticsCards - Current notes count:", notes.length);
+  const [gpaType, setGpaType] = useState<GPACalculationType>("unweighted-us");
   
   // Use studentId to fetch todos
   const { todos } = useStudentTodos(studentId);
@@ -31,21 +35,67 @@ export default function StatisticsCards({ courses, activities, notes, studentId 
     total: todos.length,
   };
 
-  const calculateCurrentGPA = (weighted: boolean = true) => {
+  const calculateCurrentGPA = () => {
     if (courses.length === 0) return "0.00";
     const validCourses = courses.filter(course => course.grade !== "In Progress");
     if (validCourses.length === 0) return "0.00";
     
-    const totalGPA = validCourses.reduce((sum, course) => {
-      if (weighted) {
-        return sum + calculateGPA(course.grade, course.course_type || 'Regular', course.grade_type);
-      } else {
+    if (gpaType === "100-point") {
+      const totalPoints = validCourses.reduce((sum, course) => {
+        if (course.grade_type === '100-point') {
+          const points = parseFloat(course.grade);
+          return isNaN(points) ? sum : sum + points;
+        }
+        return sum;
+      }, 0);
+      
+      const valid100PointCourses = validCourses.filter(course => course.grade_type === '100-point');
+      if (valid100PointCourses.length === 0) return "0.00";
+      
+      return (totalPoints / valid100PointCourses.length).toFixed(2);
+    } 
+    else if (gpaType === "unweighted-us") {
+      const totalGPA = validCourses.reduce((sum, course) => {
         // For unweighted, always use 'Regular' as course type
         return sum + calculateGPA(course.grade, 'Regular', course.grade_type);
-      }
-    }, 0);
-    
-    return (totalGPA / validCourses.length).toFixed(2);
+      }, 0);
+      
+      return (totalGPA / validCourses.length).toFixed(2);
+    }
+    else if (gpaType === "uc-gpa") {
+      const ucValidCourses = validCourses.filter(course => course.grade_level !== '9');
+      if (ucValidCourses.length === 0) return "0.00";
+      
+      const totalGPA = ucValidCourses.reduce((sum, course) => {
+        // For UC GPA, use special calculation with honors/AP bonus
+        const baseGPA = calculateGPA(course.grade, 'Regular', course.grade_type);
+        const bonus = course.course_type === 'Honors' || course.course_type === 'AP/IB' ? 1.0 : 0;
+        return sum + baseGPA + bonus;
+      }, 0);
+      
+      return (totalGPA / ucValidCourses.length).toFixed(2);
+    }
+    else {
+      // Regular weighted GPA
+      const totalGPA = validCourses.reduce((sum, course) => {
+        return sum + calculateGPA(course.grade, course.course_type || 'Regular', course.grade_type);
+      }, 0);
+      
+      return (totalGPA / validCourses.length).toFixed(2);
+    }
+  };
+
+  const getGPALabel = () => {
+    switch (gpaType) {
+      case "100-point": return "100分制平均分";
+      case "unweighted-us": return "Unweighted GPA";
+      case "uc-gpa": return "UC GPA";
+      default: return "GPA";
+    }
+  };
+
+  const getGPAScale = () => {
+    return gpaType === "100-point" ? "" : "/4.0";
   };
 
   const calculateWeeklyHours = (activities: Array<{ timeCommitment: string }>) => {
@@ -87,12 +137,17 @@ export default function StatisticsCards({ courses, activities, notes, studentId 
         <CardContent>
           <div className="space-y-2">
             <div>
-              <p className="text-sm text-muted-foreground">Weighted</p>
-              <p className="text-2xl font-bold">GPA: {calculateCurrentGPA(true)}/5</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Unweighted</p>
-              <p className="text-2xl font-bold">GPA: {calculateCurrentGPA(false)}/4</p>
+              <select 
+                className="w-full mb-2 p-1 text-sm rounded border border-gray-300 bg-white/80"
+                value={gpaType}
+                onChange={(e) => setGpaType(e.target.value as GPACalculationType)}
+              >
+                <option value="unweighted-us">Unweighted GPA-US</option>
+                <option value="uc-gpa">UC GPA</option>
+                <option value="100-point">100分制平均分</option>
+              </select>
+              <p className="text-sm text-muted-foreground">{getGPALabel()}</p>
+              <p className="text-2xl font-bold">GPA: {calculateCurrentGPA()}{getGPAScale()}</p>
             </div>
           </div>
           <div className="text-sm text-muted-foreground space-y-2 mt-2">

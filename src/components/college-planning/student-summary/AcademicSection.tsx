@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import GradeCalculator from "../academics/GradeCalculator";
@@ -17,6 +18,7 @@ interface Course {
   semester: string;
   academic_year?: string;
   grade_type?: string;
+  grade_level?: string;
 }
 
 interface AcademicSectionProps {

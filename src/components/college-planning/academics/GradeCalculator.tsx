@@ -1,4 +1,8 @@
+
 import { Calculator } from "lucide-react";
+import { useState } from "react";
+import GPATypeSelector, { GPACalculationType } from "./GPATypeSelector";
+
 export const GRADE_TO_GPA: { [key: string]: number } = {
   'A+': 4.0, 'A': 4.0, 'A-': 3.7,
   'B+': 3.3, 'B': 3.0, 'B-': 2.7,
@@ -10,6 +14,13 @@ export const GRADE_TO_GPA: { [key: string]: number } = {
 export const COURSE_TYPE_BONUS: { [key: string]: number } = {
   'Regular': 0,
   'Honors': 0.5,
+  'AP/IB': 1.0
+};
+
+// UC GPA specific bonus
+export const UC_COURSE_TYPE_BONUS: { [key: string]: number } = {
+  'Regular': 0,
+  'Honors': 1.0,
   'AP/IB': 1.0
 };
 
@@ -42,6 +53,7 @@ interface Course {
   gpa_value?: number;
   academic_year?: string;
   grade_type?: string;
+  grade_level?: string;
 }
 
 interface GradeCalculatorProps {
@@ -73,22 +85,61 @@ function calculateUnweightedGPA(grade: string, gradeType: string = 'letter'): nu
   return GRADE_TO_GPA[grade.toUpperCase()] || 0;
 }
 
-function calculateYearGPA(courses: Course[], academicYear: string, weighted: boolean = true): number {
+function calculateUCGPA(course: Course): number {
+  if (SPECIAL_GRADES.includes(course.grade)) return 0;
+  
+  // UC GPA only counts courses from grades 10-12
+  if (course.grade_level === '9') return 0;
+  
+  // Calculate base GPA (unweighted)
+  let baseGPA = 0;
+  if (course.grade_type === '100-point') {
+    const numericGrade = parseFloat(course.grade);
+    if (isNaN(numericGrade)) return 0;
+    baseGPA = getGPAFromPercentage(numericGrade, 'Regular');
+  } else {
+    baseGPA = GRADE_TO_GPA[course.grade.toUpperCase()] || 0;
+  }
+  
+  // Apply UC-specific course type bonus
+  const bonus = UC_COURSE_TYPE_BONUS[course.course_type] || 0;
+  return baseGPA + bonus;
+}
+
+function calculateYearGPA(courses: Course[], academicYear: string, gpaType: GPACalculationType): number {
   const yearCourses = courses.filter(course => 
     course.academic_year === academicYear && !SPECIAL_GRADES.includes(course.grade)
   );
   
   if (yearCourses.length === 0) return 0;
 
-  const totalGPA = yearCourses.reduce((sum, course) => {
-    if (weighted) {
-      return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type, course.grade_type));
+  let totalGPA = 0;
+  let validCourseCount = 0;
+
+  yearCourses.forEach(course => {
+    let courseGPA = 0;
+    
+    if (gpaType === "unweighted-us") {
+      courseGPA = calculateUnweightedGPA(course.grade, course.grade_type);
+    } else if (gpaType === "uc-gpa") {
+      courseGPA = calculateUCGPA(course);
+      // Only count the course if it returned a non-zero GPA (e.g., not 9th grade)
+      if (courseGPA > 0) {
+        validCourseCount++;
+      } else {
+        return; // Skip this course for calculation
+      }
     } else {
-      return sum + calculateUnweightedGPA(course.grade, course.grade_type);
+      courseGPA = course.gpa_value || calculateGPA(course.grade, course.course_type, course.grade_type);
     }
-  }, 0);
+    
+    totalGPA += courseGPA;
+  });
   
-  return Number((totalGPA / yearCourses.length).toFixed(2));
+  // For UC GPA, we might have filtered out some courses
+  const coursesCount = gpaType === "uc-gpa" ? validCourseCount : yearCourses.length;
+  
+  return coursesCount > 0 ? Number((totalGPA / coursesCount).toFixed(2)) : 0;
 }
 
 function calculate100PointAverage(courses: Course[]): number | null {
@@ -114,19 +165,57 @@ function calculateYear100PointAverage(courses: Course[], academicYear: string): 
 }
 
 export default function GradeCalculator({ courses }: GradeCalculatorProps) {
-  const calculateOverallGPA = (weighted: boolean = true): number => {
+  const [gpaType, setGpaType] = useState<GPACalculationType>("unweighted-us");
+
+  const calculateOverallGPA = (): number => {
     const validCourses = courses.filter(course => !SPECIAL_GRADES.includes(course.grade));
     if (validCourses.length === 0) return 0;
     
-    const totalGPA = validCourses.reduce((sum, course) => {
-      if (weighted) {
-        return sum + (course.gpa_value || calculateGPA(course.grade, course.course_type, course.grade_type));
+    if (gpaType === "100-point") {
+      const average = calculate100PointAverage(validCourses);
+      return average !== null ? average : 0;
+    }
+
+    let totalGPA = 0;
+    let validCourseCount = 0;
+
+    validCourses.forEach(course => {
+      let courseGPA = 0;
+      
+      if (gpaType === "unweighted-us") {
+        courseGPA = calculateUnweightedGPA(course.grade, course.grade_type);
+      } else if (gpaType === "uc-gpa") {
+        courseGPA = calculateUCGPA(course);
+        // Only count the course if it returned a non-zero GPA (e.g., not 9th grade)
+        if (courseGPA > 0) {
+          validCourseCount++;
+        } else {
+          return; // Skip this course
+        }
       } else {
-        return sum + calculateUnweightedGPA(course.grade, course.grade_type);
+        courseGPA = course.gpa_value || calculateGPA(course.grade, course.course_type, course.grade_type);
       }
-    }, 0);
+      
+      totalGPA += courseGPA;
+    });
     
-    return Number((totalGPA / validCourses.length).toFixed(2));
+    // For UC GPA, we might have filtered out some courses
+    const coursesCount = gpaType === "uc-gpa" ? validCourseCount : validCourses.length;
+    
+    return coursesCount > 0 ? Number((totalGPA / coursesCount).toFixed(2)) : 0;
+  };
+
+  const getGPAScale = () => {
+    return gpaType === "100-point" ? "100" : "4.0";
+  };
+
+  const getGPATypeLabel = () => {
+    switch (gpaType) {
+      case "100-point": return "100分制平均分";
+      case "unweighted-us": return "Unweighted GPA-US";
+      case "uc-gpa": return "UC GPA";
+      default: return "GPA";
+    }
   };
 
   const academicYears = Array.from(new Set(courses.map(course => course.academic_year)))
@@ -137,66 +226,40 @@ export default function GradeCalculator({ courses }: GradeCalculatorProps) {
   const average100Point = calculate100PointAverage(courses);
 
   return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">GPA Calculator</h3>
+        <div className="w-48">
+          <GPATypeSelector value={gpaType} onChange={setGpaType} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-2">
         <div className="flex items-center gap-2 bg-green-50 p-3 rounded-lg">
           <Calculator className="h-5 w-5 text-green-600" />
           <div>
-            <p className="text-xs font-medium text-green-600">Weighted</p>
-            <p className="text-lg font-bold text-green-700">{calculateOverallGPA(true)}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 bg-blue-50 p-3 rounded-lg">
-          <Calculator className="h-5 w-5 text-blue-600" />
-          <div>
-            <p className="text-xs font-medium text-blue-600">Unweighted</p>
-            <p className="text-lg font-bold text-blue-700">{calculateOverallGPA(false)}</p>
+            <p className="text-xs font-medium text-green-600">{getGPATypeLabel()}</p>
+            <p className="text-lg font-bold text-green-700">
+              {calculateOverallGPA().toFixed(2)}{gpaType === "100-point" ? "" : `/${getGPAScale()}`}
+            </p>
           </div>
         </div>
       </div>
       
-      {average100Point !== null && (
-        <div className="flex items-center gap-2 bg-purple-50 p-3 rounded-lg">
-          <Calculator className="h-5 w-5 text-purple-600" />
-          <div>
-            <p className="text-xs font-medium text-purple-600">Overall 100-Point Average</p>
-            <p className="text-lg font-bold text-purple-700">{average100Point}</p>
-          </div>
-        </div>
-      )}
-      
       <div className="grid gap-2">
-        {academicYears.map(year => {
-          const year100PointAvg = calculateYear100PointAverage(courses, year);
-          return (
-            <div key={year} className="grid grid-cols-3 gap-2">
-              <div className="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
-                <div>
-                  <p className="text-xs font-medium text-green-600">{year} Weighted</p>
-                  <p className="text-base font-bold text-green-700">
-                    {calculateYearGPA(courses, year, true)}
-                  </p>
-                </div>
+        {academicYears.map(year => (
+          <div key={year} className="grid grid-cols-1 gap-2">
+            <div className="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
+              <div>
+                <p className="text-xs font-medium text-green-600">{year} {getGPATypeLabel()}</p>
+                <p className="text-base font-bold text-green-700">
+                  {calculateYearGPA(courses, year, gpaType).toFixed(2)}
+                  {gpaType === "100-point" ? "" : `/${getGPAScale()}`}
+                </p>
               </div>
-              <div className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg">
-                <div>
-                  <p className="text-xs font-medium text-blue-600">{year} Unweighted</p>
-                  <p className="text-base font-bold text-blue-700">
-                    {calculateYearGPA(courses, year, false)}
-                  </p>
-                </div>
-              </div>
-              {year100PointAvg !== null && (
-                <div className="flex items-center gap-2 bg-purple-50 p-2 rounded-lg">
-                  <div>
-                    <p className="text-xs font-medium text-purple-600">{year} 100-Point</p>
-                    <p className="text-base font-bold text-purple-700">{year100PointAvg}</p>
-                  </div>
-                </div>
-              )}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </div>
   );
