@@ -9,17 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-
-interface Course {
-  id: string;
-  name: string;
-  grade: string;
-  course_type: string;
-  semester: string;
-  academic_year?: string;
-  grade_type?: string;
-  grade_level?: string;
-}
+import { Course } from "../types/course";
 
 interface AcademicSectionProps {
   courses: Course[];
@@ -40,6 +30,13 @@ export default function AcademicSection({ courses, studentId }: AcademicSectionP
     }, {});
   };
 
+  // Convert courses to the format expected by GradeCalculator
+  // This ensures it has the student_id property to satisfy the type requirements
+  const validCourses = courses.map(course => ({
+    ...course,
+    student_id: course.student_id || studentId
+  }));
+
   return (
     <Card>
       <CardHeader>
@@ -50,12 +47,12 @@ export default function AcademicSection({ courses, studentId }: AcademicSectionP
       </CardHeader>
       <CardContent className="space-y-6">
         {/* GPA Summary */}
-        <GradeCalculator courses={courses} />
+        <GradeCalculator courses={validCourses} />
 
         {/* Course List */}
         <ScrollArea className="h-[600px]">
           <Accordion type="multiple" className="space-y-4">
-            {Object.entries(groupCoursesByYear(courses))
+            {Object.entries(groupCoursesByYear(validCourses))
               .sort(([yearA], [yearB]) => yearB.localeCompare(yearA))
               .map(([year, yearCourses]) => (
                 <AccordionItem 
