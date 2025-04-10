@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, X } from "lucide-react";
-import { calculateGPA } from "../GradeCalculator";
+import { calculateGPA } from "../utils/gpaCalculations";
 import { Course } from "../../types/course";
 import GradeInput from "../course-form/GradeInput";
 import GradeTypeSelect from "../course-form/GradeTypeSelect";

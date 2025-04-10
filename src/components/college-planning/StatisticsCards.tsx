@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, BookOpen, CheckCircle2, ListTodo, StickyNote, Star } from "lucide-react";
-import { calculateGPA } from "./academics/GradeCalculator";
+import { calculateGPA, calculateUnweightedGPA } from "./academics/utils/gpaCalculations";
 import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
 import { useState } from "react";
 import { GPACalculationType } from "./academics/GPATypeSelector";

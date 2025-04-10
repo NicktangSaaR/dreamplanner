@@ -1,9 +1,8 @@
-
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { Course } from "../../types/course";
-import { calculateGPA } from "../GradeCalculator";
+import { calculateGPA } from "../utils/gpaCalculations";
 
 interface CourseTableRowProps {
   course: Course;
