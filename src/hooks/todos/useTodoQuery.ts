@@ -7,6 +7,9 @@ export interface Todo {
   completed: boolean;
   starred: boolean;
   author_id: string;
+  due_date?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export function useTodoQuery() {

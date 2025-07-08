@@ -52,12 +52,17 @@ export function useStudentTodos(studentId: string | undefined) {
   });
 
   const createTodo = useMutation({
-    mutationFn: async ({ title, authorId }: { title: string; authorId: string }) => {
+    mutationFn: async ({ title, authorId, due_date }: { title: string; authorId: string; due_date?: string }) => {
       console.log("Creating todo for student:", authorId);
+      
+      const insertData: any = { title, author_id: authorId };
+      if (due_date) {
+        insertData.due_date = due_date;
+      }
       
       const { data, error } = await supabase
         .from("todos")
-        .insert([{ title, author_id: authorId }])
+        .insert([insertData])
         .select()
         .single();
 
