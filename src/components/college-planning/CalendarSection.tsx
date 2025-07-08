@@ -3,9 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar, Plus, Edit, Trash } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Calendar, Plus, Edit, Trash, Download, FileText, Grid } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { exportCalendarAsListPDF, exportCalendarAsGridPDF } from "./calendar/CalendarPDFExport";
 import { toast } from "sonner";
 
 const MONTHS = [
@@ -22,6 +26,24 @@ export default function CalendarSection() {
   const [todoTitle, setTodoTitle] = useState("");
 
   const currentYear = new Date().getFullYear();
+
+  // Get student profile for export
+  const { data: profile } = useQuery({
+    queryKey: ["student-profile", studentId],
+    queryFn: async () => {
+      if (!studentId) return null;
+      
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", studentId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!studentId,
+  });
 
   // Filter todos by month
   const getTodosForMonth = (monthIndex: number) => {
@@ -91,11 +113,42 @@ export default function CalendarSection() {
     setIsDialogOpen(true);
   };
 
+  const handleExportList = () => {
+    exportCalendarAsListPDF(todos, currentYear, profile?.full_name || undefined);
+    toast.success("Calendar list exported successfully");
+  };
+
+  const handleExportGrid = () => {
+    exportCalendarAsGridPDF(todos, currentYear, profile?.full_name || undefined);
+    toast.success("Calendar grid exported successfully");
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Calendar className="h-6 w-6" />
-        <h2 className="text-2xl font-bold">{currentYear} Calendar</h2>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-6 w-6" />
+          <h2 className="text-2xl font-bold">{currentYear} Calendar</h2>
+        </div>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Export PDF
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleExportList} className="gap-2">
+              <FileText className="h-4 w-4" />
+              Export as List
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportGrid} className="gap-2">
+              <Grid className="h-4 w-4" />
+              Export as Calendar Grid
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
