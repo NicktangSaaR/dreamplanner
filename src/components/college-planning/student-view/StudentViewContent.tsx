@@ -56,10 +56,12 @@ export default function StudentViewContent({
       
       <ActivitiesSection activities={activities} />
 
+      {/* Full-width Calendar Section */}
+      <StudentCalendar studentId={studentId} />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
           <TodoSection />
-          <StudentCalendar studentId={studentId} />
           <CollegeListSection />
           <SharedFolderSection studentId={studentId} />
         </div>
