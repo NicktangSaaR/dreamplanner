@@ -4,13 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Calendar, Plus, Edit, Trash, Download, FileText, Grid } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
+import { Calendar, Plus, Edit, Trash, Download, FileText, Grid, CalendarIcon } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { exportCalendarAsListPDF, exportCalendarAsGridPDF } from "./calendar/CalendarPDFExport";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -24,6 +28,7 @@ export default function CalendarSection() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<any>(null);
   const [todoTitle, setTodoTitle] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   const currentYear = new Date().getFullYear();
 
@@ -55,10 +60,17 @@ export default function CalendarSection() {
   };
 
   const handleAddTodo = async () => {
-    if (!todoTitle.trim() || selectedMonth === null || !studentId) return;
+    if (!todoTitle.trim() || !studentId) return;
 
-    // Set due date to first day of selected month
-    const dueDate = new Date(currentYear, selectedMonth, 1);
+    // Use selected date or default to first day of selected month
+    let dueDate: Date;
+    if (selectedDate) {
+      dueDate = selectedDate;
+    } else if (selectedMonth !== null) {
+      dueDate = new Date(currentYear, selectedMonth, 1);
+    } else {
+      dueDate = new Date(); // Default to today
+    }
     
     try {
       await createTodo.mutateAsync({ 
@@ -67,6 +79,7 @@ export default function CalendarSection() {
         due_date: dueDate.toISOString()
       });
       setTodoTitle("");
+      setSelectedDate(undefined);
       setIsDialogOpen(false);
       toast.success("Todo added successfully");
     } catch (error) {
@@ -77,12 +90,17 @@ export default function CalendarSection() {
   const handleEditTodo = async () => {
     if (!todoTitle.trim() || !editingTodo) return;
 
+    const updateData: any = { id: editingTodo.id, title: todoTitle };
+    
+    // Add due_date to update if a new date was selected
+    if (selectedDate) {
+      updateData.due_date = selectedDate.toISOString();
+    }
+
     try {
-      await updateTodo.mutateAsync({ 
-        id: editingTodo.id, 
-        title: todoTitle 
-      });
+      await updateTodo.mutateAsync(updateData);
       setTodoTitle("");
+      setSelectedDate(undefined);
       setEditingTodo(null);
       setIsDialogOpen(false);
       toast.success("Todo updated successfully");
@@ -104,12 +122,14 @@ export default function CalendarSection() {
     setSelectedMonth(monthIndex);
     setEditingTodo(null);
     setTodoTitle("");
+    setSelectedDate(new Date(currentYear, monthIndex, 1)); // Set default date to first of month
     setIsDialogOpen(true);
   };
 
   const openEditDialog = (todo: any) => {
     setEditingTodo(todo);
     setTodoTitle(todo.title);
+    setSelectedDate(todo.due_date ? new Date(todo.due_date) : undefined);
     setIsDialogOpen(true);
   };
 
@@ -217,16 +237,47 @@ export default function CalendarSection() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input
-              placeholder="Enter todo title..."
-              value={todoTitle}
-              onChange={(e) => setTodoTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  editingTodo ? handleEditTodo() : handleAddTodo();
-                }
-              }}
-            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Title</label>
+              <Input
+                placeholder="Enter todo title..."
+                value={todoTitle}
+                onChange={(e) => setTodoTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    editingTodo ? handleEditTodo() : handleAddTodo();
+                  }
+                }}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Due Date</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarUI
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel

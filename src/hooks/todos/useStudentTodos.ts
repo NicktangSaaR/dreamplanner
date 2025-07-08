@@ -122,10 +122,14 @@ export function useStudentTodos(studentId: string | undefined) {
   });
 
   const updateTodo = useMutation({
-    mutationFn: async ({ id, title }: { id: string; title: string }) => {
+    mutationFn: async ({ id, title, due_date }: { id: string; title?: string; due_date?: string }) => {
+      const updateData: any = {};
+      if (title !== undefined) updateData.title = title;
+      if (due_date !== undefined) updateData.due_date = due_date;
+      
       const { data, error } = await supabase
         .from("todos")
-        .update({ title })
+        .update(updateData)
         .eq("id", id)
         .select()
         .single();
