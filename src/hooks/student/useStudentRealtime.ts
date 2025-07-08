@@ -49,6 +49,19 @@ export const useStudentRealtime = (studentId: string | undefined, queryClient: Q
           queryClient.invalidateQueries({ queryKey: ["student-notes", studentId] });
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'todos',
+          filter: `author_id=eq.${studentId}`,
+        },
+        (payload) => {
+          console.log('Todos changed, refreshing...', payload);
+          queryClient.invalidateQueries({ queryKey: ["student-todos", studentId] });
+        }
+      )
       .subscribe((status) => {
         console.log("Subscription status:", status);
       });
