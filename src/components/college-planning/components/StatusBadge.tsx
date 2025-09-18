@@ -21,6 +21,8 @@ export const StatusBadge = ({ status }: StatusBadgeProps) => {
         return "bg-pink-100 text-pink-800";
       case "Completed":
         return "bg-green-100 text-green-800";
+      case "Transfer Student":
+        return "bg-amber-100 text-amber-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
