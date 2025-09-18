@@ -7,7 +7,9 @@ import {
   calculateGPA, 
   getGPALabel, 
   getGPAScale, 
-  getCourseTypeDistribution 
+  getCourseTypeDistribution,
+  calculateCollegeGPA40,
+  calculateCollegeGPA433
 } from "./utils/gpaUtils";
 
 interface AcademicsCardProps {
@@ -62,6 +64,20 @@ export default function AcademicsCard({ courses }: AcademicsCardProps) {
       
       return (totalGPA / ucValidCourses.length).toFixed(2);
     }
+    else if (gpaType === "college-gpa-4.0") {
+      const totalGPA = validCourses.reduce((sum, course) => {
+        return sum + calculateCollegeGPA40(course.grade, course.grade_type);
+      }, 0);
+      
+      return (totalGPA / validCourses.length).toFixed(2);
+    }
+    else if (gpaType === "college-gpa-4.33") {
+      const totalGPA = validCourses.reduce((sum, course) => {
+        return sum + calculateCollegeGPA433(course.grade, course.grade_type);
+      }, 0);
+      
+      return (totalGPA / validCourses.length).toFixed(2);
+    }
     else {
       // Regular weighted GPA
       const totalGPA = validCourses.reduce((sum, course) => {
@@ -94,6 +110,8 @@ export default function AcademicsCard({ courses }: AcademicsCardProps) {
             >
               <option value="unweighted-us">Unweighted GPA-US</option>
               <option value="uc-gpa">UC GPA</option>
+              <option value="college-gpa-4.0">US College GPA (4.0 Scale)</option>
+              <option value="college-gpa-4.33">US College GPA (4.33 Scale)</option>
               <option value="100-point">100分制平均分</option>
             </select>
             <p className="text-sm text-muted-foreground">{getGPALabel(gpaType)}</p>
