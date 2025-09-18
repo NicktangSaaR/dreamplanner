@@ -1,7 +1,16 @@
 
-// Grade to GPA conversion for letter grades
+// Grade to GPA conversion for letter grades (4.0 scale)
 export const GRADE_TO_GPA: { [key: string]: number } = {
   'A+': 4.0, 'A': 4.0, 'A-': 3.7,
+  'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+  'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+  'D+': 1.3, 'D': 1.0, 'D-': 0.7,
+  'F': 0.0
+};
+
+// Grade to GPA conversion for 4.33 scale
+export const GRADE_TO_GPA_433: { [key: string]: number } = {
+  'A+': 4.33, 'A': 4.0, 'A-': 3.7,
   'B+': 3.3, 'B': 3.0, 'B-': 2.7,
   'C+': 2.3, 'C': 2.0, 'C-': 1.7,
   'D+': 1.3, 'D': 1.0, 'D-': 0.7,

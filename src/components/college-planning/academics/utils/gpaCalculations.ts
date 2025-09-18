@@ -1,6 +1,7 @@
 
 import { 
   GRADE_TO_GPA, 
+  GRADE_TO_GPA_433,
   COURSE_TYPE_BONUS, 
   UC_COURSE_TYPE_BONUS, 
   SPECIAL_GRADES 
@@ -64,6 +65,36 @@ export function calculateUnweightedGPA(grade: string, gradeType: string = 'lette
 }
 
 /**
+ * Calculates US College GPA (4.0 scale)
+ */
+export function calculateCollegeGPA40(grade: string, gradeType: string = 'letter'): number {
+  if (SPECIAL_GRADES.includes(grade)) return 0;
+  
+  if (gradeType === '100-point') {
+    const numericGrade = parseFloat(grade);
+    if (isNaN(numericGrade)) return 0;
+    return getGPAFromPercentage(numericGrade, 'Regular');
+  }
+  return GRADE_TO_GPA[grade.toUpperCase()] || 0;
+}
+
+/**
+ * Calculates US College GPA (4.33 scale)
+ */
+export function calculateCollegeGPA433(grade: string, gradeType: string = 'letter'): number {
+  if (SPECIAL_GRADES.includes(grade)) return 0;
+  
+  if (gradeType === '100-point') {
+    const numericGrade = parseFloat(grade);
+    if (isNaN(numericGrade)) return 0;
+    // For 4.33 scale, A+ (97+) = 4.33, everything else follows standard conversion
+    if (numericGrade >= 97) return 4.33;
+    return getGPAFromPercentage(numericGrade, 'Regular');
+  }
+  return GRADE_TO_GPA_433[grade.toUpperCase()] || 0;
+}
+
+/**
  * Calculates UC GPA which only counts 10-12 grade courses and has specific weighting
  */
 export function calculateUCGPA(course: Course): number {
@@ -113,6 +144,10 @@ export function calculateYearGPA(courses: Course[], academicYear: string, gpaTyp
       } else {
         return; // Skip this course for calculation
       }
+    } else if (gpaType === "college-gpa-4.0") {
+      courseGPA = calculateCollegeGPA40(course.grade, course.grade_type);
+    } else if (gpaType === "college-gpa-4.33") {
+      courseGPA = calculateCollegeGPA433(course.grade, course.grade_type);
     } else {
       courseGPA = course.gpa_value || calculateGPA(course.grade, course.course_type, course.grade_type);
     }
@@ -182,6 +217,10 @@ export function calculateOverallGPA(courses: Course[], gpaType: GPACalculationTy
       } else {
         return; // Skip this course
       }
+    } else if (gpaType === "college-gpa-4.0") {
+      courseGPA = calculateCollegeGPA40(course.grade, course.grade_type);
+    } else if (gpaType === "college-gpa-4.33") {
+      courseGPA = calculateCollegeGPA433(course.grade, course.grade_type);
     } else {
       courseGPA = course.gpa_value || calculateGPA(course.grade, course.course_type, course.grade_type);
     }
@@ -199,7 +238,9 @@ export function calculateOverallGPA(courses: Course[], gpaType: GPACalculationTy
  * Helper functions for GPA display
  */
 export function getGPAScale(gpaType: GPACalculationType): string {
-  return gpaType === "100-point" ? "100" : "4.0";
+  if (gpaType === "100-point") return "100";
+  if (gpaType === "college-gpa-4.33") return "4.33";
+  return "4.0";
 }
 
 export function getGPATypeLabel(gpaType: GPACalculationType): string {
@@ -207,6 +248,8 @@ export function getGPATypeLabel(gpaType: GPACalculationType): string {
     case "100-point": return "100分制平均分";
     case "unweighted-us": return "Unweighted GPA-US";
     case "uc-gpa": return "UC GPA";
+    case "college-gpa-4.0": return "US College GPA (4.0)";
+    case "college-gpa-4.33": return "US College GPA (4.33)";
     default: return "GPA";
   }
 }
