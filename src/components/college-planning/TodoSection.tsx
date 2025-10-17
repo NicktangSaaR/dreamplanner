@@ -8,7 +8,7 @@ import TodoList from './todos/TodoList';
 import TodoForm from './todos/TodoForm';
 import BulkImportForm from './todos/BulkImportForm';
 import { ChevronDown, ChevronUp, SendIcon, ExternalLink, RefreshCw } from 'lucide-react';
-import { useTodos } from '@/hooks/useTodos';
+import { useStudentTodos } from '@/hooks/todos/useStudentTodos';
 import { useTodoReminder } from '@/hooks/todos/useTodoReminder';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,30 +16,20 @@ import { useUserStatus } from '@/hooks/useUserStatus';
 
 const TodoSection = () => {
   const { studentId } = useParams();
-  const { todos, isLoading, error, createTodo, updateTodo, toggleTodoStatus, toggleStarred, deleteTodo } = useTodos();
+  const { todos, error, createTodo, updateTodo, toggleTodoStatus, toggleStarred, deleteTodo } = useStudentTodos(studentId);
   const { sendReminder, isLoading: isSendingReminder, connectionError, lastAttempt } = useTodoReminder(studentId);
   const [expanded, setExpanded] = useState(true);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const { userType } = useAuth();
   const { isAdmin } = useUserStatus();
 
-  // Filter todos for this student
-  const filteredTodos = useMemo(() => {
-    if (!studentId) return [];
-    console.log("TodoSection - Current user type:", userType);
-    console.log("TodoSection - Student ID from params:", studentId);
-    const filtered = todos.filter(todo => todo.author_id === studentId);
-    console.log("TodoSection - Filtered todos:", filtered);
-    return filtered;
-  }, [todos, studentId]);
-
   const completedTodos = useMemo(() => {
-    return filteredTodos.filter(todo => todo.completed);
-  }, [filteredTodos]);
+    return todos.filter(todo => todo.completed);
+  }, [todos]);
 
   const incompleteTodos = useMemo(() => {
-    return filteredTodos.filter(todo => !todo.completed);
-  }, [filteredTodos]);
+    return todos.filter(todo => !todo.completed);
+  }, [todos]);
 
   const toggleExpanded = () => {
     setExpanded(!expanded);
@@ -82,60 +72,30 @@ const TodoSection = () => {
 
   // Create wrapper functions to match the expected prop types
   const handleToggleStatus = async (id: string, completed: boolean) => {
-    try {
-      await toggleTodoStatus.mutateAsync({ id, completed });
-    } catch (error) {
-      console.error("Failed to toggle todo status:", error);
-      toast.error("更新任务状态失败");
-    }
+    await toggleTodoStatus.mutateAsync({ id, completed });
   };
 
   const handleToggleStarred = async (id: string, starred: boolean) => {
-    try {
-      await toggleStarred.mutateAsync({ id, starred });
-    } catch (error) {
-      console.error("Failed to toggle todo starred:", error);
-      toast.error("更新任务星标状态失败");
-    }
+    await toggleStarred.mutateAsync({ id, starred });
   };
 
   const handleUpdateTodo = async (id: string, title: string) => {
-    try {
-      await updateTodo.mutateAsync({ id, title });
-    } catch (error) {
-      console.error("Failed to update todo:", error);
-      toast.error("更新任务失败");
-    }
+    await updateTodo.mutateAsync({ id, title });
   };
 
   const handleDeleteTodo = async (id: string) => {
-    try {
-      await deleteTodo.mutateAsync(id);
-    } catch (error) {
-      console.error("Failed to delete todo:", error);
-      toast.error("删除任务失败");
-    }
+    await deleteTodo.mutateAsync(id);
   };
 
   const handleCreateTodo = async (title: string) => {
     if (!studentId) return;
-    try {
-      await createTodo.mutateAsync({ title, authorId: studentId });
-    } catch (error) {
-      console.error("Failed to create todo:", error);
-      toast.error("创建任务失败");
-    }
+    await createTodo.mutateAsync({ title, authorId: studentId });
   };
 
   const handleBulkImport = async (titles: string[]) => {
     if (!studentId) return;
     for (const title of titles) {
-      try {
-        await createTodo.mutateAsync({ title, authorId: studentId });
-      } catch (error) {
-        console.error(`Failed to import todo "${title}":`, error);
-        toast.error(`导入任务"${title}"失败`);
-      }
+      await createTodo.mutateAsync({ title, authorId: studentId });
     }
   };
 
@@ -155,7 +115,7 @@ const TodoSection = () => {
               <TabsList className="w-full rounded-none border-b">
                 <TabsTrigger value="incomplete" className="flex-1">待完成 ({incompleteTodos.length})</TabsTrigger>
                 <TabsTrigger value="completed" className="flex-1">已完成 ({completedTodos.length})</TabsTrigger>
-                <TabsTrigger value="all" className="flex-1">全部 ({filteredTodos.length})</TabsTrigger>
+                <TabsTrigger value="all" className="flex-1">全部 ({todos.length})</TabsTrigger>
               </TabsList>
               
               <TabsContent value="incomplete" className="p-4">
@@ -180,7 +140,7 @@ const TodoSection = () => {
               
               <TabsContent value="all" className="p-4">
                 <TodoList
-                  todos={filteredTodos}
+                  todos={todos}
                   onToggleStatus={handleToggleStatus}
                   onToggleStarred={handleToggleStarred}
                   onDelete={handleDeleteTodo}
