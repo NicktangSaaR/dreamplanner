@@ -99,12 +99,13 @@ export class ResendEmailService implements EmailService {
   /**
    * Send email reminder
    */
-  async sendReminderEmail(to: string, subject: string, htmlContent: string, domain: string = "dreamplaneredu.com"): Promise<any> {
+  async sendReminderEmail(to: string, subject: string, htmlContent: string, domain: string = "resend.dev"): Promise<any> {
     try {
-      console.log(`Sending email to ${to} from reminder@${domain}`);
+      console.log(`Sending email to ${to}`);
       
-      // Create full sender address
-      const fromAddress = `College Planning <reminder@${domain}>`;
+      // Use Resend's default test domain for unverified domains
+      // For production, verify your domain at https://resend.com/domains
+      const fromAddress = `DreamPlane Education <onboarding@resend.dev>`;
       console.log(`Using from address: ${fromAddress}`);
       
       const emailParams = {
