@@ -67,9 +67,9 @@ export default function StudentTodoManagement() {
     },
   });
 
-  // Split students into active and completed groups
-  const activeStudents = students?.filter((s) => s.status !== "completed") || [];
-  const completedStudents = students?.filter((s) => s.status === "completed") || [];
+  // Split students into active and completed groups (case-insensitive check)
+  const activeStudents = students?.filter((s) => s.status?.toLowerCase() !== "completed") || [];
+  const completedStudents = students?.filter((s) => s.status?.toLowerCase() === "completed") || [];
 
   // Fetch todos for selected student
   const { data: todos, isLoading: todosLoading } = useQuery({
