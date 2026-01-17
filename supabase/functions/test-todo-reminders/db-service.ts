@@ -14,22 +14,10 @@ export class SupabaseDatabaseService implements DatabaseService {
   }
 
   async getUncompletedTodos(studentId: string): Promise<any[]> {
+    // First get the todos
     const { data: todos, error: todosError } = await this.supabase
       .from("todos")
-      .select(`
-        id, 
-        title, 
-        completed, 
-        starred, 
-        due_date, 
-        author_id,
-        profiles:author_id (
-          id,
-          email,
-          full_name,
-          user_type
-        )
-      `)
+      .select("id, title, completed, starred, due_date, author_id")
       .eq("author_id", studentId)
       .eq("completed", false);
     
@@ -38,7 +26,26 @@ export class SupabaseDatabaseService implements DatabaseService {
       throw todosError;
     }
     
-    return todos || [];
+    if (!todos || todos.length === 0) {
+      return [];
+    }
+    
+    // Get student profile separately
+    const { data: profile, error: profileError } = await this.supabase
+      .from("profiles")
+      .select("id, email, full_name, user_type")
+      .eq("id", studentId)
+      .single();
+    
+    if (profileError) {
+      console.error("Error fetching student profile:", profileError);
+    }
+    
+    // Attach profile to todos
+    return todos.map(todo => ({
+      ...todo,
+      profiles: profile || null
+    }));
   }
 
   async getCounselorForStudent(studentId: string): Promise<any> {
