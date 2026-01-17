@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,9 +13,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Upload, ListTodo, Loader2, Trash2 } from "lucide-react";
+import { Plus, Upload, ListTodo, Loader2, Trash2, Mail, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Student {
   id: string;
@@ -37,6 +46,9 @@ export default function StudentTodoManagement() {
   const [newTodoTitle, setNewTodoTitle] = useState("");
   const [bulkContent, setBulkContent] = useState("");
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [customEmail, setCustomEmail] = useState("");
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch all students
@@ -193,6 +205,59 @@ export default function StudentTodoManagement() {
   };
 
   const selectedStudent = students?.find((s) => s.id === selectedStudentId);
+
+  // Get incomplete todos for email
+  const incompleteTodos = todos?.filter((t) => !t.completed) || [];
+
+  // Handle sending email reminder
+  const handleSendEmailReminder = async () => {
+    if (!customEmail.trim()) {
+      toast.error("Please enter an email address");
+      return;
+    }
+
+    if (incompleteTodos.length === 0) {
+      toast.error("No incomplete todos to send");
+      return;
+    }
+
+    setIsSendingEmail(true);
+
+    try {
+      console.log("Sending email reminder to:", customEmail);
+      
+      const { data, error } = await supabase.functions.invoke('test-todo-reminders', {
+        body: {
+          studentId: selectedStudentId,
+          customEmail: customEmail.trim(),
+          debug: true,
+          domain: "dreamplaneredu.com"
+        }
+      });
+
+      if (error) {
+        console.error("Error sending reminder:", error);
+        toast.error(`Failed to send reminder: ${error.message || "Unknown error"}`);
+        return;
+      }
+
+      if (data?.error) {
+        console.error("API returned error:", data.error);
+        toast.error(`Failed to send reminder: ${data.error}`);
+        return;
+      }
+
+      console.log("Reminder sent successfully:", data);
+      toast.success(`Reminder email sent to ${customEmail}!`);
+      setIsEmailDialogOpen(false);
+      setCustomEmail("");
+    } catch (err: any) {
+      console.error("Exception sending reminder:", err);
+      toast.error(`Failed to send reminder: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -363,6 +428,78 @@ export default function StudentTodoManagement() {
             </>
           )}
         </CardContent>
+        
+        {/* Email Reminder Footer */}
+        {selectedStudentId && incompleteTodos.length > 0 && (
+          <CardFooter className="border-t pt-4">
+            <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="default" className="w-full sm:w-auto">
+                  <Mail className="h-4 w-4 mr-2" />
+                  Send Todo Reminder Email
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Send Todo Reminder</DialogTitle>
+                  <DialogDescription>
+                    Send an email with {incompleteTodos.length} incomplete todo(s) for {selectedStudent?.full_name || "this student"} to the specified email address.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Recipient Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Enter email address..."
+                      value={customEmail}
+                      onChange={(e) => setCustomEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Todos to be sent:</Label>
+                    <div className="max-h-40 overflow-y-auto border rounded-lg p-2 bg-muted/30">
+                      <ul className="space-y-1 text-sm">
+                        {incompleteTodos.map((todo) => (
+                          <li key={todo.id} className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-primary" />
+                            {todo.title}
+                            {todo.due_date && (
+                              <span className="text-muted-foreground text-xs">
+                                (Due: {new Date(todo.due_date).toLocaleDateString()})
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEmailDialogOpen(false)}
+                    disabled={isSendingEmail}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSendEmailReminder}
+                    disabled={!customEmail.trim() || isSendingEmail}
+                  >
+                    {isSendingEmail ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Send className="h-4 w-4 mr-2" />
+                    )}
+                    Send Email
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );

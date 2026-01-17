@@ -13,8 +13,8 @@ export async function processReminderRequest(requestBody: any) {
     return validationResult;
   }
   
-  const { studentId, debug, domain } = validationResult;
-  console.log("Request received with studentId:", studentId, "debug mode:", debug, "domain:", domain);
+  const { studentId, customEmail, debug, domain } = validationResult;
+  console.log("Request received with studentId:", studentId, "customEmail:", customEmail, "debug mode:", debug, "domain:", domain);
   
   // Validate Resend API key
   const apiKeyValidation = validateResendApiKey();
@@ -39,7 +39,7 @@ export async function processReminderRequest(requestBody: any) {
     );
     
     console.log("Services initialized successfully, processing reminder");
-    return await reminderService.processReminder(studentId);
+    return await reminderService.processReminder(studentId, customEmail);
   } catch (initError) {
     console.error("Failed to initialize services:", initError);
     console.error("Error details:", JSON.stringify(initError, Object.getOwnPropertyNames(initError)));

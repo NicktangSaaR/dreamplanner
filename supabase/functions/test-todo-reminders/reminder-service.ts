@@ -19,8 +19,10 @@ export class ReminderService {
   
   /**
    * Process reminder for a specific student
+   * @param studentId - The student's ID
+   * @param customEmail - Optional custom email to send to instead of student/counselor emails
    */
-  async processReminder(studentId: string) {
+  async processReminder(studentId: string, customEmail?: string) {
     try {
       // Get todos
       console.log("Fetching uncompleted todos for student:", studentId);
@@ -39,12 +41,18 @@ export class ReminderService {
       // Log student email information for debugging
       console.log("Student email:", studentInfo?.email);
       
+      // If customEmail is provided, send only to that email
+      if (customEmail) {
+        console.log("Custom email provided, sending to:", customEmail);
+        return await this.emailManager.sendCustomEmail(todos, studentInfo, customEmail);
+      }
+      
       // Get the counselor information for the student
       console.log("Fetching counselor for student:", studentId);
       const counselorInfo = await this.dbService.getCounselorForStudent(studentId);
       console.log("Counselor email:", counselorInfo?.email);
       
-      // Send emails
+      // Send emails to student and counselor
       return await this.emailManager.sendReminderEmails(todos, studentInfo, counselorInfo);
     } catch (error) {
       console.error("Error in processReminder:", error);
