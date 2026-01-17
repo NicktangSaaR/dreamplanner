@@ -1,6 +1,6 @@
 
 import { createEmailService } from "./email-service.ts";
-import { generateEmailContent } from "./email-templates.ts";
+import { generateEmailContent, generateCustomEmailContent } from "./email-templates.ts";
 import { formatErrorResponse } from "./error-handling.ts";
 
 /**
@@ -13,6 +13,63 @@ export class EmailManager {
   constructor(apiKey: string, domain: string = "dreamplaneredu.com") {
     this.emailService = createEmailService(apiKey);
     this.domain = domain;
+  }
+  
+  /**
+   * Sends a reminder email to a custom email address
+   */
+  async sendCustomEmail(todos: any[], studentInfo: any, customEmail: string) {
+    const studentName = studentInfo?.full_name || '学生';
+    
+    // Generate email content for custom recipient
+    const htmlContent = generateCustomEmailContent(todos, studentName);
+    
+    try {
+      console.log(`Sending custom email to: ${customEmail} using domain: ${this.domain}`);
+      
+      const emailResult = await this.emailService.sendReminderEmail(
+        customEmail,
+        `待办事项提醒 - ${studentName}`,
+        htmlContent,
+        this.domain
+      );
+      
+      console.log("Custom email sending result:", JSON.stringify(emailResult));
+      
+      if (emailResult.success) {
+        return { 
+          success: true, 
+          message: `提醒邮件已成功发送到 ${customEmail}`,
+          sentTo: [customEmail],
+          todoCount: todos.length,
+          domain: this.domain
+        };
+      } else {
+        return { 
+          error: "邮件发送失败", 
+          details: emailResult.message || JSON.stringify(emailResult.error),
+          domain: this.domain
+        };
+      }
+    } catch (emailError) {
+      console.error("Exception while sending custom email:", emailError);
+      console.error("Error details:", JSON.stringify(emailError, Object.getOwnPropertyNames(emailError)));
+      
+      const errorMessage = String(emailError);
+      if (errorMessage.includes("from_address_not_allowed")) {
+        return { 
+          error: `From address 'reminder@${this.domain}' is not allowed. Please verify your domain in Resend.`,
+          domain: this.domain,
+          details: errorMessage
+        };
+      }
+      
+      return { 
+        error: "Email sending exception", 
+        domain: this.domain,
+        details: errorMessage
+      };
+    }
   }
   
   /**

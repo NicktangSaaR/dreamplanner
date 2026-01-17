@@ -3,7 +3,7 @@
  * Validates and processes the incoming request parameters
  */
 export function validateRequestParams(requestBody: any) {
-  const { studentId, debug, domain = "dreamplaneredu.com" } = requestBody;
+  const { studentId, customEmail, debug, domain = "dreamplaneredu.com" } = requestBody;
   
   if (!studentId) {
     return { 
@@ -13,12 +13,30 @@ export function validateRequestParams(requestBody: any) {
     };
   }
   
+  // Validate email format if customEmail is provided
+  if (customEmail && !isValidEmail(customEmail)) {
+    return {
+      isValid: false,
+      error: "Invalid email format",
+      details: "Please provide a valid email address"
+    };
+  }
+  
   return {
     isValid: true,
     studentId,
+    customEmail,
     debug,
     domain
   };
+}
+
+/**
+ * Validates email format
+ */
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
 /**
