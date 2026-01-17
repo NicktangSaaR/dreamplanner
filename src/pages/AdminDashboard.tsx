@@ -11,6 +11,7 @@ import ProspectiveClientManagement from "@/components/admin/ProspectiveClientMan
 import ArticleManagement from "@/components/admin/ArticleManagement";
 import PlatformUpdateManagement from "@/components/admin/PlatformUpdateManagement";
 import CollegeEvaluationManagement from "@/components/admin/college-evaluation/CollegeEvaluationManagement";
+import StudentTodoManagement from "@/components/admin/StudentTodoManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -58,8 +59,9 @@ export default function AdminDashboard() {
         </Button>
       </div>
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="student-todos">Student Todos</TabsTrigger>
           <TabsTrigger value="question-banks">Question Banks</TabsTrigger>
           <TabsTrigger value="prospective-clients">Prospective Clients</TabsTrigger>
           <TabsTrigger value="articles">Articles</TabsTrigger>
@@ -69,6 +71,10 @@ export default function AdminDashboard() {
 
         <TabsContent value="users" className="space-y-4">
           <UserManagement />
+        </TabsContent>
+
+        <TabsContent value="student-todos" className="space-y-4">
+          <StudentTodoManagement />
         </TabsContent>
 
         <TabsContent value="question-banks" className="space-y-4">

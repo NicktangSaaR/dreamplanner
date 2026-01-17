@@ -900,26 +900,11 @@ export type Database = {
         Args: { student_id: string; viewer_id: string }
         Returns: boolean
       }
-      check_email_not_registered: {
-        Args: { email: string }
-        Returns: boolean
-      }
-      check_if_user_exists: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      check_profile_access: {
-        Args: { profile_id: string }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_counselor: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      check_email_not_registered: { Args: { email: string }; Returns: boolean }
+      check_if_user_exists: { Args: { user_id: string }; Returns: boolean }
+      check_profile_access: { Args: { profile_id: string }; Returns: boolean }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_counselor: { Args: { user_id: string }; Returns: boolean }
       is_counselor_for_student: {
         Args: { counselor_id: string; student_id: string }
         Returns: boolean
