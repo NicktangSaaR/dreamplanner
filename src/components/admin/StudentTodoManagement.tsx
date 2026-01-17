@@ -30,6 +30,7 @@ interface Student {
   id: string;
   full_name: string | null;
   email: string | null;
+  status: string | null;
 }
 
 interface Todo {
@@ -57,7 +58,7 @@ export default function StudentTodoManagement() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, email")
+        .select("id, full_name, email, status")
         .eq("user_type", "student")
         .order("full_name");
 
@@ -65,6 +66,10 @@ export default function StudentTodoManagement() {
       return data as Student[];
     },
   });
+
+  // Split students into active and completed groups
+  const activeStudents = students?.filter((s) => s.status !== "completed") || [];
+  const completedStudents = students?.filter((s) => s.status === "completed") || [];
 
   // Fetch todos for selected student
   const { data: todos, isLoading: todosLoading } = useQuery({
@@ -288,12 +293,30 @@ export default function StudentTodoManagement() {
                   <SelectValue placeholder="Choose a student..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {students?.map((student) => (
-                    <SelectItem key={student.id} value={student.id}>
-                      {student.full_name || student.email || "Unnamed Student"}
-                    </SelectItem>
-                  ))
-                  }
+                  {activeStudents.length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                        进行中 / Active ({activeStudents.length})
+                      </div>
+                      {activeStudents.map((student) => (
+                        <SelectItem key={student.id} value={student.id}>
+                          {student.full_name || student.email || "Unnamed Student"}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                  {completedStudents.length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 mt-1">
+                        已完成 / Completed ({completedStudents.length})
+                      </div>
+                      {completedStudents.map((student) => (
+                        <SelectItem key={student.id} value={student.id}>
+                          {student.full_name || student.email || "Unnamed Student"}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             )}
