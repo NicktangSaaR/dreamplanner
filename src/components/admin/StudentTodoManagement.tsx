@@ -25,6 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import ReminderContactManagement from "./ReminderContactManagement";
 
 interface Student {
   id: string;
@@ -50,6 +51,7 @@ export default function StudentTodoManagement() {
   const [customEmail, setCustomEmail] = useState("");
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isBulkSending, setIsBulkSending] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch all students
@@ -264,266 +266,336 @@ export default function StudentTodoManagement() {
     }
   };
 
+  // Handle bulk sending to multiple contacts
+  const handleBulkSendReminder = async (emails: string[]) => {
+    if (emails.length === 0) {
+      toast.error("请选择至少一个联系人 / Please select at least one contact");
+      return;
+    }
+
+    if (incompleteTodos.length === 0) {
+      toast.error("没有未完成的待办事项 / No incomplete todos to send");
+      return;
+    }
+
+    setIsBulkSending(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const email of emails) {
+      try {
+        console.log("Sending email reminder to:", email);
+        
+        const { data, error } = await supabase.functions.invoke('test-todo-reminders', {
+          body: {
+            studentId: selectedStudentId,
+            customEmail: email.trim(),
+            debug: true,
+            domain: "dreamplaneredu.com"
+          }
+        });
+
+        if (error || data?.error) {
+          console.error("Error sending reminder to:", email, error || data?.error);
+          failCount++;
+        } else {
+          console.log("Reminder sent successfully to:", email);
+          successCount++;
+        }
+      } catch (err: any) {
+        console.error("Exception sending reminder to:", email, err);
+        failCount++;
+      }
+    }
+
+    setIsBulkSending(false);
+
+    if (successCount > 0 && failCount === 0) {
+      toast.success(`成功发送 ${successCount} 封邮件 / Successfully sent ${successCount} emails!`);
+    } else if (successCount > 0 && failCount > 0) {
+      toast.warning(`发送 ${successCount} 封成功，${failCount} 封失败 / Sent ${successCount} success, ${failCount} failed`);
+    } else {
+      toast.error("所有邮件发送失败 / All emails failed to send");
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ListTodo className="h-5 w-5" />
-            Student Todo Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Student Selection */}
-          <div className="mb-6">
-            <Label htmlFor="student-select" className="mb-2 block">
-              Select Student
-            </Label>
-            {studentsLoading ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading students...
-              </div>
-            ) : (
-              <Select
-                value={selectedStudentId}
-                onValueChange={setSelectedStudentId}
-              >
-                <SelectTrigger id="student-select" className="w-full max-w-md">
-                  <SelectValue placeholder="Choose a student..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeStudents.length > 0 && (
-                    <>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
-                        进行中 / Active ({activeStudents.length})
-                      </div>
-                      {activeStudents.map((student) => (
-                        <SelectItem key={student.id} value={student.id}>
-                          {student.full_name || student.email || "Unnamed Student"}
-                        </SelectItem>
-                      ))}
-                    </>
-                  )}
-                  {completedStudents.length > 0 && (
-                    <>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 mt-1">
-                        已完成 / Completed ({completedStudents.length})
-                      </div>
-                      {completedStudents.map((student) => (
-                        <SelectItem key={student.id} value={student.id}>
-                          {student.full_name || student.email || "Unnamed Student"}
-                        </SelectItem>
-                      ))}
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          {selectedStudentId && (
-            <>
-              {/* Add Single Todo */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Todo Management Section */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ListTodo className="h-5 w-5" />
+                Student Todo Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Student Selection */}
               <div className="mb-6">
-                <Label className="mb-2 block">Add Single Todo</Label>
-                <form onSubmit={handleAddTodo} className="flex gap-2">
-                  <Input
-                    value={newTodoTitle}
-                    onChange={(e) => setNewTodoTitle(e.target.value)}
-                    placeholder="Enter todo title..."
-                    className="flex-1"
-                  />
-                  <Button
-                    type="submit"
-                    disabled={!newTodoTitle.trim() || addTodoMutation.isPending}
-                  >
-                    {addTodoMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <Plus className="h-4 w-4 mr-2" />
-                    )}
-                    Add
-                  </Button>
-                </form>
-              </div>
-
-              {/* Bulk Import Section */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <Label>Bulk Import</Label>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowBulkImport(!showBulkImport)}
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    {showBulkImport ? "Hide" : "Show"} Bulk Import
-                  </Button>
-                </div>
-                {showBulkImport && (
-                  <div className="space-y-2 p-4 border rounded-lg bg-muted/30">
-                    <Textarea
-                      value={bulkContent}
-                      onChange={(e) => setBulkContent(e.target.value)}
-                      placeholder="Paste multiple todos (one per line)..."
-                      rows={6}
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={handleBulkImport}
-                        disabled={!bulkContent.trim() || bulkImportMutation.isPending}
-                        className="flex-1"
-                      >
-                        {bulkImportMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <Upload className="h-4 w-4 mr-2" />
-                        )}
-                        Import All
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setBulkContent("");
-                          setShowBulkImport(false);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Existing Todos List */}
-              <div>
-                <Label className="mb-2 block">
-                  Current Todos for {selectedStudent?.full_name || "Student"}
+                <Label htmlFor="student-select" className="mb-2 block">
+                  Select Student
                 </Label>
-                {todosLoading ? (
-                  <div className="flex items-center gap-2 text-muted-foreground py-4">
+                {studentsLoading ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading todos...
-                  </div>
-                ) : todos && todos.length > 0 ? (
-                  <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-2">
-                    {todos.map((todo) => (
-                      <div
-                        key={todo.id}
-                        className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 group"
-                      >
-                        <Checkbox
-                          checked={todo.completed}
-                          onCheckedChange={(checked) =>
-                            toggleTodoMutation.mutate({
-                              id: todo.id,
-                              completed: !!checked,
-                            })
-                          }
-                        />
-                        <span
-                          className={`flex-1 ${
-                            todo.completed
-                              ? "line-through text-muted-foreground"
-                              : ""
-                          }`}
-                        >
-                          {todo.title}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => deleteTodoMutation.mutate(todo.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                    Loading students...
                   </div>
                 ) : (
-                  <p className="text-muted-foreground py-4">
-                    No todos yet for this student.
-                  </p>
+                  <Select
+                    value={selectedStudentId}
+                    onValueChange={setSelectedStudentId}
+                  >
+                    <SelectTrigger id="student-select" className="w-full">
+                      <SelectValue placeholder="Choose a student..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activeStudents.length > 0 && (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                            进行中 / Active ({activeStudents.length})
+                          </div>
+                          {activeStudents.map((student) => (
+                            <SelectItem key={student.id} value={student.id}>
+                              {student.full_name || student.email || "Unnamed Student"}
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
+                      {completedStudents.length > 0 && (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 mt-1">
+                            已完成 / Completed ({completedStudents.length})
+                          </div>
+                          {completedStudents.map((student) => (
+                            <SelectItem key={student.id} value={student.id}>
+                              {student.full_name || student.email || "Unnamed Student"}
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
                 )}
               </div>
-            </>
-          )}
-        </CardContent>
-        
-        {/* Email Reminder Footer */}
-        {selectedStudentId && incompleteTodos.length > 0 && (
-          <CardFooter className="border-t pt-4">
-            <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="default" className="w-full sm:w-auto">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Send Todo Reminder Email
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Send Todo Reminder</DialogTitle>
-                  <DialogDescription>
-                    Send an email with {incompleteTodos.length} incomplete todo(s) for {selectedStudent?.full_name || "this student"} to the specified email address.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Recipient Email Address</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter email address..."
-                      value={customEmail}
-                      onChange={(e) => setCustomEmail(e.target.value)}
-                    />
+
+              {selectedStudentId && (
+                <>
+                  {/* Add Single Todo */}
+                  <div className="mb-6">
+                    <Label className="mb-2 block">Add Single Todo</Label>
+                    <form onSubmit={handleAddTodo} className="flex gap-2">
+                      <Input
+                        value={newTodoTitle}
+                        onChange={(e) => setNewTodoTitle(e.target.value)}
+                        placeholder="Enter todo title..."
+                        className="flex-1"
+                      />
+                      <Button
+                        type="submit"
+                        disabled={!newTodoTitle.trim() || addTodoMutation.isPending}
+                      >
+                        {addTodoMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Plus className="h-4 w-4 mr-2" />
+                        )}
+                        Add
+                      </Button>
+                    </form>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Todos to be sent:</Label>
-                    <div className="max-h-40 overflow-y-auto border rounded-lg p-2 bg-muted/30">
-                      <ul className="space-y-1 text-sm">
-                        {incompleteTodos.map((todo) => (
-                          <li key={todo.id} className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-primary" />
-                            {todo.title}
-                            {todo.due_date && (
-                              <span className="text-muted-foreground text-xs">
-                                (Due: {new Date(todo.due_date).toLocaleDateString()})
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
+
+                  {/* Bulk Import Section */}
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Bulk Import</Label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowBulkImport(!showBulkImport)}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {showBulkImport ? "Hide" : "Show"} Bulk Import
+                      </Button>
                     </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEmailDialogOpen(false)}
-                    disabled={isSendingEmail}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSendEmailReminder}
-                    disabled={!customEmail.trim() || isSendingEmail}
-                  >
-                    {isSendingEmail ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <Send className="h-4 w-4 mr-2" />
+                    {showBulkImport && (
+                      <div className="space-y-2 p-4 border rounded-lg bg-muted/30">
+                        <Textarea
+                          value={bulkContent}
+                          onChange={(e) => setBulkContent(e.target.value)}
+                          placeholder="Paste multiple todos (one per line)..."
+                          rows={6}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleBulkImport}
+                            disabled={!bulkContent.trim() || bulkImportMutation.isPending}
+                            className="flex-1"
+                          >
+                            {bulkImportMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : (
+                              <Upload className="h-4 w-4 mr-2" />
+                            )}
+                            Import All
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setBulkContent("");
+                              setShowBulkImport(false);
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
                     )}
-                    Send Email
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardFooter>
-        )}
-      </Card>
+                  </div>
+
+                  {/* Existing Todos List */}
+                  <div>
+                    <Label className="mb-2 block">
+                      Current Todos for {selectedStudent?.full_name || "Student"}
+                    </Label>
+                    {todosLoading ? (
+                      <div className="flex items-center gap-2 text-muted-foreground py-4">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading todos...
+                      </div>
+                    ) : todos && todos.length > 0 ? (
+                      <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-2">
+                        {todos.map((todo) => (
+                          <div
+                            key={todo.id}
+                            className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 group"
+                          >
+                            <Checkbox
+                              checked={todo.completed}
+                              onCheckedChange={(checked) =>
+                                toggleTodoMutation.mutate({
+                                  id: todo.id,
+                                  completed: !!checked,
+                                })
+                              }
+                            />
+                            <span
+                              className={`flex-1 ${
+                                todo.completed
+                                  ? "line-through text-muted-foreground"
+                                  : ""
+                              }`}
+                            >
+                              {todo.title}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => deleteTodoMutation.mutate(todo.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground py-4">
+                        No todos yet for this student.
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+            </CardContent>
+            
+            {/* Email Reminder Footer */}
+            {selectedStudentId && incompleteTodos.length > 0 && (
+              <CardFooter className="border-t pt-4">
+                <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="default" className="w-full sm:w-auto">
+                      <Mail className="h-4 w-4 mr-2" />
+                      发送单封邮件 / Send Single Email
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>发送待办提醒 / Send Todo Reminder</DialogTitle>
+                      <DialogDescription>
+                        向指定邮箱发送 {incompleteTodos.length} 个未完成待办事项（{selectedStudent?.full_name || "学生"}）/ 
+                        Send {incompleteTodos.length} incomplete todo(s) for {selectedStudent?.full_name || "this student"} to the specified email.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">收件人邮箱 / Recipient Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="Enter email address..."
+                          value={customEmail}
+                          onChange={(e) => setCustomEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>待发送的待办事项 / Todos to be sent:</Label>
+                        <div className="max-h-40 overflow-y-auto border rounded-lg p-2 bg-muted/30">
+                          <ul className="space-y-1 text-sm">
+                            {incompleteTodos.map((todo) => (
+                              <li key={todo.id} className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-primary" />
+                                {todo.title}
+                                {todo.due_date && (
+                                  <span className="text-muted-foreground text-xs">
+                                    (Due: {new Date(todo.due_date).toLocaleDateString()})
+                                  </span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEmailDialogOpen(false)}
+                        disabled={isSendingEmail}
+                      >
+                        取消 / Cancel
+                      </Button>
+                      <Button
+                        onClick={handleSendEmailReminder}
+                        disabled={!customEmail.trim() || isSendingEmail}
+                      >
+                        {isSendingEmail ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Send className="h-4 w-4 mr-2" />
+                        )}
+                        发送 / Send
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardFooter>
+            )}
+          </Card>
+        </div>
+
+        {/* Contact Management Section */}
+        <div className="lg:col-span-1">
+          <ReminderContactManagement
+            studentId={selectedStudentId}
+            studentName={selectedStudent?.full_name || "学生"}
+            incompleteTodosCount={incompleteTodos.length}
+            onSendReminder={handleBulkSendReminder}
+            isSending={isBulkSending}
+          />
+        </div>
+      </div>
     </div>
   );
 }
