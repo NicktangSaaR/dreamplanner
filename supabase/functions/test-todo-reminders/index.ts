@@ -33,9 +33,11 @@ serve(async (req) => {
     // Determine appropriate status code
     let statusCode = 200;
     if (result.error) {
-      statusCode = result.error.includes("not allowed") || 
-                  result.error.includes("validation") || 
-                  result.error.includes("Student ID is required") ? 
+      // Check if result.error is a string before calling includes
+      const errorMsg = typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
+      statusCode = errorMsg.includes("not allowed") || 
+                  errorMsg.includes("validation") || 
+                  errorMsg.includes("Student ID is required") ? 
                   400 : 500;
     }
     
