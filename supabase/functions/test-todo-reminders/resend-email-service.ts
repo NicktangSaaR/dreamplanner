@@ -99,46 +99,63 @@ export class ResendEmailService implements EmailService {
   /**
    * Send email reminder
    */
-  async sendReminderEmail(to: string, subject: string, htmlContent: string, domain: string = "resend.dev"): Promise<any> {
+  async sendReminderEmail(
+    to: string,
+    subject: string,
+    htmlContent: string,
+    domain: string = "dreamplaneredu.com",
+  ): Promise<any> {
     try {
+      // Prefer explicit FROM address from env (recommended for production)
+      // Example: "DreamPlane Education <reminder@dreamplaneredu.com>"
+      const envFrom = Deno.env.get("RESEND_FROM")?.trim();
+      const envDomain = Deno.env.get("RESEND_DOMAIN")?.trim();
+
+      const effectiveDomain = envDomain || domain || "dreamplaneredu.com";
+
+      // If domain is verified in Resend, use a sender on that domain.
+      // If not verified, Resend test mode will only allow sending to the account owner's email.
+      const fromAddress =
+        envFrom ||
+        `DreamPlane Education <reminder@${effectiveDomain}>`;
+
       console.log(`Sending email to ${to}`);
-      
-      // Use Resend's default test domain for unverified domains
-      // For production, verify your domain at https://resend.com/domains
-      const fromAddress = `DreamPlane Education <onboarding@resend.dev>`;
       console.log(`Using from address: ${fromAddress}`);
-      
+
       const emailParams = {
         from: fromAddress,
-        to: to,
-        subject: subject,
+        to,
+        subject,
         html: htmlContent,
       };
-      
+
       console.log("Email parameters:", JSON.stringify(emailParams));
-      
+
       const emailResult = await this.resend.emails.send(emailParams);
-      
+
       console.log("Email sending result:", JSON.stringify(emailResult));
-      
+
       if (emailResult.error) {
         console.error("Error in Resend response:", emailResult.error);
         return {
           error: true,
           code: emailResult.error.code || "send_failure",
           message: emailResult.error.message || "Failed to send email",
-          details: JSON.stringify(emailResult.error)
+          details: JSON.stringify(emailResult.error),
         };
       }
-      
+
       return {
         success: true,
         message: "Email sent successfully",
-        id: emailResult.id
+        id: emailResult.id,
       };
     } catch (error) {
       console.error("Exception in sendReminderEmail:", error);
-      console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      console.error(
+        "Error details:",
+        JSON.stringify(error, Object.getOwnPropertyNames(error)),
+      );
       return formatErrorResponse(error, domain);
     }
   }
