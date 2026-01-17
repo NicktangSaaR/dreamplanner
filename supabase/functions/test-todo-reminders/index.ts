@@ -32,13 +32,24 @@ serve(async (req) => {
     
     // Determine appropriate status code
     let statusCode = 200;
-    if (result.error) {
-      // Check if result.error is a string before calling includes
-      const errorMsg = typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
-      statusCode = errorMsg.includes("not allowed") || 
-                  errorMsg.includes("validation") || 
-                  errorMsg.includes("Student ID is required") ? 
-                  400 : 500;
+    if (result?.error) {
+      const errorMsg =
+        typeof result.error === "string" ? result.error : JSON.stringify(result.error);
+      const detailsMsg =
+        typeof result.details === "string"
+          ? result.details
+          : JSON.stringify(result.details || "");
+
+      // Treat Resend validation/test-mode errors as 400 to avoid crashing the UI
+      const combined = `${errorMsg} ${detailsMsg}`;
+      statusCode =
+        combined.includes("validation_error") ||
+        combined.includes("only send testing emails") ||
+        combined.includes("not allowed") ||
+        combined.includes("validation") ||
+        combined.includes("Student ID is required")
+          ? 400
+          : 500;
     }
     
     // Return the response

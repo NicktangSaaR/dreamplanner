@@ -12,7 +12,7 @@ export class EmailManager {
   
   constructor(apiKey: string, domain: string = "dreamplaneredu.com") {
     this.emailService = createEmailService(apiKey);
-    this.domain = domain;
+    this.domain = Deno.env.get("RESEND_DOMAIN") || domain;
   }
   
   /**
