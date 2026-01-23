@@ -18,13 +18,13 @@ import { toast } from "sonner";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { profile } = useProfile();
+  const { profile, isLoading } = useProfile();
 
   useEffect(() => {
-    if (profile && profile.user_type !== 'admin') {
+    if (!isLoading && profile && profile.user_type !== 'admin') {
       navigate('/');
     }
-  }, [profile, navigate]);
+  }, [profile, isLoading, navigate]);
 
   const handleLogout = async () => {
     try {
@@ -42,7 +42,15 @@ export default function AdminDashboard() {
     }
   };
 
-  if (profile?.user_type !== 'admin') {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!profile || profile.user_type !== 'admin') {
     return null;
   }
 
