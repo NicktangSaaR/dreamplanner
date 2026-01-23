@@ -69,7 +69,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "DreamPlanner <onboarding@resend.dev>",
+      from: "DreamPlanner <noreply@dreamplaneredu.com>",
       to: [email],
       subject: emailSubject,
       html: emailHtml,
