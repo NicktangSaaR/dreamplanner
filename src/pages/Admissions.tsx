@@ -3,14 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Download, Settings } from "lucide-react";
+import { Search, Plus, Download, Settings, Sparkles } from "lucide-react";
 import { useAdmissionCases } from "@/components/admissions/hooks/useAdmissionCases";
 import { useProfile } from "@/hooks/useProfile";
 import CaseCard from "@/components/admissions/CaseCard";
 import CaseDetailDialog from "@/components/admissions/CaseDetailDialog";
 import CaseFormDialog from "@/components/admissions/CaseFormDialog";
+import AIGenerateDialog from "@/components/admissions/AIGenerateDialog";
 import AdminCaseTable from "@/components/admissions/AdminCaseTable";
-import { AdmissionCase, NewCaseForm } from "@/components/admissions/types";
+import { AdmissionCase, NewCaseForm, initialCaseForm } from "@/components/admissions/types";
 import MainNav from "@/components/layout/MainNav";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -38,8 +39,10 @@ export default function Admissions() {
   
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showFormDialog, setShowFormDialog] = useState(false);
+  const [showAIDialog, setShowAIDialog] = useState(false);
   const [viewingCase, setViewingCase] = useState<AdmissionCase | null>(null);
   const [editingCase, setEditingCase] = useState<AdmissionCase | null>(null);
+  const [aiGeneratedData, setAiGeneratedData] = useState<Partial<NewCaseForm> | null>(null);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -211,7 +214,11 @@ export default function Admissions() {
                       导出选中 ({selectedCases.length})
                     </Button>
                   )}
-                  <Button onClick={() => { setEditingCase(null); setShowFormDialog(true); }}>
+                  <Button variant="outline" onClick={() => setShowAIDialog(true)}>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    AI生成
+                  </Button>
+                  <Button onClick={() => { setEditingCase(null); setAiGeneratedData(null); setShowFormDialog(true); }}>
                     <Plus className="h-4 w-4 mr-2" />
                     添加案例
                   </Button>
@@ -255,7 +262,10 @@ export default function Admissions() {
         open={showFormDialog}
         onOpenChange={(open) => {
           setShowFormDialog(open);
-          if (!open) setEditingCase(null);
+          if (!open) {
+            setEditingCase(null);
+            setAiGeneratedData(null);
+          }
         }}
         initialData={editingCase ? {
           year: editingCase.year,
@@ -267,9 +277,21 @@ export default function Admissions() {
           academic_background: editingCase.academic_background,
           activities: editingCase.activities.length > 0 ? editingCase.activities : [''],
           courses: editingCase.courses.length > 0 ? editingCase.courses : ['']
+        } : aiGeneratedData ? {
+          ...initialCaseForm,
+          ...aiGeneratedData,
         } : undefined}
         onSave={handleSaveCase}
         isEditing={!!editingCase}
+      />
+
+      <AIGenerateDialog
+        open={showAIDialog}
+        onOpenChange={setShowAIDialog}
+        onGenerated={(data) => {
+          setAiGeneratedData(data);
+          setShowFormDialog(true);
+        }}
       />
     </div>
   );

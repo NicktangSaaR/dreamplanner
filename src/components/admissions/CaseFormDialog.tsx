@@ -1,12 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Upload, X } from "lucide-react";
+import { Plus, Trash2, Upload, X, Wand2, Loader2 } from "lucide-react";
 import { NewCaseForm, initialCaseForm } from "./types";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface CaseFormDialogProps {
   open: boolean;
@@ -14,6 +16,7 @@ interface CaseFormDialogProps {
   initialData?: NewCaseForm;
   onSave: (data: NewCaseForm) => Promise<boolean>;
   isEditing?: boolean;
+  onRequestAIGenerate?: () => void;
 }
 
 const years = ['2025', '2024', '2023', '2022', '2021'];
@@ -24,11 +27,49 @@ export default function CaseFormDialog({
   onOpenChange, 
   initialData, 
   onSave,
-  isEditing = false 
+  isEditing = false,
+  onRequestAIGenerate
 }: CaseFormDialogProps) {
   const [formData, setFormData] = useState<NewCaseForm>(initialData || initialCaseForm);
   const [saving, setSaving] = useState(false);
+  const [polishing, setPolishing] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync formData when initialData changes (e.g., from AI generation)
+  useEffect(() => {
+    if (open) {
+      setFormData(initialData || initialCaseForm);
+    }
+  }, [open, initialData]);
+
+  const handlePolish = async (field: 'profile_style' | 'academic_background') => {
+    const content = formData[field];
+    if (!content?.trim()) {
+      toast.error("请先输入内容");
+      return;
+    }
+
+    setPolishing(field);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-admission-case", {
+        body: { keywords: content, type: "polish" },
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.data?.text) {
+        setFormData({ ...formData, [field]: data.data.text });
+        toast.success("AI润色完成！");
+      } else {
+        throw new Error(data?.error || "润色失败");
+      }
+    } catch (error: any) {
+      console.error("AI polish error:", error);
+      toast.error(error.message || "AI润色失败，请重试");
+    } finally {
+      setPolishing(null);
+    }
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -205,7 +246,23 @@ export default function CaseFormDialog({
           </div>
           
           <div className="space-y-2">
-            <Label>学生画像 *</Label>
+            <div className="flex items-center justify-between">
+              <Label>学生画像 *</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handlePolish('profile_style')}
+                disabled={polishing === 'profile_style' || !formData.profile_style?.trim()}
+              >
+                {polishing === 'profile_style' ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Wand2 className="h-4 w-4 mr-1" />
+                )}
+                AI润色
+              </Button>
+            </div>
             <Textarea 
               value={formData.profile_style}
               onChange={e => setFormData({...formData, profile_style: e.target.value})}
@@ -215,7 +272,23 @@ export default function CaseFormDialog({
           </div>
           
           <div className="space-y-2">
-            <Label>学术背景 *</Label>
+            <div className="flex items-center justify-between">
+              <Label>学术背景 *</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handlePolish('academic_background')}
+                disabled={polishing === 'academic_background' || !formData.academic_background?.trim()}
+              >
+                {polishing === 'academic_background' ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Wand2 className="h-4 w-4 mr-1" />
+                )}
+                AI润色
+              </Button>
+            </div>
             <Textarea 
               value={formData.academic_background}
               onChange={e => setFormData({...formData, academic_background: e.target.value})}
