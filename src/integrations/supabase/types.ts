@@ -721,6 +721,116 @@ export type Database = {
         }
         Relationships: []
       }
+      resume_data: {
+        Row: {
+          activities: Json | null
+          address: string | null
+          awards: Json | null
+          certifications: Json | null
+          created_at: string
+          education: Json | null
+          email: string | null
+          full_name: string | null
+          generated_resume: string | null
+          id: string
+          languages: Json | null
+          linkedin_url: string | null
+          personal_website: string | null
+          phone: string | null
+          projects: Json | null
+          request_id: string
+          skills: Json | null
+          student_id: string
+          updated_at: string
+          work_experience: Json | null
+        }
+        Insert: {
+          activities?: Json | null
+          address?: string | null
+          awards?: Json | null
+          certifications?: Json | null
+          created_at?: string
+          education?: Json | null
+          email?: string | null
+          full_name?: string | null
+          generated_resume?: string | null
+          id?: string
+          languages?: Json | null
+          linkedin_url?: string | null
+          personal_website?: string | null
+          phone?: string | null
+          projects?: Json | null
+          request_id: string
+          skills?: Json | null
+          student_id: string
+          updated_at?: string
+          work_experience?: Json | null
+        }
+        Update: {
+          activities?: Json | null
+          address?: string | null
+          awards?: Json | null
+          certifications?: Json | null
+          created_at?: string
+          education?: Json | null
+          email?: string | null
+          full_name?: string | null
+          generated_resume?: string | null
+          id?: string
+          languages?: Json | null
+          linkedin_url?: string | null
+          personal_website?: string | null
+          phone?: string | null
+          projects?: Json | null
+          request_id?: string
+          skills?: Json | null
+          student_id?: string
+          updated_at?: string
+          work_experience?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_data_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "resume_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resume_requests: {
+        Row: {
+          admin_id: string
+          created_at: string
+          due_date: string | null
+          id: string
+          message: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          message?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          message?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shared_folders: {
         Row: {
           created_at: string | null
