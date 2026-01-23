@@ -20,6 +20,7 @@ import Articles from "@/pages/Articles";
 import ArticleDetail from "@/pages/ArticleDetail";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ActivityBrainstorming from "@/pages/ActivityBrainstorming";
+import Admissions from "@/pages/Admissions";
 import Footer from "@/components/layout/Footer";
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/articles" element={<Articles />} />
           <Route path="/articles/:id" element={<ArticleDetail />} />
+          <Route path="/admissions" element={<Admissions />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route element={<AuthLayout />}>

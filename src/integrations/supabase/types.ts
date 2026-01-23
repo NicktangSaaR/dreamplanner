@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      admission_cases: {
+        Row: {
+          academic_background: string
+          activities: Json | null
+          country: string
+          courses: Json | null
+          created_at: string
+          id: number
+          major: string | null
+          offer_image: string | null
+          profile_style: string
+          university: string
+          updated_at: string
+          year: string
+        }
+        Insert: {
+          academic_background: string
+          activities?: Json | null
+          country: string
+          courses?: Json | null
+          created_at?: string
+          id?: number
+          major?: string | null
+          offer_image?: string | null
+          profile_style: string
+          university: string
+          updated_at?: string
+          year: string
+        }
+        Update: {
+          academic_background?: string
+          activities?: Json | null
+          country?: string
+          courses?: Json | null
+          created_at?: string
+          id?: number
+          major?: string | null
+          offer_image?: string | null
+          profile_style?: string
+          university?: string
+          updated_at?: string
+          year?: string
+        }
+        Relationships: []
+      }
       article_categories: {
         Row: {
           created_at: string
