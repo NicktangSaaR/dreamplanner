@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,13 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, FileText, Calendar, CheckCircle, AlertCircle } from "lucide-react";
+import { Save, Plus, Trash2, FileText, Calendar, CheckCircle, AlertCircle, Upload, File } from "lucide-react";
 import { format } from "date-fns";
 import { ResumeData, Education, WorkExperience, Activity, Award } from "@/components/admin/resume/types";
 
 export default function PublicResumeForm() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState<ResumeData>({
     full_name: "",
@@ -34,6 +35,10 @@ export default function PublicResumeForm() {
     projects: [],
     languages: [],
   });
+  
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFilePath, setUploadedFilePath] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Fetch resume request by token
   const { data: request, isLoading: isLoadingRequest, error: requestError } = useQuery({
@@ -94,12 +99,38 @@ export default function PublicResumeForm() {
     }
   }, [existingData]);
 
+  // File upload handler
+  const handleFileUpload = async (file: File) => {
+    if (!request) return;
+    
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${request.id}/${Date.now()}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('resume-uploads')
+        .upload(fileName, file);
+      
+      if (error) throw error;
+      
+      setUploadedFile(file);
+      setUploadedFilePath(data.path);
+      toast.success("文件上传成功");
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error("文件上传失败: " + error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   // Save mutation
   const saveMutation = useMutation({
     mutationFn: async (submit: boolean) => {
       if (!request) throw new Error("无效请求");
       
-      const dataToSave = {
+      const dataToSave: any = {
         request_id: request.id,
         student_id: request.student_id,
         full_name: formData.full_name,
@@ -117,6 +148,11 @@ export default function PublicResumeForm() {
         projects: JSON.parse(JSON.stringify(formData.projects)),
         languages: JSON.parse(JSON.stringify(formData.languages)),
       };
+      
+      // Include uploaded file path if exists
+      if (uploadedFilePath) {
+        dataToSave.uploaded_file_path = uploadedFilePath;
+      }
       
       if (existingData) {
         const { error } = await supabase
@@ -266,6 +302,79 @@ export default function PublicResumeForm() {
               </p>
             )}
           </CardHeader>
+        </Card>
+
+        {/* File Upload Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              上传现有简历（可选）
+            </CardTitle>
+            <CardDescription>
+              如果您已有现成的简历文件，可以直接上传。支持 PDF、Word 等格式。
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept=".pdf,.doc,.docx,.txt"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  if (file.size > 10 * 1024 * 1024) {
+                    toast.error("文件大小不能超过 10MB");
+                    return;
+                  }
+                  handleFileUpload(file);
+                }
+              }}
+            />
+            
+            {uploadedFile ? (
+              <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                <File className="h-8 w-8 text-primary" />
+                <div className="flex-1">
+                  <p className="font-medium">{uploadedFile.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {(uploadedFile.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setUploadedFile(null);
+                    setUploadedFilePath(null);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full h-24 border-dashed"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    上传中...
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload className="h-6 w-6" />
+                    <span>点击上传简历文件</span>
+                    <span className="text-xs text-muted-foreground">支持 PDF、Word 格式，最大 10MB</span>
+                  </div>
+                )}
+              </Button>
+            )}
+          </CardContent>
         </Card>
 
         <Tabs defaultValue="personal" className="w-full">
