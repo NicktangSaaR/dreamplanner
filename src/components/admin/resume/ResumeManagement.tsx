@@ -95,8 +95,10 @@ export default function ResumeManagement() {
   // Send email notification mutation
   const sendEmailMutation = useMutation({
     mutationFn: async (request: ResumeRequest & { public_token?: string }) => {
-      // Get the form URL with the public token
-      const formUrl = `${window.location.origin}/resume-form?token=${request.public_token}`;
+      // Use production URL to ensure the link works after email is received
+      // window.location.origin may be a preview URL that expires
+      const productionUrl = "https://dreamplanner.lovable.app";
+      const formUrl = `${productionUrl}/resume-form?token=${request.public_token}`;
       
       const emailHtml = `
 <div style="font-family: 'Microsoft YaHei', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
@@ -298,7 +300,8 @@ export default function ResumeManagement() {
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            const formUrl = `${window.location.origin}/resume-form?token=${(request as any).public_token}`;
+                            const productionUrl = "https://dreamplanner.lovable.app";
+                            const formUrl = `${productionUrl}/resume-form?token=${(request as any).public_token}`;
                             navigator.clipboard.writeText(formUrl);
                             toast.success("链接已复制到剪贴板");
                           }}
