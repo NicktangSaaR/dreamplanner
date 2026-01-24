@@ -850,6 +850,7 @@ export type Database = {
           due_date: string | null
           id: string
           message: string | null
+          public_token: string | null
           status: string
           student_id: string
           updated_at: string
@@ -860,6 +861,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           message?: string | null
+          public_token?: string | null
           status?: string
           student_id: string
           updated_at?: string
@@ -870,6 +872,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           message?: string | null
+          public_token?: string | null
           status?: string
           student_id?: string
           updated_at?: string

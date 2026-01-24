@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Send, Eye, FileText, Calendar, Mail } from "lucide-react";
+import { Send, Eye, FileText, Calendar, Mail, Copy, Link } from "lucide-react";
 import { format } from "date-fns";
 import { ResumeRequest } from "./types";
 import ResumePreviewDialog from "./ResumePreviewDialog";
@@ -59,7 +59,7 @@ export default function ResumeManagement() {
       return data.map(r => ({
         ...r,
         student: studentMap.get(r.student_id),
-      })) as ResumeRequest[];
+      })) as (ResumeRequest & { public_token?: string })[];
     },
   });
 
@@ -94,12 +94,15 @@ export default function ResumeManagement() {
 
   // Send email notification mutation
   const sendEmailMutation = useMutation({
-    mutationFn: async (request: ResumeRequest) => {
+    mutationFn: async (request: ResumeRequest & { public_token?: string }) => {
+      // Get the form URL with the public token
+      const formUrl = `${window.location.origin}/resume-form?token=${request.public_token}`;
+      
       const { data, error } = await supabase.functions.invoke("send-invitation", {
         body: {
           email: request.student?.email,
-          subject: "请填写简历信息表",
-          content: `您好 ${request.student?.full_name}，\n\n请登录系统填写简历信息表。${request.message ? `\n\n备注：${request.message}` : ""}\n${request.due_date ? `\n截止日期：${format(new Date(request.due_date), "yyyy年MM月dd日")}` : ""}`,
+          subject: "请填写简历信息表 - DreamPlanner",
+          content: `您好 ${request.student?.full_name}，\n\n请点击以下链接填写您的简历信息表：\n\n${formUrl}\n\n该链接无需登录即可填写。${request.message ? `\n\n备注：${request.message}` : ""}${request.due_date ? `\n\n截止日期：${format(new Date(request.due_date), "yyyy年MM月dd日")}` : ""}\n\n如有问题，请联系您的顾问。\n\n祝好，\nDreamPlanner团队`,
         },
       });
       if (error) throw error;
@@ -240,8 +243,21 @@ export default function ResumeManagement() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => sendEmailMutation.mutate(request)}
+                          onClick={() => {
+                            const formUrl = `${window.location.origin}/resume-form?token=${(request as any).public_token}`;
+                            navigator.clipboard.writeText(formUrl);
+                            toast.success("链接已复制到剪贴板");
+                          }}
+                          title="复制表单链接"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => sendEmailMutation.mutate(request as any)}
                           disabled={sendEmailMutation.isPending}
+                          title="发送邮件通知"
                         >
                           <Mail className="h-4 w-4" />
                         </Button>
@@ -250,6 +266,7 @@ export default function ResumeManagement() {
                             size="sm"
                             variant="outline"
                             onClick={() => setPreviewRequest(request)}
+                            title="查看提交内容"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
