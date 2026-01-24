@@ -98,11 +98,64 @@ export default function ResumeManagement() {
       // Get the form URL with the public token
       const formUrl = `${window.location.origin}/resume-form?token=${request.public_token}`;
       
+      const emailHtml = `
+<div style="font-family: 'Microsoft YaHei', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+  <div style="background-color: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">📋 简历信息收集邀请</h1>
+    </div>
+    
+    <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+      您好 <strong>${request.student?.full_name}</strong>，
+    </p>
+    
+    <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+      我们诚邀您填写简历信息表，以便为您生成专业的个人简历。您可以选择以下任一方式提交：
+    </p>
+    
+    <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+      <p style="color: #1e40af; font-weight: 600; margin: 0 0 8px 0;">方式一：在线填写表单</p>
+      <p style="color: #374151; margin: 0 0 12px 0; font-size: 14px;">点击下方按钮，直接在线填写您的教育背景、工作经历、课外活动等信息。</p>
+      <a href="${formUrl}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+        📝 立即填写表单
+      </a>
+    </div>
+    
+    <div style="background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+      <p style="color: #166534; font-weight: 600; margin: 0 0 8px 0;">方式二：上传现有简历</p>
+      <p style="color: #374151; margin: 0; font-size: 14px;">如果您已有现成的简历文件（PDF、Word等），也可以在表单页面直接上传。</p>
+    </div>
+    
+    ${request.message ? `
+    <div style="background-color: #fef3c7; border-radius: 8px; padding: 12px 16px; margin: 16px 0;">
+      <p style="color: #92400e; margin: 0; font-size: 14px;">
+        <strong>备注：</strong>${request.message}
+      </p>
+    </div>
+    ` : ''}
+    
+    ${request.due_date ? `
+    <p style="color: #dc2626; font-size: 14px; font-weight: 500;">
+      ⏰ 截止日期：${format(new Date(request.due_date), "yyyy年MM月dd日")}
+    </p>
+    ` : ''}
+    
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+    
+    <p style="color: #6b7280; font-size: 12px; text-align: center; margin: 0;">
+      如有任何问题，请联系您的顾问。<br/>
+      此邮件由 DreamPlanner 系统自动发送
+    </p>
+  </div>
+</div>
+      `.trim();
+      
       const { data, error } = await supabase.functions.invoke("send-invitation", {
         body: {
           email: request.student?.email,
-          subject: "请填写简历信息表 - DreamPlanner",
-          content: `您好 ${request.student?.full_name}，\n\n请点击以下链接填写您的简历信息表：\n\n${formUrl}\n\n该链接无需登录即可填写。${request.message ? `\n\n备注：${request.message}` : ""}${request.due_date ? `\n\n截止日期：${format(new Date(request.due_date), "yyyy年MM月dd日")}` : ""}\n\n如有问题，请联系您的顾问。\n\n祝好，\nDreamPlanner团队`,
+          subject: "📋 请填写简历信息表 - DreamPlanner",
+          content: emailHtml,
+          isHtml: true,
         },
       });
       if (error) throw error;

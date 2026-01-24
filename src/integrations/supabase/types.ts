@@ -787,6 +787,7 @@ export type Database = {
           skills: Json | null
           student_id: string
           updated_at: string
+          uploaded_file_path: string | null
           work_experience: Json | null
         }
         Insert: {
@@ -809,6 +810,7 @@ export type Database = {
           skills?: Json | null
           student_id: string
           updated_at?: string
+          uploaded_file_path?: string | null
           work_experience?: Json | null
         }
         Update: {
@@ -831,6 +833,7 @@ export type Database = {
           skills?: Json | null
           student_id?: string
           updated_at?: string
+          uploaded_file_path?: string | null
           work_experience?: Json | null
         }
         Relationships: [

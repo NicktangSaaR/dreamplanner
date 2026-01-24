@@ -16,6 +16,7 @@ interface EmailRequest {
   // For general emails
   subject?: string;
   content?: string;
+  isHtml?: boolean; // New: support HTML content directly
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -35,9 +36,9 @@ const handler = async (req: Request): Promise<Response> => {
     
     const resend = new Resend(apiKey);
     const requestData: EmailRequest = await req.json();
-    const { email, token, expirationDate, subject, content } = requestData;
+    const { email, token, expirationDate, subject, content, isHtml } = requestData;
     
-    console.log("Received request data:", { email, hasToken: !!token, hasSubject: !!subject });
+    console.log("Received request data:", { email, hasToken: !!token, hasSubject: !!subject, isHtml });
 
     let emailSubject: string;
     let emailHtml: string;
@@ -46,11 +47,16 @@ const handler = async (req: Request): Promise<Response> => {
     if (subject && content) {
       // General email format
       emailSubject = subject;
-      emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          ${content.split('\n').map(line => `<p>${line}</p>`).join('')}
-        </div>
-      `;
+      // Check if content is already HTML or plain text
+      if (isHtml) {
+        emailHtml = content;
+      } else {
+        emailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            ${content.split('\n').map(line => `<p>${line}</p>`).join('')}
+          </div>
+        `;
+      }
     } else if (token && expirationDate) {
       // Invitation email format
       const formattedExpiration = new Date(expirationDate).toLocaleTimeString();
