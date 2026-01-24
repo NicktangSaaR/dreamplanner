@@ -161,8 +161,9 @@ export default function ResumeManagement() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      toast.success("邮件通知已发送");
+    onSuccess: (data: any) => {
+      const id = data?.data?.id ?? data?.id;
+      toast.success(id ? `邮件已提交至发送服务（ID: ${id}）` : "邮件通知已发送");
     },
     onError: () => {
       toast.error("发送邮件失败");
