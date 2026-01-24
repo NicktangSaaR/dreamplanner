@@ -74,11 +74,27 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Invalid email request: must provide either (subject + content) or (token + expirationDate)");
     }
 
+    // Provide a plain-text fallback to improve deliverability and readability
+    // (Some mailbox providers may downrank HTML-only messages)
+    const emailText = ((): string => {
+      if (subject && content && !isHtml) return content;
+      // naive HTML -> text fallback
+      return emailHtml
+        .replace(/<style[\s\S]*?<\/style>/gi, "")
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<br\s*\/?\s*>/gi, "\n")
+        .replace(/<\/?p\s*>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+    })();
+
     const emailResponse = await resend.emails.send({
       from: "DreamPlanner <noreply@dreamplaneredu.com>",
       to: [email],
       subject: emailSubject,
       html: emailHtml,
+      text: emailText,
     });
 
     console.log("Email sent successfully:", emailResponse);

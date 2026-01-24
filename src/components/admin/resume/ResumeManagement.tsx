@@ -153,7 +153,7 @@ export default function ResumeManagement() {
       const { data, error } = await supabase.functions.invoke("send-invitation", {
         body: {
           email: request.student?.email,
-          subject: "📋 请填写简历信息表 - DreamPlanner",
+          subject: "请填写简历信息表 - DreamPlanner",
           content: emailHtml,
           isHtml: true,
         },
