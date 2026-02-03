@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Link2, Unlink, Loader2, FolderOpen } from "lucide-react";
+import { FolderOpen, Loader2, Save, X } from "lucide-react";
 
 interface GoogleDriveConnectProps {
   studentId: string;
@@ -11,132 +13,99 @@ interface GoogleDriveConnectProps {
 }
 
 export default function GoogleDriveConnect({ studentId, onConnectionChange }: GoogleDriveConnectProps) {
-  const [isConnected, setIsConnected] = useState(false);
+  const [folderId, setFolderId] = useState<string>("");
+  const [savedFolderId, setSavedFolderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [folderId, setFolderId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    checkConnectionStatus();
-    // Handle OAuth callback
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-    
-    if (code && state === studentId) {
-      handleOAuthCallback(code);
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+    checkFolderStatus();
   }, [studentId]);
 
-  const checkConnectionStatus = async () => {
+  const checkFolderStatus = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('google-drive-auth', {
-        body: { action: 'check-status', studentId },
+        body: { action: 'get-student-folder', studentId },
       });
 
       if (error) throw error;
 
-      setIsConnected(data.connected);
-      setFolderId(data.folderId);
-      onConnectionChange?.(data.connected, data.folderId);
+      setSavedFolderId(data.folderId);
+      setFolderId(data.folderId || "");
+      onConnectionChange?.(data.hasFolder, data.folderId);
     } catch (error) {
-      console.error('Failed to check Google Drive status:', error);
+      console.error('Failed to check folder status:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleConnect = async () => {
-    try {
-      setIsLoading(true);
-      const redirectUri = `${window.location.origin}${window.location.pathname}`;
-      
-      const { data, error } = await supabase.functions.invoke('google-drive-auth', {
-        body: { 
-          action: 'get-auth-url', 
-          studentId,
-          redirectUri,
-        },
-      });
-
-      if (error) throw error;
-
-      // Redirect to Google OAuth
-      window.location.href = data.authUrl;
-    } catch (error) {
-      console.error('Failed to initiate Google Drive connection:', error);
+  const handleSaveFolder = async () => {
+    if (!folderId.trim()) {
       toast({
-        title: "连接失败",
-        description: "无法启动 Google Drive 授权",
+        title: "请输入文件夹 ID",
         variant: "destructive",
       });
-      setIsLoading(false);
+      return;
     }
-  };
 
-  const handleOAuthCallback = async (code: string) => {
     try {
-      setIsLoading(true);
-      const redirectUri = `${window.location.origin}${window.location.pathname}`;
-
-      const { data, error } = await supabase.functions.invoke('google-drive-auth', {
-        body: { 
-          action: 'exchange-code', 
-          code,
-          studentId,
-          redirectUri,
-        },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "连接成功",
-        description: "Google Drive 已成功授权",
-      });
-
-      setIsConnected(true);
-      onConnectionChange?.(true);
-    } catch (error) {
-      console.error('OAuth callback failed:', error);
-      toast({
-        title: "授权失败",
-        description: error instanceof Error ? error.message : "Google Drive 授权失败",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDisconnect = async () => {
-    try {
-      setIsLoading(true);
+      setIsSaving(true);
       const { error } = await supabase.functions.invoke('google-drive-auth', {
-        body: { action: 'disconnect', studentId },
+        body: { 
+          action: 'set-student-folder', 
+          studentId,
+          folderId: folderId.trim(),
+        },
       });
 
       if (error) throw error;
 
       toast({
-        title: "已断开连接",
-        description: "Google Drive 授权已取消",
+        title: "保存成功",
+        description: "学生文件夹已关联",
       });
 
-      setIsConnected(false);
-      setFolderId(null);
+      setSavedFolderId(folderId.trim());
+      onConnectionChange?.(true, folderId.trim());
+    } catch (error) {
+      console.error('Failed to save folder:', error);
+      toast({
+        title: "保存失败",
+        description: error instanceof Error ? error.message : "无法保存文件夹 ID",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRemoveFolder = async () => {
+    try {
+      setIsSaving(true);
+      const { error } = await supabase.functions.invoke('google-drive-auth', {
+        body: { action: 'remove-student-folder', studentId },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "已移除",
+        description: "学生文件夹关联已移除",
+      });
+
+      setSavedFolderId(null);
+      setFolderId("");
       onConnectionChange?.(false);
     } catch (error) {
-      console.error('Failed to disconnect:', error);
+      console.error('Failed to remove folder:', error);
       toast({
-        title: "断开失败",
-        description: "无法断开 Google Drive 连接",
+        title: "移除失败",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
@@ -155,40 +124,46 @@ export default function GoogleDriveConnect({ studentId, onConnectionChange }: Go
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <FolderOpen className="h-5 w-5" />
-          Google Drive 连接
+          学生 Google Drive 文件夹
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        {isConnected ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-green-600">
-              <Link2 className="h-4 w-4" />
-              <span>已连接到 Google Drive</span>
-            </div>
-            {folderId && (
-              <p className="text-xs text-muted-foreground">
-                文件夹 ID: {folderId}
-              </p>
-            )}
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="folderId">Google Drive 文件夹 ID</Label>
+          <div className="flex gap-2">
+            <Input
+              id="folderId"
+              value={folderId}
+              onChange={(e) => setFolderId(e.target.value)}
+              placeholder="输入文件夹 ID..."
+              className="flex-1"
+            />
             <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleDisconnect}
-              className="w-full"
+              onClick={handleSaveFolder} 
+              disabled={isSaving || !folderId.trim()}
+              size="icon"
             >
-              <Unlink className="h-4 w-4 mr-2" />
-              断开连接
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             </Button>
+            {savedFolderId && (
+              <Button 
+                variant="outline" 
+                onClick={handleRemoveFolder} 
+                disabled={isSaving}
+                size="icon"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              连接 Google Drive 以同步规划方案文档
-            </p>
-            <Button onClick={handleConnect} className="w-full">
-              <Link2 className="h-4 w-4 mr-2" />
-              连接 Google Drive
-            </Button>
+          <p className="text-xs text-muted-foreground">
+            从 Google Drive 文件夹 URL 中获取 ID（/folders/ 后面的部分）
+          </p>
+        </div>
+        {savedFolderId && (
+          <div className="text-sm text-green-600 flex items-center gap-2">
+            <FolderOpen className="h-4 w-4" />
+            <span>已关联文件夹: {savedFolderId}</span>
           </div>
         )}
       </CardContent>
