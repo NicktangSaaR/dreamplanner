@@ -1,4 +1,3 @@
-
 import { Profile } from "@/hooks/useProfile";
 import StatisticsCards from "../StatisticsCards";
 import StudentProfile from "../student-summary/StudentProfile";
@@ -8,7 +7,7 @@ import TodoSection from "../TodoSection";
 import StudentCalendar from "./StudentCalendar";
 import CollegeListSection from "../CollegeListSection";
 import SharedFolderSection from "../student-summary/SharedFolderSection";
-import RecentNotes from "../student-summary/RecentNotes";
+import { PlanningDocumentSection } from "../google-drive";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface StudentViewContentProps {
@@ -34,10 +33,6 @@ export default function StudentViewContent({
     timeCommitment: activity.time_commitment || "",
   }));
 
-  const handleNotesChange = () => {
-    queryClient.invalidateQueries({ queryKey: ["student-notes", studentId] });
-  };
-
   return (
     <div className="space-y-6">
       <StudentProfile profile={profile} />
@@ -59,18 +54,15 @@ export default function StudentViewContent({
       {/* Full-width Calendar Section */}
       <StudentCalendar studentId={studentId} />
 
+      {/* Planning Document Section - Replaces Notes */}
+      <PlanningDocumentSection studentId={studentId} />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
           <TodoSection />
           <CollegeListSection />
           <SharedFolderSection studentId={studentId} />
         </div>
-
-        <RecentNotes 
-          notes={notes} 
-          studentId={studentId} 
-          onNotesChange={handleNotesChange}
-        />
       </div>
     </div>
   );
