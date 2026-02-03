@@ -11,24 +11,30 @@ export const loadChineseFont = async (): Promise<string | null> => {
     return cachedFont;
   }
 
-  try {
-    // Use a lightweight subset of NotoSansSC from jsDelivr CDN
-    const fontUrl = "https://cdn.jsdelivr.net/npm/@aspect-dev/noto-sans-sc@1.0.0/fonts/NotoSansSC-Regular.otf";
-    
-    const response = await fetch(fontUrl);
-    if (!response.ok) {
-      console.warn("Failed to load Chinese font, falling back to default");
-      return null;
-    }
+  // Try multiple CDN sources for the Chinese font
+  const fontUrls = [
+    "https://cdn.jsdelivr.net/gh/nicnocquee/jspdf-fonts@main/fonts/NotoSansSC-Regular.ttf",
+    "https://raw.githubusercontent.com/nicnocquee/jspdf-fonts/main/fonts/NotoSansSC-Regular.ttf",
+    "https://fonts.gstatic.com/s/notosanssc/v36/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FnYw.ttf",
+  ];
 
-    const arrayBuffer = await response.arrayBuffer();
-    const base64 = arrayBufferToBase64(arrayBuffer);
-    cachedFont = base64;
-    return base64;
-  } catch (error) {
-    console.error("Error loading Chinese font:", error);
-    return null;
+  for (const fontUrl of fontUrls) {
+    try {
+      const response = await fetch(fontUrl);
+      if (response.ok) {
+        const arrayBuffer = await response.arrayBuffer();
+        const base64 = arrayBufferToBase64(arrayBuffer);
+        cachedFont = base64;
+        console.log("Chinese font loaded successfully from:", fontUrl);
+        return base64;
+      }
+    } catch (error) {
+      console.warn("Failed to load font from:", fontUrl, error);
+    }
   }
+
+  console.warn("Failed to load Chinese font from all sources, falling back to default");
+  return null;
 };
 
 const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
