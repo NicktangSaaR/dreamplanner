@@ -17,7 +17,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AssociateCounselorDialog } from "./user-management/AssociateCounselorDialog";
-import AdminGoogleDriveAuth from "@/components/college-planning/google-drive/AdminGoogleDriveAuth";
 
 interface EditableUser {
   id: string;
@@ -150,9 +149,6 @@ const UserManagement = () => {
           {users.length} Users ({users.filter(u => u.user_type === 'counselor' && !u.is_verified).length} pending verification)
         </Badge>
       </div>
-
-      {/* Google Drive Authorization Section */}
-      <AdminGoogleDriveAuth />
       
       <UserTable
         users={users}
