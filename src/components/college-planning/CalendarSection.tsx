@@ -131,14 +131,16 @@ export default function CalendarSection() {
     setIsDialogOpen(true);
   };
 
-  const handleExportList = () => {
-    exportCalendarAsListPDF(todos, selectedYear, profile?.full_name || undefined);
-    toast.success("Calendar list exported successfully");
+  const handleExportList = async () => {
+    toast.info("正在生成 PDF...");
+    await exportCalendarAsListPDF(todos, selectedYear, profile?.full_name || undefined);
+    toast.success("日历列表导出成功");
   };
 
-  const handleExportGrid = () => {
-    exportCalendarAsGridPDF(todos, selectedYear, profile?.full_name || undefined);
-    toast.success("Calendar grid exported successfully");
+  const handleExportGrid = async () => {
+    toast.info("正在生成 PDF...");
+    await exportCalendarAsGridPDF(todos, selectedYear, profile?.full_name || undefined);
+    toast.success("日历网格导出成功");
   };
 
   return (
