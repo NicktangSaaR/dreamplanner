@@ -627,7 +627,10 @@ export type Database = {
       }
       planning_documents: {
         Row: {
+          content: string | null
           created_at: string
+          file_name: string | null
+          file_path: string | null
           google_doc_id: string
           id: string
           is_primary: boolean | null
@@ -637,7 +640,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          content?: string | null
           created_at?: string
+          file_name?: string | null
+          file_path?: string | null
           google_doc_id: string
           id?: string
           is_primary?: boolean | null
@@ -647,7 +653,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          content?: string | null
           created_at?: string
+          file_name?: string | null
+          file_path?: string | null
           google_doc_id?: string
           id?: string
           is_primary?: boolean | null
