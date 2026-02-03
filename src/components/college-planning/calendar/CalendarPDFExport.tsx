@@ -131,15 +131,15 @@ export const exportCalendarAsGridPDF = async (todos: Todo[], year: number, stude
     }
   });
   
-  // Calendar grid - 4 columns x 3 rows
-  const startY = studentName ? 50 : 40;
-  const cellWidth = 65;
-  const cellHeight = 50;
-  const startX = 20;
+  // Calendar grid - 3 columns x 4 rows (larger cells)
+  const startY = studentName ? 45 : 35;
+  const cellWidth = 90;
+  const cellHeight = 45;
+  const startX = 10;
   
   MONTHS.forEach((month, index) => {
-    const row = Math.floor(index / 4);
-    const col = index % 4;
+    const row = Math.floor(index / 3);
+    const col = index % 3;
     
     const x = startX + col * cellWidth;
     const y = startY + row * cellHeight;
@@ -148,13 +148,13 @@ export const exportCalendarAsGridPDF = async (todos: Todo[], year: number, stude
     pdf.rect(x, y, cellWidth, cellHeight);
     
     // Month name
-    pdf.setFontSize(12);
+    pdf.setFontSize(11);
     if (hasChineseFont) {
       pdf.setFont("NotoSansSC", "normal");
     } else {
       pdf.setFont("helvetica", "bold");
     }
-    pdf.text(month, x + 2, y + 8);
+    pdf.text(month, x + 3, y + 8);
     
     // Todos for this month
     const monthTodos = todosByMonth[index] || [];
@@ -167,19 +167,20 @@ export const exportCalendarAsGridPDF = async (todos: Todo[], year: number, stude
     
     let todoY = y + 15;
     if (monthTodos.length === 0) {
-      pdf.text("No todos", x + 2, todoY);
+      pdf.text("No todos", x + 3, todoY);
     } else {
-      monthTodos.slice(0, 4).forEach(todo => { // Limit to 4 todos per cell
+      monthTodos.slice(0, 5).forEach(todo => { // Show up to 5 todos per cell
         const status = todo.completed ? "✓" : "•";
         const title = hasChineseFont ? todo.title : sanitizeForPDF(todo.title);
-        const truncatedTitle = title.slice(0, 18) + (title.length > 18 ? "..." : "");
+        // Allow longer titles (up to 35 chars)
+        const truncatedTitle = title.slice(0, 35) + (title.length > 35 ? "..." : "");
         const text = `${status} ${truncatedTitle}`;
-        pdf.text(text, x + 2, todoY);
-        todoY += 8;
+        pdf.text(text, x + 3, todoY);
+        todoY += 6;
       });
       
-      if (monthTodos.length > 4) {
-        pdf.text(`+${monthTodos.length - 4} more...`, x + 2, todoY);
+      if (monthTodos.length > 5) {
+        pdf.text(`+${monthTodos.length - 5} more...`, x + 3, todoY);
       }
     }
   });
