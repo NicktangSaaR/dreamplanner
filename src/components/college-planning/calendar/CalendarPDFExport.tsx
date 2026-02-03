@@ -131,15 +131,16 @@ export const exportCalendarAsGridPDF = async (todos: Todo[], year: number, stude
     }
   });
   
-  // Calendar grid - 3 columns x 4 rows (larger cells)
-  const startY = studentName ? 45 : 35;
-  const cellWidth = 90;
-  const cellHeight = 45;
-  const startX = 10;
+  // Calendar grid - 4 columns x 3 rows (fits A4 landscape better)
+  const startY = studentName ? 40 : 32;
+  const cellWidth = 68;
+  const cellHeight = 52;
+  const startX = 8;
+  const pageHeight = 210; // A4 landscape height in mm
   
   MONTHS.forEach((month, index) => {
-    const row = Math.floor(index / 3);
-    const col = index % 3;
+    const row = Math.floor(index / 4);
+    const col = index % 4;
     
     const x = startX + col * cellWidth;
     const y = startY + row * cellHeight;
