@@ -5,7 +5,6 @@ import AcademicSection from "../student-summary/AcademicSection";
 import ActivitiesSection from "../student-summary/ActivitiesSection";
 import TodoSection from "../TodoSection";
 import StudentCalendar from "./StudentCalendar";
-import CollegeListSection from "../CollegeListSection";
 import SharedFolderSection from "../student-summary/SharedFolderSection";
 import { PlanningDocumentSection } from "../google-drive";
 import { useQueryClient } from "@tanstack/react-query";
@@ -60,7 +59,6 @@ export default function StudentViewContent({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
           <TodoSection />
-          <CollegeListSection />
           <SharedFolderSection studentId={studentId} />
         </div>
       </div>

@@ -5,7 +5,6 @@ import ExtracurricularSection from "./ExtracurricularSection";
 import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
 import CalendarSection from "./CalendarSection";
-import CollegeListSection from "./CollegeListSection";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
 import { Course } from "./types/course";
 
@@ -29,7 +28,7 @@ export default function DashboardTabs({
 
   return (
     <Tabs defaultValue="academics" className="w-full">
-      <TabsList className="grid w-full grid-cols-7 bg-card">
+      <TabsList className="grid w-full grid-cols-6 bg-card">
         <TabsTrigger 
           value="academics"
           className="data-[state=active]:after:bg-[#0EA5E9] data-[state=inactive]:bg-[#E1F5FE] relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:translate-y-[1px] transition-colors"
@@ -61,12 +60,6 @@ export default function DashboardTabs({
           Calendar
         </TabsTrigger>
         <TabsTrigger 
-          value="colleges"
-          className="data-[state=active]:after:bg-[#10B981] data-[state=inactive]:bg-[#E6FEF8] relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:translate-y-[1px] transition-colors"
-        >
-          College List
-        </TabsTrigger>
-        <TabsTrigger 
           value="resume"
           className="data-[state=active]:after:bg-[#EC4899] data-[state=inactive]:bg-[#FCE7F3] relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:translate-y-[1px] transition-colors"
         >
@@ -93,9 +86,6 @@ export default function DashboardTabs({
       </TabsContent>
       <TabsContent value="calendar">
         <CalendarSection />
-      </TabsContent>
-      <TabsContent value="colleges">
-        <CollegeListSection />
       </TabsContent>
       <TabsContent value="resume">
         <StudentResumeForm />
