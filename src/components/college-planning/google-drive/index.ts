@@ -3,3 +3,4 @@ export { default as GoogleDriveFileList } from "./GoogleDriveFileList";
 export { default as PlanningDocumentViewer } from "./PlanningDocumentViewer";
 export { default as PlanningMilestones } from "./PlanningMilestones";
 export { default as PlanningDocumentSection } from "./PlanningDocumentSection";
+export { default as AdminGoogleDriveAuth } from "./AdminGoogleDriveAuth";

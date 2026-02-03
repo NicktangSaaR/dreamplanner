@@ -8,6 +8,7 @@ import InviteStudentDialog from "@/components/college-planning/InviteStudentDial
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import AdminGoogleDriveAuth from "@/components/college-planning/google-drive/AdminGoogleDriveAuth";
 
 export default function CounselorDashboard() {
   const navigate = useNavigate();
@@ -132,6 +133,9 @@ export default function CounselorDashboard() {
           </Button>
         </div>
       </div>
+
+      {/* Admin Google Drive Authorization */}
+      <AdminGoogleDriveAuth />
 
       {/* Active Students Section */}
       <div className="mb-8">
