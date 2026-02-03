@@ -1,13 +1,17 @@
 import jsPDF from "jspdf";
 import { Todo } from "@/hooks/todos/useTodoQuery";
+import { setupChineseFont } from "./chineseFont";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
 
-export const exportCalendarAsListPDF = (todos: Todo[], year: number, studentName?: string) => {
+export const exportCalendarAsListPDF = async (todos: Todo[], year: number, studentName?: string) => {
   const pdf = new jsPDF();
+  
+  // Try to load Chinese font
+  const hasChineseFont = await setupChineseFont(pdf);
   
   // Header
   pdf.setFontSize(20);
@@ -47,29 +51,43 @@ export const exportCalendarAsListPDF = (todos: Todo[], year: number, studentName
     
     // Month header
     pdf.setFontSize(16);
-    pdf.setFont("helvetica", "bold");
+    if (hasChineseFont) {
+      pdf.setFont("NotoSansSC", "normal");
+    } else {
+      pdf.setFont("helvetica", "bold");
+    }
     pdf.text(month, 20, yPosition);
     yPosition += 10;
     
     // Todos for this month
     pdf.setFontSize(12);
-    pdf.setFont("helvetica", "normal");
+    if (hasChineseFont) {
+      pdf.setFont("NotoSansSC", "normal");
+    } else {
+      pdf.setFont("helvetica", "normal");
+    }
     
     if (monthTodos.length === 0) {
       pdf.text("  No todos this month", 20, yPosition);
       yPosition += 8;
     } else {
       monthTodos.forEach(todo => {
-        const status = todo.completed ? "[✓] " : "[ ] ";
-        const text = `  ${status}${todo.title}`;
-        pdf.text(text, 20, yPosition);
-        yPosition += 8;
+        const status = todo.completed ? "[Done] " : "[ ] ";
+        const title = hasChineseFont ? todo.title : sanitizeForPDF(todo.title);
+        const text = `  ${status}${title}`;
         
-        // Check if we need a new page
-        if (yPosition > 280) {
-          pdf.addPage();
-          yPosition = 20;
-        }
+        // Split long text to prevent overflow
+        const lines = pdf.splitTextToSize(text, 170);
+        lines.forEach((line: string) => {
+          pdf.text(line, 20, yPosition);
+          yPosition += 8;
+          
+          // Check if we need a new page
+          if (yPosition > 280) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+        });
       });
     }
     
@@ -80,11 +98,17 @@ export const exportCalendarAsListPDF = (todos: Todo[], year: number, studentName
   pdf.save(`${year}-calendar-todo-list.pdf`);
 };
 
-export const exportCalendarAsGridPDF = (todos: Todo[], year: number, studentName?: string) => {
+export const exportCalendarAsGridPDF = async (todos: Todo[], year: number, studentName?: string) => {
   const pdf = new jsPDF("landscape");
+  
+  // Try to load Chinese font
+  const hasChineseFont = await setupChineseFont(pdf);
   
   // Header
   pdf.setFontSize(20);
+  if (hasChineseFont) {
+    pdf.setFont("NotoSansSC", "normal");
+  }
   pdf.text(`${year} Calendar`, 20, 20);
   
   if (studentName) {
@@ -125,13 +149,21 @@ export const exportCalendarAsGridPDF = (todos: Todo[], year: number, studentName
     
     // Month name
     pdf.setFontSize(12);
-    pdf.setFont("helvetica", "bold");
+    if (hasChineseFont) {
+      pdf.setFont("NotoSansSC", "normal");
+    } else {
+      pdf.setFont("helvetica", "bold");
+    }
     pdf.text(month, x + 2, y + 8);
     
     // Todos for this month
     const monthTodos = todosByMonth[index] || [];
     pdf.setFontSize(8);
-    pdf.setFont("helvetica", "normal");
+    if (hasChineseFont) {
+      pdf.setFont("NotoSansSC", "normal");
+    } else {
+      pdf.setFont("helvetica", "normal");
+    }
     
     let todoY = y + 15;
     if (monthTodos.length === 0) {
@@ -139,9 +171,11 @@ export const exportCalendarAsGridPDF = (todos: Todo[], year: number, studentName
     } else {
       monthTodos.slice(0, 4).forEach(todo => { // Limit to 4 todos per cell
         const status = todo.completed ? "✓" : "•";
-        const text = `${status} ${todo.title.slice(0, 20)}${todo.title.length > 20 ? "..." : ""}`;
+        const title = hasChineseFont ? todo.title : sanitizeForPDF(todo.title);
+        const truncatedTitle = title.slice(0, 18) + (title.length > 18 ? "..." : "");
+        const text = `${status} ${truncatedTitle}`;
         pdf.text(text, x + 2, todoY);
-        todoY += 6;
+        todoY += 8;
       });
       
       if (monthTodos.length > 4) {
@@ -152,4 +186,24 @@ export const exportCalendarAsGridPDF = (todos: Todo[], year: number, studentName
   
   // Save the PDF
   pdf.save(`${year}-calendar-grid.pdf`);
+};
+
+// Remove non-ASCII characters for fallback when Chinese font is not available
+const sanitizeForPDF = (text: string): string => {
+  // Replace common Chinese punctuation with ASCII equivalents
+  return text
+    .replace(/：/g, ':')
+    .replace(/，/g, ',')
+    .replace(/。/g, '.')
+    .replace(/、/g, ',')
+    .replace(/（/g, '(')
+    .replace(/）/g, ')')
+    .replace(/【/g, '[')
+    .replace(/】/g, ']')
+    .replace(/"/g, '"')
+    .replace(/"/g, '"')
+    .replace(/'/g, "'")
+    .replace(/'/g, "'")
+    // Replace Chinese characters with placeholder
+    .replace(/[\u4e00-\u9fa5]/g, '?');
 };
