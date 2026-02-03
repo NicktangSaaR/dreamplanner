@@ -11,17 +11,16 @@ const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-const ADMIN_CREDENTIALS_KEY = 'admin_google_drive_credentials';
-
 // Get admin's valid access token (refresh if needed)
 async function getAdminAccessToken(supabase: any): Promise<string> {
   const { data: credentials, error } = await supabase
-    .from('student_google_drive')
-    .select('access_token, refresh_token, token_expires_at')
-    .eq('student_id', ADMIN_CREDENTIALS_KEY)
+    .from('admin_google_drive_credentials')
+    .select('id, access_token, refresh_token, token_expires_at')
+    .limit(1)
     .single();
 
   if (error || !credentials) {
+    console.error('Admin credentials not found:', error);
     throw new Error('Admin Google Drive not connected. Please connect the admin account first.');
   }
 
@@ -56,12 +55,12 @@ async function getAdminAccessToken(supabase: any): Promise<string> {
 
   // Update token in database
   await supabase
-    .from('student_google_drive')
+    .from('admin_google_drive_credentials')
     .update({
       access_token: tokenData.access_token,
       token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
     })
-    .eq('student_id', ADMIN_CREDENTIALS_KEY);
+    .eq('id', credentials.id);
 
   return tokenData.access_token;
 }
@@ -72,7 +71,7 @@ async function getStudentFolderId(supabase: any, studentId: string): Promise<str
     .from('student_google_drive')
     .select('folder_id')
     .eq('student_id', studentId)
-    .single();
+    .maybeSingle();
 
   if (error || !data) {
     return null;

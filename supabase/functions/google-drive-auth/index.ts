@@ -11,9 +11,6 @@ const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-// Admin credentials storage key
-const ADMIN_CREDENTIALS_KEY = 'admin_google_drive_credentials';
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -29,16 +26,16 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
-    // Get admin credentials from a settings table or first admin's credentials
+    // Get admin credentials from dedicated table
     const getAdminCredentials = async () => {
-      // Try to get from student_google_drive where student_id is 'admin'
       const { data, error } = await supabase
-        .from('student_google_drive')
-        .select('access_token, refresh_token, token_expires_at')
-        .eq('student_id', ADMIN_CREDENTIALS_KEY)
+        .from('admin_google_drive_credentials')
+        .select('id, access_token, refresh_token, token_expires_at')
+        .limit(1)
         .single();
       
       if (error || !data) {
+        console.log('No admin credentials found:', error);
         return null;
       }
       return data;
@@ -69,12 +66,12 @@ serve(async (req) => {
 
       // Update admin credentials
       await supabase
-        .from('student_google_drive')
+        .from('admin_google_drive_credentials')
         .update({
           access_token: tokenData.access_token,
           token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
         })
-        .eq('student_id', ADMIN_CREDENTIALS_KEY);
+        .eq('id', credentials.id);
 
       return tokenData.access_token;
     };
@@ -122,21 +119,38 @@ serve(async (req) => {
         throw new Error(tokenData.error_description || 'Failed to exchange authorization code');
       }
 
-      // Store admin credentials with special key
-      const { error: upsertError } = await supabase
-        .from('student_google_drive')
-        .upsert({
-          student_id: ADMIN_CREDENTIALS_KEY,
-          access_token: tokenData.access_token,
-          refresh_token: tokenData.refresh_token,
-          token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
-        }, {
-          onConflict: 'student_id',
-        });
+      // Check if credentials already exist
+      const existingCredentials = await getAdminCredentials();
 
-      if (upsertError) {
-        console.error('Failed to store admin tokens:', upsertError);
-        throw new Error('Failed to store admin authorization tokens');
+      if (existingCredentials) {
+        // Update existing credentials
+        const { error: updateError } = await supabase
+          .from('admin_google_drive_credentials')
+          .update({
+            access_token: tokenData.access_token,
+            refresh_token: tokenData.refresh_token,
+            token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+          })
+          .eq('id', existingCredentials.id);
+
+        if (updateError) {
+          console.error('Failed to update admin tokens:', updateError);
+          throw new Error('Failed to update admin authorization tokens');
+        }
+      } else {
+        // Insert new credentials
+        const { error: insertError } = await supabase
+          .from('admin_google_drive_credentials')
+          .insert({
+            access_token: tokenData.access_token,
+            refresh_token: tokenData.refresh_token,
+            token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+          });
+
+        if (insertError) {
+          console.error('Failed to store admin tokens:', insertError);
+          throw new Error('Failed to store admin authorization tokens');
+        }
       }
 
       return new Response(JSON.stringify({ success: true }), {
@@ -217,7 +231,7 @@ serve(async (req) => {
         .from('student_google_drive')
         .select('folder_id')
         .eq('student_id', studentId)
-        .single();
+        .maybeSingle();
 
       return new Response(JSON.stringify({
         folderId: data?.folder_id || null,
