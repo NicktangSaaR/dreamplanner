@@ -57,6 +57,25 @@ export default function GoogleDriveFileList({
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const openInNewTab = (url: string) => {
+    // Google Drive/Docs disallow being embedded in iframes; always open in a new tab.
+    // Some browsers/iframe environments may block window.open; provide a DOM fallback.
+    try {
+      const opened = window.open(url, "_blank", "noopener,noreferrer");
+      if (opened) return;
+    } catch {
+      // ignore and fallback below
+    }
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
   useEffect(() => {
     if (folderId) {
       loadFiles();
@@ -150,7 +169,7 @@ export default function GoogleDriveFileList({
       onSelectDocument?.(file.id, file.name);
     } else {
       // Open in new tab for non-Google Docs
-      window.open(file.webViewLink, '_blank');
+      openInNewTab(file.webViewLink);
     }
   };
 
@@ -270,7 +289,7 @@ export default function GoogleDriveFileList({
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open(file.webViewLink, '_blank');
+                        openInNewTab(file.webViewLink);
                       }}
                     >
                       <ExternalLink className="h-4 w-4" />
