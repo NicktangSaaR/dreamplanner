@@ -26,6 +26,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import ReminderContactManagement from "./ReminderContactManagement";
+import StudentReminderEmails from "./StudentReminderEmails";
 
 interface Student {
   id: string;
@@ -586,7 +587,16 @@ export default function StudentTodoManagement() {
         </div>
 
         {/* Contact Management Section */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-4">
+          {/* Student-specific reminder emails */}
+          {selectedStudentId && (
+            <StudentReminderEmails
+              studentId={selectedStudentId}
+              studentName={selectedStudent?.full_name || "学生"}
+            />
+          )}
+          
+          {/* Global reminder contacts */}
           <ReminderContactManagement
             studentId={selectedStudentId}
             studentName={selectedStudent?.full_name || "学生"}
