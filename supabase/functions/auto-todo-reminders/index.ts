@@ -29,9 +29,10 @@ interface ReminderEmail {
 /**
  * Auto Todo Reminders Edge Function
  * 
- * Supports two modes:
+ * Supports three modes:
  * 1. Monthly reminder (mode: "monthly"): Sends on the 1st of each month for todos due in the next 40 days
  * 2. Weekly reminder (mode: "weekly"): Sends reminders for todos due in the next 7 days
+ * 3. Urgent reminder (mode: "urgent"): Sends urgent reminders for todos due in the next 3 days
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -71,6 +72,10 @@ serve(async (req) => {
       // Monthly: todos due in the next 40 days
       dueDateStart = now;
       dueDateEnd = new Date(now.getTime() + 40 * 24 * 60 * 60 * 1000);
+    } else if (mode === "urgent") {
+      // Urgent: todos due in the next 3 days
+      dueDateStart = now;
+      dueDateEnd = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
     } else {
       // Weekly: todos due in the next 7 days
       dueDateStart = now;
@@ -201,6 +206,8 @@ serve(async (req) => {
               to: [email],
               subject: mode === "monthly" 
                 ? `📅 月度待办提醒 - ${studentName} 的待完成事项`
+                : mode === "urgent"
+                ? `🚨 紧急提醒 - ${studentName} 有 ${studentTodos.length} 项待办即将到期！`
                 : `⏰ 待办提醒 - ${studentName} 有 ${studentTodos.length} 项待办即将到期`,
               html: emailContent.html,
               text: emailContent.text,
@@ -257,18 +264,22 @@ function generateEmailContent(studentName: string, todos: Todo[], mode: string):
     return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
   });
 
+  const isUrgent = mode === "urgent";
+  
   const todosHtml = sortedTodos.map((todo) => {
     const dueDate = todo.due_date ? new Date(todo.due_date).toLocaleDateString("zh-CN") : "无截止日期";
     const daysLeft = todo.due_date 
       ? Math.ceil((new Date(todo.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
       : null;
-    const urgencyColor = daysLeft !== null && daysLeft <= 3 ? "#dc2626" : daysLeft !== null && daysLeft <= 7 ? "#f59e0b" : "#16a34a";
+    const urgencyColor = daysLeft !== null && daysLeft <= 1 ? "#dc2626" : daysLeft !== null && daysLeft <= 3 ? "#ea580c" : daysLeft !== null && daysLeft <= 7 ? "#f59e0b" : "#16a34a";
     const urgencyText = daysLeft !== null 
-      ? daysLeft <= 0 ? "已过期" : daysLeft === 1 ? "明天到期" : `${daysLeft}天后到期`
+      ? daysLeft <= 0 ? "⚠️ 已过期" : daysLeft === 1 ? "🔥 明天到期" : daysLeft <= 3 ? `⚡ ${daysLeft}天后到期` : `${daysLeft}天后到期`
       : "";
 
+    const rowBg = isUrgent && daysLeft !== null && daysLeft <= 1 ? "#fef2f2" : "";
+
     return `
-      <tr>
+      <tr style="background: ${rowBg};">
         <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
           <strong>${todo.title}</strong>
         </td>
@@ -276,7 +287,7 @@ function generateEmailContent(studentName: string, todos: Todo[], mode: string):
           ${dueDate}
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">
-          <span style="color: ${urgencyColor}; font-weight: 500;">${urgencyText}</span>
+          <span style="color: ${urgencyColor}; font-weight: 600;">${urgencyText}</span>
         </td>
       </tr>
     `;
@@ -284,12 +295,39 @@ function generateEmailContent(studentName: string, todos: Todo[], mode: string):
 
   const todosText = sortedTodos.map((todo) => {
     const dueDate = todo.due_date ? new Date(todo.due_date).toLocaleDateString("zh-CN") : "无截止日期";
-    return `• ${todo.title} (截止: ${dueDate})`;
+    const daysLeft = todo.due_date 
+      ? Math.ceil((new Date(todo.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+      : null;
+    const urgencyMark = daysLeft !== null && daysLeft <= 1 ? "🔥 " : daysLeft !== null && daysLeft <= 3 ? "⚡ " : "";
+    return `${urgencyMark}• ${todo.title} (截止: ${dueDate})`;
   }).join("\n");
 
   const introText = mode === "monthly"
     ? `以下是 ${studentName} 在接下来40天内需要完成的待办事项：`
+    : mode === "urgent"
+    ? `⚠️ 紧急通知：${studentName} 有以下待办事项将在3天内到期，请务必及时完成！`
     : `以下是 ${studentName} 在接下来7天内需要完成的待办事项：`;
+
+  // Urgent mode uses red/orange gradient, others use purple gradient
+  const headerGradient = isUrgent 
+    ? "linear-gradient(135deg, #dc2626 0%, #ea580c 100%)"
+    : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)";
+  
+  const headerTitle = mode === "monthly" 
+    ? "📅 月度待办提醒" 
+    : mode === "urgent" 
+    ? "🚨 紧急待办提醒" 
+    : "⏰ 待办提醒";
+
+  const tableHeaderBg = isUrgent ? "#dc2626" : "#6366f1";
+
+  const urgentBanner = isUrgent ? `
+    <div style="background: #fef2f2; border: 2px solid #dc2626; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
+      <p style="margin: 0; color: #dc2626; font-size: 16px; font-weight: 600;">
+        ⚠️ 以下待办事项即将到期，请立即处理！
+      </p>
+    </div>
+  ` : "";
 
   const html = `
     <!DOCTYPE html>
@@ -299,19 +337,22 @@ function generateEmailContent(studentName: string, todos: Todo[], mode: string):
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+      <div style="background: ${headerGradient}; padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
         <h1 style="color: white; margin: 0; font-size: 24px;">
-          ${mode === "monthly" ? "📅 月度待办提醒" : "⏰ 待办提醒"}
+          ${headerTitle}
         </h1>
+        ${isUrgent ? '<p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">请立即查看并处理</p>' : ''}
       </div>
       
       <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
         <p style="margin-top: 0;">亲爱的家长/学生，</p>
-        <p>${introText}</p>
+        <p style="${isUrgent ? 'color: #dc2626; font-weight: 600;' : ''}">${introText}</p>
+        
+        ${urgentBanner}
         
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #f9fafb; border-radius: 8px; overflow: hidden;">
           <thead>
-            <tr style="background: #6366f1; color: white;">
+            <tr style="background: ${tableHeaderBg}; color: white;">
               <th style="padding: 12px; text-align: left;">待办事项</th>
               <th style="padding: 12px; text-align: center;">截止日期</th>
               <th style="padding: 12px; text-align: center;">剩余时间</th>
@@ -322,7 +363,7 @@ function generateEmailContent(studentName: string, todos: Todo[], mode: string):
           </tbody>
         </table>
         
-        <p>请确保及时完成以上任务。如有任何问题，请随时联系我们。</p>
+        <p>${isUrgent ? '⚡ 请确保尽快完成以上任务，避免错过截止日期！' : '请确保及时完成以上任务。'}如有任何问题，请随时联系我们。</p>
         
         <p style="margin-bottom: 0;">
           祝学业顺利！<br>
@@ -339,7 +380,7 @@ function generateEmailContent(studentName: string, todos: Todo[], mode: string):
   `;
 
   const text = `
-${mode === "monthly" ? "月度待办提醒" : "待办提醒"}
+${headerTitle}
 
 亲爱的家长/学生，
 
@@ -347,7 +388,7 @@ ${introText}
 
 ${todosText}
 
-请确保及时完成以上任务。如有任何问题，请随时联系我们。
+${isUrgent ? '⚡ 请确保尽快完成以上任务，避免错过截止日期！' : '请确保及时完成以上任务。'}如有任何问题，请随时联系我们。
 
 祝学业顺利！
 DreamPlane 团队
