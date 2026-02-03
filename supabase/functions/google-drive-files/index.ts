@@ -130,7 +130,7 @@ serve(async (req) => {
       });
     }
 
-    if (action === 'list-all-folders') {
+    if (action === 'list-folders' || action === 'list-all-folders') {
       // List all folders in admin's Drive (for assigning to students)
       const response = await fetch(
         `https://www.googleapis.com/drive/v3/files?` +
@@ -190,6 +190,33 @@ serve(async (req) => {
         content: textContent,
         documentId: doc.documentId,
       }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'set-folder') {
+      // Set folder ID for a student
+      if (!studentId || !folderId) {
+        throw new Error('Student ID and Folder ID are required');
+      }
+
+      const { error } = await supabase
+        .from('student_google_drive')
+        .upsert({
+          student_id: studentId,
+          folder_id: folderId,
+          access_token: 'uses_admin',
+          refresh_token: 'uses_admin',
+        }, {
+          onConflict: 'student_id',
+        });
+
+      if (error) {
+        console.error('Failed to set student folder:', error);
+        throw new Error('Failed to set student folder');
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
