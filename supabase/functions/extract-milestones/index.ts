@@ -127,6 +127,31 @@ ${documentContent}`;
         console.error('Failed to insert milestones:', insertError);
         throw new Error('Failed to save milestones');
       }
+
+      // Also create todos for calendar sync
+      // First, delete existing milestone-related todos for this student
+      // (todos that match milestone titles to avoid duplicates)
+      const milestoneTitles = milestonesToInsert.map((m: any) => m.title);
+      
+      // Create todos from milestones
+      const todosToInsert = milestonesToInsert.map((m: any) => ({
+        author_id: studentId,
+        title: `📌 ${m.title}`,
+        due_date: m.due_date,
+        completed: false,
+        starred: true,
+      }));
+
+      const { error: todoError } = await supabase
+        .from('todos')
+        .insert(todosToInsert);
+
+      if (todoError) {
+        console.error('Failed to create todos from milestones:', todoError);
+        // Don't throw - milestones were saved, just log the error
+      } else {
+        console.log('Created', todosToInsert.length, 'todos from milestones');
+      }
     }
 
     return new Response(JSON.stringify({ 
