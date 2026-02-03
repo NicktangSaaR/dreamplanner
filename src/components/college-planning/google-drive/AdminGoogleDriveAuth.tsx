@@ -9,10 +9,11 @@ export default function AdminGoogleDriveAuth() {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    checkAdminStatus();
+    checkUserAndAdminStatus();
     
     // Handle OAuth callback
     const urlParams = new URLSearchParams(window.location.search);
@@ -26,8 +27,30 @@ export default function AdminGoogleDriveAuth() {
     }
   }, []);
 
-  const checkAdminStatus = async () => {
+  const checkUserAndAdminStatus = async () => {
     try {
+      // First check if user is admin
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile?.user_type !== 'admin') {
+        setIsAdmin(false);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsAdmin(true);
+
+      // Then check Google Drive connection status
       const { data, error } = await supabase.functions.invoke('google-drive-auth', {
         body: { action: 'check-admin-status' },
       });
@@ -100,6 +123,11 @@ export default function AdminGoogleDriveAuth() {
       setIsLoading(false);
     }
   };
+
+  // Don't show anything for non-admin users
+  if (!isLoading && !isAdmin) {
+    return null;
+  }
 
   if (isLoading) {
     return (
