@@ -598,6 +598,101 @@ export type Database = {
           },
         ]
       }
+      planning_documents: {
+        Row: {
+          created_at: string
+          google_doc_id: string
+          id: string
+          is_primary: boolean | null
+          last_synced_at: string | null
+          student_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          google_doc_id: string
+          id?: string
+          is_primary?: boolean | null
+          last_synced_at?: string | null
+          student_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          google_doc_id?: string
+          id?: string
+          is_primary?: boolean | null
+          last_synced_at?: string | null
+          student_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planning_documents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planning_milestones: {
+        Row: {
+          created_at: string
+          description: string | null
+          document_id: string | null
+          due_date: string
+          id: string
+          reminder_emails: string[] | null
+          reminder_sent: boolean | null
+          student_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          document_id?: string | null
+          due_date: string
+          id?: string
+          reminder_emails?: string[] | null
+          reminder_sent?: boolean | null
+          student_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          document_id?: string | null
+          due_date?: string
+          id?: string
+          reminder_emails?: string[] | null
+          reminder_sent?: boolean | null
+          student_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planning_milestones_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "planning_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planning_milestones_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_updates: {
         Row: {
           content: string
@@ -978,6 +1073,47 @@ export type Database = {
             foreignKeyName: "student_evaluations_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_google_drive: {
+        Row: {
+          access_token: string
+          created_at: string
+          folder_id: string | null
+          id: string
+          refresh_token: string
+          student_id: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          folder_id?: string | null
+          id?: string
+          refresh_token: string
+          student_id: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          folder_id?: string | null
+          id?: string
+          refresh_token?: string
+          student_id?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_google_drive_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
