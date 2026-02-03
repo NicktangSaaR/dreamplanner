@@ -15,11 +15,8 @@ verify_jwt = false
 [functions.generate-admission-case]
 verify_jwt = false
 
-[functions.google-drive-auth]
-verify_jwt = false
-
-[functions.google-drive-files]
-verify_jwt = false
-
 [functions.extract-milestones]
+verify_jwt = false
+
+[functions.parse-document]
 verify_jwt = false
