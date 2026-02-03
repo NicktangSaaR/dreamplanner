@@ -6,8 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID');
-const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET');
+// NOTE: Secrets sometimes get pasted with leading/trailing whitespace.
+// Always trim to avoid generating invalid OAuth URLs (e.g. "client_id=%20...").
+const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')?.trim();
+const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')?.trim();
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
