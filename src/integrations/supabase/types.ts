@@ -1185,6 +1185,44 @@ export type Database = {
         }
         Relationships: []
       }
+      student_reminder_emails: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          notes: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name?: string | null
+          notes?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          notes?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_reminder_emails_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       todos: {
         Row: {
           author_id: string

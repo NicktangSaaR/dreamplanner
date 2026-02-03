@@ -12,6 +12,9 @@ verify_jwt = true
 [functions.test-todo-reminders]
 verify_jwt = false
 
+[functions.auto-todo-reminders]
+verify_jwt = false
+
 [functions.generate-admission-case]
 verify_jwt = false
 
