@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
-import { Calendar, Plus, Edit, Trash, Download, FileText, Grid, CalendarIcon } from "lucide-react";
+import { Calendar, Plus, Edit, Trash, Download, FileText, Grid, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
 import { useQuery } from "@tanstack/react-query";
@@ -29,8 +29,7 @@ export default function CalendarSection() {
   const [editingTodo, setEditingTodo] = useState<any>(null);
   const [todoTitle, setTodoTitle] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-
-  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   // Get student profile for export
   const { data: profile } = useQuery({
@@ -50,24 +49,23 @@ export default function CalendarSection() {
     enabled: !!studentId,
   });
 
-  // Filter todos by month
+  // Filter todos by month and selected year
   const getTodosForMonth = (monthIndex: number) => {
     return todos.filter(todo => {
       if (!todo.due_date) return false;
       const todoDate = new Date(todo.due_date);
-      return todoDate.getMonth() === monthIndex && todoDate.getFullYear() === currentYear;
+      return todoDate.getMonth() === monthIndex && todoDate.getFullYear() === selectedYear;
     });
   };
 
   const handleAddTodo = async () => {
     if (!todoTitle.trim() || !studentId) return;
 
-    // Use selected date or default to first day of selected month
     let dueDate: Date;
     if (selectedDate) {
       dueDate = selectedDate;
     } else if (selectedMonth !== null) {
-      dueDate = new Date(currentYear, selectedMonth, 1);
+      dueDate = new Date(selectedYear, selectedMonth, 1);
     } else {
       dueDate = new Date(); // Default to today
     }
@@ -122,7 +120,7 @@ export default function CalendarSection() {
     setSelectedMonth(monthIndex);
     setEditingTodo(null);
     setTodoTitle("");
-    setSelectedDate(new Date(currentYear, monthIndex, 1)); // Set default date to first of month
+    setSelectedDate(new Date(selectedYear, monthIndex, 1)); // Set default date to first of month
     setIsDialogOpen(true);
   };
 
@@ -134,21 +132,39 @@ export default function CalendarSection() {
   };
 
   const handleExportList = () => {
-    exportCalendarAsListPDF(todos, currentYear, profile?.full_name || undefined);
+    exportCalendarAsListPDF(todos, selectedYear, profile?.full_name || undefined);
     toast.success("Calendar list exported successfully");
   };
 
   const handleExportGrid = () => {
-    exportCalendarAsGridPDF(todos, currentYear, profile?.full_name || undefined);
+    exportCalendarAsGridPDF(todos, selectedYear, profile?.full_name || undefined);
     toast.success("Calendar grid exported successfully");
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <Calendar className="h-6 w-6" />
-          <h2 className="text-2xl font-bold">{currentYear} Calendar</h2>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setSelectedYear(y => y - 1)}
+              className="h-8 w-8"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <h2 className="text-2xl font-bold min-w-[100px] text-center">{selectedYear}</h2>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setSelectedYear(y => y + 1)}
+              className="h-8 w-8"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
         <DropdownMenu>
