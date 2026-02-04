@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import UserManagement from "@/components/admin/UserManagement";
 import QuestionBankManagement from "@/components/admin/QuestionBankManagement";
-import ProspectiveClientManagement from "@/components/admin/ProspectiveClientManagement";
+
 import ArticleManagement from "@/components/admin/ArticleManagement";
 import PlatformUpdateManagement from "@/components/admin/PlatformUpdateManagement";
 import CollegeEvaluationManagement from "@/components/admin/college-evaluation/CollegeEvaluationManagement";
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="student-todos">Student Todos</TabsTrigger>
           <TabsTrigger value="resume">Resume</TabsTrigger>
           <TabsTrigger value="question-banks">Question Banks</TabsTrigger>
-          <TabsTrigger value="prospective-clients">Prospective Clients</TabsTrigger>
+          
           <TabsTrigger value="articles">Articles</TabsTrigger>
           <TabsTrigger value="platform-updates">Platform Updates</TabsTrigger>
           <TabsTrigger value="college-evaluations">College Evaluations</TabsTrigger>
@@ -96,9 +96,6 @@ export default function AdminDashboard() {
           <QuestionBankManagement />
         </TabsContent>
 
-        <TabsContent value="prospective-clients" className="space-y-4">
-          <ProspectiveClientManagement />
-        </TabsContent>
 
         <TabsContent value="articles" className="space-y-4">
           <ArticleManagement />
