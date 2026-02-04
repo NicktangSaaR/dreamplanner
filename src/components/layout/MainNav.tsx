@@ -85,9 +85,6 @@ export default function MainNav({
               <span className="text-xs text-muted-foreground">Beta v1.5</span>
             </div>
             <ResourcesMenu />
-            <Link to="/admissions" className="text-muted-foreground hover:text-primary transition-colors">
-              录取案例
-            </Link>
           </div>
           <div className="flex items-center gap-4">
             {isAuthenticated ? <>

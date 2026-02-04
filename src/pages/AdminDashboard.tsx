@@ -12,7 +12,7 @@ import PlatformUpdateManagement from "@/components/admin/PlatformUpdateManagemen
 import CollegeEvaluationManagement from "@/components/admin/college-evaluation/CollegeEvaluationManagement";
 import StudentTodoManagement from "@/components/admin/StudentTodoManagement";
 import ResumeManagement from "@/components/admin/resume/ResumeManagement";
-import AdmissionCaseManagement from "@/components/admin/AdmissionCaseManagement";
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="articles">Articles</TabsTrigger>
           <TabsTrigger value="platform-updates">Platform Updates</TabsTrigger>
           <TabsTrigger value="college-evaluations">College Evaluations</TabsTrigger>
-          <TabsTrigger value="admission-cases">Admission Cases</TabsTrigger>
+          
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
@@ -112,9 +112,6 @@ export default function AdminDashboard() {
           <CollegeEvaluationManagement />
         </TabsContent>
 
-        <TabsContent value="admission-cases" className="space-y-4">
-          <AdmissionCaseManagement />
-        </TabsContent>
       </Tabs>
     </div>
   );
