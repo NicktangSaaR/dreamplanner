@@ -15,9 +15,11 @@ export default function CourseTypeSelect({ value, onChange }: CourseTypeSelectPr
           <SelectValue placeholder="Select course type" />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="College Prep">College Prep</SelectItem>
           <SelectItem value="Regular">Regular</SelectItem>
           <SelectItem value="Honors">Honors</SelectItem>
           <SelectItem value="AP/IB">AP/IB</SelectItem>
+          <SelectItem value="Post AP">Post AP</SelectItem>
         </SelectContent>
       </Select>
     </div>
