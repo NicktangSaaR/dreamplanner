@@ -66,7 +66,8 @@ export function getGPALabel(gpaType: string): string {
   switch (gpaType) {
     case "100-point": return "100分制平均分";
     case "unweighted-us": return "Unweighted GPA";
-    case "uc-gpa": return "UC GPA";
+    case "uc-weighted": return "Weighted UC GPA";
+    case "uc-capped": return "Capped UC GPA";
     case "college-gpa-4.0": return "US College GPA (4.0)";
     case "college-gpa-4.33": return "US College GPA (4.33)";
     default: return "GPA";
@@ -76,6 +77,7 @@ export function getGPALabel(gpaType: string): string {
 export function getGPAScale(gpaType: string): string {
   if (gpaType === "100-point") return "";
   if (gpaType === "college-gpa-4.33") return "/4.33";
+  if (gpaType === "uc-capped") return "/4.5";
   return "/4.0";
 }
 

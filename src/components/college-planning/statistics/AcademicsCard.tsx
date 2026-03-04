@@ -104,13 +104,22 @@ export default function AcademicsCard({ courses, studentId }: AcademicsCardProps
       
       return (totalGPA / validCourses.length).toFixed(2);
     }
-    else if (gpaType === "uc-gpa") {
+    else if (gpaType === "uc-weighted" || gpaType === "uc-capped") {
       const ucValidCourses = validCourses.filter(course => course.grade_level !== '9');
       if (ucValidCourses.length === 0) return "0.00";
       
+      // Use simplified calculation here - honors/AP/IB/Post AP get +1
+      let honorsCount = 0;
       const totalGPA = ucValidCourses.reduce((sum, course) => {
         const baseGPA = calculateGPA(course.grade, 'Regular', course.grade_type);
-        const bonus = course.course_type === 'Honors' || course.course_type === 'AP/IB' ? 1.0 : 0;
+        const isHonors = ['Honors', 'AP/IB', 'Post AP'].includes(course.course_type);
+        let bonus = 0;
+        if (isHonors) {
+          if (gpaType === "uc-weighted" || honorsCount < 8) {
+            bonus = 1.0;
+          }
+          honorsCount++;
+        }
         return sum + baseGPA + bonus;
       }, 0);
       
@@ -160,7 +169,8 @@ export default function AcademicsCard({ courses, studentId }: AcademicsCardProps
               onChange={(e) => setGpaType(e.target.value as GPACalculationType)}
             >
               <option value="unweighted-us">Unweighted GPA-US</option>
-              <option value="uc-gpa">UC GPA</option>
+              <option value="uc-weighted">Weighted UC GPA</option>
+              <option value="uc-capped">Capped UC GPA (4.5)</option>
               <option value="college-gpa-4.0">US College GPA (4.0 Scale)</option>
               <option value="college-gpa-4.33">US College GPA (4.33 Scale)</option>
               <option value="100-point">100分制平均分</option>
