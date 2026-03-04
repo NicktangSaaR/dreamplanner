@@ -9,7 +9,7 @@ import ProfileSection from "./student-summary/ProfileSection";
 import AcademicSection from "./student-summary/AcademicSection";
 import ActivitiesSection from "./student-summary/ActivitiesSection";
 import ApplicationsSection from "./student-summary/ApplicationsSection";
-import SharedFolderSection from "./student-summary/SharedFolderSection";
+
 import AddCollaboratorDialog from "./AddCollaboratorDialog";
 import EnginesDashboard from "@/components/engines/EnginesDashboard";
 import { useProfile } from "@/hooks/useProfile";
@@ -136,9 +136,6 @@ export default function StudentSummaryPage() {
         <div className="space-y-6">
           <div className="bg-card rounded-lg shadow-sm">
             <AcademicSection courses={courses} studentId={studentId} />
-          </div>
-          <div className="bg-card rounded-lg shadow-sm">
-            <SharedFolderSection studentId={studentId} />
           </div>
         </div>
         <div className="space-y-6">

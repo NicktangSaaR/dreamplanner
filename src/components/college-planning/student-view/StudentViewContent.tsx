@@ -5,7 +5,7 @@ import AcademicSection from "../student-summary/AcademicSection";
 import ActivitiesSection from "../student-summary/ActivitiesSection";
 import TodoSection from "../TodoSection";
 import StudentCalendar from "./StudentCalendar";
-import SharedFolderSection from "../student-summary/SharedFolderSection";
+
 import { PlanningDocumentSection } from "../google-drive";
 import { useQueryClient } from "@tanstack/react-query";
 import EnginesDashboard from "@/components/engines/EnginesDashboard";
@@ -61,11 +61,10 @@ export default function StudentViewContent({
       {/* Planning Document */}
       <PlanningDocumentSection studentId={studentId} />
 
-      {/* Todos, Notes & Shared Folders */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Todos & Notes */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TodoSection />
         <NotesSection onNotesChange={() => {}} studentId={studentId} />
-        <SharedFolderSection studentId={studentId} />
       </div>
     </div>
   );

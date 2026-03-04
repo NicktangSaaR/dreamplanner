@@ -1,7 +1,7 @@
 import StageEngine from "./StageEngine";
 import QuarterEngine from "./QuarterEngine";
 import EvaluationEngine from "./EvaluationEngine";
-import MeetingEngine from "./MeetingEngine";
+import SharedFolderSection from "@/components/college-planning/student-summary/SharedFolderSection";
 
 interface EnginesDashboardProps {
   studentId: string;
@@ -17,7 +17,7 @@ export default function EnginesDashboard({ studentId, grade, readOnly = false }:
         <QuarterEngine studentId={studentId} readOnly={readOnly} />
         <EvaluationEngine studentId={studentId} readOnly={readOnly} />
       </div>
-      <MeetingEngine studentId={studentId} readOnly={readOnly} />
+      <SharedFolderSection studentId={studentId} />
     </div>
   );
 }
