@@ -8,6 +8,7 @@ interface StudentProfileProps {
     interested_majors: string[] | null;
     graduation_school: string | null;
     background_intro: string | null;
+    status?: string | null;
   };
 }
 
@@ -19,7 +20,7 @@ export default function StudentProfile({ profile }: StudentProfileProps) {
           <div>
             <h2 className="text-2xl font-bold mb-4">{profile.full_name}</h2>
             <div className="space-y-2 text-sm">
-              <p><span className="font-medium">Grade:</span> {profile.grade || "Not set"}</p>
+              <p><span className="font-medium">Grade:</span> {profile.status || profile.grade || "Not set"}</p>
               <p><span className="font-medium">School:</span> {profile.school || "Not set"}</p>
               {profile.interested_majors && profile.interested_majors.length > 0 && (
                 <p><span className="font-medium">Interested Majors:</span> {profile.interested_majors.join(", ")}</p>
