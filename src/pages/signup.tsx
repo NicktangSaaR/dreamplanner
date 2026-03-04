@@ -249,6 +249,8 @@ export default function SignUp() {
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <option value="">Select grade...</option>
+                  <option value="G7">G7 (七年级)</option>
+                  <option value="G8">G8 (八年级)</option>
                   <option value="G9">G9 (九年级)</option>
                   <option value="G10">G10 (十年级)</option>
                   <option value="G11">G11 (十一年级)</option>
