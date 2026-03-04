@@ -1,7 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen } from "lucide-react";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { BookOpen, Pencil, Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { GPACalculationType } from "../academics/GPATypeSelector";
 import { 
   calculateGPA, 
@@ -11,6 +13,9 @@ import {
   calculateCollegeGPA40,
   calculateCollegeGPA433
 } from "./utils/gpaUtils";
+import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/hooks/useProfile";
+import { toast } from "sonner";
 
 interface AcademicsCardProps {
   courses: Array<{
@@ -19,10 +24,59 @@ interface AcademicsCardProps {
     grade_type?: string;
     grade_level?: string;
   }>;
+  studentId?: string;
 }
 
-export default function AcademicsCard({ courses }: AcademicsCardProps) {
+export default function AcademicsCard({ courses, studentId }: AcademicsCardProps) {
   const [gpaType, setGpaType] = useState<GPACalculationType>("unweighted-us");
+  const { profile } = useProfile();
+  const [manualGpa, setManualGpa] = useState<string>("");
+  const [isEditingGpa, setIsEditingGpa] = useState(false);
+  const [editGpaValue, setEditGpaValue] = useState("");
+  const [savedManualGpa, setSavedManualGpa] = useState<number | null>(null);
+
+  const isCounselor = profile?.user_type === 'counselor' || profile?.user_type === 'admin';
+
+  // Fetch manual GPA from student profile
+  useEffect(() => {
+    if (!studentId) return;
+    const fetchManualGpa = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('manual_gpa')
+        .eq('id', studentId)
+        .single();
+      if (data && (data as any).manual_gpa != null) {
+        setSavedManualGpa((data as any).manual_gpa);
+        setManualGpa(String((data as any).manual_gpa));
+      }
+    };
+    fetchManualGpa();
+  }, [studentId]);
+
+  const handleSaveManualGpa = async () => {
+    if (!studentId) return;
+    const value = parseFloat(editGpaValue);
+    if (isNaN(value) || value < 0 || value > 5) {
+      toast.error("请输入有效的GPA值 (0-5)");
+      return;
+    }
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ manual_gpa: value } as any)
+      .eq('id', studentId);
+
+    if (error) {
+      toast.error("保存失败");
+      return;
+    }
+
+    setSavedManualGpa(value);
+    setManualGpa(String(value));
+    setIsEditingGpa(false);
+    toast.success("手动GPA已保存");
+  };
   
   const calculateCurrentGPA = () => {
     if (courses.length === 0) return "0.00";
@@ -45,7 +99,6 @@ export default function AcademicsCard({ courses }: AcademicsCardProps) {
     } 
     else if (gpaType === "unweighted-us") {
       const totalGPA = validCourses.reduce((sum, course) => {
-        // For unweighted, always use 'Regular' as course type
         return sum + calculateGPA(course.grade, 'Regular', course.grade_type);
       }, 0);
       
@@ -56,7 +109,6 @@ export default function AcademicsCard({ courses }: AcademicsCardProps) {
       if (ucValidCourses.length === 0) return "0.00";
       
       const totalGPA = ucValidCourses.reduce((sum, course) => {
-        // For UC GPA, use special calculation with honors/AP bonus
         const baseGPA = calculateGPA(course.grade, 'Regular', course.grade_type);
         const bonus = course.course_type === 'Honors' || course.course_type === 'AP/IB' ? 1.0 : 0;
         return sum + baseGPA + bonus;
@@ -79,7 +131,6 @@ export default function AcademicsCard({ courses }: AcademicsCardProps) {
       return (totalGPA / validCourses.length).toFixed(2);
     }
     else {
-      // Regular weighted GPA
       const totalGPA = validCourses.reduce((sum, course) => {
         return sum + calculateGPA(course.grade, course.course_type || 'Regular', course.grade_type);
       }, 0);
@@ -116,6 +167,52 @@ export default function AcademicsCard({ courses }: AcademicsCardProps) {
             </select>
             <p className="text-sm text-muted-foreground">{getGPALabel(gpaType)}</p>
             <p className="text-2xl font-bold">GPA: {calculateCurrentGPA()}{getGPAScale(gpaType)}</p>
+          </div>
+
+          {/* Manual GPA */}
+          <div className="border-t pt-2 mt-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">手动GPA</p>
+              {isCounselor && !isEditingGpa && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 w-6 p-0"
+                  onClick={() => { setIsEditingGpa(true); setEditGpaValue(manualGpa || ""); }}
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            {isEditingGpa ? (
+              <div className="flex items-center gap-1 mt-1">
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="5"
+                  value={editGpaValue}
+                  onChange={(e) => setEditGpaValue(e.target.value)}
+                  className="h-7 text-sm"
+                  placeholder="例: 3.85"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveManualGpa();
+                    if (e.key === 'Escape') setIsEditingGpa(false);
+                  }}
+                />
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleSaveManualGpa}>
+                  <Check className="h-3.5 w-3.5 text-green-600" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setIsEditingGpa(false)}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <p className="text-lg font-semibold">
+                {savedManualGpa != null ? savedManualGpa : "—"}
+              </p>
+            )}
           </div>
         </div>
         <div className="text-sm text-muted-foreground space-y-2 mt-2">
