@@ -11,6 +11,7 @@ import ActivitiesSection from "./student-summary/ActivitiesSection";
 import ApplicationsSection from "./student-summary/ApplicationsSection";
 import SharedFolderSection from "./student-summary/SharedFolderSection";
 import AddCollaboratorDialog from "./AddCollaboratorDialog";
+import EnginesDashboard from "@/components/engines/EnginesDashboard";
 import { useProfile } from "@/hooks/useProfile";
 import { useState } from "react";
 
@@ -20,30 +21,18 @@ export default function StudentSummaryPage() {
   const studentId = params.studentId;
   const { profile } = useProfile();
   const [showCollaboratorDialog, setShowCollaboratorDialog] = useState(false);
-  console.log("StudentSummaryPage - Received studentId:", studentId);
 
   // Fetch student profile
   const { data: studentProfile } = useQuery({
     queryKey: ["student-profile", studentId],
     queryFn: async () => {
-      if (!studentId) {
-        console.error("No student ID provided");
-        throw new Error("No student ID provided");
-      }
-      
-      console.log("Fetching student profile data for ID:", studentId);
+      if (!studentId) throw new Error("No student ID provided");
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", studentId)
         .maybeSingle();
-
-      if (error) {
-        console.error("Error fetching profile:", error);
-        throw error;
-      }
-
-      console.log("Student profile data:", data);
+      if (error) throw error;
       return data;
     },
     enabled: !!studentId,
@@ -53,24 +42,13 @@ export default function StudentSummaryPage() {
   const { data: courses = [] } = useQuery({
     queryKey: ["student-courses", studentId],
     queryFn: async () => {
-      if (!studentId) {
-        console.log("No student ID available for courses query");
-        return [];
-      }
-      
-      console.log("Fetching courses for student:", studentId);
+      if (!studentId) return [];
       const { data, error } = await supabase
         .from("courses")
         .select("*")
         .eq("student_id", studentId)
         .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching courses:", error);
-        throw error;
-      }
-
-      console.log("Fetched courses:", data);
+      if (error) throw error;
       return data;
     },
     enabled: !!studentId,
@@ -80,18 +58,12 @@ export default function StudentSummaryPage() {
     queryKey: ["student-applications", studentId],
     queryFn: async () => {
       if (!studentId) return [];
-      
       const { data, error } = await supabase
         .from("college_applications")
         .select("*")
         .eq("student_id", studentId)
         .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching applications:", error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data;
     },
     enabled: !!studentId,
@@ -101,18 +73,12 @@ export default function StudentSummaryPage() {
     queryKey: ["student-activities", studentId],
     queryFn: async () => {
       if (!studentId) return [];
-      
       const { data, error } = await supabase
         .from("extracurricular_activities")
         .select("*")
         .eq("student_id", studentId)
         .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching activities:", error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data;
     },
     enabled: !!studentId,
@@ -133,17 +99,15 @@ export default function StudentSummaryPage() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      {/* Header with back button and collaboration button */}
+      {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={handleBack}
-          >
+          <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold">Student Summary</h1>
+          <h1 className="text-2xl font-bold">
+            {studentProfile.full_name || 'Student'} - 规划总览
+          </h1>
         </div>
         {profile?.user_type === 'counselor' && (
           <Button
@@ -155,30 +119,33 @@ export default function StudentSummaryPage() {
         )}
       </div>
 
-      {/* Main content */}
+      {/* Profile Summary */}
+      <div className="bg-card rounded-lg shadow-sm p-6">
+        <ProfileSection profile={studentProfile} />
+      </div>
+
+      {/* Planning Engines - Core Section */}
+      <EnginesDashboard 
+        studentId={studentId} 
+        grade={studentProfile.grade} 
+        readOnly={false} 
+      />
+
+      {/* Data Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left column - Profile and Academics */}
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <ProfileSection profile={studentProfile} />
+          <div className="bg-card rounded-lg shadow-sm">
+            <AcademicSection courses={courses} studentId={studentId} />
           </div>
-          <div className="bg-white rounded-lg shadow-sm">
-            <AcademicSection 
-              courses={courses} 
-              studentId={studentId}
-            />
-          </div>
-          <div className="bg-white rounded-lg shadow-sm">
+          <div className="bg-card rounded-lg shadow-sm">
             <SharedFolderSection studentId={studentId} />
           </div>
         </div>
-
-        {/* Right column - Activities and Applications */}
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm">
+          <div className="bg-card rounded-lg shadow-sm">
             <ActivitiesSection activities={activities} />
           </div>
-          <div className="bg-white rounded-lg shadow-sm">
+          <div className="bg-card rounded-lg shadow-sm">
             <ApplicationsSection applications={applications} />
           </div>
         </div>
