@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -93,7 +93,7 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
   const [showNewKpiInput, setShowNewKpiInput] = useState(false);
 
   const { data: planningDocs = [] } = useQuery({
-    queryKey: ["planning-documents", studentId],
+    queryKey: ["planning-documents", studentId, currentPhase],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("planning_documents")
@@ -101,10 +101,23 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
         .eq("student_id", studentId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data || [];
+      // Filter by current phase if available, using raw field access
+      const allDocs = data || [];
+      if (currentPhase) {
+        const phaseDocs = allDocs.filter((d: any) => d.phase === currentPhase);
+        if (phaseDocs.length > 0) return phaseDocs;
+      }
+      return allDocs;
     },
     enabled: !!studentId,
   });
+
+  // Auto-select first phase doc
+  useEffect(() => {
+    if (planningDocs.length > 0 && selectedDocId === "none") {
+      setSelectedDocId(planningDocs[0].id);
+    }
+  }, [planningDocs]);
 
   const getQuarterData = (q: string) => {
     const saved = quarters.find(sq => sq.quarter === q && sq.academic_year === academicYear);
