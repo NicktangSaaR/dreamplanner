@@ -19,16 +19,20 @@ export const GRADE_TO_GPA_433: { [key: string]: number } = {
 
 // Bonus points for course types
 export const COURSE_TYPE_BONUS: { [key: string]: number } = {
+  'College Prep': 0,
   'Regular': 0,
   'Honors': 0.5,
-  'AP/IB': 1.0
+  'AP/IB': 1.0,
+  'Post AP': 1.0
 };
 
 // UC GPA specific bonus
 export const UC_COURSE_TYPE_BONUS: { [key: string]: number } = {
+  'College Prep': 0,
   'Regular': 0,
   'Honors': 1.0,
-  'AP/IB': 1.0
+  'AP/IB': 1.0,
+  'Post AP': 1.0
 };
 
 // Special grade designations that don't count in GPA
