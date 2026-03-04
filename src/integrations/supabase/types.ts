@@ -682,6 +682,7 @@ export type Database = {
           id: string
           is_primary: boolean | null
           last_synced_at: string | null
+          phase: string | null
           student_id: string
           title: string
           updated_at: string
@@ -695,6 +696,7 @@ export type Database = {
           id?: string
           is_primary?: boolean | null
           last_synced_at?: string | null
+          phase?: string | null
           student_id: string
           title: string
           updated_at?: string
@@ -708,6 +710,7 @@ export type Database = {
           id?: string
           is_primary?: boolean | null
           last_synced_at?: string | null
+          phase?: string | null
           student_id?: string
           title?: string
           updated_at?: string
