@@ -264,27 +264,15 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
 
             return (
               <TabsContent key={q} value={q} className="space-y-4 mt-4">
-                {/* Focus & Risk side by side */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>季度重点 Focus</Label>
-                    <Textarea
-                      value={data.focus}
-                      onChange={(e) => updateField(q, "focus", e.target.value)}
-                      rows={3}
-                      disabled={readOnly}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>风险评估 Risk</Label>
-                    <Textarea
-                      value={data.risk}
-                      onChange={(e) => updateField(q, "risk", e.target.value)}
-                      rows={3}
-                      disabled={readOnly}
-                      placeholder="潜在风险和应对方案"
-                    />
-                  </div>
+                {/* Focus */}
+                <div className="space-y-2">
+                  <Label>季度重点 Focus</Label>
+                  <Textarea
+                    value={data.focus}
+                    onChange={(e) => updateField(q, "focus", e.target.value)}
+                    rows={3}
+                    disabled={readOnly}
+                  />
                 </div>
 
                 {/* KPI To-Do List */}
