@@ -19,7 +19,7 @@ import Index from "@/pages/Index";
 import Articles from "@/pages/Articles";
 import ArticleDetail from "@/pages/ArticleDetail";
 import AdminDashboard from "@/pages/AdminDashboard";
-import ActivityBrainstorming from "@/pages/ActivityBrainstorming";
+
 
 import PublicResumeForm from "@/pages/PublicResumeForm";
 import Footer from "@/components/layout/Footer";
@@ -42,11 +42,6 @@ export default function App() {
             <Route path="/mock-interview" element={
               <ProtectedRoute allowedUserTypes={["student", "admin"]}>
                 <MockInterview />
-              </ProtectedRoute>
-            } />
-            <Route path="/activity-brainstorming" element={
-              <ProtectedRoute allowedUserTypes={["student", "counselor", "admin"]}>
-                <ActivityBrainstorming />
               </ProtectedRoute>
             } />
             <Route path="/student-profile" element={

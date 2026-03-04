@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useCounselorStudents } from "@/hooks/useCounselorStudents";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, BrainCircuit, CheckCircle } from "lucide-react";
+import { LogOut, User, CheckCircle } from "lucide-react";
 import StudentCard from "@/components/college-planning/StudentCard";
 import InviteStudentDialog from "@/components/college-planning/InviteStudentDialog";
 import { useState, useEffect } from "react";
@@ -86,9 +86,6 @@ export default function CounselorDashboard() {
     }
   };
 
-  const handleActivityBrainstorming = () => {
-    window.open('https://chatgpt.com/g/g-67c3ae02ca70819186461af602529c0e-nick-activity-brainstromer', '_blank');
-  };
 
   const handleStatusChange = async (studentId: string, status: string) => {
     // Refetch the students data to update the grouping
@@ -113,15 +110,6 @@ export default function CounselorDashboard() {
           >
             <User className="mr-2 h-4 w-4" />
             My Profile
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={handleActivityBrainstorming}
-            className="flex items-center gap-2"
-          >
-            <BrainCircuit className="h-4 w-4" />
-            <span>AI Activity Brainstromer</span>
-            <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded-full">Beta</span>
           </Button>
           <Button 
             variant="outline"
