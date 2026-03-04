@@ -3,7 +3,6 @@ import {
   GRADE_TO_GPA, 
   GRADE_TO_GPA_433,
   COURSE_TYPE_BONUS, 
-  UC_COURSE_TYPE_BONUS, 
   SPECIAL_GRADES 
 } from "../constants/gradeConstants";
 import { Course } from "../../types/course";
@@ -95,27 +94,79 @@ export function calculateCollegeGPA433(grade: string, gradeType: string = 'lette
 }
 
 /**
- * Calculates UC GPA which only counts 10-12 grade courses and has specific weighting
+ * Calculates base GPA for a UC-eligible course (grades 10-12 only)
+ * Returns { baseGPA, isHonors } for use in weighted/capped calculations
  */
-export function calculateUCGPA(course: Course): number {
-  if (SPECIAL_GRADES.includes(course.grade)) return 0;
+export function getUCCourseGPA(course: Course): { baseGPA: number; isHonors: boolean } | null {
+  if (SPECIAL_GRADES.includes(course.grade)) return null;
   
   // UC GPA only counts courses from grades 10-12
-  if (course.grade_level === '9') return 0;
+  if (course.grade_level === '9') return null;
   
-  // Calculate base GPA (unweighted)
   let baseGPA = 0;
   if (course.grade_type === '100-point') {
     const numericGrade = parseFloat(course.grade);
-    if (isNaN(numericGrade)) return 0;
+    if (isNaN(numericGrade)) return null;
     baseGPA = getGPAFromPercentage(numericGrade, 'Regular');
   } else {
     baseGPA = GRADE_TO_GPA[course.grade.toUpperCase()] || 0;
   }
   
-  // Apply UC-specific course type bonus
-  const bonus = UC_COURSE_TYPE_BONUS[course.course_type] || 0;
-  return baseGPA + bonus;
+  const isHonors = ['Honors', 'AP/IB', 'Post AP'].includes(course.course_type);
+  return { baseGPA, isHonors };
+}
+
+/**
+ * Calculates Weighted UC GPA (uncapped honors bonus)
+ */
+export function calculateWeightedUCGPA(courses: Course[]): number {
+  const validCourses = courses.filter(c => !SPECIAL_GRADES.includes(c.grade));
+  let totalGPA = 0;
+  let count = 0;
+
+  validCourses.forEach(course => {
+    const result = getUCCourseGPA(course);
+    if (!result) return;
+    const bonus = result.isHonors ? 1.0 : 0;
+    totalGPA += result.baseGPA + bonus;
+    count++;
+  });
+
+  return count > 0 ? Number((totalGPA / count).toFixed(2)) : 0;
+}
+
+/**
+ * Calculates Capped UC GPA (max 8 semesters of honors bonus, max GPA 4.5)
+ */
+export function calculateCappedUCGPA(courses: Course[]): number {
+  const validCourses = courses.filter(c => !SPECIAL_GRADES.includes(c.grade));
+  let totalGPA = 0;
+  let count = 0;
+  let honorsCount = 0;
+
+  // Sort honors courses by base GPA descending to apply bonus to best courses first
+  const courseResults = validCourses
+    .map(course => ({ course, result: getUCCourseGPA(course) }))
+    .filter((c): c is { course: Course; result: { baseGPA: number; isHonors: boolean } } => c.result !== null);
+
+  // Count honors-eligible courses
+  const honorsCourses = courseResults.filter(c => c.result.isHonors).sort((a, b) => b.result.baseGPA - a.result.baseGPA);
+  const nonHonorsCourses = courseResults.filter(c => !c.result.isHonors);
+
+  // Apply bonus to up to 8 honors courses
+  honorsCourses.forEach(({ result }) => {
+    const bonus = honorsCount < 8 ? 1.0 : 0;
+    totalGPA += result.baseGPA + bonus;
+    honorsCount++;
+    count++;
+  });
+
+  nonHonorsCourses.forEach(({ result }) => {
+    totalGPA += result.baseGPA;
+    count++;
+  });
+
+  return count > 0 ? Number((totalGPA / count).toFixed(2)) : 0;
 }
 
 /**
@@ -131,19 +182,19 @@ export function calculateYearGPA(courses: Course[], academicYear: string, gpaTyp
   let totalGPA = 0;
   let validCourseCount = 0;
 
+  // For UC GPA types, use dedicated functions
+  if (gpaType === "uc-weighted") {
+    return calculateWeightedUCGPA(yearCourses);
+  }
+  if (gpaType === "uc-capped") {
+    return calculateCappedUCGPA(yearCourses);
+  }
+
   yearCourses.forEach(course => {
     let courseGPA = 0;
     
     if (gpaType === "unweighted-us") {
       courseGPA = calculateUnweightedGPA(course.grade, course.grade_type);
-    } else if (gpaType === "uc-gpa") {
-      courseGPA = calculateUCGPA(course);
-      // Only count the course if it returned a non-zero GPA (e.g., not 9th grade)
-      if (courseGPA > 0) {
-        validCourseCount++;
-      } else {
-        return; // Skip this course for calculation
-      }
     } else if (gpaType === "college-gpa-4.0") {
       courseGPA = calculateCollegeGPA40(course.grade, course.grade_type);
     } else if (gpaType === "college-gpa-4.33") {
@@ -155,10 +206,7 @@ export function calculateYearGPA(courses: Course[], academicYear: string, gpaTyp
     totalGPA += courseGPA;
   });
   
-  // For UC GPA, we might have filtered out some courses
-  const coursesCount = gpaType === "uc-gpa" ? validCourseCount : yearCourses.length;
-  
-  return coursesCount > 0 ? Number((totalGPA / coursesCount).toFixed(2)) : 0;
+  return yearCourses.length > 0 ? Number((totalGPA / yearCourses.length).toFixed(2)) : 0;
 }
 
 /**
@@ -201,6 +249,13 @@ export function calculateOverallGPA(courses: Course[], gpaType: GPACalculationTy
     return average !== null ? average : 0;
   }
 
+  if (gpaType === "uc-weighted") {
+    return calculateWeightedUCGPA(validCourses);
+  }
+  if (gpaType === "uc-capped") {
+    return calculateCappedUCGPA(validCourses);
+  }
+
   let totalGPA = 0;
   let validCourseCount = 0;
 
@@ -209,14 +264,6 @@ export function calculateOverallGPA(courses: Course[], gpaType: GPACalculationTy
     
     if (gpaType === "unweighted-us") {
       courseGPA = calculateUnweightedGPA(course.grade, course.grade_type);
-    } else if (gpaType === "uc-gpa") {
-      courseGPA = calculateUCGPA(course);
-      // Only count the course if it returned a non-zero GPA (e.g., not 9th grade)
-      if (courseGPA > 0) {
-        validCourseCount++;
-      } else {
-        return; // Skip this course
-      }
     } else if (gpaType === "college-gpa-4.0") {
       courseGPA = calculateCollegeGPA40(course.grade, course.grade_type);
     } else if (gpaType === "college-gpa-4.33") {
@@ -228,10 +275,7 @@ export function calculateOverallGPA(courses: Course[], gpaType: GPACalculationTy
     totalGPA += courseGPA;
   });
   
-  // For UC GPA, we might have filtered out some courses
-  const coursesCount = gpaType === "uc-gpa" ? validCourseCount : validCourses.length;
-  
-  return coursesCount > 0 ? Number((totalGPA / coursesCount).toFixed(2)) : 0;
+  return validCourses.length > 0 ? Number((totalGPA / validCourses.length).toFixed(2)) : 0;
 }
 
 /**
@@ -240,6 +284,7 @@ export function calculateOverallGPA(courses: Course[], gpaType: GPACalculationTy
 export function getGPAScale(gpaType: GPACalculationType): string {
   if (gpaType === "100-point") return "100";
   if (gpaType === "college-gpa-4.33") return "4.33";
+  if (gpaType === "uc-capped") return "4.5";
   return "4.0";
 }
 
@@ -247,7 +292,8 @@ export function getGPATypeLabel(gpaType: GPACalculationType): string {
   switch (gpaType) {
     case "100-point": return "100分制平均分";
     case "unweighted-us": return "Unweighted GPA-US";
-    case "uc-gpa": return "UC GPA";
+    case "uc-weighted": return "Weighted UC GPA";
+    case "uc-capped": return "Capped UC GPA";
     case "college-gpa-4.0": return "US College GPA (4.0)";
     case "college-gpa-4.33": return "US College GPA (4.33)";
     default: return "GPA";
