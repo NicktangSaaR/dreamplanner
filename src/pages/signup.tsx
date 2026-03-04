@@ -21,6 +21,7 @@ export default function SignUp() {
     fullName: "",
     englishName: "",
     school: "",
+    grade: "",
     parentEmail: "",
     interestedMajors: [] as string[],
     isUndecided: false,
@@ -84,6 +85,7 @@ export default function SignUp() {
             english_name: formData.englishName,
             user_type: formData.userType,
             school: formData.school,
+            grade: formData.grade,
             parent_email: formData.parentEmail,
             interested_majors: majors.join(","),
           },
@@ -230,6 +232,28 @@ export default function SignUp() {
                     setFormData({ ...formData, school: e.target.value })
                   }
                 />
+              </div>
+            )}
+
+            {/* Grade */}
+            {isStudent && (
+              <div className="space-y-2">
+                <Label htmlFor="grade">Current Grade (当前年级)</Label>
+                <select
+                  id="grade"
+                  required
+                  value={formData.grade}
+                  onChange={(e) =>
+                    setFormData({ ...formData, grade: e.target.value })
+                  }
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="">Select grade...</option>
+                  <option value="G9">G9 (九年级)</option>
+                  <option value="G10">G10 (十年级)</option>
+                  <option value="G11">G11 (十一年级)</option>
+                  <option value="G12">G12 (十二年级)</option>
+                </select>
               </div>
             )}
 
