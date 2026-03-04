@@ -36,11 +36,11 @@ export default function PlanningMilestones({ studentId, refreshTrigger, onMilest
   const loadMilestones = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('planning_milestones')
-        .select('*')
-        .eq('student_id', studentId)
-        .order('due_date', { ascending: true });
+      const { data, error } = await supabase.
+      from('planning_milestones').
+      select('*').
+      eq('student_id', studentId).
+      order('due_date', { ascending: true });
 
       if (error) throw error;
       setMilestones(data || []);
@@ -88,13 +88,13 @@ export default function PlanningMilestones({ studentId, refreshTrigger, onMilest
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-16 bg-muted rounded-lg" />
-            ))}
+            {[1, 2, 3].map((i) =>
+            <div key={i} className="h-16 bg-muted rounded-lg" />
+            )}
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
@@ -102,7 +102,7 @@ export default function PlanningMilestones({ studentId, refreshTrigger, onMilest
       <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-xl flex items-center gap-2">
+            <CardTitle className="text-xl flex items-center gap-2">重要节点
               <Calendar className="h-6 w-6" />
               规划节点
             </CardTitle>
@@ -110,78 +110,78 @@ export default function PlanningMilestones({ studentId, refreshTrigger, onMilest
           </div>
         </CardHeader>
         <CardContent>
-          {milestones.length > 0 ? (
-            <div className="space-y-4">
+          {milestones.length > 0 ?
+          <div className="space-y-4">
               {milestones.map((milestone) => {
-                const dueDate = new Date(milestone.due_date);
-                const daysUntil = differenceInDays(dueDate, new Date());
-                const isOverdue = isPast(dueDate);
+              const dueDate = new Date(milestone.due_date);
+              const daysUntil = differenceInDays(dueDate, new Date());
+              const isOverdue = isPast(dueDate);
 
-                return (
-                  <div
-                    key={milestone.id}
-                    className={`p-5 rounded-xl border-2 transition-colors ${
-                      isOverdue 
-                        ? 'border-destructive/50 bg-destructive/5' 
-                        : daysUntil <= 7 
-                          ? 'border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20'
-                          : 'border-border hover:border-primary/30'
-                    }`}
-                  >
+              return (
+                <div
+                  key={milestone.id}
+                  className={`p-5 rounded-xl border-2 transition-colors ${
+                  isOverdue ?
+                  'border-destructive/50 bg-destructive/5' :
+                  daysUntil <= 7 ?
+                  'border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20' :
+                  'border-border hover:border-primary/30'}`
+                  }>
+                  
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
                           <h4 className="text-lg font-semibold">{milestone.title}</h4>
                           {getStatusBadge(milestone.due_date, milestone.reminder_sent)}
                         </div>
-                        {milestone.description && (
-                          <p className="text-base text-muted-foreground mb-3">
+                        {milestone.description &&
+                      <p className="text-base text-muted-foreground mb-3">
                             {milestone.description}
                           </p>
-                        )}
+                      }
                         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1.5">
                             <Clock className="h-4 w-4" />
                             {format(dueDate, 'yyyy年M月d日', { locale: zhCN })}
                           </span>
-                          {milestone.reminder_emails?.length > 0 && (
-                            <span className="flex items-center gap-1.5">
+                          {milestone.reminder_emails?.length > 0 &&
+                        <span className="flex items-center gap-1.5">
                               <Mail className="h-4 w-4" />
                               {milestone.reminder_emails.length} 个收件人
                             </span>
-                          )}
-                          {milestone.reminder_sent && (
-                            <span className="flex items-center gap-1.5 text-green-600">
+                        }
+                          {milestone.reminder_sent &&
+                        <span className="flex items-center gap-1.5 text-green-600">
                               <CheckCircle className="h-4 w-4" />
                               已发送提醒
                             </span>
-                          )}
+                        }
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2 flex-shrink-0">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditClick(milestone)}
-                          className="h-8 w-8 p-0"
-                        >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditClick(milestone)}
+                        className="h-8 w-8 p-0">
+                        
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        {!isOverdue && (
-                          <span className={`text-base font-semibold ${
-                            daysUntil <= 7 ? 'text-destructive' : 'text-muted-foreground'
-                          }`}>
+                        {!isOverdue &&
+                      <span className={`text-base font-semibold ${
+                      daysUntil <= 7 ? 'text-destructive' : 'text-muted-foreground'}`
+                      }>
                             {daysUntil === 0 ? '今天' : `${daysUntil} 天后`}
                           </span>
-                        )}
+                      }
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
+                  </div>);
+
+            })}
+            </div> :
+
+          <div className="flex flex-col items-center justify-center py-12 text-center">
               <AlertCircle className="h-10 w-10 text-muted-foreground mb-4" />
               <p className="text-lg text-muted-foreground">
                 暂无规划节点
@@ -190,7 +190,7 @@ export default function PlanningMilestones({ studentId, refreshTrigger, onMilest
                 选择规划文档后使用 AI 提取节点
               </p>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
@@ -199,8 +199,8 @@ export default function PlanningMilestones({ studentId, refreshTrigger, onMilest
         studentId={studentId}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        onSave={handleSave}
-      />
-    </>
-  );
+        onSave={handleSave} />
+      
+    </>);
+
 }
