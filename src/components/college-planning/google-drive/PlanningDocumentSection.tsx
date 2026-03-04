@@ -408,9 +408,6 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
           </Tabs>
         </CardContent>
       </Card>
-
-      {/* Planning Milestones */}
-      <PlanningMilestones studentId={studentId} refreshTrigger={milestonesRefresh} />
     </div>
   );
 }

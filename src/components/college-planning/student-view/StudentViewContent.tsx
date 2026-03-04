@@ -5,6 +5,7 @@ import AcademicSection from "../student-summary/AcademicSection";
 import ActivitiesSection from "../student-summary/ActivitiesSection";
 import TodoSection from "../TodoSection";
 import StudentCalendar from "./StudentCalendar";
+import { PlanningMilestones } from "../google-drive";
 
 import { useQueryClient } from "@tanstack/react-query";
 import EnginesDashboard from "@/components/engines/EnginesDashboard";
@@ -54,8 +55,11 @@ export default function StudentViewContent({
         <ActivitiesSection activities={activities} />
       </div>
 
-      {/* Calendar */}
-      <StudentCalendar studentId={studentId} />
+      {/* Calendar & Milestones */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <StudentCalendar studentId={studentId} />
+        <PlanningMilestones studentId={studentId} refreshTrigger={0} />
+      </div>
 
       {/* Todos & Notes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
