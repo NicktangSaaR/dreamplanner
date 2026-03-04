@@ -15,7 +15,8 @@ import {
   Trash2,
   AlertCircle,
   FileUp,
-  Download
+  Download,
+  ChevronRight
 } from "lucide-react";
 import PlanningMilestones from "./PlanningMilestones";
 
@@ -34,7 +35,8 @@ interface PlanningDocument {
 }
 
 export default function PlanningDocumentSection({ studentId }: PlanningDocumentSectionProps) {
-  const [document, setDocument] = useState<PlanningDocument | null>(null);
+  const [documents, setDocuments] = useState<PlanningDocument[]>([]);
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -44,38 +46,44 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
 
   const isCounselor = profile?.user_type === 'counselor' || profile?.user_type === 'admin';
 
-  // Load existing document
+  const selectedDocument = documents.find(d => d.id === selectedDocId) || null;
+
   useEffect(() => {
-    loadDocument();
+    loadDocuments();
   }, [studentId]);
 
-  const loadDocument = async () => {
+  const loadDocuments = async () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('planning_documents')
         .select('id, title, google_doc_id, file_path, file_name, content, created_at, updated_at')
         .eq('student_id', studentId)
-        .eq('is_primary', true)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      if (data) {
-        setDocument({
-          id: data.id,
-          title: data.title,
-          content: data.content || data.google_doc_id || "",
-          file_path: data.file_path,
-          file_name: data.file_name,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-        });
-      } else {
-        setDocument(null);
+      const docs: PlanningDocument[] = (data || []).map(d => ({
+        id: d.id,
+        title: d.title,
+        content: d.content || d.google_doc_id || "",
+        file_path: d.file_path,
+        file_name: d.file_name,
+        created_at: d.created_at,
+        updated_at: d.updated_at,
+      }));
+
+      setDocuments(docs);
+
+      // Auto-select the first document if none selected
+      if (docs.length > 0 && (!selectedDocId || !docs.find(d => d.id === selectedDocId))) {
+        setSelectedDocId(docs[0].id);
+      }
+      if (docs.length === 0) {
+        setSelectedDocId(null);
       }
     } catch (error) {
-      console.error('Failed to load document:', error);
+      console.error('Failed to load documents:', error);
     } finally {
       setIsLoading(false);
     }
@@ -85,10 +93,9 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     const allowedTypes = [
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-      'text/plain', // .txt
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
     ];
     
     if (!allowedTypes.includes(file.type)) {
@@ -100,7 +107,6 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
       return;
     }
 
-    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "文件过大",
@@ -113,11 +119,9 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
     try {
       setIsUploading(true);
 
-      // Generate unique file path
       const fileExt = file.name.split('.').pop();
       const fileName = `${studentId}/${Date.now()}.${fileExt}`;
 
-      // Upload file to storage
       const { error: uploadError } = await supabase.storage
         .from('planning-documents')
         .upload(fileName, file, {
@@ -126,7 +130,6 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
         });
 
       if (uploadError) {
-        console.error("Upload error:", uploadError);
         throw new Error("文件上传失败: " + uploadError.message);
       }
 
@@ -135,71 +138,42 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
         description: "正在解析文档内容...",
       });
 
-      // Parse the document to extract text
       const { data: parseData, error: parseError } = await supabase.functions.invoke('parse-document', {
-        body: {
-          filePath: fileName,
-          studentId: studentId,
-        },
+        body: { filePath: fileName, studentId },
       });
 
-      if (parseError) {
-        console.error("Parse error:", parseError);
-        throw new Error("文档解析失败");
-      }
-
-      if (parseData?.error) {
-        throw new Error(parseData.error);
-      }
+      if (parseError) throw new Error("文档解析失败");
+      if (parseData?.error) throw new Error(parseData.error);
 
       const extractedContent = parseData?.content || "";
 
-      // Save or update document record
-      if (document) {
-        // Delete old file if exists
-        if (document.file_path) {
-          await supabase.storage
-            .from('planning-documents')
-            .remove([document.file_path]);
-        }
+      // Always create a new document record
+      const { data: insertData, error: insertError } = await supabase
+        .from('planning_documents')
+        .insert({
+          student_id: studentId,
+          title: file.name.replace(/\.[^/.]+$/, ""),
+          file_path: fileName,
+          file_name: file.name,
+          content: extractedContent,
+          google_doc_id: extractedContent,
+          is_primary: false,
+        })
+        .select('id')
+        .single();
 
-        // Update existing document
-        const { error: updateError } = await supabase
-          .from('planning_documents')
-          .update({
-            title: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
-            file_path: fileName,
-            file_name: file.name,
-            content: extractedContent,
-            google_doc_id: extractedContent, // Keep for backwards compatibility
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', document.id);
-
-        if (updateError) throw updateError;
-      } else {
-        // Create new document
-        const { error: insertError } = await supabase
-          .from('planning_documents')
-          .insert({
-            student_id: studentId,
-            title: file.name.replace(/\.[^/.]+$/, ""),
-            file_path: fileName,
-            file_name: file.name,
-            content: extractedContent,
-            google_doc_id: extractedContent,
-            is_primary: true,
-          });
-
-        if (insertError) throw insertError;
-      }
+      if (insertError) throw insertError;
 
       toast({
         title: "上传成功",
         description: `已解析 ${extractedContent.length} 个字符`,
       });
 
-      await loadDocument();
+      await loadDocuments();
+      // Auto-select the newly uploaded document
+      if (insertData?.id) {
+        setSelectedDocId(insertData.id);
+      }
     } catch (error) {
       console.error('Failed to upload document:', error);
       toast({
@@ -209,85 +183,57 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
       });
     } finally {
       setIsUploading(false);
-      // Reset file input
       event.target.value = '';
     }
   };
 
-  const handleDelete = async () => {
-    if (!document) return;
-
+  const handleDelete = async (doc: PlanningDocument) => {
     try {
-      // Delete file from storage if exists
-      if (document.file_path) {
-        await supabase.storage
-          .from('planning-documents')
-          .remove([document.file_path]);
+      if (doc.file_path) {
+        await supabase.storage.from('planning-documents').remove([doc.file_path]);
       }
 
-      // Delete milestones first
-      await supabase
-        .from('planning_milestones')
-        .delete()
-        .eq('document_id', document.id);
-
-      // Delete document record
-      const { error } = await supabase
-        .from('planning_documents')
-        .delete()
-        .eq('id', document.id);
-
+      await supabase.from('planning_milestones').delete().eq('document_id', doc.id);
+      const { error } = await supabase.from('planning_documents').delete().eq('id', doc.id);
       if (error) throw error;
 
-      toast({
-        title: "删除成功",
-        description: "规划方案已删除",
-      });
+      toast({ title: "删除成功", description: "规划方案已删除" });
 
-      setDocument(null);
+      if (selectedDocId === doc.id) {
+        setSelectedDocId(null);
+      }
       setMilestonesRefresh(prev => prev + 1);
+      await loadDocuments();
     } catch (error) {
       console.error('Failed to delete document:', error);
-      toast({
-        title: "删除失败",
-        variant: "destructive",
-      });
+      toast({ title: "删除失败", variant: "destructive" });
     }
   };
 
-  const handleDownload = async () => {
-    if (!document?.file_path) return;
-
+  const handleDownload = async (doc: PlanningDocument) => {
+    if (!doc.file_path) return;
     try {
-      const { data, error } = await supabase.storage
-        .from('planning-documents')
-        .download(document.file_path);
-
+      const { data, error } = await supabase.storage.from('planning-documents').download(doc.file_path);
       if (error) throw error;
 
-      // Create download link
       const url = URL.createObjectURL(data);
       const a = window.document.createElement('a');
       a.href = url;
-      a.download = document.file_name || 'document';
+      a.download = doc.file_name || 'document';
       window.document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Failed to download:', error);
-      toast({
-        title: "下载失败",
-        variant: "destructive",
-      });
+      toast({ title: "下载失败", variant: "destructive" });
     }
   };
 
   const handleExtractMilestones = async () => {
-    if (!document?.content) {
+    if (!selectedDocument?.content) {
       toast({
         title: "无内容可提取",
-        description: "请先上传规划方案文档",
+        description: "请先选择一个规划方案文档",
         variant: "destructive",
       });
       return;
@@ -298,9 +244,9 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
 
       const { data, error } = await supabase.functions.invoke('extract-milestones', {
         body: {
-          documentContent: document.content,
-          documentId: document.id,
-          studentId: studentId,
+          documentContent: selectedDocument.content,
+          documentId: selectedDocument.id,
+          studentId,
           reminderEmails: [],
         },
       });
@@ -309,7 +255,7 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
 
       toast({
         title: "提取成功",
-        description: `已提取 ${data.milestonesCount} 个规划节点`,
+        description: `已从「${selectedDocument.title}」提取 ${data.milestonesCount} 个规划节点`,
       });
 
       setMilestonesRefresh(prev => prev + 1);
@@ -348,100 +294,128 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Planning Document */}
+      {/* Planning Documents */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               规划方案
+              <Badge variant="outline" className="ml-1">{documents.length}</Badge>
             </CardTitle>
-            {isCounselor && document && (
-              <div className="flex items-center gap-2">
+            {isCounselor && (
+              <label className="cursor-pointer">
+                <Input
+                  type="file"
+                  accept=".docx,.txt"
+                  onChange={handleFileUpload}
+                  disabled={isUploading}
+                  className="hidden"
+                />
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleExtractMilestones}
-                  disabled={isExtracting}
+                  disabled={isUploading}
+                  asChild
                 >
-                  {isExtracting ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <Sparkles className="h-4 w-4 mr-2" />
-                  )}
-                  AI提取节点
+                  <span>
+                    {isUploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Upload className="h-4 w-4 mr-2" />
+                    )}
+                    上传方案
+                  </span>
                 </Button>
-                {document.file_path && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleDownload}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDelete}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              </label>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          {document ? (
+          {documents.length > 0 ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold">{document.title}</h3>
-                  {document.file_name && (
-                    <Badge variant="secondary" className="text-xs">
-                      {document.file_name.split('.').pop()?.toUpperCase()}
-                    </Badge>
-                  )}
-                </div>
-                <Badge variant="outline">
-                  {new Date(document.updated_at).toLocaleDateString('zh-CN')}
-                </Badge>
-              </div>
-              
-              <ScrollArea className="h-[350px] rounded-md border p-4">
-                <div className="whitespace-pre-wrap text-sm text-muted-foreground">
-                  {document.content || "暂无内容"}
+              {/* Document List */}
+              <ScrollArea className="max-h-[160px]">
+                <div className="space-y-2">
+                  {documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedDocId === doc.id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/30 hover:bg-muted/50'
+                      }`}
+                      onClick={() => setSelectedDocId(doc.id)}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${
+                          selectedDocId === doc.id ? 'rotate-90 text-primary' : 'text-muted-foreground'
+                        }`} />
+                        <span className="text-sm font-medium truncate">{doc.title}</span>
+                        {doc.file_name && (
+                          <Badge variant="secondary" className="text-xs shrink-0">
+                            {doc.file_name.split('.').pop()?.toUpperCase()}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0 ml-2">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(doc.updated_at).toLocaleDateString('zh-CN')}
+                        </span>
+                        {doc.file_path && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={(e) => { e.stopPropagation(); handleDownload(doc); }}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        {isCounselor && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                            onClick={(e) => { e.stopPropagation(); handleDelete(doc); }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </ScrollArea>
 
-              {isCounselor && (
-                <div className="pt-2">
-                  <label className="cursor-pointer">
-                    <Input
-                      type="file"
-                      accept=".docx,.txt"
-                      onChange={handleFileUpload}
-                      disabled={isUploading}
-                      className="hidden"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      disabled={isUploading}
-                      asChild
-                    >
-                      <span>
-                        {isUploading ? (
+              {/* Selected Document Content */}
+              {selectedDocument && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-muted-foreground">
+                      当前选中：{selectedDocument.title}
+                    </h3>
+                    {isCounselor && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleExtractMilestones}
+                        disabled={isExtracting}
+                      >
+                        {isExtracting ? (
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         ) : (
-                          <FileUp className="h-4 w-4 mr-2" />
+                          <Sparkles className="h-4 w-4 mr-2" />
                         )}
-                        重新上传文档
-                      </span>
-                    </Button>
-                  </label>
+                        AI提取节点
+                      </Button>
+                    )}
+                  </div>
+                  <ScrollArea className="h-[250px] rounded-md border p-4">
+                    <div className="whitespace-pre-wrap text-sm text-muted-foreground">
+                      {selectedDocument.content || "暂无内容"}
+                    </div>
+                  </ScrollArea>
                 </div>
               )}
             </div>
@@ -450,7 +424,7 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
               <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-2">暂无规划方案</p>
               <p className="text-xs text-muted-foreground mb-4">
-                支持上传 .docx 或 .txt 文件
+                支持上传 .docx 或 .txt 文件，可上传多个方案
               </p>
               {isCounselor && (
                 <label className="cursor-pointer">
@@ -461,11 +435,7 @@ export default function PlanningDocumentSection({ studentId }: PlanningDocumentS
                     disabled={isUploading}
                     className="hidden"
                   />
-                  <Button
-                    variant="outline"
-                    disabled={isUploading}
-                    asChild
-                  >
+                  <Button variant="outline" disabled={isUploading} asChild>
                     <span>
                       {isUploading ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
