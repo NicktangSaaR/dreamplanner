@@ -130,7 +130,7 @@ export default function StudentCard({ student, onClick, onStatusChange }: Studen
       // Update the student's status in the profiles table
       const { error } = await supabase
         .from("profiles")
-        .update({ status: newStatus })
+        .update({ status: newStatus, grade: newStatus })
         .eq("id", student.id);
 
       if (error) {
