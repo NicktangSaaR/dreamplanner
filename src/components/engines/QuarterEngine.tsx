@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Save, Sparkles } from "lucide-react";
+import { Calendar, Save, Sparkles, FileText, AlertCircle } from "lucide-react";
 import { useStudentQuarters } from "./hooks/useStudentQuarters";
 import { QUARTER_LABELS, QUARTER_DEFAULT_FOCUS } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 const PLANNING_SCHEMES = {
   balanced: { label: "均衡发展", description: "学术、活动、竞赛均衡推进" },
@@ -50,6 +51,22 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
 
   const [formData, setFormData] = useState<Record<string, { focus: string; kpi: string; risk: string }>>({});
   const [selectedScheme, setSelectedScheme] = useState<string>("balanced");
+  const [selectedDocId, setSelectedDocId] = useState<string>("none");
+
+  // Fetch uploaded planning documents for this student
+  const { data: planningDocs = [] } = useQuery({
+    queryKey: ["planning-documents", studentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("planning_documents")
+        .select("id, title, content, file_name")
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!studentId,
+  });
 
   const getQuarterData = (q: string) => {
     const saved = quarters.find(sq => sq.quarter === q && sq.academic_year === academicYear);
@@ -85,8 +102,16 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
     setIsGenerating(true);
     try {
       const scheme = PLANNING_SCHEMES[selectedScheme as keyof typeof PLANNING_SCHEMES];
+      // Get planning document content if selected
+      const selectedDoc = selectedDocId !== "none" ? planningDocs.find(d => d.id === selectedDocId) : null;
+      const documentContent = selectedDoc?.content || undefined;
+
       const { data, error } = await supabase.functions.invoke("generate-quarter-plan", {
-        body: { studentId, quarter, academicYear, currentPhase, scheme: selectedScheme, schemeDescription: scheme?.description },
+        body: { 
+          studentId, quarter, academicYear, currentPhase, 
+          scheme: selectedScheme, schemeDescription: scheme?.description,
+          documentContent, documentTitle: selectedDoc?.title,
+        },
       });
       if (error) throw error;
       if (data?.suggestions) {
@@ -179,22 +204,52 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
 
                 {!readOnly && (
                   <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm whitespace-nowrap">规划方案</Label>
-                      <Select value={selectedScheme} onValueChange={setSelectedScheme}>
-                        <SelectTrigger className="w-[200px] h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(PLANNING_SCHEMES).map(([key, { label, description }]) => (
-                            <SelectItem key={key} value={key} className="text-xs">
-                              <span className="font-medium">{label}</span>
-                              <span className="text-muted-foreground ml-1">- {description}</span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm whitespace-nowrap"><FileText className="h-3 w-3 inline mr-1" />规划方案</Label>
+                        <Select value={selectedDocId} onValueChange={setSelectedDocId}>
+                          <SelectTrigger className="w-[180px] h-8 text-xs">
+                            <SelectValue placeholder="选择规划方案" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none" className="text-xs">不使用方案</SelectItem>
+                            {planningDocs.map((doc) => (
+                              <SelectItem key={doc.id} value={doc.id} className="text-xs">
+                                {doc.title || doc.file_name || "未命名方案"}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm whitespace-nowrap">规划风格</Label>
+                        <Select value={selectedScheme} onValueChange={setSelectedScheme}>
+                          <SelectTrigger className="w-[180px] h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(PLANNING_SCHEMES).map(([key, { label, description }]) => (
+                              <SelectItem key={key} value={key} className="text-xs">
+                                <span className="font-medium">{label}</span>
+                                <span className="text-muted-foreground ml-1">- {description}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
+                    {selectedDocId !== "none" && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
+                        <FileText className="h-3 w-3" />
+                        将基于「{planningDocs.find(d => d.id === selectedDocId)?.title}」的内容生成建议
+                      </div>
+                    )}
+                    {planningDocs.length === 0 && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <AlertCircle className="h-3 w-3" />
+                        暂无已上传的规划方案，请先在规划方案区域上传文档
+                      </div>
+                    )}
                     <div className="flex gap-2">
                       <Button onClick={() => handleSave(q)} disabled={upsertQuarter.isPending} size="sm" className="gap-1">
                         <Save className="h-3 w-3" /> 保存
