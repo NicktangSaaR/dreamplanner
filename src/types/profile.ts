@@ -2,6 +2,7 @@ export interface Profile {
   id: string;
   user_type: string;
   full_name: string | null;
+  english_name?: string | null;
   grade: string | null;
   school: string | null;
   interested_majors: string[] | null;
@@ -22,7 +23,8 @@ export interface Profile {
     primaryType: string;
   } | null;
   email?: string | null;
-  status?: string | null; // Add status field
+  parent_email?: string | null;
+  status?: string | null;
 }
 
 export interface ProfileError {

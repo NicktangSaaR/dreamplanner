@@ -810,12 +810,14 @@ export type Database = {
           career_interest_test: Json | null
           created_at: string
           email: string | null
+          english_name: string | null
           full_name: string | null
           grade: string | null
           graduation_school: string | null
           id: string
           interested_majors: string[] | null
           is_verified: boolean | null
+          parent_email: string | null
           personal_website: string | null
           school: string | null
           social_media: Json | null
@@ -829,12 +831,14 @@ export type Database = {
           career_interest_test?: Json | null
           created_at?: string
           email?: string | null
+          english_name?: string | null
           full_name?: string | null
           grade?: string | null
           graduation_school?: string | null
           id: string
           interested_majors?: string[] | null
           is_verified?: boolean | null
+          parent_email?: string | null
           personal_website?: string | null
           school?: string | null
           social_media?: Json | null
@@ -848,12 +852,14 @@ export type Database = {
           career_interest_test?: Json | null
           created_at?: string
           email?: string | null
+          english_name?: string | null
           full_name?: string | null
           grade?: string | null
           graduation_school?: string | null
           id?: string
           interested_majors?: string[] | null
           is_verified?: boolean | null
+          parent_email?: string | null
           personal_website?: string | null
           school?: string | null
           social_media?: Json | null
