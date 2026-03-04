@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { studentId, quarter, academicYear, currentPhase } = await req.json();
+    const { studentId, quarter, academicYear, currentPhase, scheme, schemeDescription } = await req.json();
     
     const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
@@ -29,10 +29,14 @@ serve(async (req) => {
       Q4_summer: "暑期 (6-8月)",
     };
 
+    const schemeContext = scheme && schemeDescription
+      ? `\n规划方案: ${scheme} - ${schemeDescription}\n请严格按照该方案的侧重方向生成建议。`
+      : "";
+
     const prompt = `你是一位资深的美国大学申请规划顾问。请根据以下信息，为学生生成${quarterNames[quarter] || quarter}的规划建议。
 
 当前阶段: ${currentPhase || "exploration"}
-学年: ${academicYear}
+学年: ${academicYear}${schemeContext}
 
 请用JSON格式返回：
 {

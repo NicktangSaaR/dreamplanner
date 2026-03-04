@@ -1,16 +1,26 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Save, Sparkles } from "lucide-react";
 import { useStudentQuarters } from "./hooks/useStudentQuarters";
 import { QUARTER_LABELS, QUARTER_DEFAULT_FOCUS } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const PLANNING_SCHEMES = {
+  balanced: { label: "均衡发展", description: "学术、活动、竞赛均衡推进" },
+  academic: { label: "学术导向", description: "以GPA、AP、标化为核心" },
+  activity: { label: "活动导向", description: "以课外活动和领导力为核心" },
+  competition: { label: "竞赛导向", description: "以学术竞赛和科研为核心" },
+  narrative: { label: "故事线打造", description: "围绕个人叙事主线规划" },
+  stem: { label: "STEM专项", description: "针对理工科方向强化" },
+  humanities: { label: "人文社科", description: "针对文科方向深耕" },
+} as const;
 
 interface QuarterEngineProps {
   studentId: string;
@@ -39,6 +49,7 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
   const [isGenerating, setIsGenerating] = useState(false);
 
   const [formData, setFormData] = useState<Record<string, { focus: string; kpi: string; risk: string }>>({});
+  const [selectedScheme, setSelectedScheme] = useState<string>("balanced");
 
   const getQuarterData = (q: string) => {
     const saved = quarters.find(sq => sq.quarter === q && sq.academic_year === academicYear);
@@ -73,8 +84,9 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
   const handleGenerateSuggestions = async (quarter: string) => {
     setIsGenerating(true);
     try {
+      const scheme = PLANNING_SCHEMES[selectedScheme as keyof typeof PLANNING_SCHEMES];
       const { data, error } = await supabase.functions.invoke("generate-quarter-plan", {
-        body: { studentId, quarter, academicYear, currentPhase },
+        body: { studentId, quarter, academicYear, currentPhase, scheme: selectedScheme, schemeDescription: scheme?.description },
       });
       if (error) throw error;
       if (data?.suggestions) {
@@ -166,19 +178,37 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
                 )}
 
                 {!readOnly && (
-                  <div className="flex gap-2">
-                    <Button onClick={() => handleSave(q)} disabled={upsertQuarter.isPending} size="sm" className="gap-1">
-                      <Save className="h-3 w-3" /> 保存
-                    </Button>
-                    <Button 
-                      onClick={() => handleGenerateSuggestions(q)} 
-                      disabled={isGenerating} 
-                      size="sm" 
-                      variant="outline" 
-                      className="gap-1"
-                    >
-                      <Sparkles className="h-3 w-3" /> AI生成建议
-                    </Button>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm whitespace-nowrap">规划方案</Label>
+                      <Select value={selectedScheme} onValueChange={setSelectedScheme}>
+                        <SelectTrigger className="w-[200px] h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(PLANNING_SCHEMES).map(([key, { label, description }]) => (
+                            <SelectItem key={key} value={key} className="text-xs">
+                              <span className="font-medium">{label}</span>
+                              <span className="text-muted-foreground ml-1">- {description}</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={() => handleSave(q)} disabled={upsertQuarter.isPending} size="sm" className="gap-1">
+                        <Save className="h-3 w-3" /> 保存
+                      </Button>
+                      <Button 
+                        onClick={() => handleGenerateSuggestions(q)} 
+                        disabled={isGenerating} 
+                        size="sm" 
+                        variant="outline" 
+                        className="gap-1"
+                      >
+                        <Sparkles className="h-3 w-3" /> AI生成建议
+                      </Button>
+                    </div>
                   </div>
                 )}
               </TabsContent>
