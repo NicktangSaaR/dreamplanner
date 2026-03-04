@@ -18,11 +18,11 @@ export default function EnginesDashboard({ studentId, grade, readOnly = false }:
     <div className="space-y-6">
       <StageEngine studentId={studentId} grade={grade} readOnly={readOnly} />
       
-      {/* Planning Documents + Quarter Engine side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PlanningDocumentSection studentId={studentId} currentPhase={currentPhase} />
-        <QuarterEngine studentId={studentId} currentPhase={currentPhase} readOnly={readOnly} />
-      </div>
+      {/* Planning Documents */}
+      <PlanningDocumentSection studentId={studentId} currentPhase={currentPhase} />
+      
+      {/* Quarter Engine */}
+      <QuarterEngine studentId={studentId} currentPhase={currentPhase} readOnly={readOnly} />
 
       <SharedFolderSection studentId={studentId} />
     </div>
