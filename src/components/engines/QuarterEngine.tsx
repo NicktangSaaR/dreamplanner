@@ -210,7 +210,14 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
         // Convert AI KPI suggestions into structured items
         let kpiItems: KpiItem[] = [];
         if (data.suggestions.kpi) {
-          const kpiLines = data.suggestions.kpi.split('\n').filter((l: string) => l.trim());
+          let kpiLines: string[] = [];
+          if (Array.isArray(data.suggestions.kpi)) {
+            kpiLines = data.suggestions.kpi.map((item: any) =>
+              typeof item === 'string' ? item : item.title || item.text || JSON.stringify(item)
+            );
+          } else if (typeof data.suggestions.kpi === 'string') {
+            kpiLines = data.suggestions.kpi.split('\n').filter((l: string) => l.trim());
+          }
           kpiItems = kpiLines.map((line: string, i: number) => ({
             id: `kpi-ai-${Date.now()}-${i}`,
             text: line.replace(/^[•\-\d.、\s]+/, '').trim(),
