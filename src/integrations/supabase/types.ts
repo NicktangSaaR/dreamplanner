@@ -820,6 +820,7 @@ export type Database = {
           id: string
           interested_majors: string[] | null
           is_verified: boolean | null
+          manual_gpa: number | null
           parent_email: string | null
           personal_website: string | null
           school: string | null
@@ -841,6 +842,7 @@ export type Database = {
           id: string
           interested_majors?: string[] | null
           is_verified?: boolean | null
+          manual_gpa?: number | null
           parent_email?: string | null
           personal_website?: string | null
           school?: string | null
@@ -862,6 +864,7 @@ export type Database = {
           id?: string
           interested_majors?: string[] | null
           is_verified?: boolean | null
+          manual_gpa?: number | null
           parent_email?: string | null
           personal_website?: string | null
           school?: string | null

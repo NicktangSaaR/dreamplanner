@@ -30,7 +30,7 @@ export default function StatisticsCards({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <AcademicsCard courses={courses} />
+      <AcademicsCard courses={courses} studentId={studentId} />
       <ActivitiesCard activities={activities} />
       <NotesCard notes={notes} />
       <TodosCard studentId={studentId} />
