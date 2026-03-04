@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { studentId, quarter, academicYear, currentPhase, scheme, schemeDescription } = await req.json();
+    const { studentId, quarter, academicYear, currentPhase, scheme, schemeDescription, documentContent, documentTitle } = await req.json();
     
     const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
@@ -30,13 +30,19 @@ serve(async (req) => {
     };
 
     const schemeContext = scheme && schemeDescription
-      ? `\n规划方案: ${scheme} - ${schemeDescription}\n请严格按照该方案的侧重方向生成建议。`
+      ? `\n规划风格: ${scheme} - ${schemeDescription}\n请严格按照该风格的侧重方向生成建议。`
+      : "";
+
+    // Truncate document content to avoid token limits
+    const docContent = documentContent ? documentContent.substring(0, 4000) : "";
+    const documentContext = docContent
+      ? `\n\n以下是该学生的规划方案文档「${documentTitle || "规划方案"}」的内容，请基于此方案内容生成具体的季度执行建议：\n---\n${docContent}\n---\n请务必结合上述规划方案的具体内容来生成建议，而非泛泛而谈。`
       : "";
 
     const prompt = `你是一位资深的美国大学申请规划顾问。请根据以下信息，为学生生成${quarterNames[quarter] || quarter}的规划建议。
 
 当前阶段: ${currentPhase || "exploration"}
-学年: ${academicYear}${schemeContext}
+学年: ${academicYear}${schemeContext}${documentContext}
 
 请用JSON格式返回：
 {
