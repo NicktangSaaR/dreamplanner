@@ -3,6 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import DashboardHeader from "@/components/college-planning/DashboardHeader";
 import StatisticsCards from "@/components/college-planning/StatisticsCards";
 import DashboardTabs from "@/components/college-planning/DashboardTabs";
+import EnginesDashboard from "@/components/engines/EnginesDashboard";
+import { useProfile } from "@/hooks/useProfile";
 import { QueryClient } from "@tanstack/react-query";
 
 interface DashboardContentProps {
@@ -20,6 +22,8 @@ export default function DashboardContent({
   notes,
   queryClient
 }: DashboardContentProps) {
+  const { profile } = useProfile();
+
   const transformedActivities = activities.map(activity => ({
     timeCommitment: activity.time_commitment || "",
   }));
@@ -30,6 +34,16 @@ export default function DashboardContent({
       <div className="container mx-auto px-4 py-6 space-y-8">
         <div className="max-w-7xl mx-auto">
           <DashboardHeader />
+
+          {/* Planning Engines - Always visible at top */}
+          <div className="mt-8">
+            <EnginesDashboard 
+              studentId={studentId} 
+              grade={profile?.grade} 
+              readOnly={false} 
+            />
+          </div>
+
           <div className="mt-8">
             <StatisticsCards 
               courses={courses}

@@ -9,6 +9,7 @@ import SharedFolderSection from "../student-summary/SharedFolderSection";
 import { PlanningDocumentSection } from "../google-drive";
 import { useQueryClient } from "@tanstack/react-query";
 import EnginesDashboard from "@/components/engines/EnginesDashboard";
+import NotesSection from "../NotesSection";
 
 interface StudentViewContentProps {
   studentId: string;
@@ -37,8 +38,10 @@ export default function StudentViewContent({
     <div className="space-y-6">
       <StudentProfile profile={profile} />
 
-      {/* Planning Engines */}
-      <EnginesDashboard studentId={studentId} grade={profile.grade} />
+      {/* Planning Engines - Core Planning Hub */}
+      <EnginesDashboard studentId={studentId} grade={profile.grade} readOnly={false} />
+
+      {/* Statistics Overview */}
       <StatisticsCards
         courses={courses}
         activities={transformedActivities}
@@ -46,24 +49,23 @@ export default function StudentViewContent({
         studentId={studentId}
       />
 
-      <AcademicSection 
-        courses={courses} 
-        studentId={studentId}
-      />
-      
-      <ActivitiesSection activities={activities} />
+      {/* Academic & Activities side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AcademicSection courses={courses} studentId={studentId} />
+        <ActivitiesSection activities={activities} />
+      </div>
 
-      {/* Full-width Calendar Section */}
+      {/* Calendar */}
       <StudentCalendar studentId={studentId} />
 
-      {/* Planning Document Section - Replaces Notes */}
+      {/* Planning Document */}
       <PlanningDocumentSection studentId={studentId} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <TodoSection />
-          <SharedFolderSection studentId={studentId} />
-        </div>
+      {/* Todos, Notes & Shared Folders */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <TodoSection />
+        <NotesSection onNotesChange={() => {}} studentId={studentId} />
+        <SharedFolderSection studentId={studentId} />
       </div>
     </div>
   );
