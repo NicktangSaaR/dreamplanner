@@ -779,6 +779,72 @@ export type Database = {
           },
         ]
       }
+      planning_reports: {
+        Row: {
+          academic_year: string | null
+          ai_draft: string | null
+          created_at: string
+          final_content: string | null
+          generated_by: string | null
+          id: string
+          kpi_summary: Json | null
+          phase: string | null
+          quarter: string | null
+          report_type: string
+          status: string
+          student_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string | null
+          ai_draft?: string | null
+          created_at?: string
+          final_content?: string | null
+          generated_by?: string | null
+          id?: string
+          kpi_summary?: Json | null
+          phase?: string | null
+          quarter?: string | null
+          report_type?: string
+          status?: string
+          student_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string | null
+          ai_draft?: string | null
+          created_at?: string
+          final_content?: string | null
+          generated_by?: string | null
+          id?: string
+          kpi_summary?: Json | null
+          phase?: string | null
+          quarter?: string | null
+          report_type?: string
+          status?: string
+          student_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planning_reports_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planning_reports_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_updates: {
         Row: {
           content: string
