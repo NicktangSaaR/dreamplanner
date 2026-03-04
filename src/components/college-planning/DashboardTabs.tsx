@@ -6,7 +6,9 @@ import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
 import CalendarSection from "./CalendarSection";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
+import EnginesDashboard from "@/components/engines/EnginesDashboard";
 import { Course } from "./types/course";
+import { useProfile } from "@/hooks/useProfile";
 
 interface DashboardTabsProps {
   courses: Course[];
@@ -23,12 +25,13 @@ export default function DashboardTabs({
   onNotesChange,
   studentId,
 }: DashboardTabsProps) {
+  const { profile } = useProfile();
   console.log("DashboardTabs - Received courses:", courses);
   console.log("DashboardTabs - Received studentId:", studentId);
 
   return (
     <Tabs defaultValue="academics" className="w-full">
-      <TabsList className="grid w-full grid-cols-6 bg-card">
+      <TabsList className="grid w-full grid-cols-7 bg-card">
         <TabsTrigger 
           value="academics"
           className="data-[state=active]:after:bg-[#0EA5E9] data-[state=inactive]:bg-[#E1F5FE] relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:translate-y-[1px] transition-colors"
@@ -65,6 +68,12 @@ export default function DashboardTabs({
         >
           Resume
         </TabsTrigger>
+        <TabsTrigger 
+          value="engines"
+          className="data-[state=active]:after:bg-[#10B981] data-[state=inactive]:bg-[#D1FAE5] relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:translate-y-[1px] transition-colors"
+        >
+          规划引擎
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="academics" className="mt-6">
         <AcademicsSection 
@@ -89,6 +98,9 @@ export default function DashboardTabs({
       </TabsContent>
       <TabsContent value="resume">
         <StudentResumeForm />
+      </TabsContent>
+      <TabsContent value="engines">
+        <EnginesDashboard studentId={studentId} grade={profile?.grade} readOnly={false} />
       </TabsContent>
     </Tabs>
   );

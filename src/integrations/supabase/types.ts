@@ -507,6 +507,53 @@ export type Database = {
           },
         ]
       }
+      meeting_action_items: {
+        Row: {
+          assigned_to: string | null
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          meeting_id: string
+          priority: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          meeting_id: string
+          priority?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          meeting_id?: string
+          priority?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_action_items_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "student_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mock_interview_bank_questions: {
         Row: {
           bank_id: string
@@ -1043,6 +1090,90 @@ export type Database = {
         }
         Relationships: []
       }
+      student_engine_scores: {
+        Row: {
+          academic_year: string | null
+          ari_auto: number | null
+          ari_score: number | null
+          compound_auto: number | null
+          compound_growth: number | null
+          counselor_adjustment_notes: string | null
+          created_at: string
+          evaluated_by: string | null
+          evaluation_date: string
+          game_risk: number | null
+          game_risk_auto: number | null
+          id: string
+          narrative_auto: number | null
+          narrative_index: number | null
+          quarter: string | null
+          strategy_alert: boolean | null
+          strategy_alert_message: string | null
+          student_id: string
+          total_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string | null
+          ari_auto?: number | null
+          ari_score?: number | null
+          compound_auto?: number | null
+          compound_growth?: number | null
+          counselor_adjustment_notes?: string | null
+          created_at?: string
+          evaluated_by?: string | null
+          evaluation_date?: string
+          game_risk?: number | null
+          game_risk_auto?: number | null
+          id?: string
+          narrative_auto?: number | null
+          narrative_index?: number | null
+          quarter?: string | null
+          strategy_alert?: boolean | null
+          strategy_alert_message?: string | null
+          student_id: string
+          total_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string | null
+          ari_auto?: number | null
+          ari_score?: number | null
+          compound_auto?: number | null
+          compound_growth?: number | null
+          counselor_adjustment_notes?: string | null
+          created_at?: string
+          evaluated_by?: string | null
+          evaluation_date?: string
+          game_risk?: number | null
+          game_risk_auto?: number | null
+          id?: string
+          narrative_auto?: number | null
+          narrative_index?: number | null
+          quarter?: string | null
+          strategy_alert?: boolean | null
+          strategy_alert_message?: string | null
+          student_id?: string
+          total_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_engine_scores_evaluated_by_fkey"
+            columns: ["evaluated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_engine_scores_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_evaluations: {
         Row: {
           academic_excellence_score: number | null
@@ -1184,6 +1315,163 @@ export type Database = {
           used_at?: string | null
         }
         Relationships: []
+      }
+      student_meetings: {
+        Row: {
+          ai_generated_email: string | null
+          ai_generated_minutes: string | null
+          core_goal: string | null
+          created_at: string
+          created_by: string
+          current_risk: string | null
+          decisions: string | null
+          id: string
+          last_month_completion: string | null
+          meeting_date: string
+          meeting_notes: string | null
+          next_meeting_date: string | null
+          next_meeting_reminder_sent: boolean | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_generated_email?: string | null
+          ai_generated_minutes?: string | null
+          core_goal?: string | null
+          created_at?: string
+          created_by: string
+          current_risk?: string | null
+          decisions?: string | null
+          id?: string
+          last_month_completion?: string | null
+          meeting_date?: string
+          meeting_notes?: string | null
+          next_meeting_date?: string | null
+          next_meeting_reminder_sent?: boolean | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_generated_email?: string | null
+          ai_generated_minutes?: string | null
+          core_goal?: string | null
+          created_at?: string
+          created_by?: string
+          current_risk?: string | null
+          decisions?: string | null
+          id?: string
+          last_month_completion?: string | null
+          meeting_date?: string
+          meeting_notes?: string | null
+          next_meeting_date?: string | null
+          next_meeting_reminder_sent?: boolean | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_meetings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_meetings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_phases: {
+        Row: {
+          compression_mode: boolean
+          created_at: string
+          current_phase: string
+          id: string
+          phase_notes: string | null
+          phase_start_date: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          compression_mode?: boolean
+          created_at?: string
+          current_phase?: string
+          id?: string
+          phase_notes?: string | null
+          phase_start_date?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          compression_mode?: boolean
+          created_at?: string
+          current_phase?: string
+          id?: string
+          phase_notes?: string | null
+          phase_start_date?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_phases_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_quarters: {
+        Row: {
+          academic_year: string
+          auto_suggestions: Json | null
+          created_at: string
+          id: string
+          quarter: string
+          quarter_focus: string | null
+          quarter_kpi: string | null
+          quarter_risk: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          auto_suggestions?: Json | null
+          created_at?: string
+          id?: string
+          quarter: string
+          quarter_focus?: string | null
+          quarter_kpi?: string | null
+          quarter_risk?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          auto_suggestions?: Json | null
+          created_at?: string
+          id?: string
+          quarter?: string
+          quarter_focus?: string | null
+          quarter_kpi?: string | null
+          quarter_risk?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_quarters_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_reminder_emails: {
         Row: {

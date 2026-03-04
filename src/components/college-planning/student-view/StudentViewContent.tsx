@@ -8,6 +8,7 @@ import StudentCalendar from "./StudentCalendar";
 import SharedFolderSection from "../student-summary/SharedFolderSection";
 import { PlanningDocumentSection } from "../google-drive";
 import { useQueryClient } from "@tanstack/react-query";
+import EnginesDashboard from "@/components/engines/EnginesDashboard";
 
 interface StudentViewContentProps {
   studentId: string;
@@ -35,7 +36,9 @@ export default function StudentViewContent({
   return (
     <div className="space-y-6">
       <StudentProfile profile={profile} />
-      
+
+      {/* Planning Engines */}
+      <EnginesDashboard studentId={studentId} grade={profile.grade} />
       <StatisticsCards
         courses={courses}
         activities={transformedActivities}
