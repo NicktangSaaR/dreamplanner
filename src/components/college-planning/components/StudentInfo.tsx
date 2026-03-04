@@ -27,7 +27,7 @@ export const StudentInfo = ({ student, status }: StudentInfoProps) => {
           <StatusBadge status={status} />
         </div>
         <p className="text-sm text-gray-600 truncate">
-          {student.grade || "Grade not set"} • {student.school || "School not set"}
+          {status || student.grade || "Grade not set"} • {student.school || "School not set"}
         </p>
         {student.interested_majors && student.interested_majors.length > 0 && (
           <p className="text-sm text-gray-500 truncate">

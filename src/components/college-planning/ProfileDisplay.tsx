@@ -44,7 +44,7 @@ export default function ProfileDisplay({ profile, onEdit }: ProfileDisplayProps)
               <>
                 <div>
                   <Label>Grade</Label>
-                  <p className="text-sm">{profile?.grade || "Not set"}</p>
+                  <p className="text-sm">{profile?.status || profile?.grade || "Not set"}</p>
                 </div>
                 <div>
                   <Label>School</Label>

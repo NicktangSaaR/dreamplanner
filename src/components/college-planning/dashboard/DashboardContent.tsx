@@ -39,7 +39,7 @@ export default function DashboardContent({
           <div className="mt-8">
             <EnginesDashboard 
               studentId={studentId} 
-              grade={profile?.grade} 
+              grade={profile?.status || profile?.grade} 
               readOnly={false} 
             />
           </div>
