@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Save, Sparkles, FileText, AlertCircle } from "lucide-react";
+import { Calendar, Save, Sparkles, FileText, AlertCircle, Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import { useStudentQuarters } from "./hooks/useStudentQuarters";
 import { QUARTER_LABELS, QUARTER_DEFAULT_FOCUS } from "./types";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +24,12 @@ const PLANNING_SCHEMES = {
   stem: { label: "STEM专项", description: "针对理工科方向强化" },
   humanities: { label: "人文社科", description: "针对文科方向深耕" },
 } as const;
+
+interface KpiItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
 
 interface QuarterEngineProps {
   studentId: string;
@@ -43,6 +51,31 @@ const getCurrentQuarter = () => {
   return "Q4_summer";
 };
 
+// Parse KPI string into structured items
+const parseKpiItems = (kpiStr: string): KpiItem[] => {
+  if (!kpiStr) return [];
+  try {
+    const parsed = JSON.parse(kpiStr);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {
+    // Fallback: parse from plain text lines
+    return kpiStr
+      .split('\n')
+      .filter(line => line.trim())
+      .map((line, i) => ({
+        id: `kpi-${Date.now()}-${i}`,
+        text: line.replace(/^[•\-\s]+/, '').trim(),
+        completed: false,
+      }));
+  }
+  return [];
+};
+
+// Serialize KPI items to JSON string for storage
+const serializeKpiItems = (items: KpiItem[]): string => {
+  return JSON.stringify(items);
+};
+
 export default function QuarterEngine({ studentId, currentPhase, readOnly = false }: QuarterEngineProps) {
   const academicYear = getCurrentAcademicYear();
   const { quarters, isLoading, upsertQuarter } = useStudentQuarters(studentId);
@@ -53,7 +86,12 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
   const [selectedScheme, setSelectedScheme] = useState<string>("balanced");
   const [selectedDocId, setSelectedDocId] = useState<string>("none");
 
-  // Fetch uploaded planning documents for this student
+  // KPI editing state
+  const [editingKpiId, setEditingKpiId] = useState<string | null>(null);
+  const [editingKpiText, setEditingKpiText] = useState("");
+  const [newKpiText, setNewKpiText] = useState("");
+  const [showNewKpiInput, setShowNewKpiInput] = useState(false);
+
   const { data: planningDocs = [] } = useQuery({
     queryKey: ["planning-documents", studentId],
     queryFn: async () => {
@@ -79,6 +117,61 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
     };
   };
 
+  const getKpiItems = (quarter: string): KpiItem[] => {
+    const data = getQuarterData(quarter);
+    return parseKpiItems(data.kpi);
+  };
+
+  const updateKpiItems = (quarter: string, items: KpiItem[]) => {
+    const serialized = serializeKpiItems(items);
+    setFormData(prev => ({
+      ...prev,
+      [quarter]: { ...getQuarterData(quarter), ...prev[quarter], kpi: serialized },
+    }));
+  };
+
+  const handleToggleKpi = (quarter: string, kpiId: string) => {
+    const items = getKpiItems(quarter);
+    const updated = items.map(item =>
+      item.id === kpiId ? { ...item, completed: !item.completed } : item
+    );
+    updateKpiItems(quarter, updated);
+  };
+
+  const handleDeleteKpi = (quarter: string, kpiId: string) => {
+    const items = getKpiItems(quarter);
+    updateKpiItems(quarter, items.filter(item => item.id !== kpiId));
+  };
+
+  const handleStartEditKpi = (kpi: KpiItem) => {
+    setEditingKpiId(kpi.id);
+    setEditingKpiText(kpi.text);
+  };
+
+  const handleSaveEditKpi = (quarter: string) => {
+    if (!editingKpiText.trim() || !editingKpiId) return;
+    const items = getKpiItems(quarter);
+    const updated = items.map(item =>
+      item.id === editingKpiId ? { ...item, text: editingKpiText.trim() } : item
+    );
+    updateKpiItems(quarter, updated);
+    setEditingKpiId(null);
+    setEditingKpiText("");
+  };
+
+  const handleAddKpi = (quarter: string) => {
+    if (!newKpiText.trim()) return;
+    const items = getKpiItems(quarter);
+    items.push({
+      id: `kpi-${Date.now()}`,
+      text: newKpiText.trim(),
+      completed: false,
+    });
+    updateKpiItems(quarter, items);
+    setNewKpiText("");
+    setShowNewKpiInput(false);
+  };
+
   const updateField = (quarter: string, field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -102,26 +195,35 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
     setIsGenerating(true);
     try {
       const scheme = PLANNING_SCHEMES[selectedScheme as keyof typeof PLANNING_SCHEMES];
-      // Get planning document content if selected
       const selectedDoc = selectedDocId !== "none" ? planningDocs.find(d => d.id === selectedDocId) : null;
-      const documentContent = selectedDoc?.content || undefined;
 
       const { data, error } = await supabase.functions.invoke("generate-quarter-plan", {
-        body: { 
-          studentId, quarter, academicYear, currentPhase, 
+        body: {
+          studentId, quarter, academicYear, currentPhase,
           scheme: selectedScheme, schemeDescription: scheme?.description,
-          documentContent, documentTitle: selectedDoc?.title,
+          documentContent: selectedDoc?.content, documentTitle: selectedDoc?.title,
         },
       });
       if (error) throw error;
       if (data?.suggestions) {
         const qData = getQuarterData(quarter);
+        // Convert AI KPI suggestions into structured items
+        let kpiItems: KpiItem[] = [];
+        if (data.suggestions.kpi) {
+          const kpiLines = data.suggestions.kpi.split('\n').filter((l: string) => l.trim());
+          kpiItems = kpiLines.map((line: string, i: number) => ({
+            id: `kpi-ai-${Date.now()}-${i}`,
+            text: line.replace(/^[•\-\d.、\s]+/, '').trim(),
+            completed: false,
+          }));
+        }
+
         upsertQuarter.mutate({
           student_id: studentId,
           quarter,
           academic_year: academicYear,
           quarter_focus: data.suggestions.focus || qData.focus,
-          quarter_kpi: data.suggestions.kpi || qData.kpi,
+          quarter_kpi: kpiItems.length > 0 ? serializeKpiItems(kpiItems) : qData.kpi,
           quarter_risk: data.suggestions.risk || qData.risk,
           auto_suggestions: data.suggestions.items || [],
         });
@@ -157,9 +259,13 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
           </TabsList>
           {Object.keys(QUARTER_LABELS).map((q) => {
             const data = getQuarterData(q);
+            const kpiItems = getKpiItems(q);
+            const completedCount = kpiItems.filter(k => k.completed).length;
+
             return (
               <TabsContent key={q} value={q} className="space-y-4 mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Focus & Risk side by side */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>季度重点 Focus</Label>
                     <Textarea
@@ -167,16 +273,6 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
                       onChange={(e) => updateField(q, "focus", e.target.value)}
                       rows={3}
                       disabled={readOnly}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>季度KPI</Label>
-                    <Textarea
-                      value={data.kpi}
-                      onChange={(e) => updateField(q, "kpi", e.target.value)}
-                      rows={3}
-                      disabled={readOnly}
-                      placeholder="例：完成2个AP报名，1个竞赛提交"
                     />
                   </div>
                   <div className="space-y-2">
@@ -188,6 +284,108 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
                       disabled={readOnly}
                       placeholder="潜在风险和应对方案"
                     />
+                  </div>
+                </div>
+
+                {/* KPI To-Do List */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2">
+                      季度KPI
+                      {kpiItems.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {completedCount}/{kpiItems.length}
+                        </Badge>
+                      )}
+                    </Label>
+                    {!readOnly && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 text-xs"
+                        onClick={() => setShowNewKpiInput(true)}
+                      >
+                        <Plus className="h-3 w-3" /> 添加
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="border rounded-lg divide-y">
+                    {kpiItems.length === 0 && !showNewKpiInput && (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        暂无KPI，点击添加或使用AI生成
+                      </div>
+                    )}
+
+                    {kpiItems.map((kpi) => (
+                      <div key={kpi.id} className="flex items-center gap-3 px-3 py-2 group hover:bg-muted/50 transition-colors">
+                        {editingKpiId === kpi.id ? (
+                          <>
+                            <Input
+                              value={editingKpiText}
+                              onChange={(e) => setEditingKpiText(e.target.value)}
+                              className="h-8 flex-1 text-sm"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveEditKpi(q);
+                                if (e.key === 'Escape') { setEditingKpiId(null); setEditingKpiText(""); }
+                              }}
+                            />
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleSaveEditKpi(q)}>
+                              <Check className="h-3.5 w-3.5 text-green-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setEditingKpiId(null); setEditingKpiText(""); }}>
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Checkbox
+                              checked={kpi.completed}
+                              onCheckedChange={() => !readOnly && handleToggleKpi(q, kpi.id)}
+                              disabled={readOnly}
+                            />
+                            <span className={`flex-1 text-sm ${kpi.completed ? 'line-through text-muted-foreground' : ''}`}>
+                              {kpi.text}
+                            </span>
+                            {!readOnly && (
+                              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleStartEditKpi(kpi)}>
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDeleteKpi(q, kpi.id)}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* New KPI input */}
+                    {showNewKpiInput && (
+                      <div className="flex items-center gap-3 px-3 py-2">
+                        <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <Input
+                          value={newKpiText}
+                          onChange={(e) => setNewKpiText(e.target.value)}
+                          placeholder="输入新的KPI..."
+                          className="h-8 flex-1 text-sm"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleAddKpi(q);
+                            if (e.key === 'Escape') { setShowNewKpiInput(false); setNewKpiText(""); }
+                          }}
+                        />
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleAddKpi(q)}>
+                          <Check className="h-3.5 w-3.5 text-green-600" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setShowNewKpiInput(false); setNewKpiText(""); }}>
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -254,11 +452,11 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
                       <Button onClick={() => handleSave(q)} disabled={upsertQuarter.isPending} size="sm" className="gap-1">
                         <Save className="h-3 w-3" /> 保存
                       </Button>
-                      <Button 
-                        onClick={() => handleGenerateSuggestions(q)} 
-                        disabled={isGenerating} 
-                        size="sm" 
-                        variant="outline" 
+                      <Button
+                        onClick={() => handleGenerateSuggestions(q)}
+                        disabled={isGenerating}
+                        size="sm"
+                        variant="outline"
                         className="gap-1"
                       >
                         <Sparkles className="h-3 w-3" /> AI生成建议
