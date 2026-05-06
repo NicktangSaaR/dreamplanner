@@ -1625,6 +1625,102 @@ export type Database = {
         }
         Relationships: []
       }
+      wechat_bindings: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          nickname: string | null
+          openid: string
+          unionid: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          nickname?: string | null
+          openid: string
+          unionid?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          nickname?: string | null
+          openid?: string
+          unionid?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wechat_message_logs: {
+        Row: {
+          error_message: string | null
+          id: string
+          openid: string
+          payload: Json | null
+          related_todo_id: string | null
+          sent_at: string
+          status: string
+          template_id: string
+          user_id: string
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          openid: string
+          payload?: Json | null
+          related_todo_id?: string | null
+          sent_at?: string
+          status: string
+          template_id: string
+          user_id: string
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          openid?: string
+          payload?: Json | null
+          related_todo_id?: string | null
+          sent_at?: string
+          status?: string
+          template_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wechat_subscribe_authorizations: {
+        Row: {
+          id: string
+          last_authorized_at: string
+          remaining_quota: number
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_authorized_at?: string
+          remaining_quota?: number
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_authorized_at?: string
+          remaining_quota?: number
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       youtube_credentials: {
         Row: {
           access_token: string
