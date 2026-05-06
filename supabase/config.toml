@@ -30,3 +30,15 @@ verify_jwt = false
 
 [functions.generate-planning-report]
 verify_jwt = false
+
+[functions.wechat-login]
+verify_jwt = false
+
+[functions.wechat-send-subscribe]
+verify_jwt = false
+
+[functions.wechat-record-subscribe]
+verify_jwt = true
+
+[functions.wechat-todo-cron]
+verify_jwt = false
