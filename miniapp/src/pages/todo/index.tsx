@@ -3,8 +3,8 @@ import Taro, { useDidShow } from "@tarojs/taro";
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
-// ⚠️ 替换为你在微信公众平台申请的"待办到期提醒"模板 ID
-const TODO_TEMPLATE_ID = "REPLACE_WITH_YOUR_TEMPLATE_ID";
+// ⚠️ 等你在微信公众平台拿到"待办提醒"模板 ID 后，回填这里就能开启订阅推送
+const TODO_TEMPLATE_ID = "";
 
 interface Todo {
   id: string;
@@ -42,25 +42,31 @@ export default function TodoList() {
     void loadTodos();
   }
 
-  // 引导用户授权订阅消息（每授权一次配额 +1）
   async function requestSubscribe() {
+    if (!TODO_TEMPLATE_ID) {
+      Taro.showModal({
+        title: "暂未启用",
+        content: "请先在公众平台申请订阅消息模板，并把 template_id 配置到代码里",
+        showCancel: false,
+      });
+      return;
+    }
     try {
       const res = await Taro.requestSubscribeMessage({ tmplIds: [TODO_TEMPLATE_ID] });
       if (res[TODO_TEMPLATE_ID] === "accept") {
         const { data: { session } } = await supabase.auth.getSession();
         await Taro.request({
-          url: `${supabase.supabaseUrl}/functions/v1/wechat-record-subscribe`,
+          url: `https://fyxnuhqzgkzfuldqurej.supabase.co/functions/v1/wechat-record-subscribe`,
           method: "POST",
           data: { template_ids: [TODO_TEMPLATE_ID] },
           header: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.access_token}`,
-            apikey: supabase.supabaseKey,
           },
         });
         Taro.showToast({ title: "订阅成功", icon: "success" });
       }
-    } catch (e: any) {
+    } catch {
       Taro.showToast({ title: "订阅失败", icon: "none" });
     }
   }

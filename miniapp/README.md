@@ -1,58 +1,70 @@
 # DreamPlanner 微信小程序
 
-基于 Taro 4 + React 的小程序，与网站共享同一个 Supabase 后端。
+基于 Taro 4 + React，与网站共用同一个 Supabase 后端。
 
-## 开发流程
+---
+
+## 一、第一次跑起来（5 分钟）
 
 ```bash
 cd miniapp
-npm install
-npm run dev:weapp
+npm install          # 装依赖
+npm run dev:weapp    # 持续编译，输出到 miniapp/dist
 ```
 
-然后在「微信开发者工具」打开 `miniapp/dist` 目录预览。
+打开「**微信开发者工具**」→ 导入项目：
+- 项目目录：选 `miniapp/` 这个文件夹（注意：不是 `dist`，工具会按 `project.config.json` 自动指向 `dist`）
+- AppID：会自动读取 `wx2cf6175453246d95`
+- 不使用云服务
 
-## 必备配置
+进去后应该能看到：
+- 底部 tab：**待办** / **我的**
+- 「待办」页：未登录时会跳到登录页
+- 「我的」页：显示当前邮箱 + 退出登录
 
-1. **微信公众平台** ([mp.weixin.qq.com](https://mp.weixin.qq.com))
-   - 注册小程序，拿到 **AppID** 和 **AppSecret**
-   - 在「订阅消息」里申请「待办到期提醒」模板（建议字段：thing1=待办标题、time2=到期时间、thing3=提醒说明），拿到 **template_id**
-   - 在「开发设置 → 服务器域名 → request 合法域名」加上 `https://fyxnuhqzgkzfuldqurej.supabase.co`
+> ⚠️ 第一次启动若提示「不在以下 request 合法域名列表」，在开发者工具右上角「详情 → 本地设置」勾选「**不校验合法域名**」即可（线上发布前必须配置）。
 
-2. **Lovable 项目 secrets**（让 Edge Function 能调微信 API）
-   - `WECHAT_MINIAPP_APPID`
-   - `WECHAT_MINIAPP_SECRET`
-   - `WECHAT_TEMPLATE_TODO_DUE` = 上面申请到的模板 ID
+---
 
-3. **代码里替换**
-   - `miniapp/src/pages/todo/index.tsx` 顶部 `TODO_TEMPLATE_ID`
+## 二、配置公众平台（订阅消息开通流程）
 
-## 定时推送
+1. 登录 [mp.weixin.qq.com](https://mp.weixin.qq.com)
+2. **设置 → 基本设置**：填写小程序名称、头像、简介、**服务类目**（必填，否则订阅消息菜单不会出现）
+3. 等左侧菜单出现 **功能 → 订阅消息**，进入 → **公共模板库** → 搜「待办」/「任务」/「提醒」
+4. 选一个含以下字段的模板申请：
+   - `thing` 类型 — 待办标题
+   - `time` 类型 — 到期时间
+   - `thing` 类型 — 提醒说明
+5. 拿到 **template_id**（一长串字符串）
 
-在 Supabase SQL Editor 执行（每天上午 9 点扫一次到期 to-do）：
+---
 
-```sql
-select cron.schedule(
-  'wechat-todo-daily',
-  '0 9 * * *',
-  $$ select net.http_post(
-       url := 'https://fyxnuhqzgkzfuldqurej.supabase.co/functions/v1/wechat-todo-cron',
-       headers := '{"Content-Type":"application/json"}'::jsonb
-     ); $$
-);
-```
+## 三、启用订阅推送（拿到 template_id 之后）
 
-## 架构
+1. 把 template_id 填到 `miniapp/src/pages/todo/index.tsx` 顶部的 `TODO_TEMPLATE_ID`
+2. 在 Lovable 的 Supabase secrets 里加上 `WECHAT_TEMPLATE_TODO_DUE` = 同一个 template_id
+3. 在「**开发管理 → 开发设置 → 服务器域名 → request 合法域名**」加上：
+   `https://fyxnuhqzgkzfuldqurej.supabase.co`
+4. 在 Supabase SQL Editor 跑一次：
+   ```sql
+   select cron.schedule(
+     'wechat-todo-daily',
+     '0 9 * * *',
+     $$ select net.http_post(
+          url := 'https://fyxnuhqzgkzfuldqurej.supabase.co/functions/v1/wechat-todo-cron',
+          headers := '{"Content-Type":"application/json"}'::jsonb
+        ); $$
+   );
+   ```
 
-| 端 | 技术 | 部署 |
-|---|---|---|
-| 网站 | React + Vite | Lovable / dreamplanner.lovable.app |
-| 小程序 | Taro 4 + React | 本地构建 → 微信开发者工具上传 |
-| 后端 | Supabase（共用） | Edge Functions + Postgres |
+---
 
-## 推送链路
+## 四、当前状态
 
-1. 用户进入 To-do 页 → 点击「开启到期提醒」→ `wx.requestSubscribeMessage` 授权
-2. 前端调 `wechat-record-subscribe` 把配额 +1 写到 `wechat_subscribe_authorizations`
-3. 每天 9 点 cron 调 `wechat-todo-cron` → 扫 24h 内到期的未完成 to-do
-4. 对每个有微信绑定 + 有配额的 to-do，调 `wechat-send-subscribe` 发送订阅消息，配额 -1
+| 模块 | 状态 |
+|---|---|
+| 小程序骨架（登录 / 待办 / 我的） | ✅ 已完成 |
+| Supabase 客户端（Taro 适配） | ✅ |
+| 微信登录 Edge Function | ✅ 待联调 |
+| 订阅消息推送 | ⏸ 等公众平台模板审核 |
+

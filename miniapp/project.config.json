@@ -1,0 +1,22 @@
+{
+  "miniprogramRoot": "dist/",
+  "projectname": "dreamplanner-miniapp",
+  "description": "DreamPlanner 微信小程序",
+  "appid": "wx2cf6175453246d95",
+  "setting": {
+    "urlCheck": false,
+    "es6": false,
+    "enhance": false,
+    "postcss": false,
+    "minified": false,
+    "newFeature": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.4.0",
+  "condition": {}
+}
