@@ -35,7 +35,7 @@ export const useStudentQuarters = (studentId: string | undefined) => {
       if (existing) {
         const { data, error } = await supabase
           .from("student_quarters")
-          .update(updates)
+          .update(updates as any)
           .eq("id", existing.id)
           .select()
           .single();
@@ -44,7 +44,7 @@ export const useStudentQuarters = (studentId: string | undefined) => {
       } else {
         const { data, error } = await supabase
           .from("student_quarters")
-          .insert(updates)
+          .insert(updates as any)
           .select()
           .single();
         if (error) throw error;
