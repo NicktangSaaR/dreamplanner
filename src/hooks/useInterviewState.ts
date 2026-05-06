@@ -18,7 +18,7 @@ export const useInterviewState = (settings: InterviewSettings) => {
   }, [stage, settings]);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setInterval>;
     
     if (stage === InterviewStage.PREPARATION && timeLeft > 0) {
       timer = setInterval(() => {
