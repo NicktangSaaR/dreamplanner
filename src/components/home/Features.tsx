@@ -1,45 +1,36 @@
-
-import { Check, User, Star } from "lucide-react";
+import { ClipboardList, MessagesSquare, FileText, Video } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageProvider";
+import type { MessageKey } from "@/i18n/translations";
 
 interface Feature {
-  title: string;
-  description: string;
-  icon: JSX.Element;
+  id: "profile" | "counselor" | "reports" | "interview";
+  icon: LucideIcon;
 }
 
-export default function Features() {
-  const features: Feature[] = [
-    {
-      title: "Track Your Progress",
-      description: "Keep on eye on your course selction, GPA and excurricular activities.",
-      icon: <Check className="h-6 w-6 text-green-500" />,
-    },
-    {
-      title: "Collaborate with Counselors",
-      description: "Get guidance and support from experienced counselors.",
-      icon: <User className="h-6 w-6 text-blue-500" />,
-    },
-    {
-      title: "AI-Supported Planning Tools",
-      description: "Build your AI-supported school list that includes top schools across the world.",
-      icon: <Star className="h-6 w-6 text-yellow-500" />,
-    },
-  ];
+const FEATURES: Feature[] = [
+  { id: "profile", icon: ClipboardList },
+  { id: "counselor", icon: MessagesSquare },
+  { id: "reports", icon: FileText },
+  { id: "interview", icon: Video },
+];
 
+export default function Features() {
+  const { t } = useLanguage();
   return (
-    <section className="mt-24 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-      {features.map((feature) => (
-        <div
-          key={feature.title}
-          className="p-6 rounded-2xl bg-white shadow-sm border"
-        >
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            {feature.icon}
+    <section className="mt-28" aria-labelledby="features-heading">
+      <h2 id="features-heading" className="font-serif text-2xl font-semibold text-pine sm:text-3xl">
+        {t("features.heading")}
+      </h2>
+      <div className="mt-10 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+        {FEATURES.map(({ id, icon: Icon }) => (
+          <div key={id} className="border-t-2 border-primary pt-5">
+            <Icon className="h-6 w-6 text-primary" aria-hidden="true" />
+            <h3 className="mt-4 text-lg font-semibold text-pine">{t(`features.${id}.title` as MessageKey)}</h3>
+            <p className="mt-2 leading-relaxed text-muted-foreground">{t(`features.${id}.body` as MessageKey)}</p>
           </div>
-          <h3 className="text-xl font-semibold">{feature.title}</h3>
-          <p className="mt-2 text-muted-foreground">{feature.description}</p>
-        </div>
-      ))}
+        ))}
+      </div>
     </section>
   );
 }

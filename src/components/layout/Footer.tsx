@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { ArrowUp } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 export default function Footer() {
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const { t } = useLanguage();
   useEffect(() => {
     const checkScroll = () => {
       setShowScrollTop(window.scrollY > 200);
@@ -17,31 +19,31 @@ export default function Footer() {
     });
   };
   return <>
-      <footer className="mt-auto bg-white/80 backdrop-blur-sm border-t">
+      <footer className="mt-auto border-t bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-baseline gap-2">
-              <Link to="/" className="font-bold text-xl">
+              <Link to="/" className="font-serif text-xl font-bold text-pine">
                 DreamPlanner
               </Link>
-              <span className="text-xs text-muted-foreground">Beta v1.5</span>
+              <span className="text-xs text-muted-foreground">{t("footer.tagline")}</span>
             </div>
             <nav className="flex gap-8">
               <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">
-                About Dream Planner
+                {t("footer.about")}
               </Link>
               <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
-                Contact Us
+                {t("footer.contact")}
               </Link>
             </nav>
           </div>
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} DreamPlanner. All rights reserved.
+            © {new Date().getFullYear()} {t("footer.rights")}
           </div>
         </div>
       </footer>
       
-      {showScrollTop && <button onClick={scrollToTop} className="fixed bottom-8 right-8 bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-all duration-200 z-50" aria-label="Scroll to top">
+      {showScrollTop && <button onClick={scrollToTop} className="fixed bottom-6 right-6 z-50 rounded-full bg-primary p-3 text-primary-foreground shadow-md transition-colors hover:bg-primary/90" aria-label={t("footer.backToTop")}>
           <ArrowUp className="h-5 w-5" />
         </button>}
     </>;
