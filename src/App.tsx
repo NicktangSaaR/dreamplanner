@@ -22,6 +22,8 @@ import AdminDashboard from "@/pages/AdminDashboard";
 
 
 import PublicResumeForm from "@/pages/PublicResumeForm";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import Footer from "@/components/layout/Footer";
 
 export default function App() {
@@ -38,6 +40,8 @@ export default function App() {
           <Route path="/resume-form" element={<PublicResumeForm />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route element={<AuthLayout />}>
             <Route path="/mock-interview" element={
               <ProtectedRoute allowedUserTypes={["student", "admin"]}>
