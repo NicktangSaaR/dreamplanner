@@ -48,8 +48,8 @@ const zh = {
   "features.interview.title": "模拟面试练习",
   "features.interview.body": "按院校题库录制回答，回看自己的表达，反复练到自然。",
 
-  "cases.heading": "看看往届学生的录取案例",
-  "cases.body": "按学校、专业和背景筛选，了解不同路径的申请准备。",
+  "cases.heading": "浏览录取案例参考",
+  "cases.body": "按学校、专业和背景筛选，看看不同申请路径通常怎样准备。",
   "cases.cta": "查看录取案例",
 
   "articles.heading": "最新文章",
@@ -141,8 +141,8 @@ const en: Messages = {
   "features.interview.title": "Mock interview practice",
   "features.interview.body": "Record answers to school-specific questions, review how you come across, and practice until it feels natural.",
 
-  "cases.heading": "See past students' admission cases",
-  "cases.body": "Filter by school, major and background to see how different paths were prepared.",
+  "cases.heading": "Browse admission case examples",
+  "cases.body": "Filter by school, major and background to see how different application paths are typically prepared.",
   "cases.cta": "View admission cases",
 
   "articles.heading": "Latest articles",
