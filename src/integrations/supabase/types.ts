@@ -1759,6 +1759,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_resume_data_by_token: {
+        Args: { p_token: string }
+        Returns: Database["public"]["Tables"]["resume_data"]["Row"][]
+      }
+      get_resume_request_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          id: string
+          status: string
+          due_date: string | null
+          message: string | null
+          created_at: string
+        }[]
+      }
+      save_resume_data_by_token: {
+        Args: { p_token: string; p_data: Json; p_submit?: boolean }
+        Returns: string
+      }
       can_access_student_data: {
         Args: { student_id: string; viewer_id: string }
         Returns: boolean

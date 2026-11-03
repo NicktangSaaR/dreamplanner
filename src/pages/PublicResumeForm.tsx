@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,37 +42,31 @@ export default function PublicResumeForm() {
   const [isUploading, setIsUploading] = useState(false);
 
   // Fetch resume request by token
-  const { data: request, isLoading: isLoadingRequest, error: requestError } = useQuery({
+  // All public-form access goes through token-checked RPCs; the token is
+  // verified server-side on every call.
+  const { data: request, isLoading: isLoadingRequest, error: requestError, refetch: refetchRequest } = useQuery({
     queryKey: ["public-resume-request", token],
     queryFn: async () => {
       if (!token) throw new Error("无效链接");
-      
-      const { data, error } = await supabase
-        .from("resume_requests")
-        .select("*")
-        .eq("public_token", token)
-        .single();
-      
-      if (error) throw new Error("链接无效或已过期");
-      return data;
+
+      const { data, error } = await supabase.rpc("get_resume_request_by_token", { p_token: token });
+      const row = Array.isArray(data) ? data[0] : null;
+      if (error || !row) throw new Error("链接无效或已过期");
+      return row;
     },
     enabled: !!token,
+    retry: false,
   });
 
   // Fetch existing resume data
   const { data: existingData } = useQuery({
     queryKey: ["public-resume-data", request?.id],
     queryFn: async () => {
-      if (!request) return null;
-      
-      const { data, error } = await supabase
-        .from("resume_data")
-        .select("*")
-        .eq("request_id", request.id)
-        .single();
-      
-      if (error && error.code !== "PGRST116") throw error;
-      return data;
+      if (!request || !token) return null;
+
+      const { data, error } = await supabase.rpc("get_resume_data_by_token", { p_token: token });
+      if (error) throw error;
+      return Array.isArray(data) ? data[0] ?? null : null;
     },
     enabled: !!request,
   });
@@ -128,11 +123,9 @@ export default function PublicResumeForm() {
   // Save mutation
   const saveMutation = useMutation({
     mutationFn: async (submit: boolean) => {
-      if (!request) throw new Error("无效请求");
-      
-      const dataToSave: any = {
-        request_id: request.id,
-        student_id: request.student_id,
+      if (!request || !token) throw new Error("无效请求");
+
+      const dataToSave: { [key: string]: Json } = {
         full_name: formData.full_name,
         email: formData.email,
         phone: formData.phone,
@@ -154,29 +147,16 @@ export default function PublicResumeForm() {
         dataToSave.uploaded_file_path = uploadedFilePath;
       }
       
-      if (existingData) {
-        const { error } = await supabase
-          .from("resume_data")
-          .update(dataToSave)
-          .eq("id", existingData.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("resume_data")
-          .insert(dataToSave);
-        if (error) throw error;
-      }
-      
-      if (submit) {
-        const { error } = await supabase
-          .from("resume_requests")
-          .update({ status: "submitted" })
-          .eq("id", request.id);
-        if (error) throw error;
-      }
+      const { error } = await supabase.rpc("save_resume_data_by_token", {
+        p_token: token,
+        p_data: dataToSave,
+        p_submit: submit,
+      });
+      if (error) throw error;
     },
     onSuccess: (_, submit) => {
       toast.success(submit ? "简历信息已提交，感谢您的填写！" : "保存成功");
+      if (submit) refetchRequest();
     },
     onError: (error) => {
       toast.error("保存失败: " + error.message);
