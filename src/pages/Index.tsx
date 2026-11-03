@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import MainNav from "@/components/layout/MainNav";
 import Hero from "@/components/home/Hero";
 import Features from "@/components/home/Features";
-import ArticleList from "@/components/articles/ArticleList";
 import Autoplay from 'embla-carousel-autoplay';
 import {
   Carousel,
@@ -14,20 +13,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { Article, ArticleCategory } from "@/types/article";
-import { cn } from "@/lib/utils";
+import { GETOFFERS_URL } from "@/lib/siteLinks";
+import { Button } from "@/components/ui/button";
 
-// Category color mapping
-const categoryColors: { [key: string]: string } = {
-  "学术资源": "bg-[#F2FCE2]", // Soft Green
-  "升学指导": "bg-[#E5DEFF]", // Soft Purple
-  "职业发展": "bg-[#FEC6A1]", // Soft Orange
-  "校园生活": "bg-[#D3E4FD]", // Soft Blue
-  "留学申请": "bg-[#FFDEE2]", // Soft Pink
-  "default": "bg-[#F1F0FB]", // Soft Gray
-};
+
 
 export default function Index() {
   const navigate = useNavigate();
@@ -100,69 +91,71 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+    <div className="min-h-screen bg-background">
       <MainNav 
         isAuthenticated={isAuthenticated} 
         userId={userId}
         onLogout={handleLogout}
       />
-      <main className="container mx-auto px-4 pt-32">
+      <main className="container mx-auto px-4 pb-24 pt-28 sm:pt-36">
         <Hero />
         <Features />
-        <section className="mt-24 mb-16">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">Latest Articles</h2>
-            <Link to="/articles" className="text-primary hover:underline">
-              View all articles →
-            </Link>
-          </div>
-          <Carousel 
-            className="w-full max-w-5xl mx-auto"
-            opts={{
-              align: "start",
-              loop: true,
-              skipSnaps: false,
-              startIndex: 0,
-              slidesToScroll: 3
-            }}
-            plugins={[
-              Autoplay({
-                delay: 5000,
-                stopOnInteraction: false,
-              }),
-            ]}
-          >
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {articles?.map((article) => (
-                <CarouselItem key={article.id} className="pl-2 md:pl-4 basis-1/3">
-                  <Card className={cn(
-                    "overflow-hidden cursor-pointer h-full",
-                    "transition-all duration-200 hover:shadow-lg",
-                    categoryColors[article.article_categories?.name || "default"]
-                  )}>
-                    <Link to={`/articles/${article.id}`}>
-                      <CardHeader>
-                        <CardTitle className="line-clamp-2 h-12">{article.title}</CardTitle>
-                        <div className="space-y-1.5">
-                          {article.article_categories && (
-                            <div className="text-sm text-muted-foreground font-medium">
-                              {article.article_categories.name}
-                            </div>
-                          )}
-                          <div className="text-sm text-muted-foreground">
-                            {new Date(article.created_at).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </CardHeader>
+        {GETOFFERS_URL && (
+          <section className="mt-28 rounded-md bg-pine px-6 py-10 text-white sm:px-10">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="max-w-xl">
+                <h2 className="font-serif text-2xl font-semibold sm:text-3xl">看看往届学生的录取案例</h2>
+                <p className="mt-3 text-white/80">按学校、专业和背景筛选，了解不同路径的申请准备。</p>
+              </div>
+              <Button asChild size="lg" variant="secondary" className="shrink-0">
+                <a href={GETOFFERS_URL}>查看录取案例</a>
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {articles && articles.length > 0 && (
+          <section className="mt-28" aria-labelledby="articles-heading">
+            <div className="flex items-baseline justify-between gap-4">
+              <h2 id="articles-heading" className="font-serif text-2xl font-semibold text-pine sm:text-3xl">
+                最新文章
+              </h2>
+              <Link to="/articles" className="shrink-0 text-sm font-medium text-primary hover:underline">
+                全部文章
+              </Link>
+            </div>
+            <Carousel
+              className="mt-8"
+              opts={{ align: "start", loop: articles.length > 3 }}
+              plugins={[Autoplay({ delay: 6000, stopOnInteraction: true, stopOnMouseEnter: true })]}
+            >
+              <CarouselContent className="-ml-4">
+                {articles.map((article) => (
+                  <CarouselItem key={article.id} className="basis-full pl-4 sm:basis-1/2 lg:basis-1/3">
+                    <Link
+                      to={`/articles/${article.id}`}
+                      className="group flex h-full flex-col rounded-md border bg-card p-5 transition-colors hover:border-primary"
+                    >
+                      {article.article_categories && (
+                        <span className="text-sm font-medium text-primary">{article.article_categories.name}</span>
+                      )}
+                      <h3 className="mt-2 line-clamp-2 text-lg font-semibold leading-snug text-pine group-hover:text-primary">
+                        {article.title}
+                      </h3>
+                      <time className="mt-auto pt-4 text-sm text-muted-foreground" dateTime={article.created_at}>
+                        {new Date(article.created_at).toLocaleDateString("zh-CN")}
+                      </time>
                     </Link>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-        </section>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <div className="mt-6 flex justify-end gap-2">
+                <CarouselPrevious className="static translate-y-0" aria-label="上一篇" />
+                <CarouselNext className="static translate-y-0" aria-label="下一篇" />
+              </div>
+            </Carousel>
+          </section>
+        )}
       </main>
     </div>
   );

@@ -15,23 +15,24 @@ export default function Login() {
         size="icon"
         onClick={() => navigate("/")}
         className="mb-4"
+        aria-label="返回首页"
       >
         <ArrowLeft className="h-4 w-4" />
       </Button>
       
       <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <AuthCard
-          title="Welcome Back"
-          subtitle="Please enter your login details"
+          title="欢迎回来"
+          subtitle="登录你的 DreamPlanner 账号"
           footer={
             <>
-              <span className="text-muted-foreground">Don't have an account?</span>
+              <span className="text-muted-foreground">还没有账号？</span>
               <Button 
                 variant="link" 
                 className="p-0 h-auto font-semibold"
                 onClick={() => navigate("/signup")}
               >
-                Sign Up
+                免费注册
               </Button>
             </>
           }

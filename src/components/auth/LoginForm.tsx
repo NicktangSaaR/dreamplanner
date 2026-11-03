@@ -25,11 +25,12 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleLogin} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">邮箱</Label>
         <Input
           id="email"
           type="email"
-          placeholder="Enter your email"
+          placeholder="you@example.com"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -38,7 +39,7 @@ export default function LoginForm() {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">密码</Label>
           <Link to="/forgot-password" className="text-sm text-primary hover:underline">
             忘记密码？
           </Link>
@@ -46,7 +47,7 @@ export default function LoginForm() {
         <Input
           id="password"
           type="password"
-          placeholder="Enter your password"
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -58,7 +59,7 @@ export default function LoginForm() {
         className="w-full"
         disabled={isLoading}
       >
-        {isLoading ? "Logging in..." : "Login"}
+        {isLoading ? "登录中..." : "登录"}
       </Button>
     </form>
   );
