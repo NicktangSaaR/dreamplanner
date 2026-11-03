@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { ArrowUp } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 export default function Footer() {
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const { t } = useLanguage();
   useEffect(() => {
     const checkScroll = () => {
       setShowScrollTop(window.scrollY > 200);
@@ -24,24 +26,24 @@ export default function Footer() {
               <Link to="/" className="font-serif text-xl font-bold text-pine">
                 DreamPlanner
               </Link>
-              <span className="text-xs text-muted-foreground">升学规划平台</span>
+              <span className="text-xs text-muted-foreground">{t("footer.tagline")}</span>
             </div>
             <nav className="flex gap-8">
               <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">
-                关于我们
+                {t("footer.about")}
               </Link>
               <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
-                联系我们
+                {t("footer.contact")}
               </Link>
             </nav>
           </div>
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} DreamPlanner 保留所有权利
+            © {new Date().getFullYear()} {t("footer.rights")}
           </div>
         </div>
       </footer>
       
-      {showScrollTop && <button onClick={scrollToTop} className="fixed bottom-6 right-6 z-50 rounded-full bg-primary p-3 text-primary-foreground shadow-md transition-colors hover:bg-primary/90" aria-label="回到顶部">
+      {showScrollTop && <button onClick={scrollToTop} className="fixed bottom-6 right-6 z-50 rounded-full bg-primary p-3 text-primary-foreground shadow-md transition-colors hover:bg-primary/90" aria-label={t("footer.backToTop")}>
           <ArrowUp className="h-5 w-5" />
         </button>}
     </>;

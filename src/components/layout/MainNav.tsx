@@ -8,6 +8,8 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ArticleCategory } from "@/types/article";
 import { GETOFFERS_URL } from "@/lib/siteLinks";
+import { useLanguage } from "@/i18n/LanguageProvider";
+import LanguageToggle from "@/i18n/LanguageToggle";
 
 interface MainNavProps {
   isAuthenticated: boolean;
@@ -16,8 +18,9 @@ interface MainNavProps {
 }
 
 function Brand() {
+  const { t } = useLanguage();
   return (
-    <Link to="/" className="flex items-baseline gap-2" aria-label="DreamPlanner 首页">
+    <Link to="/" className="flex items-baseline gap-2" aria-label={t("nav.brandHome")}>
       <span className="font-serif text-xl font-bold text-pine">DreamPlanner</span>
       <span className="hidden text-xs text-muted-foreground sm:inline">Beta</span>
     </Link>
@@ -26,6 +29,7 @@ function Brand() {
 
 export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useLanguage();
   const dashboardLink = isAuthenticated && userId ? `/student-dashboard/${userId}` : "/login";
 
   const { data: categories } = useQuery({
@@ -52,14 +56,14 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
               <HoverCard openDelay={0} closeDelay={100}>
                 <HoverCardTrigger asChild>
                   <Link to="/articles" className={`flex items-center ${linkClass}`}>
-                    免费资源
+                    {t("nav.resources")}
                     <ChevronDown className="ml-1 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </HoverCardTrigger>
                 <HoverCardContent align="start" className="w-48 p-1">
                   <div className="flex flex-col">
                     <Link to="/articles" className="rounded-sm px-2 py-1.5 text-sm hover:bg-accent">
-                      全部文章
+                      {t("nav.allArticles")}
                     </Link>
                     {categories?.map((category) => (
                       <Link
@@ -75,7 +79,7 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
               </HoverCard>
               {GETOFFERS_URL && (
                 <a href={GETOFFERS_URL} className={linkClass}>
-                  录取案例
+                  {t("nav.cases")}
                 </a>
               )}
             </div>
@@ -83,34 +87,37 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
 
           {/* Desktop actions */}
           <div className="hidden items-center gap-3 md:flex">
+            <LanguageToggle />
             {isAuthenticated ? (
               <>
                 <Button asChild variant="ghost">
-                  <Link to="/mock-interview">模拟面试</Link>
+                  <Link to="/mock-interview">{t("nav.mockInterview")}</Link>
                 </Button>
                 <Button asChild>
-                  <Link to={dashboardLink}>我的主页</Link>
+                  <Link to={dashboardLink}>{t("nav.dashboard")}</Link>
                 </Button>
                 <Button variant="outline" onClick={onLogout}>
-                  退出登录
+                  {t("nav.logout")}
                 </Button>
               </>
             ) : (
               <>
                 <Button asChild variant="ghost">
-                  <Link to="/login">登录</Link>
+                  <Link to="/login">{t("nav.login")}</Link>
                 </Button>
                 <Button asChild>
-                  <Link to="/signup">免费注册</Link>
+                  <Link to="/signup">{t("nav.signup")}</Link>
                 </Button>
               </>
             )}
           </div>
 
           {/* Mobile menu */}
+          <div className="flex items-center gap-1 md:hidden">
+          <LanguageToggle />
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden" aria-label="打开菜单">
+              <Button variant="ghost" size="icon" aria-label={t("nav.openMenu")}>
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -120,7 +127,7 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
               </SheetHeader>
               <div className="mt-6 flex flex-col gap-1">
                 <Link to="/articles" onClick={closeMobile} className="rounded-sm px-2 py-2 hover:bg-accent">
-                  全部文章
+                  {t("nav.allArticles")}
                 </Link>
                 {categories?.map((category) => (
                   <Link
@@ -134,7 +141,7 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
                 ))}
                 {GETOFFERS_URL && (
                   <a href={GETOFFERS_URL} className="rounded-sm px-2 py-2 hover:bg-accent">
-                    录取案例
+                    {t("nav.cases")}
                   </a>
                 )}
               </div>
@@ -142,10 +149,10 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
                 {isAuthenticated ? (
                   <>
                     <Button asChild onClick={closeMobile}>
-                      <Link to={dashboardLink}>我的主页</Link>
+                      <Link to={dashboardLink}>{t("nav.dashboard")}</Link>
                     </Button>
                     <Button asChild variant="outline" onClick={closeMobile}>
-                      <Link to="/mock-interview">模拟面试</Link>
+                      <Link to="/mock-interview">{t("nav.mockInterview")}</Link>
                     </Button>
                     <Button
                       variant="ghost"
@@ -154,22 +161,23 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
                         onLogout();
                       }}
                     >
-                      退出登录
+                      {t("nav.logout")}
                     </Button>
                   </>
                 ) : (
                   <>
                     <Button asChild onClick={closeMobile}>
-                      <Link to="/signup">免费注册</Link>
+                      <Link to="/signup">{t("nav.signup")}</Link>
                     </Button>
                     <Button asChild variant="outline" onClick={closeMobile}>
-                      <Link to="/login">登录</Link>
+                      <Link to="/login">{t("nav.login")}</Link>
                     </Button>
                   </>
                 )}
               </div>
             </SheetContent>
           </Sheet>
+          </div>
         </div>
       </div>
     </nav>

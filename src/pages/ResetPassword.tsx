@@ -6,11 +6,14 @@ import AuthCard from "@/components/auth/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/i18n/LanguageProvider";
+import LanguageToggle from "@/i18n/LanguageToggle";
 
 const MIN_LENGTH = 8;
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -50,11 +53,11 @@ export default function ResetPassword() {
     e.preventDefault();
     setError(null);
     if (password.length < MIN_LENGTH) {
-      setError(`密码至少需要 ${MIN_LENGTH} 位。`);
+      setError(t("reset.tooShort", { min: MIN_LENGTH }));
       return;
     }
     if (password !== confirm) {
-      setError("两次输入的密码不一致。");
+      setError(t("reset.mismatch"));
       return;
     }
     setIsLoading(true);
@@ -65,33 +68,34 @@ export default function ResetPassword() {
       return;
     }
     await supabase.auth.signOut();
-    toast.success("密码已更新，请用新密码登录");
+    toast.success(t("reset.done"));
     navigate("/login");
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container relative mx-auto p-4">
+      <LanguageToggle className="absolute right-4 top-4" />
       <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <AuthCard
-          title="设置新密码"
+          title={t("reset.title")}
           subtitle={
             status === "invalid"
-              ? "重置链接无效或已过期"
-              : "请输入你的新密码"
+              ? t("reset.invalid")
+              : t("reset.subtitle")
           }
           footer={
             <Link to={status === "invalid" ? "/forgot-password" : "/login"} className="font-semibold text-primary hover:underline">
-              {status === "invalid" ? "重新发送重置链接" : "返回登录"}
+              {status === "invalid" ? t("reset.resend") : t("auth.backToLogin")}
             </Link>
           }
         >
           {status === "checking" && (
-            <p className="text-center text-sm text-muted-foreground">正在验证链接...</p>
+            <p className="text-center text-sm text-muted-foreground">{t("reset.checking")}</p>
           )}
           {status === "ready" && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-password">新密码</Label>
+                <Label htmlFor="new-password">{t("reset.new")}</Label>
                 <Input
                   id="new-password"
                   type="password"
@@ -103,7 +107,7 @@ export default function ResetPassword() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">确认新密码</Label>
+                <Label htmlFor="confirm-password">{t("reset.confirm")}</Label>
                 <Input
                   id="confirm-password"
                   type="password"
@@ -116,7 +120,7 @@ export default function ResetPassword() {
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "保存中..." : "保存新密码"}
+                {isLoading ? t("reset.submitting") : t("reset.submit")}
               </Button>
             </form>
           )}

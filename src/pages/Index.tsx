@@ -17,10 +17,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Article, ArticleCategory } from "@/types/article";
 import { GETOFFERS_URL } from "@/lib/siteLinks";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 
 
 export default function Index() {
+  const { t, lang } = useLanguage();
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -104,11 +106,11 @@ export default function Index() {
           <section className="mt-28 rounded-md bg-pine px-6 py-10 text-white sm:px-10">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="max-w-xl">
-                <h2 className="font-serif text-2xl font-semibold sm:text-3xl">看看往届学生的录取案例</h2>
-                <p className="mt-3 text-white/80">按学校、专业和背景筛选，了解不同路径的申请准备。</p>
+                <h2 className="font-serif text-2xl font-semibold sm:text-3xl">{t("cases.heading")}</h2>
+                <p className="mt-3 text-white/80">{t("cases.body")}</p>
               </div>
               <Button asChild size="lg" variant="secondary" className="shrink-0">
-                <a href={GETOFFERS_URL}>查看录取案例</a>
+                <a href={GETOFFERS_URL}>{t("cases.cta")}</a>
               </Button>
             </div>
           </section>
@@ -118,10 +120,10 @@ export default function Index() {
           <section className="mt-28" aria-labelledby="articles-heading">
             <div className="flex items-baseline justify-between gap-4">
               <h2 id="articles-heading" className="font-serif text-2xl font-semibold text-pine sm:text-3xl">
-                最新文章
+                {t("articles.heading")}
               </h2>
               <Link to="/articles" className="shrink-0 text-sm font-medium text-primary hover:underline">
-                全部文章
+                {t("articles.all")}
               </Link>
             </div>
             <Carousel
@@ -143,15 +145,15 @@ export default function Index() {
                         {article.title}
                       </h3>
                       <time className="mt-auto pt-4 text-sm text-muted-foreground" dateTime={article.created_at}>
-                        {new Date(article.created_at).toLocaleDateString("zh-CN")}
+                        {new Date(article.created_at).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-CA")}
                       </time>
                     </Link>
                   </CarouselItem>
                 ))}
               </CarouselContent>
               <div className="mt-6 flex justify-end gap-2">
-                <CarouselPrevious className="static translate-y-0" aria-label="上一篇" />
-                <CarouselNext className="static translate-y-0" aria-label="下一篇" />
+                <CarouselPrevious className="static translate-y-0" aria-label={t("articles.prev")} />
+                <CarouselNext className="static translate-y-0" aria-label={t("articles.next")} />
               </div>
             </Carousel>
           </section>
