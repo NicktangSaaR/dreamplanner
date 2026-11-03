@@ -55,9 +55,13 @@ CREATE OR REPLACE FUNCTION public.protect_profile_privileged_fields()
  SET search_path TO 'public'
 AS $function$
 DECLARE
+  -- auth.role() comes from the request JWT. API traffic always carries one
+  -- ('anon', 'authenticated' or 'service_role'); an empty role means a direct
+  -- database connection (migrations, SQL editor, the auth service's signup
+  -- trigger), which is trusted.
+  jwt_role text := coalesce(auth.role(), '');
   privileged boolean :=
-       coalesce(auth.role(), '') = 'service_role'
-    OR session_user IN ('postgres', 'supabase_admin')
+       jwt_role IN ('', 'service_role')
     OR coalesce(public.is_admin(auth.uid()), false);
 BEGIN
   IF privileged THEN
