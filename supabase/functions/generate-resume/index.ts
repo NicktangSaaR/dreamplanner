@@ -12,10 +12,28 @@ serve(async (req) => {
 
   try {
     const { resumeData } = await req.json();
+    const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+
+    // Prefer our own providers; Lovable gateway is a last-resort fallback only.
+    let apiUrl: string;
+    let apiKey: string;
+    let model: string;
+    if (DEEPSEEK_API_KEY) {
+      apiUrl = "https://api.deepseek.com/v1/chat/completions";
+      apiKey = DEEPSEEK_API_KEY;
+      model = "deepseek-chat";
+    } else if (OPENAI_API_KEY) {
+      apiUrl = "https://api.openai.com/v1/chat/completions";
+      apiKey = OPENAI_API_KEY;
+      model = "gpt-4o-mini";
+    } else if (LOVABLE_API_KEY) {
+      apiUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
+      apiKey = LOVABLE_API_KEY;
+      model = "google/gemini-3-flash-preview";
+    } else {
+      throw new Error("No AI API key configured");
     }
 
     const systemPrompt = `You are an expert resume writer specializing in creating professional resumes for high school and college students. 
@@ -71,14 +89,14 @@ Please generate a professional, well-formatted resume in markdown. Make sure to:
 3. Use strong action verbs
 4. Keep it concise and impactful`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

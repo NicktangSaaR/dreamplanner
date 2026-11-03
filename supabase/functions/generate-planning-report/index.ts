@@ -19,11 +19,8 @@ serve(async (req) => {
     let apiKey: string;
     let model: string;
 
-    if (LOVABLE_API_KEY) {
-      apiUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
-      apiKey = LOVABLE_API_KEY;
-      model = "google/gemini-3-flash-preview";
-    } else if (DEEPSEEK_API_KEY) {
+    // Prefer our own providers; Lovable gateway is a last-resort fallback only.
+    if (DEEPSEEK_API_KEY) {
       apiUrl = "https://api.deepseek.com/v1/chat/completions";
       apiKey = DEEPSEEK_API_KEY;
       model = "deepseek-chat";
@@ -31,6 +28,10 @@ serve(async (req) => {
       apiUrl = "https://api.openai.com/v1/chat/completions";
       apiKey = OPENAI_API_KEY;
       model = "gpt-4o-mini";
+    } else if (LOVABLE_API_KEY) {
+      apiUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
+      apiKey = LOVABLE_API_KEY;
+      model = "google/gemini-3-flash-preview";
     } else {
       throw new Error("No AI API key configured");
     }
