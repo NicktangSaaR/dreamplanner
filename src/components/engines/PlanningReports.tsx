@@ -1,3 +1,4 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
   const { profile } = useProfile();
   const queryClient = useQueryClient();
   const isCounselor = profile?.user_type === "counselor" || profile?.user_type === "admin";
+  const { t, lang } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<string>("quarterly");
   const [selectedQuarter, setSelectedQuarter] = useState(getCurrentQuarter());
@@ -200,7 +202,7 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
     doc.text(report.title, margin, margin + 10);
 
     doc.setFontSize(10);
-    doc.text(`Generated: ${new Date(report.created_at).toLocaleDateString("zh-CN")}`, margin, margin + 20);
+    doc.text(`Generated: ${new Date(report.created_at).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-CA")}`, margin, margin + 20);
 
     doc.setFontSize(11);
     const content = report.final_content || report.ai_draft || "";
@@ -232,12 +234,12 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-sm">{report.title}</h3>
             <Badge variant={report.status === "published" ? "default" : "secondary"} className="text-xs">
-              {report.status === "published" ? "已发布" : "草稿"}
+              {report.status === "published" ? t("plan.reports.published") : t("plan.reports.draft")}
             </Badge>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">
-              {new Date(report.created_at).toLocaleDateString("zh-CN")}
+              {new Date(report.created_at).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-CA")}
             </span>
             {isCounselor && !isEditing && (
               <Button variant="ghost" size="sm" className="h-7 w-7 p-0"
@@ -282,15 +284,15 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
     );
   };
 
-  if (isLoading) return <Card><CardContent className="p-6">加载中...</CardContent></Card>;
+  if (isLoading) return <Card><CardContent className="p-6">{t("plan.loading")}</CardContent></Card>;
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <FileBarChart className="h-5 w-5" />
-          规划报告 Planning Reports
-          <Badge variant="outline">{visibleReports.length} 份报告</Badge>
+          {t("plan.reportsTitle")}
+          <Badge variant="outline">{t("plan.reportsCount", { n: visibleReports.length })}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -314,7 +316,7 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
           <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="quarterly" className="gap-1">
               <CalendarCheck className="h-3.5 w-3.5" />
-              季度评估
+              {t("plan.reports.quarterly")}
               {quarterlyReports.length > 0 && (
                 <Badge variant="secondary" className="h-4 min-w-4 p-0 text-[10px] flex items-center justify-center rounded-full">
                   {quarterlyReports.length}
@@ -323,7 +325,7 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
             </TabsTrigger>
             <TabsTrigger value="annual" className="gap-1">
               <TrendingUp className="h-3.5 w-3.5" />
-              阶段总结
+              {t("plan.reports.annual")}
               {annualReports.length > 0 && (
                 <Badge variant="secondary" className="h-4 min-w-4 p-0 text-[10px] flex items-center justify-center rounded-full">
                   {annualReports.length}
@@ -358,7 +360,7 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground text-sm">
-                暂无季度评估报告
+                {t("plan.reports.emptyQuarterly")}
               </div>
             )}
           </TabsContent>
@@ -379,7 +381,7 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground text-sm">
-                暂无阶段总结报告
+                {t("plan.reports.emptyAnnual")}
               </div>
             )}
           </TabsContent>

@@ -1,3 +1,4 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,6 +50,7 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
   const { profile } = useProfile();
 
   const isCounselor = profile?.user_type === 'counselor' || profile?.user_type === 'admin';
+  const { t, lang } = useLanguage();
 
   const phaseDocuments = documents.filter(d => d.phase === activePhase);
   const selectedDocument = documents.find(d => d.id === selectedDocId) || null;
@@ -256,8 +258,8 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <FileText className="h-5 w-5" />
-            规划方案 Planning Documents
-            <Badge variant="outline">{documents.length} 个方案</Badge>
+            {t("plan.docsTitle")}
+            <Badge variant="outline">{t("plan.docsCount", { n: documents.length })}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -269,7 +271,7 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
                 return (
                   <TabsTrigger key={phase.key} value={phase.key} className="text-xs gap-1">
                     <Icon className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">{phase.label}</span>
+                    <span className="hidden sm:inline">{t(`plan.phase.${phase.key}` as "plan.phase.exploration")}</span>
                     {count > 0 && (
                       <Badge variant="secondary" className="h-4 w-4 p-0 text-[10px] flex items-center justify-center rounded-full">
                         {count}
@@ -290,8 +292,8 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Icon className={`h-4 w-4 ${phase.color}`} />
-                      <span className="text-sm font-medium">{phase.label}</span>
-                      <Badge variant="outline" className="text-xs">{phaseDocs.length} 个方案</Badge>
+                      <span className="text-sm font-medium">{t(`plan.phase.${phase.key}` as "plan.phase.exploration")}</span>
+                      <Badge variant="outline" className="text-xs">{t("plan.docsCount", { n: phaseDocs.length })}</Badge>
                     </div>
                     {isCounselor && (
                       <label className="cursor-pointer">
@@ -339,7 +341,7 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
                               </div>
                               <div className="flex items-center gap-1 shrink-0 ml-2">
                                 <span className="text-xs text-muted-foreground">
-                                  {new Date(doc.updated_at).toLocaleDateString('zh-CN')}
+                                  {new Date(doc.updated_at).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-CA")}
                                 </span>
                                 {doc.file_path && (
                                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0"
@@ -363,7 +365,7 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <h3 className="text-sm font-semibold text-muted-foreground">
-                              当前选中：{selectedDocument.title}
+                              {t("plan.docs.selected", { title: selectedDocument.title })}
                             </h3>
                             {isCounselor && (
                               <Button variant="outline" size="sm" onClick={handleExtractMilestones} disabled={isExtracting}>
@@ -374,7 +376,7 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
                           </div>
                           <ScrollArea className="h-[200px] rounded-md border p-4">
                             <div className="whitespace-pre-wrap text-sm text-muted-foreground">
-                              {selectedDocument.content || "暂无内容"}
+                              {selectedDocument.content || t("plan.docs.noContent")}
                             </div>
                           </ScrollArea>
                         </div>
@@ -384,11 +386,11 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
                     <div className="flex flex-col items-center justify-center py-8 text-center border rounded-lg border-dashed">
                       <Icon className={`h-10 w-10 ${phase.color} opacity-30 mb-3`} />
                       <p className="text-sm text-muted-foreground mb-1">
-                        {phase.label}暂无规划方案
+                        {t("plan.docs.emptyPhase", { phase: t(`plan.phase.${phase.key}` as "plan.phase.exploration") })}
                       </p>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        上传 .docx 或 .txt 文件作为该阶段的规划依据
-                      </p>
+                      {isCounselor && (
+                        <p className="text-xs text-muted-foreground mb-3">{t("plan.docs.uploadHint")}</p>
+                      )}
                       {isCounselor && (
                         <label className="cursor-pointer">
                           <Input type="file" accept=".docx,.txt" onChange={handleFileUpload} disabled={isUploading} className="hidden" />

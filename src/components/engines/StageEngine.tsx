@@ -1,3 +1,4 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -34,6 +35,8 @@ const PHASE_COLORS = {
 
 export default function StageEngine({ studentId, grade, readOnly = false }: StageEngineProps) {
   const { phase, isLoading, upsertPhase } = useStudentPhase(studentId);
+  const { t } = useLanguage();
+  const phaseLabel = (key: string) => (key in PHASE_LABELS ? t(`plan.phase.${key}` as "plan.phase.exploration") : key);
   const [currentPhase, setCurrentPhase] = useState<string>("exploration");
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [compressionMode, setCompressionMode] = useState(false);
@@ -65,7 +68,7 @@ export default function StageEngine({ studentId, grade, readOnly = false }: Stag
 
   const PhaseIcon = PHASE_ICONS[currentPhase as keyof typeof PHASE_ICONS] || Compass;
 
-  if (isLoading) return <Card><CardContent className="p-6">加载中...</CardContent></Card>;
+  if (isLoading) return <Card><CardContent className="p-6">{t("plan.loading")}</CardContent></Card>;
 
   if (readOnly) {
     return (
@@ -73,11 +76,11 @@ export default function StageEngine({ studentId, grade, readOnly = false }: Stag
         <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex shrink-0 items-center gap-2">
             <PhaseIcon className="h-5 w-5 text-primary" aria-hidden="true" />
-            <span className="text-sm text-muted-foreground">当前阶段</span>
+            <span className="text-sm text-muted-foreground">{t("plan.currentStage")}</span>
             <Badge className={PHASE_COLORS[currentPhase as keyof typeof PHASE_COLORS]}>
-              {PHASE_LABELS[currentPhase]}
+              {phaseLabel(currentPhase)}
             </Badge>
-            {phase?.phase_start_date && <span className="text-xs text-muted-foreground">自 {phase.phase_start_date}</span>}
+            {phase?.phase_start_date && <span className="text-xs text-muted-foreground">{t("plan.since", { date: phase.phase_start_date })}</span>}
           </div>
           {notes && <p className="whitespace-pre-line text-sm leading-relaxed">{notes}</p>}
         </CardContent>
@@ -90,9 +93,9 @@ export default function StageEngine({ studentId, grade, readOnly = false }: Stag
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <PhaseIcon className="h-5 w-5" />
-          阶段引擎 Stage Engine
+          {t("plan.stageTitle")}
           <Badge className={PHASE_COLORS[currentPhase as keyof typeof PHASE_COLORS]}>
-            {PHASE_LABELS[currentPhase]}
+            {phaseLabel(currentPhase)}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -116,30 +119,30 @@ export default function StageEngine({ studentId, grade, readOnly = false }: Stag
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label>当前阶段 Current Phase</Label>
+            <Label>{t("plan.stageField")}</Label>
             <Select value={currentPhase} onValueChange={setCurrentPhase} disabled={readOnly}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(PHASE_LABELS).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                {Object.keys(PHASE_LABELS).map((key) => (
+                  <SelectItem key={key} value={key}>{phaseLabel(key)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>阶段开始日期</Label>
+            <Label>{t("plan.stageStart")}</Label>
             <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} disabled={readOnly} />
           </div>
           <div className="flex items-center gap-3 pt-6">
             <Switch checked={compressionMode} onCheckedChange={setCompressionMode} disabled={readOnly} />
-            <Label>压缩模式 Compression Mode</Label>
+            <Label>{t("plan.compression")}</Label>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label>阶段备注</Label>
+          <Label>{t("plan.stageNotes")}</Label>
           <Textarea 
             value={notes} 
             onChange={(e) => setNotes(e.target.value)} 
