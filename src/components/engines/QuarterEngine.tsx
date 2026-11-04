@@ -1,3 +1,4 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -79,6 +80,7 @@ const serializeKpiItems = (items: KpiItem[]): string => {
 export default function QuarterEngine({ studentId, currentPhase, readOnly = false }: QuarterEngineProps) {
   const academicYear = getCurrentAcademicYear();
   const { quarters, isLoading, upsertQuarter } = useStudentQuarters(studentId);
+  const { t } = useLanguage();
   const [activeQuarter, setActiveQuarter] = useState<string>(getCurrentQuarter());
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -123,7 +125,7 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
     const saved = quarters.find(sq => sq.quarter === q && sq.academic_year === academicYear);
     const form = formData[q];
     return {
-      focus: form?.focus ?? saved?.quarter_focus ?? QUARTER_DEFAULT_FOCUS[q] ?? "",
+      focus: form?.focus ?? saved?.quarter_focus ?? (q in QUARTER_DEFAULT_FOCUS ? t(`plan.focusDefault.${q}` as "plan.focusDefault.Q1_fall") : ""),
       kpi: form?.kpi ?? saved?.quarter_kpi ?? "",
       risk: form?.risk ?? saved?.quarter_risk ?? "",
       suggestions: saved?.auto_suggestions || [],
@@ -256,23 +258,23 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
     }
   };
 
-  if (isLoading) return <Card><CardContent className="p-6">加载中...</CardContent></Card>;
+  if (isLoading) return <Card><CardContent className="p-6">{t("plan.loading")}</CardContent></Card>;
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Calendar className="h-5 w-5" />
-          季度节奏引擎 Quarter Engine
+          {t("plan.quarterTitle")}
           <Badge variant="outline">{academicYear}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs value={activeQuarter} onValueChange={setActiveQuarter}>
           <TabsList className="grid grid-cols-4 w-full">
-            {Object.entries(QUARTER_LABELS).map(([key, label]) => (
+            {Object.keys(QUARTER_LABELS).map((key) => (
               <TabsTrigger key={key} value={key} className="text-xs">
-                {label}
+                {t(`plan.quarter.${key}` as "plan.quarter.Q1_fall")}
                 {key === getCurrentQuarter() && <span className="ml-1 text-primary">●</span>}
               </TabsTrigger>
             ))}
@@ -286,7 +288,7 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
               <TabsContent key={q} value={q} className="space-y-4 mt-4">
                 {/* Focus */}
                 <div className="space-y-2">
-                  <Label>季度重点 Focus</Label>
+                  <Label>{t("plan.quarterFocus")}</Label>
                   <Textarea
                     value={data.focus}
                     onChange={(e) => updateField(q, "focus", e.target.value)}
@@ -299,7 +301,7 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="flex items-center gap-2">
-                      季度KPI
+                      {t("plan.kpi")}
                       {kpiItems.length > 0 && (
                         <Badge variant="secondary" className="text-xs">
                           {completedCount}/{kpiItems.length}
@@ -321,7 +323,7 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
                   <div className="border rounded-lg divide-y">
                     {kpiItems.length === 0 && !showNewKpiInput && (
                       <div className="p-4 text-center text-sm text-muted-foreground">
-                        暂无KPI，点击添加或使用AI生成
+                        {readOnly ? t("plan.kpiEmpty") : "暂无KPI，点击添加或使用AI生成"}
                       </div>
                     )}
 
