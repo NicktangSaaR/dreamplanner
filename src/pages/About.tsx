@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import MainNav from "@/components/layout/MainNav";
+import FoundersSection from "@/components/about/FoundersSection";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 interface UpdateItem {
   id: string;
@@ -20,12 +23,21 @@ export default function About() {
   const [newUpdate, setNewUpdate] = useState({ title: '', content: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { profile } = useProfile();
+  const { t, lang } = useLanguage();
 
   const isAdmin = profile?.user_type === 'admin';
 
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
+
   useEffect(() => {
     fetchUpdates();
+    supabase.auth.getSession().then(({ data }) => setSessionUserId(data.session?.user.id ?? null));
   }, []);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setSessionUserId(null);
+  }
 
   async function fetchUpdates() {
     try {
@@ -72,28 +84,26 @@ export default function About() {
     }
   }
 
-  return <div className="container mx-auto px-4 py-12">
-      <div className="max-w-3xl mx-auto space-y-12">
-        <div>
-          <h1 className="text-4xl font-bold mb-6">About Us</h1>
-          <div className="prose prose-lg space-y-6">
-            <p>
-              DreamPlanner is an all-in-one platform designed to help students take control of their academic journey and college planning. By creating a personal account, students can efficiently manage their courses, calculate their GPA, and plan extracurricular activities. DreamPlanner also enables students to build a customized college list, tailored to universities worldwide, making the application process more organized and strategic.
-            </p>
-            <p>
-              To enhance productivity, DreamPlanner offers a built-in Note feature and a To-Do List, allowing students to keep track of important tasks, organize reminders, and collaborate seamlessly with their college counselors.
-            </p>
-            <p>
-              For International Education Consultants (IEC)and school counselors, DreamPlanner provides a Counselor Account feature that connects directly with students' profiles. This allows counselors to track student progress in real-time, provide personalized guidance, and monitor key milestones throughout the college application process.
-            </p>
-            <p>
-              With DreamPlanner, students and counselors can work together to create a structured and stress-free approach to academic success and college admissions
-            </p>
-          </div>
-        </div>
+  return (
+    <div className="min-h-screen bg-background">
+      <MainNav isAuthenticated={!!sessionUserId} userId={sessionUserId} onLogout={handleLogout} />
+      <div className="container mx-auto px-4 pb-20 pt-28 sm:pt-32">
+        <div className="mx-auto max-w-5xl space-y-16">
+          <section>
+            <h1 className="font-serif text-4xl font-semibold text-pine">{t("about.title")}</h1>
+            <div className="mt-6 max-w-3xl space-y-4 leading-relaxed text-foreground/85">
+              <p>{t("about.p1")}</p>
+              <p>{t("about.p2")}</p>
+              <p>{t("about.p3")}</p>
+              <p>{t("about.p4")}</p>
+            </div>
+          </section>
 
-        <div>
-          <h2 className="text-3xl font-bold mb-6">Recent Updates</h2>
+          <FoundersSection />
+
+          <section className="max-w-3xl">
+            <h2 className="font-serif text-3xl font-semibold text-pine">{t("about.updates")}</h2>
+            <div className="mt-6">
           {isAdmin && (
             <div className="mb-6">
               {!showUpdateForm ? (
@@ -104,7 +114,7 @@ export default function About() {
                   Add New Update
                 </Button>
               ) : (
-                <div className="p-4 border rounded-md shadow-sm space-y-4 bg-gray-50">
+                <div className="p-4 border rounded-md shadow-sm space-y-4 bg-muted/40">
                   <h3 className="font-medium">Add New Platform Update</h3>
                   <div className="space-y-3">
                     <div>
@@ -155,7 +165,7 @@ export default function About() {
                 <div key={update.id} className="border-l-4 border-primary pl-4 py-1">
                   <h3 className="font-bold text-lg">{update.title}</h3>
                   <p className="text-sm text-muted-foreground mb-2">
-                    {new Date(update.date).toLocaleDateString('en-US', {
+                    {new Date(update.date).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -167,22 +177,13 @@ export default function About() {
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground italic">No recent updates available.</p>
+              <p className="text-muted-foreground">{t("about.noUpdates")}</p>
             )}
           </div>
-        </div>
-
-        <div>
-          <h2 className="text-3xl font-bold mb-6">About The Developer</h2>
-          <div className="prose prose-lg space-y-6">
-            <p>
-              Nick Tang, the driving force behind DreamPlanner, brings 12 years of expertise in college admissions, essay coaching, and interview preparation for top universities in the U.S., Canada, and the U.K.
-            </p>
-            <p>
-              With a background in top-tier management consulting and a UCLA College Counseling Certificate, Nick combines strategic insight with a keen ability to help students craft compelling applications. His passion for mentoring has also led him to coach numerous teams in business competitions worldwide.
-            </p>
-          </div>
+            </div>
+          </section>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }
