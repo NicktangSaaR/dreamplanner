@@ -84,8 +84,10 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
   const needsAnnualReport = daysSinceRegistration >= 365;
   const hasAnnualReport = reports.some(r => (r as any).report_type === "annual" && (r as any).academic_year === academicYear);
 
-  const quarterlyReports = reports.filter((r: any) => r.report_type === "quarterly");
-  const annualReports = reports.filter((r: any) => r.report_type === "annual");
+  // Students only see reports their counselor has published, not drafts.
+  const visibleReports = isCounselor ? reports : reports.filter((r: any) => r.status === "published");
+  const quarterlyReports = visibleReports.filter((r: any) => r.report_type === "quarterly");
+  const annualReports = visibleReports.filter((r: any) => r.report_type === "annual");
 
   // Save mutation
   const saveMutation = useMutation({
@@ -288,7 +290,7 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
         <CardTitle className="flex items-center gap-2 text-lg">
           <FileBarChart className="h-5 w-5" />
           规划报告 Planning Reports
-          <Badge variant="outline">{reports.length} 份报告</Badge>
+          <Badge variant="outline">{visibleReports.length} 份报告</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>

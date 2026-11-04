@@ -1,4 +1,4 @@
-
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AcademicsSection from "./AcademicsSection";
 import ExtracurricularSection from "./ExtracurricularSection";
@@ -7,6 +7,8 @@ import TodoSection from "./TodoSection";
 import CalendarSection from "./CalendarSection";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
 import { Course } from "./types/course";
+import { useLanguage } from "@/i18n/LanguageProvider";
+import { cn } from "@/lib/utils";
 
 interface DashboardTabsProps {
   courses: Course[];
@@ -16,6 +18,12 @@ interface DashboardTabsProps {
   studentId: string;
 }
 
+type InfoView = "academics" | "activities" | "resume";
+
+/**
+ * The student's working area: their own information, to-dos with the
+ * calendar, and notes shared with the counselor.
+ */
 export default function DashboardTabs({
   courses,
   onCoursesChange,
@@ -23,69 +31,51 @@ export default function DashboardTabs({
   onNotesChange,
   studentId,
 }: DashboardTabsProps) {
+  const { t } = useLanguage();
+  const [infoView, setInfoView] = useState<InfoView>("academics");
+  const infoViews: { key: InfoView; label: string }[] = [
+    { key: "academics", label: t("dash.info.academics") },
+    { key: "activities", label: t("dash.info.activities") },
+    { key: "resume", label: t("dash.info.resume") },
+  ];
+
   return (
-    <Tabs defaultValue="academics" className="w-full">
-      <TabsList className="grid w-full grid-cols-6 bg-card">
-        <TabsTrigger 
-          value="academics"
-          className="data-[state=active]:after:bg-[#0EA5E9] data-[state=inactive]:bg-[#E1F5FE] relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:translate-y-[1px] transition-colors"
-        >
-          Academics
-        </TabsTrigger>
-        <TabsTrigger 
-          value="extracurricular"
-          className="data-[state=active]:after:bg-[#8B5CF6] data-[state=inactive]:bg-[#EDE9FE] relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:translate-y-[1px] transition-colors"
-        >
-          Extracurricular
-        </TabsTrigger>
-        <TabsTrigger 
-          value="notes"
-          className="data-[state=active]:after:bg-[#D946EF] data-[state=inactive]:bg-[#FAE8FF] relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:translate-y-[1px] transition-colors"
-        >
-          Notes
-        </TabsTrigger>
-        <TabsTrigger 
-          value="todos"
-          className="data-[state=active]:after:bg-[#F97316] data-[state=inactive]:bg-[#FFF1E7] relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:translate-y-[1px] transition-colors"
-        >
-          To-Dos
-        </TabsTrigger>
-        <TabsTrigger 
-          value="calendar"
-          className="data-[state=active]:after:bg-[#06B6D4] data-[state=inactive]:bg-[#ECFEFF] relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:translate-y-[1px] transition-colors"
-        >
-          Calendar
-        </TabsTrigger>
-        <TabsTrigger 
-          value="resume"
-          className="data-[state=active]:after:bg-[#EC4899] data-[state=inactive]:bg-[#FCE7F3] relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:translate-y-[1px] transition-colors"
-        >
-          Resume
-        </TabsTrigger>
+    <Tabs defaultValue="todos" className="w-full">
+      <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-grid">
+        <TabsTrigger value="todos">{t("dash.tab.todos")}</TabsTrigger>
+        <TabsTrigger value="info">{t("dash.tab.info")}</TabsTrigger>
+        <TabsTrigger value="notes">{t("dash.tab.notes")}</TabsTrigger>
       </TabsList>
-      <TabsContent value="academics" className="mt-6">
-        <AcademicsSection 
-          courses={courses}
-          onCoursesChange={onCoursesChange}
-        />
-      </TabsContent>
-      <TabsContent value="extracurricular">
-        <ExtracurricularSection onActivitiesChange={onActivitiesChange} />
-      </TabsContent>
-      <TabsContent value="notes">
-        <NotesSection 
-          onNotesChange={onNotesChange} 
-          studentId={studentId}
-        />
-      </TabsContent>
-      <TabsContent value="todos">
+
+      <TabsContent value="todos" className="mt-6 space-y-6">
         <TodoSection />
-      </TabsContent>
-      <TabsContent value="calendar">
         <CalendarSection />
       </TabsContent>
-      <TabsContent value="resume">
-        <StudentResumeForm />
+
+      <TabsContent value="info" className="mt-6">
+        <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label={t("dash.tab.info")}>
+          {infoViews.map((v) => (
+            <button
+              key={v.key}
+              type="button"
+              onClick={() => setInfoView(v.key)}
+              aria-pressed={infoView === v.key}
+              className={cn(
+                "rounded-full border px-4 py-1.5 text-sm transition-colors",
+                infoView === v.key ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-accent",
+              )}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+        {infoView === "academics" && <AcademicsSection courses={courses} onCoursesChange={onCoursesChange} />}
+        {infoView === "activities" && <ExtracurricularSection onActivitiesChange={onActivitiesChange} />}
+        {infoView === "resume" && <StudentResumeForm />}
+      </TabsContent>
+
+      <TabsContent value="notes" className="mt-6">
+        <NotesSection onNotesChange={onNotesChange} studentId={studentId} />
       </TabsContent>
     </Tabs>
   );
