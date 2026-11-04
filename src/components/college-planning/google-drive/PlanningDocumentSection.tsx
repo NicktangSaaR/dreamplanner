@@ -1,5 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageProvider";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { 
   FileText, Upload, Loader2, Sparkles, Trash2,
-  AlertCircle, Download, ChevronRight, Compass, Target, Focus, FileCheck
+  AlertCircle, Download, ChevronRight, Compass, Target, Focus, FileCheck,
+  HardDrive, Monitor, RefreshCw, ExternalLink
 } from "lucide-react";
 import PlanningMilestones from "./PlanningMilestones";
+import { pickDriveFile, downloadDriveFile, getDriveToken } from "@/lib/googleDrive";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const PHASES = [
   { key: "exploration", label: "探索阶段", icon: Compass, color: "text-blue-600" },
@@ -34,6 +37,8 @@ interface PlanningDocument {
   file_path: string | null;
   file_name: string | null;
   phase: string | null;
+  drive_file_id: string | null;
+  source_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -78,7 +83,7 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
       setIsLoading(true);
       const { data, error } = await supabase
         .from('planning_documents')
-        .select('id, title, google_doc_id, file_path, file_name, content, phase, created_at, updated_at')
+        .select('id, title, google_doc_id, file_path, file_name, content, phase, drive_file_id, source_url, created_at, updated_at')
         .eq('student_id', studentId)
         .order('created_at', { ascending: false });
 
@@ -91,6 +96,8 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
         file_path: d.file_path,
         file_name: d.file_name,
         phase: (d as any).phase || null,
+        drive_file_id: (d as any).drive_file_id || null,
+        source_url: (d as any).source_url || null,
         created_at: d.created_at,
         updated_at: d.updated_at,
       }));
@@ -103,77 +110,158 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  /** Store a .docx/.txt file, parse it, and create (or refresh) a planning document. */
+  const processFile = async (
+    file: File,
+    drive?: { fileId: string; url: string; title: string },
+    existing?: PlanningDocument,
+  ) => {
     const allowedTypes = [
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'text/plain',
     ];
-    
     if (!allowedTypes.includes(file.type)) {
-      toast({ title: "不支持的文件格式", description: "请上传 .docx 或 .txt 文件", variant: "destructive" });
+      toast({ title: t("plan.docs.badType"), description: t("plan.docs.badTypeHint"), variant: "destructive" });
       return;
     }
-
     if (file.size > 10 * 1024 * 1024) {
-      toast({ title: "文件过大", description: "文件大小不能超过 10MB", variant: "destructive" });
+      toast({ title: t("plan.docs.tooBig"), variant: "destructive" });
       return;
     }
 
-    try {
-      setIsUploading(true);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${studentId}/${Date.now()}.${fileExt}`;
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${studentId}/${Date.now()}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage
+      .from('planning-documents')
+      .upload(fileName, file, { cacheControl: '3600', upsert: true });
+    if (uploadError) throw new Error(uploadError.message);
 
-      const { error: uploadError } = await supabase.storage
-        .from('planning-documents')
-        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+    const { data: parseData, error: parseError } = await supabase.functions.invoke('parse-document', {
+      body: { filePath: fileName, studentId },
+    });
+    if (parseError) throw new Error(t("plan.docs.parseFailed"));
+    if (parseData?.error) throw new Error(parseData.error);
+    const extractedContent = parseData?.content || "";
 
-      if (uploadError) throw new Error("文件上传失败: " + uploadError.message);
-
-      toast({ title: "文件上传成功", description: "正在解析文档内容..." });
-
-      const { data: parseData, error: parseError } = await supabase.functions.invoke('parse-document', {
-        body: { filePath: fileName, studentId },
-      });
-
-      if (parseError) throw new Error("文档解析失败");
-      if (parseData?.error) throw new Error(parseData.error);
-
-      const extractedContent = parseData?.content || "";
-
-      const { data: insertData, error: insertError } = await supabase
+    if (existing) {
+      const { error } = await supabase
         .from('planning_documents')
-        .insert({
-          student_id: studentId,
-          title: file.name.replace(/\.[^/.]+$/, ""),
+        .update({
           file_path: fileName,
           file_name: file.name,
           content: extractedContent,
           google_doc_id: extractedContent,
-          is_primary: false,
-          phase: activePhase,
-        })
-        .select('id')
-        .single();
-
-      if (insertError) throw insertError;
-
-      toast({ title: "上传成功", description: `已解析 ${extractedContent.length} 个字符` });
-
+          last_synced_at: new Date().toISOString(),
+          ...(drive ? { title: drive.title, source_url: drive.url } : {}),
+        } as any)
+        .eq('id', existing.id);
+      if (error) throw error;
+      if (existing.file_path && existing.file_path !== fileName) {
+        await supabase.storage.from('planning-documents').remove([existing.file_path]);
+      }
+      toast({ title: t("plan.docs.synced") });
       await loadDocuments();
-      if (insertData?.id) setSelectedDocId(insertData.id);
+      return;
+    }
+
+    const { data: insertData, error: insertError } = await supabase
+      .from('planning_documents')
+      .insert({
+        student_id: studentId,
+        title: drive?.title || file.name.replace(/\.[^/.]+$/, ""),
+        file_path: fileName,
+        file_name: file.name,
+        content: extractedContent,
+        google_doc_id: extractedContent,
+        is_primary: false,
+        phase: activePhase,
+        ...(drive ? { drive_file_id: drive.fileId, source_url: drive.url, last_synced_at: new Date().toISOString() } : {}),
+      } as any)
+      .select('id')
+      .single();
+    if (insertError) throw insertError;
+
+    toast({ title: t("plan.docs.uploaded"), description: t("plan.docs.parsedChars", { n: extractedContent.length }) });
+    await loadDocuments();
+    if (insertData?.id) setSelectedDocId(insertData.id);
+  };
+
+  const reportError = (error: unknown) => {
+    console.error('Planning document error:', error);
+    const msg = error instanceof Error ? error.message : "";
+    toast({
+      title: t("plan.docs.failed"),
+      description: msg === "UNSUPPORTED_TYPE" ? t("plan.docs.badTypeHint") : msg || t("plan.docs.tryAgain"),
+      variant: "destructive",
+    });
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsUploading(true);
+      await processFile(file);
     } catch (error) {
-      console.error('Failed to upload document:', error);
-      toast({ title: "上传失败", description: error instanceof Error ? error.message : "请稍后重试", variant: "destructive" });
+      reportError(error);
     } finally {
       setIsUploading(false);
       event.target.value = '';
     }
   };
+
+  const handleDriveImport = async () => {
+    try {
+      const picked = await pickDriveFile(lang === "zh" ? "zh-CN" : "en");
+      if (!picked) return;
+      setIsUploading(true);
+      const { file, name, url } = await downloadDriveFile(picked.pick.id, picked.token);
+      await processFile(file, { fileId: picked.pick.id, url: url || picked.pick.url, title: name.replace(/\.[^/.]+$/, "") });
+    } catch (error) {
+      reportError(error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDriveResync = async (doc: PlanningDocument) => {
+    if (!doc.drive_file_id) return;
+    try {
+      setIsUploading(true);
+      const token = await getDriveToken();
+      const { file, name, url } = await downloadDriveFile(doc.drive_file_id, token);
+      await processFile(file, { fileId: doc.drive_file_id, url: url || doc.source_url || "", title: name.replace(/\.[^/.]+$/, "") }, doc);
+    } catch (error) {
+      reportError(error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadMenu = (label: string) => (
+    <>
+      <input ref={fileInputRef} type="file" accept=".docx,.txt" onChange={handleFileUpload} className="hidden" />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" disabled={isUploading}>
+            {isUploading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+            {label}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>
+            <Monitor className="h-4 w-4 mr-2" /> {t("plan.docs.fromComputer")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => { void handleDriveImport(); }}>
+            <HardDrive className="h-4 w-4 mr-2" /> {t("plan.docs.fromDrive")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
 
   const handleDelete = async (doc: PlanningDocument) => {
     try {
@@ -295,23 +383,7 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
                       <span className="text-sm font-medium">{t(`plan.phase.${phase.key}` as "plan.phase.exploration")}</span>
                       <Badge variant="outline" className="text-xs">{t("plan.docsCount", { n: phaseDocs.length })}</Badge>
                     </div>
-                    {isCounselor && (
-                      <label className="cursor-pointer">
-                        <Input
-                          type="file"
-                          accept=".docx,.txt"
-                          onChange={handleFileUpload}
-                          disabled={isUploading}
-                          className="hidden"
-                        />
-                        <Button variant="outline" size="sm" disabled={isUploading} asChild>
-                          <span>
-                            {isUploading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
-                            上传方案
-                          </span>
-                        </Button>
-                      </label>
-                    )}
+                    {isCounselor && uploadMenu(t("plan.docs.upload"))}
                   </div>
 
                   {phaseDocs.length > 0 ? (
@@ -343,6 +415,21 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
                                 <span className="text-xs text-muted-foreground">
                                   {new Date(doc.updated_at).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-CA")}
                                 </span>
+                                {doc.source_url && /^https:\/\//.test(doc.source_url) && (
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" asChild>
+                                    <a href={doc.source_url} target="_blank" rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()} aria-label={t("plan.docs.openInDrive")} title={t("plan.docs.openInDrive")}>
+                                      <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
+                                  </Button>
+                                )}
+                                {isCounselor && doc.drive_file_id && (
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" disabled={isUploading}
+                                    aria-label={t("plan.docs.resync")} title={t("plan.docs.resync")}
+                                    onClick={(e) => { e.stopPropagation(); void handleDriveResync(doc); }}>
+                                    <RefreshCw className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
                                 {doc.file_path && (
                                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0"
                                     onClick={(e) => { e.stopPropagation(); handleDownload(doc); }}>
@@ -391,17 +478,7 @@ export default function PlanningDocumentSection({ studentId, currentPhase }: Pla
                       {isCounselor && (
                         <p className="text-xs text-muted-foreground mb-3">{t("plan.docs.uploadHint")}</p>
                       )}
-                      {isCounselor && (
-                        <label className="cursor-pointer">
-                          <Input type="file" accept=".docx,.txt" onChange={handleFileUpload} disabled={isUploading} className="hidden" />
-                          <Button variant="outline" size="sm" disabled={isUploading} asChild>
-                            <span>
-                              {isUploading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
-                              上传规划方案
-                            </span>
-                          </Button>
-                        </label>
-                      )}
+                      {isCounselor && uploadMenu(t("plan.docs.upload"))}
                     </div>
                   )}
                 </TabsContent>

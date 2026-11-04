@@ -679,6 +679,7 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string
+          drive_file_id: string | null
           file_name: string | null
           file_path: string | null
           google_doc_id: string
@@ -686,6 +687,7 @@ export type Database = {
           is_primary: boolean | null
           last_synced_at: string | null
           phase: string | null
+          source_url: string | null
           student_id: string
           title: string
           updated_at: string
@@ -693,6 +695,7 @@ export type Database = {
         Insert: {
           content?: string | null
           created_at?: string
+          drive_file_id?: string | null
           file_name?: string | null
           file_path?: string | null
           google_doc_id: string
@@ -700,6 +703,7 @@ export type Database = {
           is_primary?: boolean | null
           last_synced_at?: string | null
           phase?: string | null
+          source_url?: string | null
           student_id: string
           title: string
           updated_at?: string
@@ -707,6 +711,7 @@ export type Database = {
         Update: {
           content?: string | null
           created_at?: string
+          drive_file_id?: string | null
           file_name?: string | null
           file_path?: string | null
           google_doc_id?: string
@@ -714,6 +719,7 @@ export type Database = {
           is_primary?: boolean | null
           last_synced_at?: string | null
           phase?: string | null
+          source_url?: string | null
           student_id?: string
           title?: string
           updated_at?: string
