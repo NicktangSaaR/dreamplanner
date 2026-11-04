@@ -1,5 +1,6 @@
 
 import { useParams, useNavigate } from "react-router-dom";
+import StudentCustomQuestionsCard from "@/features/mock-interview/StudentCustomQuestionsCard";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -99,6 +100,7 @@ export default function StudentView() {
         notes={notes}
         todos={todos}
       />
+      {studentId && <StudentCustomQuestionsCard studentId={studentId} />}
     </div>
   );
 }
