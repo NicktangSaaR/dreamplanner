@@ -11,7 +11,7 @@ import CounselorProfilePage from "@/pages/CounselorProfilePage";
 import CounselorDashboard from "@/pages/CounselorDashboard";
 import StudentDashboard from "@/pages/StudentDashboard";
 import StudentView from "@/pages/StudentView";
-import MockInterview from "@/pages/MockInterview";
+import MockInterview from "@/features/mock-interview/MockInterviewPage";
 import NotFound from "@/pages/NotFound";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
