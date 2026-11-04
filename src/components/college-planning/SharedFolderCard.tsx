@@ -2,6 +2,7 @@ import { useLanguage } from "@/i18n/LanguageProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FolderOpen } from "lucide-react";
+import { isSafeHttpUrl } from "@/lib/safeUrl";
 
 interface SharedFolder {
   title: string;
@@ -32,7 +33,7 @@ export default function SharedFolderCard({ folder, onEditClick }: SharedFolderCa
             </div>
             <div className="flex-1 min-w-0">
               <a 
-                href={folder.folder_url}
+                href={isSafeHttpUrl(folder.folder_url) ? folder.folder_url : undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-lg font-semibold hover:text-primary transition-colors"

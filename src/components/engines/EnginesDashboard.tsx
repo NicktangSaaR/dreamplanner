@@ -11,9 +11,10 @@ interface EnginesDashboardProps {
   studentId: string;
   grade?: string | null;
   readOnly?: boolean;
+  hideFolder?: boolean;
 }
 
-export default function EnginesDashboard({ studentId, grade, readOnly = false }: EnginesDashboardProps) {
+export default function EnginesDashboard({ studentId, grade, readOnly = false, hideFolder = false }: EnginesDashboardProps) {
   const { phase } = useStudentPhase(studentId);
   const currentPhase = phase?.current_phase || "exploration";
 
@@ -43,7 +44,7 @@ export default function EnginesDashboard({ studentId, grade, readOnly = false }:
         currentPhase={currentPhase}
       />
 
-      <SharedFolderSection studentId={studentId} />
+      {!hideFolder && <SharedFolderSection studentId={studentId} />}
     </div>
   );
 }
