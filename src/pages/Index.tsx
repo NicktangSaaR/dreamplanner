@@ -116,6 +116,25 @@ export default function Index() {
           </section>
         )}
 
+        <section className="mt-28 grid gap-8 border-t pt-12 md:grid-cols-[1fr_auto] md:items-center" aria-labelledby="founders-teaser">
+          <div className="max-w-xl">
+            <h2 id="founders-teaser" className="font-serif text-2xl font-semibold text-pine sm:text-3xl">{t("founders.heading")}</h2>
+            <p className="mt-3 text-muted-foreground">{t("founders.intro")}</p>
+            <Link to="/about" className="mt-4 inline-block font-medium text-primary underline-offset-4 hover:underline">
+              {t("founders.more")} →
+            </Link>
+          </div>
+          <div className="flex gap-4">
+            {[["Nick Tang", "/team/nick-tang.jpg", "founders.nick.role"], ["Cloris Liu", "/team/cloris-liu.jpg", "founders.cloris.role"]].map(([name, src, role]) => (
+              <Link key={name} to="/about" className="group w-36">
+                <img src={src} alt={t("founders.photoAlt", { name })} width={144} height={192} loading="lazy" className="h-48 w-36 rounded-sm object-cover" />
+                <p className="mt-2 font-serif font-semibold text-pine group-hover:underline">{name}</p>
+                <p className="text-xs leading-snug text-muted-foreground">{t(role as "founders.nick.role")}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {articles && articles.length > 0 && (
           <section className="mt-28" aria-labelledby="articles-heading">
             <div className="flex items-baseline justify-between gap-4">
