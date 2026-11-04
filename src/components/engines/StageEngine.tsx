@@ -67,6 +67,24 @@ export default function StageEngine({ studentId, grade, readOnly = false }: Stag
 
   if (isLoading) return <Card><CardContent className="p-6">加载中...</CardContent></Card>;
 
+  if (readOnly) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:gap-6">
+          <div className="flex shrink-0 items-center gap-2">
+            <PhaseIcon className="h-5 w-5 text-primary" aria-hidden="true" />
+            <span className="text-sm text-muted-foreground">当前阶段</span>
+            <Badge className={PHASE_COLORS[currentPhase as keyof typeof PHASE_COLORS]}>
+              {PHASE_LABELS[currentPhase]}
+            </Badge>
+            {phase?.phase_start_date && <span className="text-xs text-muted-foreground">自 {phase.phase_start_date}</span>}
+          </div>
+          {notes && <p className="whitespace-pre-line text-sm leading-relaxed">{notes}</p>}
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="pb-3">

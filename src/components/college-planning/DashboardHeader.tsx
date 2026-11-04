@@ -1,3 +1,5 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
+import LanguageToggle from "@/i18n/LanguageToggle";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -6,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 export default function DashboardHeader() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const {
     profile
   } = useProfile();
@@ -35,29 +38,23 @@ export default function DashboardHeader() {
       toast.error("An unexpected error occurred");
     }
   };
-  return <div className="flex justify-between items-center mb-6">
+  return <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2">
-        {profile?.user_type === 'counselor' && <Button variant="ghost" size="icon" onClick={handleBack}>
+        {profile?.user_type === 'counselor' && <Button variant="ghost" size="icon" onClick={handleBack} aria-label="Back">
             <ArrowLeft className="h-5 w-5" />
           </Button>}
-        <h1 className="text-2xl font-bold">
-          {profile?.user_type === 'counselor' ? 'Student Profile Summary' : 'Student Dashboard'}
-        </h1>
+        <div>
+          <h1 className="font-serif text-3xl font-semibold text-pine">
+            {profile?.user_type === 'counselor' ? t("dash.counselorTitle") : t("dash.title")}
+          </h1>
+          {profile?.user_type === 'student' && <p className="mt-1 text-muted-foreground">{t("dash.hello", { name: profile?.full_name || "" })}</p>}
+        </div>
       </div>
-      <div className="flex gap-2 items-center">
-        {profile?.user_type === 'student' && <>
-            <span className="text-lg">Hello, {profile?.full_name || 'Student'}</span>
-            <Button onClick={handleProfile} variant="outline">
-              My Profile
-            </Button>
-            <Button onClick={handleMockInterview} variant="outline" className="flex flex-col gap-0.5">
-              <span>Mock Interview</span>
-              <span className="text-[10px] text-muted-foreground leading-none">developing...</span>
-            </Button>
-            <Button onClick={handleLogout} variant="outline">
-              Log Out
-            </Button>
-          </>}
-      </div>
+      {profile?.user_type === 'student' && <div className="flex flex-wrap items-center gap-2">
+          <LanguageToggle />
+          <Button onClick={handleProfile} variant="outline" size="sm">{t("dash.profile")}</Button>
+          <Button onClick={handleMockInterview} variant="outline" size="sm">{t("dash.mockInterview")}</Button>
+          <Button onClick={handleLogout} variant="ghost" size="sm">{t("dash.logout")}</Button>
+        </div>}
     </div>;
 }
