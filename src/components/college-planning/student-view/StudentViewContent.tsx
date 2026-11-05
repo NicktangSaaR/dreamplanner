@@ -10,6 +10,7 @@ import { PlanningMilestones } from "../google-drive";
 import { useQueryClient } from "@tanstack/react-query";
 import EnginesDashboard from "@/components/engines/EnginesDashboard";
 import NotesSection from "../NotesSection";
+import StudentTeamCard from "@/features/team/StudentTeamCard";
 
 interface StudentViewContentProps {
   studentId: string;
@@ -37,6 +38,8 @@ export default function StudentViewContent({
   return (
     <div className="space-y-6">
       <StudentProfile profile={profile} />
+
+      <StudentTeamCard studentId={studentId} />
 
       {/* Planning Engines - Core Planning Hub */}
       <EnginesDashboard studentId={studentId} grade={profile.grade} readOnly={false} />

@@ -317,6 +317,21 @@ const zh = {
   "plan.docs.upload": "上传方案",
   "plan.docs.openInDrive": "在 Google Drive 中打开",
   "plan.docs.resync": "从 Drive 重新同步",
+  "team.title": "服务团队",
+  "team.add": "添加团队成员",
+  "team.noLead": "尚未指定主顾问",
+  "team.roleLabel": "角色",
+  "team.pickPerson": "选择老师",
+  "team.confirmAdd": "添加",
+  "team.cancel": "取消",
+  "team.remove": "移出团队",
+  "team.saveFailed": "没能保存，只有主顾问或管理员可以修改团队",
+  "team.role.lead": "主顾问",
+  "team.role.followup": "跟进老师",
+  "team.role.essay_interview": "文书/面试老师",
+  "team.role.research": "科研老师",
+  "team.role.other": "其他老师",
+  "plan.autoAdvanceHint": "每年 9 月 1 日，系统会自动把学生升一个年级、规划阶段推进一步；在这里手动修改（如压缩进度）后，之后每年在此基础上继续推进。",
 } as const;
 
 export type MessageKey = keyof typeof zh;
@@ -638,6 +653,21 @@ const en: Messages = {
   "plan.docs.upload": "Upload plan",
   "plan.docs.openInDrive": "Open in Google Drive",
   "plan.docs.resync": "Re-sync from Drive",
+  "team.title": "Service team",
+  "team.add": "Add team member",
+  "team.noLead": "No lead counselor yet",
+  "team.roleLabel": "Role",
+  "team.pickPerson": "Choose a teacher",
+  "team.confirmAdd": "Add",
+  "team.cancel": "Cancel",
+  "team.remove": "Remove from team",
+  "team.saveFailed": "Couldn't save. Only the lead counselor or an admin can change the team.",
+  "team.role.lead": "Lead counselor",
+  "team.role.followup": "Follow-up teacher",
+  "team.role.essay_interview": "Essays & interviews",
+  "team.role.research": "Research mentor",
+  "team.role.other": "Other",
+  "plan.autoAdvanceHint": "Every September 1 the system moves the student up a grade and their stage forward one step. If you change it here (for example to compress the timeline), later years continue from your setting.",
 };
 
 export const messages: Record<"zh" | "en", Messages> = { zh, en };
