@@ -50,7 +50,12 @@ export default function StudentTeamCard({ studentId }: { studentId: string }) {
     },
   });
 
-  const canManage = !!profile && (profile.user_type === "admin" || (data?.leadId && data.leadId === profile.id));
+  // Lead counselor, follow-up teachers on this team, and admins manage the team.
+  const canManage =
+    !!profile &&
+    (profile.user_type === "admin" ||
+      (!!data?.leadId && data.leadId === profile.id) ||
+      (data?.members || []).some((m) => m.collaborator_id === profile.id && m.role === "followup"));
 
   const { data: staffList = [] } = useQuery({
     queryKey: ["staff-list"],

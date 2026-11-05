@@ -25,31 +25,46 @@ AS $$
   );
 $$;
 
+-- Lead counselor and follow-up teachers manage a student's team.
+CREATE OR REPLACE FUNCTION public.can_manage_student_team(viewer_id uuid, p_student_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT public.is_lead_counselor(viewer_id, p_student_id)
+      OR EXISTS (
+        SELECT 1 FROM public.counselor_collaborations
+        WHERE collaborator_id = viewer_id AND student_id = p_student_id AND role = 'followup'
+      )
+      OR public.is_admin(viewer_id);
+$$;
+
 -- Security fix: before, any counselor could add a collaboration for any
 -- student by naming themselves as "primary", and so gain access to that
--- student's data. Only the student's lead counselor (or an admin) may now
--- add, change or remove team members.
+-- student's data. Now only the student's lead counselor, a follow-up
+-- teacher on the team, or an admin may add, change or remove members,
+-- and "primary" must be the student's actual lead counselor.
 DROP POLICY IF EXISTS counselors_create_collaborations ON public.counselor_collaborations;
 DROP POLICY IF EXISTS counselors_delete_collaborations ON public.counselor_collaborations;
 
-CREATE POLICY "Lead counselor or admin adds team members"
+CREATE POLICY "Team managers add team members"
   ON public.counselor_collaborations FOR INSERT TO authenticated
   WITH CHECK (
     collaborator_id <> student_id
-    AND (
-      (primary_counselor_id = auth.uid() AND public.is_lead_counselor(auth.uid(), student_id))
-      OR public.is_admin(auth.uid())
-    )
+    AND public.is_lead_counselor(primary_counselor_id, student_id)
+    AND public.can_manage_student_team(auth.uid(), student_id)
   );
 
-CREATE POLICY "Lead counselor or admin changes team roles"
+CREATE POLICY "Team managers change team roles"
   ON public.counselor_collaborations FOR UPDATE TO authenticated
-  USING (public.is_lead_counselor(auth.uid(), student_id) OR public.is_admin(auth.uid()))
-  WITH CHECK (public.is_lead_counselor(auth.uid(), student_id) OR public.is_admin(auth.uid()));
+  USING (public.can_manage_student_team(auth.uid(), student_id))
+  WITH CHECK (public.can_manage_student_team(auth.uid(), student_id));
 
-CREATE POLICY "Lead counselor or admin removes team members"
+CREATE POLICY "Team managers remove team members"
   ON public.counselor_collaborations FOR DELETE TO authenticated
-  USING (public.is_lead_counselor(auth.uid(), student_id) OR public.is_admin(auth.uid()));
+  USING (public.can_manage_student_team(auth.uid(), student_id));
 
 -- Everyone on a student's team can see the whole team.
 CREATE POLICY "Team members see the student's team"
