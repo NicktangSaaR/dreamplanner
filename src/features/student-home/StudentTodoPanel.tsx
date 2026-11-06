@@ -1,15 +1,13 @@
 import { useMemo, useState } from "react";
-import { CalendarDays, ChevronDown, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
 import type { Todo } from "@/hooks/todos/useTodoQuery";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
-import CalendarSection from "@/components/college-planning/CalendarSection";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -41,7 +39,6 @@ export default function StudentTodoPanel({ studentId }: { studentId: string }) {
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("");
   const [showDone, setShowDone] = useState(false);
-  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const { groups, done } = useMemo(() => {
     const today = startOfToday();
@@ -172,25 +169,10 @@ export default function StudentTodoPanel({ studentId }: { studentId: string }) {
           ) : (
             <span />
           )}
-          <button
-            type="button"
-            onClick={() => setCalendarOpen(true)}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
-          >
-            <CalendarDays className="h-4 w-4" /> {t("home.todo.calendar")}
-          </button>
         </div>
         {showDone && <ul className="divide-y">{done.map((todo) => row(todo))}</ul>}
       </CardContent>
 
-      <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
-        <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-pine">{t("home.todo.calendar")}</DialogTitle>
-          </DialogHeader>
-          {calendarOpen && <CalendarSection />}
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }
