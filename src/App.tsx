@@ -25,6 +25,13 @@ import PublicResumeForm from "@/pages/PublicResumeForm";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import Footer from "@/components/layout/Footer";
+import { useLocation } from "react-router-dom";
+
+/** The student dashboard is a focused page without the site footer. */
+function SiteFooter() {
+  const { pathname } = useLocation();
+  return pathname.startsWith("/student-dashboard") ? null : <Footer />;
+}
 
 export default function App() {
   return (
@@ -81,7 +88,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <Footer />
+        <SiteFooter />
         <Toaster />
         <Sonner />
       </div>

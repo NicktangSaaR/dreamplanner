@@ -45,13 +45,7 @@ export default function StudentDashboard() {
       
       {/* Main dashboard content */}
       {!isLoading && (
-        <DashboardContent
-          studentId={studentId || ''}
-          courses={courses}
-          activities={activities}
-          notes={notes}
-          queryClient={queryClient}
-        />
+        <DashboardContent studentId={studentId || ''} />
       )}
     </AuthCheck>
   );
