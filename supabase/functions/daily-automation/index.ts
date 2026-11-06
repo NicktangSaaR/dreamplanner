@@ -1,10 +1,11 @@
 // Daily automation for DreamPlanner, called once a day by pg_cron.
 //
-//   * September: every G9–G11 student moves up one grade, and every
-//     student's stage moves forward one step (never behind what the new
-//     grade implies). Each lead counselor gets a summary email.
-//   * July: lead counselors (and their team) are reminded that their G11
-//     students are entering application-season preparation.
+//   * July (end of Grade 11): every G11 student becomes "College Bound"
+//     and moves to the application stage; the lead counselor and team are
+//     emailed to start application-season preparation.
+//   * September: G9 and G10 students move up one grade, and their stage
+//     moves forward one step (never behind what the new grade implies).
+//     Each lead counselor gets a summary email.
 //   * Every day: planning milestones due within 7 days are emailed to the
 //     student's lead counselor, team and the milestone's own reminder list.
 //   * Every day: report-card upload requests — the student is reminded two
@@ -23,7 +24,7 @@ const PHASE_ZH: Record<string, string> = {
   application: "申请阶段",
 };
 const GRADE_PHASE: Record<string, number> = { G9: 0, G10: 1, G11: 2, G12: 3 };
-const NEXT_GRADE: Record<string, string> = { G9: "G10", G10: "G11", G11: "G12" };
+const NEXT_GRADE: Record<string, string> = { G9: "G10", G10: "G11" };
 const SITE = "https://dreamplaneredu.com";
 const FROM = "DreamPlanner <noreply@dreamplaneredu.com>";
 
@@ -111,14 +112,14 @@ Deno.serve(async (req) => {
       .from("profiles")
       .select("id, full_name, status, grade")
       .eq("user_type", "student")
-      .in("status", ["G9", "G10", "G11", "G12"]);
+      .in("status", ["G9", "G10"]);
     const { data: phases } = await db.from("student_phases").select("student_id, current_phase, last_auto_advance_year");
     const phaseOf = new Map((phases || []).map((p) => [p.student_id, p]));
     const changes: { student: Student; from: string; to: string; phaseFrom: string | null; phaseTo: string }[] = [];
 
     for (const s of (students || []) as Student[]) {
       const status = s.status as string;
-      const newStatus = NEXT_GRADE[status] || status; // G12 stays G12 until the counselor marks it done
+      const newStatus = NEXT_GRADE[status] || status;
       const existing = phaseOf.get(s.id);
       if (existing?.last_auto_advance_year === year) continue;
 
@@ -182,10 +183,19 @@ Deno.serve(async (req) => {
     await markRan(gradeKey, { count: changes.length });
   }
 
-  // ---------- 2) July: application-season prep for G11 ----------
+  // ---------- 2) July: end of Grade 11 -> College Bound ----------
   const prepKey = `application-prep-${year}`;
   if (month === 7 && !(await alreadyRan(prepKey))) {
     const { data: g11 } = await db.from("profiles").select("id, full_name, status, grade").eq("user_type", "student").eq("status", "G11");
+    if (!dry) {
+      for (const s of (g11 || []) as Student[]) {
+        await db.from("profiles").update({ status: "College Bound", grade: "College Bound" }).eq("id", s.id);
+        await db.from("student_phases").upsert(
+          { student_id: s.id, current_phase: "application", phase_start_date: today, last_auto_advance_year: year },
+          { onConflict: "student_id" },
+        );
+      }
+    }
     const byRecipient = new Map<string, Student[]>();
     for (const s of (g11 || []) as Student[]) {
       for (const email of teamEmails(s.id)) byRecipient.set(email, [...(byRecipient.get(email) || []), s]);
@@ -194,10 +204,10 @@ Deno.serve(async (req) => {
       const names = list.map((s) => `<li>${esc(s.full_name || "学生")}</li>`).join("");
       outbox.push({
         to: email,
-        subject: `申请季准备：${list.length} 位 11 年级学生即将进入申请季`,
+        subject: `申请季准备：${list.length} 位学生已进入 College Bound`,
         html: layout(
           "进入申请季准备阶段",
-          `<p>以下学生 11 年级已结束，请开始申请季准备：确认选校名单、文书主题、推荐人和标化安排，并在学生页面把阶段设为「申请阶段」。</p><ul>${names}</ul>`,
+          `<p>以下学生 11 年级已结束，系统已把他们的状态改为 <strong>College Bound</strong>，规划阶段设为「申请阶段」。请开始申请季准备：确认选校名单、文书主题、推荐人和标化安排。</p><ul>${names}</ul>`,
         ),
       });
     }

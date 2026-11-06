@@ -58,18 +58,6 @@ export default function ProfileEditForm({ form, onSubmit, isCounselor }: Profile
           <>
             <FormField
               control={form.control}
-              name="grade"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Grade</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="school"
               render={({ field }) => (
                 <FormItem>

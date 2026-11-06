@@ -1,3 +1,4 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 import React, { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
@@ -16,6 +17,7 @@ import { useUserStatus } from '@/hooks/useUserStatus';
 
 const TodoSection = () => {
   const { studentId } = useParams();
+  const { t } = useLanguage();
   const { todos, error, createTodo, updateTodo, toggleTodoStatus, toggleStarred, deleteTodo } = useStudentTodos(studentId);
   const { sendReminder, isLoading: isSendingReminder, connectionError, lastAttempt } = useTodoReminder(studentId);
   const [expanded, setExpanded] = useState(true);
@@ -102,7 +104,7 @@ const TodoSection = () => {
   return (
     <Card className="mb-6 overflow-hidden">
       <CardHeader className="p-4 flex flex-row items-center justify-between border-b cursor-pointer" onClick={toggleExpanded}>
-        <h3 className="text-lg font-semibold">To-Do List</h3>
+        <h3 className="text-lg font-semibold">{t("dash.tab.todosOnly")}</h3>
         <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); toggleExpanded(); }} className="rounded-full p-0 h-6 w-6 flex items-center justify-center">
           {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </Button>

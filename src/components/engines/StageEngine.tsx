@@ -53,8 +53,11 @@ export default function StageEngine({ studentId, grade, readOnly = false }: Stag
 
   // Grade-based auto-detection
   const gradeNum = grade ? parseInt(grade.replace(/\D/g, "")) : 0;
-  const compressionWarning = gradeNum >= 10 && !compressionMode;
-  const autoMergeWarning = gradeNum >= 11;
+  // Warn only when the saved stage is behind what the grade implies.
+  const expectedIdx = gradeNum >= 9 && gradeNum <= 12 ? gradeNum - 9 : -1;
+  const phaseOrder = ["exploration", "positioning", "consolidation", "application"];
+  const savedIdx = phaseOrder.indexOf(phase?.current_phase || currentPhase);
+  const behindWarning = expectedIdx > 0 && savedIdx >= 0 && savedIdx < expectedIdx && !compressionMode;
 
   const handleSave = () => {
     upsertPhase.mutate({
@@ -100,19 +103,11 @@ export default function StageEngine({ studentId, grade, readOnly = false }: Stag
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {compressionWarning && (
-          <Alert variant="destructive" className="border-destructive/30 bg-destructive/5">
+        {behindWarning && (
+          <Alert className="border-brass/40 bg-brass/10">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              学生已达10年级，建议开启压缩模式以加速探索阶段。
-            </AlertDescription>
-          </Alert>
-        )}
-        {autoMergeWarning && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              学生已达11年级，建议直接进入"定位+聚焦"合并模式。
+              {t("plan.behindWarning", { grade: `G${gradeNum}`, phase: phaseLabel(phaseOrder[savedIdx]), expected: phaseLabel(phaseOrder[expectedIdx]) })}
             </AlertDescription>
           </Alert>
         )}

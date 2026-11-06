@@ -1,3 +1,4 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface StudentProfileProps {
@@ -13,6 +14,7 @@ interface StudentProfileProps {
 }
 
 export default function StudentProfile({ profile }: StudentProfileProps) {
+  const { t } = useLanguage();
   return (
     <Card>
       <CardContent className="p-6">
@@ -20,20 +22,20 @@ export default function StudentProfile({ profile }: StudentProfileProps) {
           <div>
             <h2 className="text-2xl font-bold mb-4">{profile.full_name}</h2>
             <div className="space-y-2 text-sm">
-              <p><span className="font-medium">Grade:</span> {profile.status || profile.grade || "Not set"}</p>
-              <p><span className="font-medium">School:</span> {profile.school || "Not set"}</p>
+              <p><span className="font-medium">{t("st.statusShort")}：</span> {profile.status || profile.grade || t("st.notSet")}</p>
+              <p><span className="font-medium">{t("st.school")}：</span> {profile.school || t("st.notSet")}</p>
               {profile.interested_majors && profile.interested_majors.length > 0 && (
-                <p><span className="font-medium">Interested Majors:</span> {profile.interested_majors.join(", ")}</p>
+                <p><span className="font-medium">{t("st.majors")}：</span> {profile.interested_majors.join(", ")}</p>
               )}
               {profile.graduation_school && (
-                <p><span className="font-medium">Graduation School:</span> {profile.graduation_school}</p>
+                <p><span className="font-medium">{t("st.target")}：</span> {profile.graduation_school}</p>
               )}
             </div>
           </div>
           <div>
             {profile.background_intro && (
               <div>
-                <h3 className="font-medium mb-2">Background</h3>
+                <h3 className="font-medium mb-2">{t("st.background")}</h3>
                 <p className="text-sm text-muted-foreground">{profile.background_intro}</p>
               </div>
             )}

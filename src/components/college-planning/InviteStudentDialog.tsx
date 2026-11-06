@@ -1,3 +1,4 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,21 +11,19 @@ interface InviteStudentDialogProps {
 
 export default function InviteStudentDialog({ counselorId }: InviteStudentDialogProps) {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          className="bg-green-500 text-white hover:bg-green-600"
-        >
-          <UserPlus className="mr-2 h-4 w-4" />
-          Invite Student
+        <Button variant="outline" size="sm">
+          <UserPlus className="mr-1.5 h-4 w-4" />
+          {t("ch.invite")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Invite Student</DialogTitle>
+          <DialogTitle>{t("ch.invite")}</DialogTitle>
         </DialogHeader>
         <InviteStudentForm 
           counselorId={counselorId} 

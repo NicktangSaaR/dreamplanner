@@ -31,7 +31,6 @@ export default function ProfileSection() {
     try {
       await updateProfile.mutateAsync({
         full_name: data.full_name,
-        grade: data.grade,
         school: data.school,
         interested_majors: data.interested_majors.split(",").map(m => m.trim()),
         graduation_school: data.graduation_school,
