@@ -376,6 +376,19 @@ const zh = {
   "grades.pasteFailed": "保存失败",
   "grades.pasteSaved": "简报已保存，团队会收到邮件",
   "grades.manualTag": "手动简报",
+  "home3.hello": "你好，{name}",
+  "home3.menu": "菜单",
+  "notes.add": "添加笔记",
+  "notes.pinned": "置顶笔记",
+  "notes.other": "其他笔记",
+  "home3.goalsLine": "本季目标 {done}/{total}",
+  "home3.todo": "要做的事",
+  "home3.goalTag": "本季目标",
+  "home3.overdue": "{date} · 逾期",
+  "home3.uploadAsk": "上传最新成绩单（顾问请求，{date} 前）",
+  "home3.upload": "上传",
+  "home3.shared": "顾问给我的",
+  "home3.report": "季度报告",
 } as const;
 
 export type MessageKey = keyof typeof zh;
@@ -756,6 +769,19 @@ const en: Messages = {
   "grades.pasteFailed": "Couldn't save",
   "grades.pasteSaved": "Brief saved. The team will get an email.",
   "grades.manualTag": "Manual brief",
+  "home3.hello": "Hi, {name}",
+  "home3.menu": "Menu",
+  "notes.add": "Add note",
+  "notes.pinned": "Pinned notes",
+  "notes.other": "Other notes",
+  "home3.goalsLine": "Quarter goals {done}/{total}",
+  "home3.todo": "To do",
+  "home3.goalTag": "Quarter goal",
+  "home3.overdue": "{date} · overdue",
+  "home3.uploadAsk": "Upload your latest report card (your counselor asked, by {date})",
+  "home3.upload": "Upload",
+  "home3.shared": "From your counselor",
+  "home3.report": "Quarterly report",
 };
 
 export const messages: Record<"zh" | "en", Messages> = { zh, en };

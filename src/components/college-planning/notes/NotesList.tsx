@@ -1,3 +1,4 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 import { Note } from "@/hooks/notes/types";
 import NoteCard from "./NoteCard";
@@ -22,11 +23,12 @@ export default function NotesList({
   const pinnedNotes = notes.filter(note => note.is_pinned);
   const unpinnedNotes = notes.filter(note => !note.is_pinned);
   
+  const { t } = useLanguage();
   return (
     <div className="space-y-4">
       {pinnedNotes.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Pinned Notes</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">{t("notes.pinned")}</h3>
           <div className="grid gap-2">
             {pinnedNotes.map((note) => (
               <NoteCard
@@ -45,7 +47,7 @@ export default function NotesList({
       
       <div className="space-y-2">
         {pinnedNotes.length > 0 && (
-          <h3 className="text-sm font-medium text-muted-foreground">Other Notes</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">{t("notes.other")}</h3>
         )}
         <div className="grid gap-2">
           {unpinnedNotes.map((note) => (

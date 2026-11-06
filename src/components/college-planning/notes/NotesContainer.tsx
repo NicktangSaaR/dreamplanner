@@ -7,7 +7,6 @@ import NoteDialog from "../NoteDialog";
 import NotesList from "./NotesList";
 import { Note } from "@/hooks/notes/types";
 import { useNotes } from "@/hooks/useNotes";
-import SharedFolderSection from "../student-summary/SharedFolderSection";
 import NotesCard from "./NotesCard"; // Add missing import
 
 interface NotesContainerProps {
@@ -73,13 +72,6 @@ export default function NotesContainer({ onNotesChange, studentId: propStudentId
         onEdit={setEditingNote}
         onDelete={handleDeleteNote}
       />
-
-      {/* Shared Folder Section - Always render if we have a student ID */}
-      {effectiveStudentId && (
-        <div className="mt-6">
-          <SharedFolderSection studentId={effectiveStudentId} />
-        </div>
-      )}
 
       <NoteDialog
         open={isDialogOpen || !!editingNote}
