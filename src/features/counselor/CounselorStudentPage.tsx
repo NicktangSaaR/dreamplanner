@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CalendarClock, Loader2 } from "lucide-react";
+import { ArrowLeft, CalendarClock, Loader2, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import StudentStatusDialog from "./StudentStatusDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,6 +55,18 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
   const { profile, activities, isLoading } = useStudentData(studentId);
   const { phase } = useStudentPhase(studentId);
   const { quarters } = useStudentQuarters(studentId);
+  const [editing, setEditing] = useState(false);
+
+  // Lead counselor, follow-up teachers and admins may change grade / service status.
+  const { data: canManage = false } = useQuery({
+    queryKey: ["can-manage-team", studentId],
+    queryFn: async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return false;
+      const { data } = await db.rpc("can_manage_student_team", { viewer_id: auth.user.id, p_student_id: studentId });
+      return data === true;
+    },
+  });
 
   const quarter = quarterKey();
   const row = quarters.find((q) => q.quarter === quarter && q.academic_year === academicYear());
@@ -98,7 +112,12 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
         <ArrowLeft className="h-4 w-4" /> {t("cs.back")}
       </Link>
       <header className="mt-3">
-        <h1 className="font-serif text-3xl font-semibold text-pine">{profile.full_name}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="font-serif text-3xl font-semibold text-pine">{profile.full_name}</h1>
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            <Pencil className="mr-1.5 h-4 w-4" /> {t("st.edit")}
+          </Button>
+        </div>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
           <span>{profile.status || profile.grade || "—"}</span>
           {profile.school && <><span aria-hidden="true">·</span><span>{profile.school}</span></>}
@@ -106,6 +125,10 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
           {goals.length > 0 && <><span aria-hidden="true">·</span><span>{t("home3.goalsLine", { done, total: goals.length })}</span></>}
         </p>
       </header>
+
+      {editing && (
+        <StudentStatusDialog open={editing} onOpenChange={setEditing} profile={profile} canChangeStatus={canManage} />
+      )}
 
       <Tabs defaultValue="overview" className="mt-6">
         <TabsList className="flex h-auto w-full flex-wrap justify-start sm:inline-flex sm:w-auto">

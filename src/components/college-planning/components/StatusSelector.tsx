@@ -36,6 +36,7 @@ export const StatusSelector = ({ status, onChange }: StatusSelectorProps) => {
         <SelectItem value="G9">G9</SelectItem>
         <SelectItem value="G10">G10</SelectItem>
         <SelectItem value="G11">G11</SelectItem>
+        <SelectItem value="G12">G12</SelectItem>
         <SelectItem value="College Bound">College Bound</SelectItem>
         <SelectItem value="Transfer Student">Transfer Student</SelectItem>
         <SelectItem value="Completed">Completed</SelectItem>

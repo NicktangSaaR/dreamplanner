@@ -128,12 +128,14 @@ export default function StudentCard({ student, onClick, onStatusChange }: Studen
     
     try {
       // Update the student's status in the profiles table
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from("profiles")
         .update({ status: newStatus, grade: newStatus })
-        .eq("id", student.id);
+        .eq("id", student.id)
+        .select("id");
 
-      if (error) {
+      if (error || !updated?.length) {
+        setStatus(student.status || "G9");
         console.error("Error updating student status:", error);
         toast.error("Failed to update student status");
         return;
