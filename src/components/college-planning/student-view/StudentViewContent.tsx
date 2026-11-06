@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import EnginesDashboard from "@/components/engines/EnginesDashboard";
 import NotesSection from "../NotesSection";
 import StudentTeamCard from "@/features/team/StudentTeamCard";
+import AcademicBriefCard from "@/features/grades/AcademicBriefCard";
 
 interface StudentViewContentProps {
   studentId: string;
@@ -40,6 +41,8 @@ export default function StudentViewContent({
       <StudentProfile profile={profile} />
 
       <StudentTeamCard studentId={studentId} />
+
+      <AcademicBriefCard studentId={studentId} />
 
       {/* Planning Engines - Core Planning Hub */}
       <EnginesDashboard studentId={studentId} grade={profile.grade} readOnly={false} />

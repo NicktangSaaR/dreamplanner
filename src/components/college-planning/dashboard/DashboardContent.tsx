@@ -50,9 +50,6 @@ export default function DashboardContent({
               <h2 id="info-heading" className="mb-4 font-serif text-2xl font-semibold text-pine">{t("dash.tab.info")}</h2>
               <StudentInfoTabs
                 studentId={studentId}
-                courses={courses}
-                onCoursesChange={(c) => queryClient.setQueryData(["student-courses", studentId], c)}
-                onActivitiesChange={(a) => queryClient.setQueryData(["student-activities", studentId], a)}
                 onNotesChange={(n) => queryClient.setQueryData(["student-notes", studentId], n)}
               />
             </section>

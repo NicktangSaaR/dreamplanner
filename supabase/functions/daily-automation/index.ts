@@ -7,6 +7,8 @@
 //     students are entering application-season preparation.
 //   * Every day: planning milestones due within 7 days are emailed to the
 //     student's lead counselor, team and the milestone's own reminder list.
+//   * Every day: report-card upload requests — the student is reminded two
+//     days before the due date, and the team is told once it is overdue.
 //
 // Auth: requires the x-cron-secret header to match CRON_SECRET.
 // Query params for testing: ?dry=1 (report only, no writes or emails),
@@ -235,6 +237,49 @@ Deno.serve(async (req) => {
   }
   report.milestones = (milestones || []).map((m) => ({ id: m.id, title: m.title, due: m.due_date }));
 
+  // ---------- 4) Report-card upload requests ----------
+  // Two days before the due date: remind the student. After it: tell the team once.
+  const { data: openRequests } = await db
+    .from("academic_report_requests")
+    .select("id, student_id, due_date, message, student_reminded, overdue_notified")
+    .is("fulfilled_at", null);
+  const remindIds: string[] = [];
+  const overdueIds: string[] = [];
+  if (openRequests?.length) {
+    const ids = [...new Set(openRequests.map((r) => r.student_id))];
+    const { data: reqStudents } = await db.from("profiles").select("id, full_name, email").in("id", ids);
+    const info = new Map((reqStudents || []).map((s) => [s.id, s]));
+    const soon = addDays(today, 2);
+    for (const r of openRequests) {
+      const s = info.get(r.student_id);
+      if (!r.student_reminded && r.due_date <= soon && r.due_date >= today && s?.email) {
+        remindIds.push(r.id);
+        outbox.push({
+          to: s.email,
+          subject: `提醒：请在 ${r.due_date} 前上传最新成绩单`,
+          html: layout(
+            "别忘了上传成绩单",
+            `<p>${esc(s.full_name || "同学")}，你好：</p><p>请在 <strong>${esc(r.due_date)}</strong> 前登录 DreamPlanner，在「我的信息 → 成绩单」上传最新的成绩单（PDF、照片或截图都可以）。</p>`,
+          ).replace(`${SITE}/counselor-dashboard`, `${SITE}/student-dashboard/${r.student_id}`).replace("打开 DreamPlanner", "去上传"),
+        });
+      }
+      if (!r.overdue_notified && r.due_date < today) {
+        overdueIds.push(r.id);
+        for (const email of teamEmails(r.student_id)) {
+          outbox.push({
+            to: email,
+            subject: `成绩单逾期未上传：${s?.full_name || "学生"}`,
+            html: layout(
+              "成绩单逾期未上传",
+              `<p>${esc(s?.full_name || "学生")} 还没有上传成绩单（截止日期 ${esc(r.due_date)}）。请跟进，或在学生页面代为上传。</p>`,
+            ),
+          });
+        }
+      }
+    }
+  }
+  report.reportRequests = { remindStudents: remindIds.length, overdue: overdueIds.length };
+
   // ---------- send ----------
   const sent: string[] = [];
   const failed: string[] = [];
@@ -247,6 +292,8 @@ Deno.serve(async (req) => {
       });
       (res.ok ? sent : failed).push(mail.to);
     }
+    if (remindIds.length) await db.from("academic_report_requests").update({ student_reminded: true }).in("id", remindIds);
+    if (overdueIds.length) await db.from("academic_report_requests").update({ overdue_notified: true }).in("id", overdueIds);
     if (milestones?.length && failed.length === 0) {
       await db.from("planning_milestones").update({ reminder_sent: true }).in("id", milestones.map((m) => m.id));
     }

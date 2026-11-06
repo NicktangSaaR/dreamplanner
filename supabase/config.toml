@@ -45,3 +45,6 @@ verify_jwt = false
 
 [functions.daily-automation]
 verify_jwt = false
+
+[functions.academic-report]
+verify_jwt = true
