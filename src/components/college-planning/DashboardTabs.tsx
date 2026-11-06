@@ -4,7 +4,6 @@ import AcademicsSection from "./AcademicsSection";
 import ExtracurricularSection from "./ExtracurricularSection";
 import NotesSection from "./NotesSection";
 import TodoSection from "./TodoSection";
-import CalendarSection from "./CalendarSection";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
 import { Course } from "./types/course";
 import { useLanguage } from "@/i18n/LanguageProvider";
@@ -42,14 +41,13 @@ export default function DashboardTabs({
   return (
     <Tabs defaultValue="todos" className="w-full">
       <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-grid">
-        <TabsTrigger value="todos">{t("dash.tab.todos")}</TabsTrigger>
+        <TabsTrigger value="todos">{t("dash.tab.todosOnly")}</TabsTrigger>
         <TabsTrigger value="info">{t("dash.tab.info")}</TabsTrigger>
         <TabsTrigger value="notes">{t("dash.tab.notes")}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="todos" className="mt-6 space-y-6">
         <TodoSection />
-        <CalendarSection />
       </TabsContent>
 
       <TabsContent value="info" className="mt-6">
