@@ -3,6 +3,9 @@
 // POST { action: "analyze", report_id }  — read an uploaded report card
 //   (PDF or image) with AI, write a brief for the counselor team, mark open
 //   upload requests as done, and email the team.
+// POST { action: "manual", student_id, brief, period_label? } — the team
+//   pastes a finished brief written outside the system; it is saved as is
+//   (no AI) and emailed to the team.
 // POST { action: "request", student_id, due_date, message? } — the team asks
 //   a student to upload their latest report card; the student is emailed.
 //
@@ -155,6 +158,43 @@ Deno.serve(async (req) => {
       );
     }
     return json({ ok: true, id: request.id });
+  }
+
+  // ---------------- paste a finished brief ----------------
+  if (body.action === "manual") {
+    const studentId = String(body.student_id || "");
+    const brief = typeof body.brief === "string" ? body.brief.trim().slice(0, 20000) : "";
+    const period = typeof body.period_label === "string" ? body.period_label.trim().slice(0, 60) || null : null;
+    if (!/^[0-9a-f-]{36}$/.test(studentId) || !brief) return json({ error: "invalid input" }, 400);
+    if (!(await isTeam(studentId))) return json({ error: "forbidden" }, 403);
+
+    const { data: row, error } = await admin
+      .from("academic_reports")
+      .insert({ student_id: studentId, uploaded_by: caller, source: "manual", status: "ready", period_label: period, file_name: period || "简报" })
+      .select("id")
+      .single();
+    if (error) return json({ error: error.message }, 500);
+    await admin.from("academic_report_briefs").insert({ report_id: row.id, student_id: studentId, brief });
+    await admin
+      .from("academic_report_requests")
+      .update({ fulfilled_at: new Date().toISOString() })
+      .eq("student_id", studentId)
+      .is("fulfilled_at", null);
+
+    const { data: student } = await admin.from("profiles").select("full_name").eq("id", studentId).maybeSingle();
+    const name = student?.full_name || "学生";
+    const excerpt = brief.length > 1200 ? `${brief.slice(0, 1200)}…` : brief;
+    await sendEmail(
+      await teamEmails(studentId),
+      `成绩简报：${name}${period ? ` · ${period}` : ""}`,
+      layout(
+        `${name} 的成绩简报`,
+        `<div style="white-space:pre-wrap;line-height:1.6;font-size:14px">${esc(excerpt)}</div>`,
+        `${SITE}/counselor-dashboard/student/${studentId}`,
+        "查看完整简报",
+      ),
+    );
+    return json({ ok: true, id: row.id });
   }
 
   // ---------------- analyze an upload ----------------

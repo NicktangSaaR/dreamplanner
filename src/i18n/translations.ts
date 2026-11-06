@@ -369,6 +369,13 @@ const zh = {
   "grades.changes": "与上次相比",
   "grades.risks": "需要关注",
   "grades.suggestions": "建议",
+  "grades.paste": "粘贴简报",
+  "grades.pastePlaceholder": "把在系统外写好的成绩简报粘贴到这里",
+  "grades.pasteSave": "保存并通知团队",
+  "grades.pasteHint": "保存后原样显示在这里（不经 AI 改写），并邮件通知服务团队；学生看不到。",
+  "grades.pasteFailed": "保存失败",
+  "grades.pasteSaved": "简报已保存，团队会收到邮件",
+  "grades.manualTag": "手动简报",
 } as const;
 
 export type MessageKey = keyof typeof zh;
@@ -742,6 +749,13 @@ const en: Messages = {
   "grades.changes": "Since last time",
   "grades.risks": "Watch",
   "grades.suggestions": "Suggestions",
+  "grades.paste": "Paste brief",
+  "grades.pastePlaceholder": "Paste a grade brief written outside the system",
+  "grades.pasteSave": "Save and notify team",
+  "grades.pasteHint": "Saved here as is (no AI rewrite) and emailed to the service team; students can't see it.",
+  "grades.pasteFailed": "Couldn't save",
+  "grades.pasteSaved": "Brief saved. The team will get an email.",
+  "grades.manualTag": "Manual brief",
 };
 
 export const messages: Record<"zh" | "en", Messages> = { zh, en };

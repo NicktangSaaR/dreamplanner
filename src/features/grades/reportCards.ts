@@ -8,9 +8,10 @@ export type ReportCard = {
   id: string;
   student_id: string;
   uploaded_by: string | null;
-  file_path: string;
-  file_name: string;
-  mime_type: string;
+  file_path: string | null;
+  file_name: string | null;
+  mime_type: string | null;
+  source: "upload" | "manual";
   period_label: string | null;
   status: "processing" | "ready" | "failed";
   created_at: string;
