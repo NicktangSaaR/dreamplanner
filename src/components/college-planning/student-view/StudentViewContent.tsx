@@ -4,7 +4,6 @@ import StudentProfile from "../student-summary/StudentProfile";
 import AcademicSection from "../student-summary/AcademicSection";
 import ActivitiesSection from "../student-summary/ActivitiesSection";
 import TodoSection from "../TodoSection";
-import StudentCalendar from "./StudentCalendar";
 import { PlanningMilestones } from "../google-drive";
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -63,7 +62,6 @@ export default function StudentViewContent({
 
       {/* Calendar & Milestones */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <StudentCalendar studentId={studentId} />
         <PlanningMilestones studentId={studentId} refreshTrigger={0} />
       </div>
 
