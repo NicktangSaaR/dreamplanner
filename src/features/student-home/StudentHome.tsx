@@ -301,8 +301,11 @@ export default function StudentHome({ studentId }: { studentId: string }) {
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => navigate("/mock-interview")}>
-            <Video className="mr-1.5 h-4 w-4" /> {t("dash.mockInterview")}
+          {/* Mock interview opens in its own tab so the home page stays put. */}
+          <Button variant="outline" size="sm" asChild>
+            <a href="/mock-interview" target="_blank" rel="noopener noreferrer">
+              <Video className="mr-1.5 h-4 w-4" /> {t("dash.mockInterview")}
+            </a>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
