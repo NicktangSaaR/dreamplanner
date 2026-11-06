@@ -1,3 +1,4 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StickyNote, PlusCircle } from "lucide-react";
@@ -22,13 +23,14 @@ export default function NotesCard({
   onEdit,
   onDelete,
 }: NotesCardProps) {
+  const { t } = useLanguage();
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <StickyNote className="h-5 w-5" />
-            <CardTitle>Notes</CardTitle>
+            <CardTitle>{t("dash.tab.notes")}</CardTitle>
           </div>
           <Button 
             variant="outline" 
@@ -36,7 +38,7 @@ export default function NotesCard({
             onClick={onCreateNote}
           >
             <PlusCircle className="h-4 w-4 mr-2" />
-            Add Note
+            {t("notes.add")}
           </Button>
         </div>
       </CardHeader>
