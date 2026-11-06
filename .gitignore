@@ -26,3 +26,4 @@ dist-ssr
 # Supabase CLI local state
 supabase/.temp/
 dist-demo
+dist-demo-counselor
