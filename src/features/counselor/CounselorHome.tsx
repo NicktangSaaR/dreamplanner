@@ -120,14 +120,19 @@ export default function CounselorHome() {
         lastActive: last.get(s.id) || null,
       }));
 
+      // Students whose service is completed don't need follow-up.
+      const completed = new Set(
+        (students.data || []).filter((st: { status: string | null }) => st.status === "Completed").map((st: { id: string }) => st.id),
+      );
       const alerts: Alert[] = [];
       for (const r of requests.data || []) {
+        if (completed.has(r.student_id)) continue;
         if (r.due_date < today) {
           alerts.push({ key: `req-${r.student_id}`, studentId: r.student_id, name: nameOf.get(r.student_id) || "—", level: "urgent", text: t("ch.alert.reportOverdue", { date: r.due_date }), sort: 0 });
         }
       }
       for (const todo of todos.data || []) {
-        if (todo.completed || !todo.due_date) continue;
+        if (todo.completed || !todo.due_date || completed.has(todo.author_id)) continue;
         const due = String(todo.due_date).slice(0, 10);
         if (due < today) {
           alerts.push({ key: `todo-${todo.author_id}-${todo.title}`, studentId: todo.author_id, name: nameOf.get(todo.author_id) || "—", level: "urgent", text: t("ch.alert.todoOverdue", { title: todo.title, date: due }), sort: 1 });
@@ -136,6 +141,7 @@ export default function CounselorHome() {
         }
       }
       for (const m of milestones.data || []) {
+        if (completed.has(m.student_id)) continue;
         alerts.push({ key: `ms-${m.student_id}-${m.title}`, studentId: m.student_id, name: nameOf.get(m.student_id) || "—", level: "soon", text: t("ch.alert.milestone", { title: m.title, date: m.due_date }), sort: 2 });
       }
       const cutoff = new Date(Date.now() - 30 * DAY).toISOString();

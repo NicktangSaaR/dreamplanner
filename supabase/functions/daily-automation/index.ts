@@ -97,6 +97,10 @@ Deno.serve(async (req) => {
     return [...new Set(ids.map((id) => people.get(id)?.email).filter(Boolean) as string[])];
   };
 
+  // Students whose service is completed get no more reminders.
+  const { data: doneRows } = await db.from("profiles").select("id").eq("user_type", "student").eq("status", "Completed");
+  const completed = new Set((doneRows || []).map((r) => r.id));
+
   const alreadyRan = async (key: string) => {
     const { data } = await db.from("automation_runs").select("key").eq("key", key).maybeSingle();
     return !!data;
@@ -230,6 +234,7 @@ Deno.serve(async (req) => {
   const nameOf = new Map((msStudents || []).map((s) => [s.id, s.full_name || "学生"]));
   const msByRecipient = new Map<string, typeof milestones>();
   for (const m of milestones || []) {
+    if (completed.has(m.student_id)) continue;
     const extra = Array.isArray(m.reminder_emails) ? (m.reminder_emails as string[]) : [];
     for (const email of new Set([...teamEmails(m.student_id), ...extra.filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))])) {
       msByRecipient.set(email, [...(msByRecipient.get(email) || []), m]);
@@ -245,7 +250,7 @@ Deno.serve(async (req) => {
       html: layout("规划节点提醒", `<p>以下规划节点将在 7 天内到期：</p><ul style="padding-left:18px">${rows}</ul>`),
     });
   }
-  report.milestones = (milestones || []).map((m) => ({ id: m.id, title: m.title, due: m.due_date }));
+  report.milestones = (milestones || []).filter((m) => !completed.has(m.student_id)).map((m) => ({ id: m.id, title: m.title, due: m.due_date }));
 
   // ---------- 4) Report-card upload requests ----------
   // Two days before the due date: remind the student. After it: tell the team once.
@@ -261,6 +266,7 @@ Deno.serve(async (req) => {
     const info = new Map((reqStudents || []).map((s) => [s.id, s]));
     const soon = addDays(today, 2);
     for (const r of openRequests) {
+      if (completed.has(r.student_id)) continue;
       const s = info.get(r.student_id);
       if (!r.student_reminded && r.due_date <= soon && r.due_date >= today && s?.email) {
         remindIds.push(r.id);
