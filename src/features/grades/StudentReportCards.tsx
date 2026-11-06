@@ -29,6 +29,7 @@ export default function StudentReportCards({ studentId }: { studentId: string })
         .from("academic_reports")
         .select("*")
         .eq("student_id", studentId)
+        .eq("source", "upload")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data || []) as ReportCard[];
@@ -112,7 +113,7 @@ export default function StudentReportCards({ studentId }: { studentId: string })
               <FileText className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
               <button
                 type="button"
-                onClick={() => void openReportCard(r.file_path).catch(() => toast.error(t("grades.openFailed")))}
+                onClick={() => r.file_path && void openReportCard(r.file_path).catch(() => toast.error(t("grades.openFailed")))}
                 className="min-w-0 flex-1 truncate text-left text-sm hover:underline"
               >
                 {r.period_label || r.file_name}

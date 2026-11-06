@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, BellRing, ChevronDown, FileText, GraduationCap, Loader2, RefreshCw, Upload, X } from "lucide-react";
+import { AlertCircle, BellRing, ChevronDown, ClipboardPaste, FileText, GraduationCap, Loader2, RefreshCw, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,9 @@ export default function AcademicBriefCard({ studentId }: { studentId: string }) 
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [asking, setAsking] = useState(false);
+  const [pasting, setPasting] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [pastePeriod, setPastePeriod] = useState("");
   const [due, setDue] = useState("");
   const [message, setMessage] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -143,6 +146,26 @@ export default function AcademicBriefCard({ studentId }: { studentId: string }) 
     refresh();
   };
 
+  const savePasted = async () => {
+    if (!pasteText.trim()) return;
+    setBusy(true);
+    const { data, error } = await supabase.functions.invoke("academic-report", {
+      body: { action: "manual", student_id: studentId, brief: pasteText, period_label: pastePeriod.trim() || undefined },
+    });
+    setBusy(false);
+    if (error || data?.error) {
+      toast.error(t("grades.pasteFailed"));
+      return;
+    }
+    toast.success(t("grades.pasteSaved"));
+    setPasting(false);
+    setPasteText("");
+    setPastePeriod("");
+    setOpenId(data?.id ?? null);
+    refresh();
+    queryClient.invalidateQueries({ queryKey: keys.briefs });
+  };
+
   const cancelRequest = async () => {
     if (!request) return;
     await db.from("academic_report_requests").delete().eq("id", request.id);
@@ -166,6 +189,9 @@ export default function AcademicBriefCard({ studentId }: { studentId: string }) 
         </CardTitle>
         <div className="flex gap-2">
           <input ref={inputRef} type="file" accept={REPORT_CARD_ACCEPT} className="hidden" onChange={onFile} />
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => setPasting((v) => !v)}>
+            <ClipboardPaste className="mr-1.5 h-4 w-4" /> {t("grades.paste")}
+          </Button>
           <Button size="sm" variant="outline" disabled={busy} onClick={() => inputRef.current?.click()}>
             <Upload className="mr-1.5 h-4 w-4" /> {t("grades.uploadForStudent")}
           </Button>
@@ -188,6 +214,18 @@ export default function AcademicBriefCard({ studentId }: { studentId: string }) 
             <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={t("grades.cancelRequest")} onClick={() => void cancelRequest()}>
               <X className="h-4 w-4" />
             </Button>
+          </div>
+        )}
+
+        {pasting && (
+          <div className="space-y-2 rounded-md border bg-muted/30 p-3">
+            <Input value={pastePeriod} onChange={(e) => setPastePeriod(e.target.value)} placeholder={t("grades.periodPlaceholder")} maxLength={60} className="sm:max-w-xs" />
+            <Textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder={t("grades.pastePlaceholder")} rows={8} maxLength={20000} />
+            <div className="flex gap-2">
+              <Button size="sm" disabled={!pasteText.trim() || busy} onClick={() => void savePasted()}>{t("grades.pasteSave")}</Button>
+              <Button size="sm" variant="ghost" onClick={() => setPasting(false)}>{t("team.cancel")}</Button>
+            </div>
+            <p className="text-xs text-muted-foreground">{t("grades.pasteHint")}</p>
           </div>
         )}
 
@@ -225,7 +263,7 @@ export default function AcademicBriefCard({ studentId }: { studentId: string }) 
                       className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm"
                     >
                       <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
-                      <span className="truncate font-medium">{r.period_label || r.file_name}</span>
+                      <span className="truncate font-medium">{r.period_label || r.file_name || t("grades.manualTag")}</span>
                       <span className="shrink-0 text-xs text-muted-foreground">{fmt(r.created_at)}</span>
                     </button>
                     {r.status === "processing" && (
@@ -238,10 +276,14 @@ export default function AcademicBriefCard({ studentId }: { studentId: string }) 
                         <RefreshCw className="mr-1 h-3.5 w-3.5" /> {t("grades.retry")}
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label={t("grades.openFile")}
-                      onClick={() => void openReportCard(r.file_path).catch(() => toast.error(t("grades.openFailed")))}>
-                      <FileText className="h-4 w-4" />
-                    </Button>
+                    {r.file_path ? (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label={t("grades.openFile")}
+                        onClick={() => void openReportCard(r.file_path as string).catch(() => toast.error(t("grades.openFailed")))}>
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <span className="shrink-0 text-xs text-muted-foreground">{t("grades.manualTag")}</span>
+                    )}
                   </div>
                   {expanded && (
                     <div className="border-t bg-muted/20 px-4 py-3">
@@ -251,6 +293,8 @@ export default function AcademicBriefCard({ studentId }: { studentId: string }) 
                         </p>
                       ) : b?.data ? (
                         <BriefView d={b.data} />
+                      ) : b?.brief ? (
+                        <div className="whitespace-pre-wrap text-sm leading-relaxed">{b.brief}</div>
                       ) : (
                         <p className="text-sm text-muted-foreground">{t("grades.processing")}</p>
                       )}
