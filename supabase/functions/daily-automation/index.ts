@@ -61,6 +61,10 @@ Deno.serve(async (req) => {
 
   const url = new URL(req.url);
   const dry = url.searchParams.get("dry") === "1";
+  // Test mode: with dry=1, send every email that would go out to this one
+  // address instead (subject prefixed with [测试]); nothing is saved.
+  const previewTo = url.searchParams.get("preview_to");
+  const previewOk = !!previewTo && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(previewTo);
   const todayParam = url.searchParams.get("today");
   const today = todayParam && /^\d{4}-\d{2}-\d{2}$/.test(todayParam) ? todayParam : vancouverToday();
   const year = Number(today.slice(0, 4));
@@ -247,7 +251,27 @@ Deno.serve(async (req) => {
       await db.from("planning_milestones").update({ reminder_sent: true }).in("id", milestones.map((m) => m.id));
     }
   }
-  report.emails = dry ? outbox.map((m) => ({ to: m.to, subject: m.subject })) : { sent: sent.length, failed };
+  if (dry && previewOk && resendKey) {
+    for (const mail of outbox) {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: FROM,
+          to: [previewTo],
+          subject: `[测试] ${mail.subject}`,
+          html: mail.html.replace("<body", `<body data-original-to="${esc(mail.to)}"`).replace(
+            '<div style="background:#fff',
+            `<p style="font-size:12px;color:#b45309;margin:0 0 8px">测试邮件 · 正式发送时收件人：${esc(mail.to)}</p><div style="background:#fff`,
+          ),
+        }),
+      });
+      (res.ok ? sent : failed).push(mail.to);
+    }
+  }
+  report.emails = dry
+    ? { planned: outbox.map((m) => ({ to: m.to, subject: m.subject })), previewSent: sent.length, previewFailed: failed }
+    : { sent: sent.length, failed };
 
   return new Response(JSON.stringify(report, null, 2), { headers: { "Content-Type": "application/json" } });
 });
