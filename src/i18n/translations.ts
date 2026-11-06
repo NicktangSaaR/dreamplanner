@@ -439,6 +439,12 @@ const zh = {
   "st.save": "保存",
   "st.saved": "资料已更新",
   "st.saveFailed": "没能保存：你可能没有修改这位学生资料的权限",
+  "plan.behindWarning": "学生已是 {grade}，但规划阶段还在「{phase}」。建议开启压缩模式，或把阶段调到「{expected}」。",
+  "act.title": "课外活动",
+  "act.empty": "还没有课外活动记录",
+  "act.add": "添加课外活动",
+  "st.statusShort": "年级 / 状态",
+  "st.notSet": "未填写",
 } as const;
 
 export type MessageKey = keyof typeof zh;
@@ -882,6 +888,12 @@ const en: Messages = {
   "st.save": "Save",
   "st.saved": "Profile updated",
   "st.saveFailed": "Couldn't save. You may not have permission to edit this student.",
+  "plan.behindWarning": "The student is in {grade} but the stage is still \"{phase}\". Consider compressed mode, or move the stage to \"{expected}\".",
+  "act.title": "Extracurricular activities",
+  "act.empty": "No activities recorded yet",
+  "act.add": "Add activity",
+  "st.statusShort": "Grade / status",
+  "st.notSet": "Not set",
 };
 
 export const messages: Record<"zh" | "en", Messages> = { zh, en };

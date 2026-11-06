@@ -1,3 +1,4 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,7 @@ interface ActivitiesSectionProps {
 }
 
 export default function ActivitiesSection({ activities }: ActivitiesSectionProps) {
+  const { t } = useLanguage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newActivity, setNewActivity] = useState({
     name: "",
@@ -126,7 +128,7 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5" />
-            <CardTitle>Extracurricular Activities</CardTitle>
+            <CardTitle>{t("act.title")}</CardTitle>
           </div>
           <Button 
             variant="outline" 
@@ -166,7 +168,7 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
             </div>
           ))}
           {activities.length === 0 && (
-            <p className="text-gray-500 text-center">No extracurricular activities recorded</p>
+            <p className="text-muted-foreground text-center">{t("act.empty")}</p>
           )}
         </div>
       </CardContent>
@@ -174,7 +176,7 @@ export default function ActivitiesSection({ activities }: ActivitiesSectionProps
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Activity</DialogTitle>
+            <DialogTitle>{t("act.add")}</DialogTitle>
           </DialogHeader>
           <ActivityForm
             newActivity={newActivity}

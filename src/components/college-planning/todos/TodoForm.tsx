@@ -1,3 +1,4 @@
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -27,12 +28,13 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
     }
   };
 
+  const { t } = useLanguage();
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 mb-4">
       <Input
         value={newTodoTitle}
         onChange={(e) => setNewTodoTitle(e.target.value)}
-        placeholder="Add a new todo..."
+        placeholder={t("home.todo.placeholder")}
         className="flex-1"
       />
       <Button type="submit" size="sm" disabled={isSubmitting}>
