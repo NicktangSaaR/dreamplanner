@@ -13,8 +13,15 @@ import { Save, Plus, Trash2, FileText, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { ResumeData, Education, WorkExperience, Activity, Award } from "@/components/admin/resume/types";
 
-export default function StudentResumeForm() {
+/**
+ * Resume information form. Without `studentId` it edits the signed-in
+ * student's own resume; with `studentId` the student's team (lead
+ * counselor, follow-up teacher, admin) edits it on their behalf.
+ */
+export default function StudentResumeForm({ studentId }: { studentId?: string } = {}) {
   const queryClient = useQueryClient();
+  const teamMode = !!studentId;
+  const targetId = async () => studentId || (await supabase.auth.getUser()).data.user?.id;
   const [formData, setFormData] = useState<ResumeData>({
     full_name: "",
     email: "",
@@ -34,16 +41,16 @@ export default function StudentResumeForm() {
 
   // Fetch pending resume request
   const { data: pendingRequest, isLoading: isLoadingRequest } = useQuery({
-    queryKey: ["my-resume-request"],
+    queryKey: ["my-resume-request", studentId ?? "me"],
     queryFn: async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("未登录");
+      const target = await targetId();
+      if (!target) throw new Error("未登录");
       
       const { data, error } = await supabase
         .from("resume_requests")
         .select("*")
-        .eq("student_id", userData.user.id)
-        .in("status", ["pending", "submitted"])
+        .eq("student_id", target)
+        .in("status", teamMode ? ["pending", "submitted", "generated"] : ["pending", "submitted"])
         .order("created_at", { ascending: false })
         .limit(1)
         .single();
@@ -97,13 +104,13 @@ export default function StudentResumeForm() {
   // Save mutation
   const saveMutation = useMutation({
     mutationFn: async (submit: boolean) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user || !pendingRequest) throw new Error("无效请求");
+      const target = await targetId();
+      if (!target || !pendingRequest) throw new Error("无效请求");
       
       // Convert to JSON-compatible format for Supabase
       const dataToSave = {
         request_id: pendingRequest.id,
-        student_id: userData.user.id,
+        student_id: target,
         full_name: formData.full_name,
         email: formData.email,
         phone: formData.phone,
@@ -133,7 +140,7 @@ export default function StudentResumeForm() {
         if (error) throw error;
       }
       
-      if (submit) {
+      if (submit && pendingRequest.status === "pending") {
         const { error } = await supabase
           .from("resume_requests")
           .update({ status: "submitted" })
@@ -199,12 +206,27 @@ export default function StudentResumeForm() {
   }
 
   if (!pendingRequest) {
+    const start = async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user || !studentId) return;
+      const { error } = await supabase
+        .from("resume_requests")
+        .insert({ student_id: studentId, admin_id: auth.user.id, status: "pending" });
+      if (error) {
+        toast.error("没能创建简历信息表：" + error.message);
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ["my-resume-request", studentId] });
+    };
     return (
       <Card>
         <CardContent className="py-8">
           <div className="text-center text-muted-foreground">
             <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <p>暂无待填写的简历信息表</p>
+            <p>{teamMode ? "这位学生还没有简历信息表" : "暂无待填写的简历信息表"}</p>
+            {teamMode && (
+              <Button className="mt-4" onClick={() => void start()}>开始填写简历</Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -643,7 +665,7 @@ export default function StudentResumeForm() {
         </Button>
         <Button
           onClick={() => saveMutation.mutate(true)}
-          disabled={saveMutation.isPending || pendingRequest.status === "submitted"}
+          disabled={saveMutation.isPending || (!teamMode && pendingRequest.status === "submitted")}
         >
           {saveMutation.isPending ? "提交中..." : "提交信息"}
         </Button>

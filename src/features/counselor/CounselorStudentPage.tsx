@@ -20,6 +20,7 @@ import PlanningReports from "@/components/engines/PlanningReports";
 import PlanningDocumentSection from "@/components/college-planning/google-drive/PlanningDocumentSection";
 import StudentTeamCard from "@/features/team/StudentTeamCard";
 import AcademicBriefCard from "@/features/grades/AcademicBriefCard";
+import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
 import StudentCustomQuestionsCard from "@/features/mock-interview/StudentCustomQuestionsCard";
 import { useStudentQuarters } from "@/components/engines/hooks/useStudentQuarters";
 import { useStudentPhase } from "@/components/engines/hooks/useStudentPhase";
@@ -207,6 +208,12 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
           <ActivitiesSection activities={activities || []} />
           <SharedFolderSection studentId={studentId} />
           <StudentCustomQuestionsCard studentId={studentId} />
+          {canManage && (
+            <section aria-labelledby="resume-heading" className="space-y-3">
+              <h2 id="resume-heading" className="font-serif text-xl font-semibold text-pine">{t("dash.info.resume")}</h2>
+              <StudentResumeForm studentId={studentId} />
+            </section>
+          )}
         </TabsContent>
       </Tabs>
     </div>
