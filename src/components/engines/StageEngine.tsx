@@ -152,6 +152,7 @@ export default function StageEngine({ studentId, grade, readOnly = false }: Stag
           />
         </div>
 
+        {!readOnly && <p className="text-xs text-muted-foreground">{t("plan.autoAdvanceHint")}</p>}
         {!readOnly && (
           <Button onClick={handleSave} disabled={upsertPhase.isPending} className="gap-2">
             <Save className="h-4 w-4" />

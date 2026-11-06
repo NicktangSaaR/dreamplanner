@@ -6,6 +6,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TEAM_ROLES, type TeamRole, roleLabelKey } from "@/features/team/teamRoles";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 interface AddCollaboratorDialogProps {
   studentId: string;
@@ -14,6 +17,8 @@ interface AddCollaboratorDialogProps {
 }
 
 export default function AddCollaboratorDialog({ studentId, open, onOpenChange }: AddCollaboratorDialogProps) {
+  const { t } = useLanguage();
+  const [role, setRole] = useState<TeamRole>("followup");
   const { data: counselors, isLoading } = useQuery({
     queryKey: ["counselors"],
     queryFn: async () => {
@@ -68,7 +73,8 @@ export default function AddCollaboratorDialog({ studentId, open, onOpenChange }:
           primary_counselor_id: primaryCounselorId,
           collaborator_id: collaboratorId,
           student_id: studentId,
-        });
+          role,
+        } as never);
 
       if (insertError) {
         throw insertError;
@@ -86,9 +92,19 @@ export default function AddCollaboratorDialog({ studentId, open, onOpenChange }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Collaborating Counselor</DialogTitle>
+          <DialogTitle>{t("team.add")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          <Select value={role} onValueChange={(v) => setRole(v as TeamRole)}>
+            <SelectTrigger aria-label={t("team.roleLabel")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TEAM_ROLES.map((r) => (
+                <SelectItem key={r} value={r}>{t(roleLabelKey(r))}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {isLoading ? (
             <p className="text-center text-muted-foreground">Loading counselors...</p>
           ) : counselors?.length === 0 ? (

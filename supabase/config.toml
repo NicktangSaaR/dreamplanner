@@ -42,3 +42,6 @@ verify_jwt = true
 
 [functions.wechat-todo-cron]
 verify_jwt = false
+
+[functions.daily-automation]
+verify_jwt = false
