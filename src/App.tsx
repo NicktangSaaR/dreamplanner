@@ -27,10 +27,10 @@ import ResetPassword from "@/pages/ResetPassword";
 import Footer from "@/components/layout/Footer";
 import { useLocation } from "react-router-dom";
 
-/** The student dashboard is a focused page without the site footer. */
+/** Student and counselor dashboards are focused pages without the site footer. */
 function SiteFooter() {
   const { pathname } = useLocation();
-  return pathname.startsWith("/student-dashboard") ? null : <Footer />;
+  return pathname.startsWith("/student-dashboard") || pathname.startsWith("/counselor-dashboard") ? null : <Footer />;
 }
 
 export default function App() {
