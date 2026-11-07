@@ -8,7 +8,7 @@ import type { BankQuestion, CustomQuestion, InterviewBank, QuestionType } from "
 const db = supabase as any;
 
 const BANK_COLUMNS =
-  "id, title, description, school, program, preparation_time, response_time, is_active, created_at";
+  "id, title, description, school, program, preparation_time, response_time, is_active, created_at, sim_enabled, sim_question_count, sim_shuffle, sim_retakes";
 const QUESTION_COLUMNS =
   "id, bank_id, title, description, question_type, preparation_time, response_time, sort_order";
 const CUSTOM_COLUMNS =
@@ -103,6 +103,10 @@ export interface BankInput {
   preparation_time: number;
   response_time: number;
   is_active: boolean;
+  sim_enabled: boolean;
+  sim_question_count: number | null;
+  sim_shuffle: boolean;
+  sim_retakes: number;
 }
 
 export interface BankQuestionInput {

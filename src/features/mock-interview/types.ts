@@ -10,6 +10,12 @@ export interface InterviewBank {
   preparation_time: number;
   response_time: number;
   is_active: boolean;
+  /** Offered as a full simulation (real-interview conditions). */
+  sim_enabled: boolean;
+  /** Questions drawn per simulation; null = every question in the bank. */
+  sim_question_count: number | null;
+  sim_shuffle: boolean;
+  sim_retakes: number;
   created_at: string;
 }
 
@@ -86,4 +92,14 @@ export function parsePastedQuestions(text: string): string[] {
     .map((line) => line.replace(/^\s*(?:[-*•·]|\d+[.)、]|[（(]\d+[)）])\s*/, "").trim())
     .filter((line) => line.length > 0)
     .map((line) => line.slice(0, 1000));
+}
+
+/** Fisher–Yates shuffle (returns a new array). */
+export function shuffled<T>(list: T[]): T[] {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
 }

@@ -69,6 +69,10 @@ function BankDialog({
     preparation_time: bank?.preparation_time ?? 30,
     response_time: bank?.response_time ?? 60,
     is_active: bank?.is_active ?? true,
+    sim_enabled: bank?.sim_enabled ?? true,
+    sim_question_count: bank?.sim_question_count ?? null,
+    sim_shuffle: bank?.sim_shuffle ?? false,
+    sim_retakes: bank?.sim_retakes ?? 0,
   }));
 
   const submit = async () => {
@@ -131,6 +135,50 @@ function BankDialog({
             <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
             {form.is_active ? t("mi.admin.active") : t("mi.admin.inactive")}
           </label>
+
+          <div className="space-y-3 rounded-md border bg-muted/30 p-4">
+            <label className="flex items-center gap-3 text-sm font-medium">
+              <Switch checked={form.sim_enabled} onCheckedChange={(v) => setForm({ ...form, sim_enabled: v })} />
+              {t("mi2.admin.simEnabled")}
+            </label>
+            {form.sim_enabled && (
+              <div className="flex flex-wrap gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">{t("mi2.admin.simCount")}</Label>
+                  <Select value={form.sim_question_count ? String(form.sim_question_count) : "all"}
+                    onValueChange={(v) => setForm({ ...form, sim_question_count: v === "all" ? null : Number(v) })}>
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t("mi2.admin.simAll")}</SelectItem>
+                      {[1, 2, 3, 4, 5, 6, 8, 10].map((n) => <SelectItem key={n} value={String(n)}>{t("mi2.nQuestions", { n })}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">{t("mi2.admin.simOrder")}</Label>
+                  <Select value={form.sim_shuffle ? "random" : "fixed"} onValueChange={(v) => setForm({ ...form, sim_shuffle: v === "random" })}>
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fixed">{t("mi2.admin.orderFixed")}</SelectItem>
+                      <SelectItem value="random">{t("mi2.admin.orderRandom")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">{t("mi.retakes")}</Label>
+                  <Select value={String(form.sim_retakes)} onValueChange={(v) => setForm({ ...form, sim_retakes: Number(v) })}>
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">{t("mi.retakes0")}</SelectItem>
+                      <SelectItem value="1">{t("mi.retakes1")}</SelectItem>
+                      <SelectItem value="2">{t("mi.retakes2")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">{t("mi2.admin.simHint")}</p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("mi.admin.cancel")}</Button>
