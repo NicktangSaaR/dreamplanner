@@ -534,6 +534,11 @@ const zh = {
   "mi4.answer": "作答",
   "mi4.video": "录像文件",
   "mi4.zipFailed": "打包失败，请逐个点「下载录像」",
+  "grades.delete": "删除",
+  "grades.deleteConfirm": "删除「{name}」？文件和它生成的成绩简报都会删除，无法恢复。",
+  "grades.deleted": "已删除",
+  "grades.deleteFailed": "删除失败，可能没有权限删除这份成绩单",
+  "grades.byTeam": "老师上传",
 } as const;
 
 export type MessageKey = keyof typeof zh;
@@ -1072,6 +1077,11 @@ const en: Messages = {
   "mi4.answer": "Answer",
   "mi4.video": "Recording",
   "mi4.zipFailed": "Couldn't create the zip. Please download each recording.",
+  "grades.delete": "Delete",
+  "grades.deleteConfirm": "Delete \"{name}\"? The file and its academic brief will be removed. This can't be undone.",
+  "grades.deleted": "Deleted",
+  "grades.deleteFailed": "Couldn't delete. You may not have permission to delete this report card.",
+  "grades.byTeam": "Uploaded by your teacher",
 };
 
 export const messages: Record<"zh" | "en", Messages> = { zh, en };
