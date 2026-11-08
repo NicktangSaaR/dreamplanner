@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/utils";
+import BulkQuestionInput, { useBulkQuestions } from "./BulkQuestionInput";
 import { useBankQuestions, useBanks, useCustomQuestionMutations, useCustomQuestions } from "./useInterviewData";
 import {
   PREP_OPTIONS, RESPONSE_OPTIONS, fillPlaceholders, formatSeconds, shuffled,
@@ -62,7 +62,8 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
   const [program, setProgram] = useState(initialSettings.program || "");
 
   // New custom question form
-  const [newText, setNewText] = useState("");
+  const customTitles = useMemo(() => custom.map((c) => c.title), [custom]);
+  const bulk = useBulkQuestions(customTitles);
   const [newType, setNewType] = useState<QuestionType>("video");
 
   useEffect(() => {
@@ -142,12 +143,16 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
   };
 
   const handleAdd = async () => {
-    const text = newText.trim();
-    if (!text) return;
+    if (!bulk.fresh.length) return;
     try {
-      await add.mutateAsync({ title: text, question_type: newType, preparation_time: 30, response_time: 60 });
-      setNewText("");
-      toast.success(t("mi.added"));
+      await add.mutateAsync(
+        bulk.fresh.map((title) => {
+          const m = bulk.meta[title] ?? {};
+          return { title, question_type: m.type ?? newType, preparation_time: m.prep ?? 30, response_time: m.response ?? 60 };
+        }),
+      );
+      toast.success(bulk.fresh.length > 1 ? t("mi3.addedN", { n: bulk.fresh.length }) : t("mi.added"));
+      bulk.reset();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : String(e));
     }
@@ -391,7 +396,8 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
 
             <div className="space-y-2 rounded-md bg-muted/40 p-4">
               <Label htmlFor="mi-new">{t("mi.newQuestion")}</Label>
-              <Textarea id="mi-new" rows={2} maxLength={1000} placeholder={t("mi.newQuestionPlaceholder")} value={newText} onChange={(e) => setNewText(e.target.value)} />
+              <p className="text-xs text-muted-foreground">{t("mi3.mineHint")}</p>
+              <BulkQuestionInput id="mi-new" bulk={bulk} rows={3} placeholder={t("mi.newQuestionPlaceholder")} />
               <div className="flex flex-wrap items-center gap-2">
                 <Select value={newType} onValueChange={(v) => setNewType(v as QuestionType)}>
                   <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
@@ -400,9 +406,9 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
                     <SelectItem value="written">{t("mi.written")}</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button onClick={handleAdd} disabled={!newText.trim() || add.isPending}>
+                <Button onClick={handleAdd} disabled={!bulk.fresh.length || add.isPending}>
                   {add.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Plus className="mr-1.5 h-4 w-4" />}
-                  {t("mi.add")}
+                  {bulk.fresh.length > 1 ? t("mi3.addN", { n: bulk.fresh.length }) : t("mi.add")}
                 </Button>
                 <span className="text-xs text-muted-foreground">{t("mi.mineVisibility")}</span>
               </div>

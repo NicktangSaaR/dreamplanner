@@ -75,8 +75,10 @@ export function useCustomQuestionMutations(userId: string | null | undefined) {
   const refresh = () => qc.invalidateQueries({ queryKey: ["mi-custom", userId] });
 
   const add = useMutation({
-    mutationFn: async (input: CustomQuestionInput) => {
-      const { error } = await db.from("mock_interview_custom_questions").insert({ ...input, user_id: userId });
+    mutationFn: async (input: CustomQuestionInput | CustomQuestionInput[]) => {
+      const rows = (Array.isArray(input) ? input : [input]).map((r) => ({ ...r, user_id: userId }));
+      if (!rows.length) return;
+      const { error } = await db.from("mock_interview_custom_questions").insert(rows);
       if (error) throw error;
     },
     onSuccess: refresh,

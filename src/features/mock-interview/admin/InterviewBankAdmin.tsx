@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { useBankAdmin, useBankQuestions, useBanks, type BankInput } from "../useInterviewData";
 import {
-  PREP_OPTIONS, RESPONSE_OPTIONS, formatSeconds, parsePastedQuestions,
+  PREP_OPTIONS, RESPONSE_OPTIONS, formatSeconds,
   type BankQuestion, type InterviewBank, type QuestionType,
 } from "../types";
+import BulkQuestionInput, { useBulkQuestions } from "../BulkQuestionInput";
 
 const DEFAULT_KEY = "default";
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -268,22 +269,30 @@ function QuestionRow({ q, bank }: { q: BankQuestion; bank: InterviewBank }) {
 function ImportPanel({ bank, existing }: { bank: InterviewBank; existing: BankQuestion[] }) {
   const { t } = useLanguage();
   const { importQuestions } = useBankAdmin();
-  const [text, setText] = useState("");
+  const existingTitles = useMemo(() => existing.map((q) => q.title), [existing]);
+  const bulk = useBulkQuestions(existingTitles);
   const [type, setType] = useState<QuestionType>("video");
   const [prep, setPrep] = useState<number | null>(null);
   const [resp, setResp] = useState<number | null>(null);
-  const parsed = useMemo(() => parsePastedQuestions(text), [text]);
 
   const submit = async () => {
-    if (!parsed.length) return;
+    if (!bulk.fresh.length) return;
     try {
       await importQuestions.mutateAsync({
         bankId: bank.id,
         startOrder: existing.reduce((m, q) => Math.max(m, q.sort_order), 0),
-        rows: parsed.map((title) => ({ title, question_type: type, preparation_time: prep, response_time: resp })),
+        rows: bulk.fresh.map((title) => {
+          const m = bulk.meta[title] ?? {};
+          return {
+            title,
+            question_type: m.type ?? type,
+            preparation_time: m.prep ?? prep,
+            response_time: m.response ?? resp,
+          };
+        }),
       });
-      toast.success(t("mi.admin.imported", { n: parsed.length }));
-      setText("");
+      toast.success(t("mi.admin.imported", { n: bulk.fresh.length }));
+      bulk.reset();
     } catch (e) {
       toast.error(errorText(e));
     }
@@ -291,17 +300,16 @@ function ImportPanel({ bank, existing }: { bank: InterviewBank; existing: BankQu
 
   return (
     <div className="space-y-3 border-t bg-muted/30 p-4">
-      <Label className="flex items-center gap-2"><Upload className="h-4 w-4" /> {t("mi.admin.import")}</Label>
-      <p className="text-xs text-muted-foreground">{t("mi.admin.importHint")}</p>
-      <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder={"1. Tell us about yourself.\n2. Why {school}?\n3. Describe a time you led a team."} />
+      <Label className="flex items-center gap-2"><Upload className="h-4 w-4" /> {t("mi3.adminImport")}</Label>
+      <p className="text-xs text-muted-foreground">{t("mi3.adminImportHint")}</p>
+      <BulkQuestionInput bulk={bulk} rows={6} placeholder={"1. Tell us about yourself.\n2. Why {school}?\n3. Describe a time you led a team."} />
       <div className="flex flex-wrap items-center gap-3">
         <TypeSelect value={type} onChange={setType} />
         <TimeSelect value={prep} options={PREP_OPTIONS} onChange={setPrep} allowDefault defaultLabel={`${t("mi.prep")}: ${t("mi.admin.useDefault")}`} />
         <TimeSelect value={resp} options={RESPONSE_OPTIONS} onChange={setResp} allowDefault defaultLabel={`${t("mi.response")}: ${t("mi.admin.useDefault")}`} />
-        <span className="text-sm text-muted-foreground">{parsed.length > 0 && t("mi.admin.importPreview", { n: parsed.length })}</span>
-        <Button className="ml-auto" onClick={submit} disabled={!parsed.length || importQuestions.isPending}>
+        <Button className="ml-auto" onClick={submit} disabled={!bulk.fresh.length || importQuestions.isPending}>
           {importQuestions.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-          {t("mi.admin.importButton")}
+          {bulk.fresh.length > 0 ? t("mi3.importN", { n: bulk.fresh.length }) : t("mi.admin.importButton")}
         </Button>
       </div>
     </div>
