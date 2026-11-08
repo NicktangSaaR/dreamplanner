@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import BulkQuestionInput, { useBulkQuestions } from "./BulkQuestionInput";
 import { useBankQuestions, useBanks, useCustomQuestionMutations, useCustomQuestions } from "./useInterviewData";
 import {
-  PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, drawFromBlueprint, fillPlaceholders, formatSeconds, shuffled,
+  PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, drawFromBlueprint, drawRandom, recentQuestionKeys, rememberQuestions, fillPlaceholders, formatSeconds,
   type InterviewBank, type QuestionType, type SessionQuestion, type SessionSettings,
 } from "./types";
 
@@ -130,14 +130,16 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
   const start = () => {
     if (mode === "simulation") {
       if (!sim) return;
-      const drawn = drawFromBlueprint(sim, bankQuestions);
+      const drawn = drawFromBlueprint(sim, bankQuestions, recentQuestionKeys());
       if (!drawn.length) return;
+      rememberQuestions(drawn.map((q) => q.key));
       onStart(drawn, { school: sim.school || "", program: sim.program || "", retakes: sim.sim_retakes, shuffle: false }, []);
       return;
     }
     let qs: SessionQuestion[];
     if (pick === "random") {
-      qs = shuffled(poolQuestions).slice(0, Math.min(randomCount, poolQuestions.length));
+      qs = drawRandom(poolQuestions, randomCount, recentQuestionKeys());
+      rememberQuestions(qs.map((q) => q.key));
     } else {
       qs = practiceChosen;
     }

@@ -125,22 +125,65 @@ export const blueprintTotal = (b: BlueprintSection[]) => b.reduce((n, s) => n + 
 /** Estimated length of a blueprint, in seconds. */
 export const blueprintSeconds = (b: BlueprintSection[]) => b.reduce((n, s) => n + s.count * (s.prep + s.response), 0);
 
+const RECENT_KEY = "dreamplanner.mi.recent";
+const RECENT_MAX = 80;
+
+/** Question keys this browser drew recently (most recent last). Never throws. */
+export function recentQuestionKeys(): Set<string> {
+  try {
+    const raw = localStorage.getItem(RECENT_KEY);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+/** Remember the questions of a run so the next runs prefer different ones. */
+export function rememberQuestions(keys: string[]) {
+  try {
+    const list = [...recentQuestionKeys()].filter((k) => !keys.includes(k)).concat(keys);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(-RECENT_MAX)));
+  } catch {
+    /* storage unavailable: drawing still works, just without the preference */
+  }
+}
+
+const sameText = (t: string) => t.trim().toLowerCase().replace(/\s+/g, " ");
+
+/**
+ * Random order, but questions not seen recently come first, so repeated
+ * runs cycle through a pool before showing the same question again.
+ */
+export function freshFirst<T extends { key: string }>(list: T[], recent: Set<string>): T[] {
+  const mixed = shuffled(list);
+  return [...mixed.filter((q) => !recent.has(q.key)), ...mixed.filter((q) => recent.has(q.key))];
+}
+
 /**
  * Build a school interview: for each section, draw random questions from its
- * pool (never the same question twice), with the section's type and timing.
+ * pool. A question is never used twice in one interview, even when several
+ * sections draw from the same pool or the same text sits in two pools.
  */
 export function drawFromBlueprint(
   school: InterviewBank,
   questionsByPool: Record<string, BankQuestion[]>,
+  recent: Set<string> = new Set(),
 ): SessionQuestion[] {
-  const used = new Set<string>();
+  const usedIds = new Set<string>();
+  const usedTexts = new Set<string>();
   const out: SessionQuestion[] = [];
   for (const sec of school.blueprint) {
-    const candidates = shuffled((questionsByPool[sec.pool_id] ?? []).filter((q) => !used.has(q.id)));
-    for (const q of candidates.slice(0, sec.count)) {
-      used.add(q.id);
+    const pool = (questionsByPool[sec.pool_id] ?? []).map((q) => ({ ...q, key: `bank:${q.id}` }));
+    let taken = 0;
+    for (const q of freshFirst(pool, recent)) {
+      if (taken >= sec.count) break;
+      const text = sameText(q.title);
+      if (usedIds.has(q.id) || usedTexts.has(text)) continue;
+      usedIds.add(q.id);
+      usedTexts.add(text);
+      taken++;
       out.push({
-        key: `bank:${q.id}`,
+        key: q.key,
         text: q.title,
         type: sec.question_type ?? q.question_type,
         prep: sec.prep,
@@ -149,6 +192,20 @@ export function drawFromBlueprint(
     }
   }
   return school.sim_shuffle ? shuffled(out) : out;
+}
+
+/** Random practice set: no repeated text, recently seen questions last. */
+export function drawRandom(list: SessionQuestion[], n: number, recent: Set<string> = new Set()): SessionQuestion[] {
+  const seen = new Set<string>();
+  const out: SessionQuestion[] = [];
+  for (const q of freshFirst(list, recent)) {
+    if (out.length >= n) break;
+    const text = sameText(q.text);
+    if (seen.has(text)) continue;
+    seen.add(text);
+    out.push(q);
+  }
+  return out;
 }
 
 /** How many questions a blueprint can actually draw with the pools as they are now. */
