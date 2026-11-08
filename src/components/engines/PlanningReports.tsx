@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  FileBarChart, Sparkles, Save, Loader2, FileDown, Pencil, Eye, CalendarCheck, TrendingUp, Printer
+  FileBarChart, Sparkles, Save, Loader2, FileDown, Pencil, Eye, CalendarCheck, TrendingUp
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -16,7 +16,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { QUARTER_LABELS, PHASE_LABELS } from "./types";
 import ReactMarkdown from "react-markdown";
-import { downloadReportDocx, printReport } from "./reportExport";
+import { downloadReportDocx, downloadReportPdf } from "./reportExport";
 
 interface PlanningReportsProps {
   studentId: string;
@@ -214,9 +214,15 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
     }
   };
 
-  const handlePrint = (report: any) => {
-    if (!printReport(report.title, report.final_content || report.ai_draft || "", dateLabel(report))) {
-      toast.error(t("plan.reports.popupBlocked"));
+  const [pdfBusy, setPdfBusy] = useState<string | null>(null);
+  const handlePdf = async (report: any) => {
+    setPdfBusy(report.id);
+    try {
+      await downloadReportPdf(report.title, report.final_content || report.ai_draft || "", dateLabel(report));
+    } catch {
+      toast.error(t("plan.reports.exportFailed"));
+    } finally {
+      setPdfBusy(null);
     }
   };
 
@@ -247,9 +253,9 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
               title={t("plan.reports.downloadWord")}>
               <FileDown className="h-3.5 w-3.5" /> Word
             </Button>
-            <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={() => handlePrint(report)}
-              title={t("plan.reports.printPdf")}>
-              <Printer className="h-3.5 w-3.5" /> PDF
+            <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={() => void handlePdf(report)}
+              disabled={pdfBusy === report.id} title={t("plan.reports.printPdf")}>
+              {pdfBusy === report.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />} PDF
             </Button>
           </div>
         </div>

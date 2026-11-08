@@ -88,44 +88,113 @@ export async function downloadReportDocx(title: string, markdown: string, dateLa
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const inlineHtml = (s: string) => inlineRuns(s).map((r) => (r.bold ? `<strong>${esc(r.text)}</strong>` : esc(r.text))).join("");
+const EMOJI = /[\p{Extended_Pictographic}\uFE0F\u200D]/gu;
 
-/** Open the report in a clean page and the print dialog, where it can be saved as PDF. */
-export function printReport(title: string, markdown: string, dateLabel: string) {
-  let html = "";
-  let list: "ul" | "ol" | null = null;
-  const close = () => {
-    if (list) html += `</${list}>`;
-    list = null;
-  };
-  for (const blk of parseMarkdown(markdown)) {
-    if (blk.kind === "bullet") {
-      const want = blk.ordered ? "ol" : "ul";
-      if (list !== want) {
-        close();
-        html += `<${want}>`;
-        list = want;
-      }
-      html += `<li>${inlineHtml(blk.text)}</li>`;
+async function fontBase64(url: string) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`font ${res.status}`);
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+/**
+ * Wrap mixed Chinese/English text: Chinese may break between any two
+ * characters, English only at spaces (jsPDF's own wrapping treats a run of
+ * Chinese as one long word and breaks lines too early).
+ */
+function wrap(text: string, maxWidth: number, measure: (t: string) => number): string[] {
+  const tokens = text.match(/[A-Za-z0-9@#&_'’.\-+/%$]+|\s+|./gu) ?? [];
+  const lines: string[] = [];
+  let line = "";
+  for (const tok of tokens) {
+    const next = line + tok;
+    if (measure(next) <= maxWidth || !line.trim()) {
+      line = next;
       continue;
     }
-    close();
-    if (blk.kind === "heading") html += `<h${blk.level + 1}>${inlineHtml(blk.text)}</h${blk.level + 1}>`;
-    else html += `<p>${inlineHtml(blk.text)}</p>`;
+    lines.push(line.trimEnd());
+    line = /^\s+$/.test(tok) ? "" : tok;
   }
-  close();
+  if (line.trim()) lines.push(line.trimEnd());
+  // A single token wider than the line (e.g. a long URL) is split by characters.
+  return lines.flatMap((l) => {
+    if (measure(l) <= maxWidth) return [l];
+    const parts: string[] = [];
+    let cur = "";
+    for (const ch of l) {
+      if (measure(cur + ch) > maxWidth && cur) {
+        parts.push(cur);
+        cur = ch;
+      } else cur += ch;
+    }
+    if (cur) parts.push(cur);
+    return parts;
+  });
+}
 
-  const w = window.open("", "_blank");
-  if (!w) return false;
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
-<style>
-  body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC","Helvetica Neue",Arial,sans-serif;color:#1f2a28;max-width:760px;margin:32px auto;padding:0 24px;line-height:1.7;font-size:14px}
-  h1{font-size:22px;margin:0 0 4px} .date{color:#667;font-size:12px;margin-bottom:24px}
-  h2{font-size:18px;margin:24px 0 8px} h3{font-size:16px;margin:20px 0 6px} h4{font-size:15px;margin:16px 0 6px}
-  ul,ol{padding-left:22px} li{margin:4px 0} @page{margin:18mm}
-</style></head><body><h1>${esc(title)}</h1><div class="date">${esc(dateLabel)}</div>${html}
-<script>window.onload=function(){setTimeout(function(){window.print()},300)}</script></body></html>`);
-  w.document.close();
-  return true;
+let fontCache: Promise<[string, string]> | null = null;
+const loadFonts = () =>
+  (fontCache ??= Promise.all([
+    fontBase64("/fonts/NotoSansSC-Regular-gb2312.ttf"),
+    fontBase64("/fonts/NotoSansSC-Bold-gb2312.ttf"),
+  ]).catch((e) => {
+    fontCache = null;
+    throw e;
+  }));
+
+/** Download the report as a PDF with an embedded Chinese font. */
+export async function downloadReportPdf(title: string, markdown: string, dateLabel: string) {
+  const [{ default: jsPDF }, [regular, bold]] = await Promise.all([import("jspdf"), loadFonts()]);
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  doc.addFileToVFS("NotoSansSC-Regular.ttf", regular);
+  doc.addFont("NotoSansSC-Regular.ttf", "NotoSC", "normal");
+  doc.addFileToVFS("NotoSansSC-Bold.ttf", bold);
+  doc.addFont("NotoSansSC-Bold.ttf", "NotoSC", "bold");
+
+  const margin = 56;
+  const width = doc.internal.pageSize.getWidth() - margin * 2;
+  const bottom = doc.internal.pageSize.getHeight() - margin;
+  let y = margin;
+
+  const write = (text: string, opts: { size: number; bold?: boolean; indent?: number; gapBefore?: number; gapAfter?: number; color?: number }) => {
+    const clean = text
+      .replace(EMOJI, "")
+      .replace(/\$?\\rightarrow\$?/g, "→")
+      .replace(/\$?\\leftarrow\$?/g, "←")
+      .replace(/\*\*/g, "")
+      .replace(/(^|[^*])\*([^*\s][^*]*?)\*/g, "$1$2")
+      .replace(/[`]/g, "")
+      .trim();
+    if (!clean) return;
+    doc.setFont("NotoSC", opts.bold ? "bold" : "normal");
+    doc.setFontSize(opts.size);
+    doc.setTextColor(opts.color ?? 30);
+    const lineH = opts.size * 1.55;
+    y += opts.gapBefore ?? 0;
+    const lines = wrap(clean, width - (opts.indent ?? 0), (t) => doc.getTextWidth(t));
+    for (const line of lines) {
+      if (y + lineH > bottom) {
+        doc.addPage();
+        y = margin;
+      }
+      doc.text(line, margin + (opts.indent ?? 0), y + opts.size);
+      y += lineH;
+    }
+    y += opts.gapAfter ?? 0;
+  };
+
+  write(title, { size: 18, bold: true, gapAfter: 2 });
+  write(dateLabel, { size: 9, color: 110, gapAfter: 14 });
+  for (const blk of parseMarkdown(markdown)) {
+    if (blk.kind === "heading") {
+      write(blk.text, { size: blk.level === 1 ? 15 : blk.level === 2 ? 14 : 12, bold: true, gapBefore: 10, gapAfter: 4 });
+    } else if (blk.kind === "bullet") {
+      write(`${blk.ordered ? `${blk.ordered}.` : "•"} ${blk.text}`, { size: 10.5, indent: 12, gapAfter: 2 });
+    } else {
+      write(blk.text, { size: 10.5, gapAfter: 5 });
+    }
+  }
+  doc.save(`${safeName(title)}.pdf`);
 }
