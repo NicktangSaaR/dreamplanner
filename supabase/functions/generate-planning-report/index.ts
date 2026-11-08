@@ -1,15 +1,15 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { reportType, studentName, phase, quarter, academicYear, kpiData, courseSummary, activitySummary, planningDocContent } = await req.json();
+    const { reportType, studentName, phase, quarter, academicYear, kpiData, courseSummary, activitySummary, planningDocContent, language } = await req.json();
+    const english = language === "en";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
@@ -56,7 +56,7 @@ serve(async (req) => {
       ? `\n\n规划方案文档内容（摘要）：\n${planningDocContent.substring(0, 3000)}`
       : "";
 
-    const prompt = isQuarterly
+    const zhPrompt = isQuarterly
       ? `你是一位资深美国大学申请规划顾问。请为学生「${studentName || "学生"}」生成${quarterNames[quarter] || quarter} (${academicYear}) 的季度规划工作完成情况评估报告。
 
 当前阶段: ${phaseNames[phase] || phase}
@@ -119,6 +119,78 @@ ${kpiData || "暂无KPI数据"}${docContext}
 对学生当前的整体申请竞争力进行简要评估。
 
 请确保内容具体、有针对性，体现专业水准。`;
+
+
+    const quarterNamesEn: Record<string, string> = {
+      Q1_fall: "Fall term (Sep–Nov)",
+      Q2_winter: "Winter term (Dec–Feb)",
+      Q3_spring: "Spring term (Mar–May)",
+      Q4_summer: "Summer (Jun–Aug)",
+    };
+    const phaseNamesEn: Record<string, string> = {
+      exploration: "Exploration stage",
+      positioning: "Positioning stage",
+      consolidation: "Consolidation stage",
+      application: "Application stage",
+    };
+    const docContextEn = planningDocContent
+      ? `\n\nPlanning document (excerpt, may be in Chinese):\n${planningDocContent.substring(0, 3000)}`
+      : "";
+    const name = studentName || "the student";
+
+    const enPrompt = isQuarterly
+      ? `You are a senior US college admissions planning counselor. Write a quarterly progress review for ${name} covering ${quarterNamesEn[quarter] || quarter} (${academicYear}).
+
+Current stage: ${phaseNamesEn[phase] || phase}
+
+Quarterly goals and completion (may be in Chinese):
+${kpiData || "No goal data"}
+
+Academics:
+${courseSummary || "No course data"}
+
+Activities:
+${activitySummary || "No activity data"}${docContextEn}
+
+Write the report in clear, professional English, in Markdown, with these sections:
+## Quarterly Review
+
+### 1. Key achievements this quarter
+### 2. Progress on quarterly goals
+Assess each goal and give an overall completion rate.
+### 3. Priorities for next quarter
+3–5 specific, actionable recommendations.
+### 4. Risks to watch
+
+Be specific to this student and avoid generic advice. Translate any Chinese input into English.`
+      : `You are a senior US college admissions planning counselor. Write a stage summary report for ${name} for the ${phaseNamesEn[phase] || phase}.
+
+Academic year: ${academicYear}
+
+Academics:
+${courseSummary || "No course data"}
+
+Activities:
+${activitySummary || "No activity data"}
+
+Goal completion overview (may be in Chinese):
+${kpiData || "No goal data"}${docContextEn}
+
+Write the report in clear, professional English, in Markdown, with these sections:
+## Stage Summary Report
+
+### 1. Key milestones this stage
+### 2. Academic development
+GPA trend, course choices and academic competitiveness.
+### 3. Activities and personal narrative
+Depth, breadth and how the student's story is taking shape.
+### 4. Strategy for the next stage
+3–5 specific, actionable recommendations.
+### 5. Overall competitiveness
+
+Be specific to this student and professional in tone. Translate any Chinese input into English.`;
+
+    const prompt = english ? enPrompt : zhPrompt;
 
     const response = await fetch(apiUrl, {
       method: "POST",

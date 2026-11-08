@@ -539,6 +539,11 @@ const zh = {
   "grades.deleted": "已删除",
   "grades.deleteFailed": "删除失败，可能没有权限删除这份成绩单",
   "grades.byTeam": "老师上传",
+  "plan.reports.generatedOn": "生成日期：",
+  "plan.reports.exportFailed": "导出失败，请重试",
+  "plan.reports.downloadWord": "下载 Word 文件",
+  "plan.reports.printPdf": "下载 PDF 文件",
+  "plan.reports.language": "报告语言",
 } as const;
 
 export type MessageKey = keyof typeof zh;
@@ -1082,6 +1087,11 @@ const en: Messages = {
   "grades.deleted": "Deleted",
   "grades.deleteFailed": "Couldn't delete. You may not have permission to delete this report card.",
   "grades.byTeam": "Uploaded by your teacher",
+  "plan.reports.generatedOn": "Generated:",
+  "plan.reports.exportFailed": "Export failed. Please try again.",
+  "plan.reports.downloadWord": "Download as Word",
+  "plan.reports.printPdf": "Download as PDF",
+  "plan.reports.language": "Report language",
 };
 
 export const messages: Record<"zh" | "en", Messages> = { zh, en };
