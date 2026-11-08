@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import BulkQuestionInput, { useBulkQuestions } from "./BulkQuestionInput";
 import { useBankQuestions, useBanks, useCustomQuestionMutations, useCustomQuestions } from "./useInterviewData";
 import {
-  PREP_OPTIONS, RESPONSE_OPTIONS, fillPlaceholders, formatSeconds, shuffled,
+  PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, drawFromBlueprint, fillPlaceholders, formatSeconds, shuffled,
   type InterviewBank, type QuestionType, type SessionQuestion, type SessionSettings,
 } from "./types";
 
@@ -43,10 +43,17 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
   const { add, remove } = useCustomQuestionMutations(userId);
 
   const usableBanks = useMemo(
-    () => banks.filter((b) => b.is_active && (bankQuestions[b.id]?.length ?? 0) > 0),
+    () => banks.filter((b) => b.kind === "pool" && b.is_active && (bankQuestions[b.id]?.length ?? 0) > 0),
     [banks, bankQuestions],
   );
-  const simulations = usableBanks.filter((b) => b.sim_enabled);
+  const poolTitle = useMemo(() => Object.fromEntries(banks.map((b) => [b.id, b.title])), [banks]);
+  const simulations = useMemo(
+    () =>
+      banks
+        .filter((b) => b.kind === "school" && b.is_active && blueprintAvailable(b, bankQuestions) > 0)
+        .sort((a, b) => (a.school || a.title).localeCompare(b.school || b.title)),
+    [banks, bankQuestions],
+  );
 
   const [mode, setMode] = useState<Mode>("simulation");
   const [simId, setSimId] = useState("");
@@ -101,9 +108,8 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
   }, [pool]);
 
   const sim = simulations.find((b) => b.id === simId) || null;
-  const simQuestions = sim ? (bankQuestions[sim.id] ?? []).map((q) => toSession(sim, q, `bank:${q.id}`)) : [];
-  const simCount = sim ? Math.min(sim.sim_question_count ?? simQuestions.length, simQuestions.length) : 0;
-  const simTime = simQuestions.length ? Math.round((simQuestions.reduce((s, q) => s + q.prep + q.response, 0) / simQuestions.length) * simCount) : 0;
+  const simCount = sim ? blueprintAvailable(sim, bankQuestions) : 0;
+  const simTime = sim ? blueprintSeconds(sim.blueprint) : 0;
 
   const withTiming = (qs: SessionQuestion[]) =>
     qs.map((q) => ({
@@ -123,9 +129,9 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
 
   const start = () => {
     if (mode === "simulation") {
-      if (!sim || simQuestions.length === 0) return;
-      const ordered = sim.sim_shuffle ? shuffled(simQuestions) : simQuestions;
-      const drawn = sim.sim_shuffle || sim.sim_question_count ? ordered.slice(0, simCount) : ordered;
+      if (!sim) return;
+      const drawn = drawFromBlueprint(sim, bankQuestions);
+      if (!drawn.length) return;
       onStart(drawn, { school: sim.school || "", program: sim.program || "", retakes: sim.sim_retakes, shuffle: false }, []);
       return;
     }
@@ -208,8 +214,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
           <h2 id="sim-heading" className="font-semibold text-pine">{t("mi2.chooseProgram")}</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {simulations.map((b) => {
-              const total = bankQuestions[b.id]?.length ?? 0;
-              const n = Math.min(b.sim_question_count ?? total, total);
+              const n = blueprintAvailable(b, bankQuestions);
               return (
                 <button
                   key={b.id}
@@ -224,15 +229,22 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
                   <span className="block font-semibold">{b.school || b.title}</span>
                   {b.program && <span className="block text-sm">{b.program}</span>}
                   <span className="mt-2 block text-xs text-muted-foreground">
-                    {t("mi2.nQuestions", { n })} · {t("mi.prep")} {formatSeconds(b.preparation_time)} · {t("mi.response")} {formatSeconds(b.response_time)} ·{" "}
+                    {t("mi2.nQuestions", { n })} · {t("mi3.about", { time: formatSeconds(blueprintSeconds(b.blueprint)) })} ·{" "}
                     {b.sim_retakes === 0 ? t("mi.retakes0") : b.sim_retakes === 1 ? t("mi.retakes1") : t("mi.retakes2")}
+                  </span>
+                  <span className="mt-2 flex flex-wrap gap-1.5">
+                    {b.blueprint.map((sec, i) => (
+                      <span key={i} className="rounded-sm bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                        {poolTitle[sec.pool_id] ?? "?"} ×{sec.count} · {formatSeconds(sec.prep)}/{formatSeconds(sec.response)}
+                      </span>
+                    ))}
                   </span>
                 </button>
               );
             })}
           </div>
           {sim?.description && <p className="mt-4 max-w-3xl text-sm text-muted-foreground">{sim.description}</p>}
-          <p className="mt-4 text-sm text-muted-foreground">{t("mi2.simRules")}</p>
+          <p className="mt-4 text-sm text-muted-foreground">{t("mi3.simDraw")} {t("mi2.simRules")}</p>
         </section>
       ) : (
         /* ---------------- Practice ---------------- */

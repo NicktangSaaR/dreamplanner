@@ -11,38 +11,41 @@ const m = today.getMonth();
 const quarter = m >= 8 && m <= 10 ? "Q1_fall" : m >= 11 || m <= 1 ? "Q2_winter" : m >= 2 && m <= 4 ? "Q3_spring" : "Q4_summer";
 
 export const DEMO_USER = "11111111-1111-1111-1111-111111111111";
-const bank = (id: string, title: string, school: string, program: string, prep: number, resp: number, sim: Partial<Record<string, unknown>> = {}) => ({
-  id, title, description: null, school, program, preparation_time: prep, response_time: resp, is_active: true, created_at: iso(-30),
-  sim_enabled: true, sim_question_count: null, sim_shuffle: false, sim_retakes: 0, ...sim,
+let order = 0;
+const base = (id: string, kind: string, title: string, extra: Record<string, unknown> = {}) => ({
+  id, kind, title, description: null, school: null, program: null, preparation_time: 30, response_time: 60, is_active: true,
+  created_at: `2026-10-01T00:00:${String(++order).padStart(2, "0")}Z`, blueprint: [], sim_shuffle: false, sim_retakes: 0, ...extra,
 });
+const pool = (id: string, title: string, description: string) => base(id, "pool", title, { description });
+const sec = (pool_id: string, count: number, prep: number, response: number, question_type: string | null = null) => ({ pool_id, count, question_type, prep, response });
+const school = (id: string, school: string, program: string, blueprint: unknown[], extra: Record<string, unknown> = {}) =>
+  base(id, "school", `${school} · ${program}`, { school, program, blueprint, ...extra });
 let qn = 0;
-const q = (bank_id: string, title: string, type = "video", prep: number | null = null, resp: number | null = null) => ({
-  id: `bq${++qn}`, bank_id, title, description: null, question_type: type, preparation_time: prep, response_time: resp, sort_order: qn,
+const q = (bank_id: string, title: string, type = "video") => ({
+  id: `bq${++qn}`, bank_id, title, description: null, question_type: type, preparation_time: null, response_time: null, sort_order: qn,
 });
+const POOLS: Record<string, string[]> = {
+  p1: ["Tell me about a person or an event that has markedly changed you.", "Have you ever tried something and failed, but were glad you did it?", "Tell me about yourself.", "Tell me about a time you influenced someone.", "Anything you have done or experienced of which you are most proud?", "How have you left your mark on your community?"],
+  p2: ["What would you do with a free day?", "What books do you recommend?", "What is something that you can't stop talking about?", "Tell us about a skill you taught yourself."],
+  p3: ["What motivates you?", "What are your strengths and weaknesses?", "If we were privy to your peer evaluation right now, what would it say?", "Which defining principle do you most embody?", "How would you want to be remembered?"],
+  p4: ["What is your usual role on a team?", "Tell me about a time when you dealt with conflict.", "You are working on a group project and one member is not contributing. What do you do?", "Your team disagrees on the direction of a project two days before the deadline. How do you handle it?"],
+  p5: ["If you had the ability to travel back in time, when would you travel to and why?", "If you could meet anyone, dead or alive, who would it be?", "What would you do if you did not attend college next year?", "If you could add one course that every high school student must take, what would it be?"],
+  p6: ["Why do you want to study {program} at {school}?", "What will you contribute to the {school} community?", "How do you think you can make an impact at college?"],
+};
 const tables: Record<string, any[]> = {
   profiles: [{ id: DEMO_USER, full_name: "Amy Chen", user_type: "admin", email: "amy@example.com" }],
   mock_interview_questions: [
-    bank("b1", "UBC Sauder · Kira", "UBC", "Sauder School of Business", 30, 60, { sim_question_count: 4, sim_shuffle: true }),
-    bank("b2", "Waterloo Engineering · AIF Video", "University of Waterloo", "Engineering", 45, 90, { sim_retakes: 1 }),
-    bank("b3", "Western Ivey AEO", "Western University", "Ivey AEO", 30, 60),
-    bank("b4", "通用行为面试题", "", "", 30, 90, { sim_enabled: false }),
+    pool("p1", "个人经历类", "成长经历、挑战与失败、成就、影响你的人或事"),
+    pool("p2", "兴趣爱好特长类", "课外活动、爱好、书、热爱的事"),
+    pool("p3", "个人品质类", "优缺点、价值观、动力、别人如何评价你"),
+    pool("p4", "小组合作情景类", "团队角色、冲突、领导与说服、情景题"),
+    pool("p5", "创造性问题类", "假设性、开放性的问题，考察临场思考"),
+    pool("p6", "择校与专业动机类", "Why this school / program；可用 {school} {program} 占位"),
+    school("s1", "UBC", "Sauder School of Business", [sec("p1", 1, 30, 60), sec("p4", 1, 30, 60), sec("p5", 1, 30, 60), sec("p1", 1, 60, 300, "written")], { description: "演示设置：3 道视频题 + 1 道书面题，每题一次机会。" }),
+    school("s2", "University of Waterloo", "Engineering", [sec("p6", 1, 60, 120), sec("p1", 1, 45, 90), sec("p4", 1, 45, 90)], { sim_retakes: 1 }),
+    school("s3", "Western University", "Ivey AEO", [sec("p3", 1, 30, 60), sec("p5", 1, 30, 60)], { sim_shuffle: true }),
   ],
-  mock_interview_bank_questions: [
-    q("b1", "Why are you interested in studying business at {school}?"),
-    q("b1", "Tell us about a time you worked on a team and things did not go as planned."),
-    q("b1", "Describe a time you had to persuade someone to see your point of view."),
-    q("b1", "What does leadership mean to you? Give an example."),
-    q("b1", "In 150 words, describe a challenge you overcame.", "written", 30, 300),
-    q("b1", "If you could change one thing about your community, what would it be?"),
-    q("b2", "Why do you want to study {program} at {school}?", "video", 60, 120),
-    q("b2", "Describe a project you built. What would you do differently?"),
-    q("b2", "Tell us about a time you failed and what you learned."),
-    q("b3", "Describe your most meaningful leadership experience."),
-    q("b3", "What is a business you admire, and why?"),
-    q("b4", "Tell me about yourself."),
-    q("b4", "What is your greatest strength?"),
-    q("b4", "Describe a time you showed resilience."),
-  ],
+  mock_interview_bank_questions: Object.entries(POOLS).flatMap(([id, list]) => list.map((t) => q(id, t))),
   mock_interview_custom_questions: [
     { id: "c1", user_id: DEMO_USER, title: "Why did you choose materials engineering?", question_type: "video", preparation_time: 30, response_time: 60, created_at: iso(-2) },
   ],
@@ -68,6 +71,7 @@ class Query {
   eq(c: string, v: any) { this.filters.push((r) => r[c] === v); return this; }
   neq(c: string, v: any) { this.filters.push((r) => r[c] !== v); return this; }
   is(c: string, v: any) { this.filters.push((r) => (r[c] ?? null) === v); return this; }
+  contains(c: string, v: any[]) { this.filters.push((r) => v.every((x) => (r[c] ?? []).some((y: any) => Object.entries(x).every(([k, val]) => y[k] === val)))); return this; }
   in(c: string, v: any[]) { this.filters.push((r) => v.includes(r[c])); return this; }
   gte(c: string, v: any) { this.filters.push((r) => r[c] >= v); return this; }
   lte(c: string, v: any) { this.filters.push((r) => r[c] <= v); return this; }
