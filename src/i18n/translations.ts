@@ -525,6 +525,15 @@ const zh = {
   "mi3.missingPool": "（题库已删除）",
   "mi3.shortNow": "题库题目不足，目前每次只能抽到 {n}/{total} 道题",
   "mi3.usedBy": "{n} 所学校在用",
+  "mi4.downloadAll": "全部下载（压缩包）",
+  "mi4.downloadAllHint": "录像只存在这个页面里，关闭或刷新就没了。下载的压缩包里有每题录像和一份答题记录，可以直接发给老师。",
+  "mi4.allSaved": "已下载。文件在电脑的「下载」文件夹里。",
+  "mi4.leaveReview": "还有录像没下载，离开后会丢失。确定离开吗？",
+  "mi4.recordTitle": "模拟面试答题记录",
+  "mi4.recordFile": "答题记录",
+  "mi4.answer": "作答",
+  "mi4.video": "录像文件",
+  "mi4.zipFailed": "打包失败，请逐个点「下载录像」",
 } as const;
 
 export type MessageKey = keyof typeof zh;
@@ -1054,6 +1063,15 @@ const en: Messages = {
   "mi3.missingPool": "(pool deleted)",
   "mi3.shortNow": "Pools are short: each run can only draw {n}/{total} questions",
   "mi3.usedBy": "used by {n} schools",
+  "mi4.downloadAll": "Download all (zip)",
+  "mi4.downloadAllHint": "Recordings exist only in this page and are lost if you close or refresh it. The zip has every recording plus a record of your answers, ready to send to your counselor.",
+  "mi4.allSaved": "Downloaded. Look in your computer's Downloads folder.",
+  "mi4.leaveReview": "Some recordings have not been downloaded and will be lost. Leave anyway?",
+  "mi4.recordTitle": "Mock interview record",
+  "mi4.recordFile": "answers",
+  "mi4.answer": "Answer",
+  "mi4.video": "Recording",
+  "mi4.zipFailed": "Couldn't create the zip. Please download each recording.",
 };
 
 export const messages: Record<"zh" | "en", Messages> = { zh, en };
