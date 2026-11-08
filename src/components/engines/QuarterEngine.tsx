@@ -250,7 +250,7 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
           auto_suggestions: data.suggestions.items || [],
         });
       }
-      toast.success("AI建议已生成");
+      toast.success("季度重点目标已生成");
     } catch (err: any) {
       toast.error(`生成失败: ${err.message}`);
     } finally {
@@ -323,7 +323,7 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
                   <div className="border rounded-lg divide-y">
                     {kpiItems.length === 0 && !showNewKpiInput && (
                       <div className="p-4 text-center text-sm text-muted-foreground">
-                        {readOnly ? t("plan.kpiEmpty") : "暂无KPI，点击添加或使用AI生成"}
+                        {readOnly ? t("plan.kpiEmpty") : "暂无目标，点击添加或点「生成季度重点目标」"}
                       </div>
                     )}
 
@@ -469,7 +469,7 @@ export default function QuarterEngine({ studentId, currentPhase, readOnly = fals
                         variant="outline"
                         className="gap-1"
                       >
-                        <Sparkles className="h-3 w-3" /> AI生成建议
+                        <Sparkles className="h-3 w-3" /> 生成季度重点目标
                       </Button>
                     </div>
                   </div>

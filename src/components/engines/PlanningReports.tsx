@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  FileBarChart, Sparkles, Save, Loader2, FileDown, Pencil, Eye, CalendarCheck, TrendingUp
+  FileBarChart, Sparkles, Save, Loader2, FileDown, Pencil, Eye, CalendarCheck, TrendingUp, Printer
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -16,13 +16,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { QUARTER_LABELS, PHASE_LABELS } from "./types";
 import ReactMarkdown from "react-markdown";
-import jsPDF from "jspdf";
+import { downloadReportDocx, printReport } from "./reportExport";
 
 interface PlanningReportsProps {
   studentId: string;
   studentName?: string;
   currentPhase?: string;
 }
+
+const QUARTER_EN: Record<string, string> = { Q1_fall: "Q1 Fall", Q2_winter: "Q2 Winter", Q3_spring: "Q3 Spring", Q4_summer: "Q4 Summer" };
+const PHASE_EN: Record<string, string> = { exploration: "Exploration", positioning: "Positioning", consolidation: "Consolidation", application: "Application" };
 
 const getCurrentAcademicYear = () => {
   const now = new Date();
@@ -48,6 +51,7 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
   const [selectedQuarter, setSelectedQuarter] = useState(getCurrentQuarter());
   const [academicYear] = useState(getCurrentAcademicYear());
   const [isGenerating, setIsGenerating] = useState(false);
+  const [reportLang, setReportLang] = useState<"zh" | "en">(lang === "en" ? "en" : "zh");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
 
@@ -157,14 +161,20 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
           courseSummary,
           activitySummary,
           planningDocContent: docsRes.data?.[0]?.content || "",
+          language: reportLang,
         },
       });
 
       if (error) throw error;
 
-      const title = reportType === "quarterly"
-        ? `${academicYear} ${QUARTER_LABELS[selectedQuarter] || selectedQuarter} 季度评估`
-        : `${academicYear} ${PHASE_LABELS[currentPhase || "exploration"] || ""} 阶段总结`;
+      const phaseKey = currentPhase || "exploration";
+      const title = reportLang === "en"
+        ? reportType === "quarterly"
+          ? `${academicYear} ${QUARTER_EN[selectedQuarter] || selectedQuarter} Quarterly Review`
+          : `${academicYear} ${PHASE_EN[phaseKey] || ""} Stage Summary`
+        : reportType === "quarterly"
+          ? `${academicYear} ${QUARTER_LABELS[selectedQuarter] || selectedQuarter} 季度评估`
+          : `${academicYear} ${PHASE_LABELS[phaseKey] || ""} 阶段总结`;
 
       const { error: insertError } = await supabase
         .from("planning_reports")
@@ -193,35 +203,21 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
     }
   };
 
-  const handleExportPDF = (report: any) => {
-    const doc = new jsPDF();
-    const margin = 20;
-    const pageWidth = doc.internal.pageSize.getWidth() - margin * 2;
+  const dateLabel = (report: any) =>
+    `${t("plan.reports.generatedOn")} ${new Date(report.created_at).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-CA")}`;
 
-    doc.setFontSize(16);
-    doc.text(report.title, margin, margin + 10);
-
-    doc.setFontSize(10);
-    doc.text(`Generated: ${new Date(report.created_at).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-CA")}`, margin, margin + 20);
-
-    doc.setFontSize(11);
-    const content = report.final_content || report.ai_draft || "";
-    // Simple text wrapping for PDF
-    const cleanContent = content.replace(/[#*`]/g, "").replace(/\n{3,}/g, "\n\n");
-    const lines = doc.splitTextToSize(cleanContent, pageWidth);
-
-    let y = margin + 30;
-    for (const line of lines) {
-      if (y > doc.internal.pageSize.getHeight() - margin) {
-        doc.addPage();
-        y = margin;
-      }
-      doc.text(line, margin, y);
-      y += 6;
+  const handleDownloadWord = async (report: any) => {
+    try {
+      await downloadReportDocx(report.title, report.final_content || report.ai_draft || "", dateLabel(report));
+    } catch {
+      toast.error(t("plan.reports.exportFailed"));
     }
+  };
 
-    doc.save(`${report.title}.pdf`);
-    toast.success("PDF已下载");
+  const handlePrint = (report: any) => {
+    if (!printReport(report.title, report.final_content || report.ai_draft || "", dateLabel(report))) {
+      toast.error(t("plan.reports.popupBlocked"));
+    }
   };
 
   const renderReport = (report: any) => {
@@ -247,8 +243,13 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
             )}
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleExportPDF(report)}>
-              <FileDown className="h-3.5 w-3.5" />
+            <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={() => void handleDownloadWord(report)}
+              title={t("plan.reports.downloadWord")}>
+              <FileDown className="h-3.5 w-3.5" /> Word
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={() => handlePrint(report)}
+              title={t("plan.reports.printPdf")}>
+              <Printer className="h-3.5 w-3.5" /> PDF
             </Button>
           </div>
         </div>
@@ -347,6 +348,15 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
                     ))}
                   </SelectContent>
                 </Select>
+                <Select value={reportLang} onValueChange={(v) => setReportLang(v as "zh" | "en")}>
+                  <SelectTrigger className="w-[110px] h-8 text-xs" aria-label={t("plan.reports.language")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="zh" className="text-xs">中文报告</SelectItem>
+                    <SelectItem value="en" className="text-xs">English report</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button size="sm" onClick={() => handleGenerate("quarterly")} disabled={isGenerating} className="gap-1">
                   {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                   生成季度评估
@@ -368,6 +378,15 @@ export default function PlanningReports({ studentId, studentName, currentPhase }
           <TabsContent value="annual" className="mt-4 space-y-4">
             {isCounselor && (
               <div className="flex items-center gap-3">
+                <Select value={reportLang} onValueChange={(v) => setReportLang(v as "zh" | "en")}>
+                  <SelectTrigger className="w-[110px] h-8 text-xs" aria-label={t("plan.reports.language")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="zh" className="text-xs">中文报告</SelectItem>
+                    <SelectItem value="en" className="text-xs">English report</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button size="sm" onClick={() => handleGenerate("annual")} disabled={isGenerating} className="gap-1">
                   {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                   生成阶段总结
