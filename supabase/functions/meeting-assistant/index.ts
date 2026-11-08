@@ -6,8 +6,9 @@
 //   Nothing is saved.
 // POST { action: "save", student_id, meeting: {...}, goal_updates, email: { student, parent } }
 //   Saves the meeting (team-only notes separately), turns student tasks into
-//   the student's to-dos, applies the chosen goal changes and emails the
-//   summary to the student and/or parent.
+//   the student's to-dos, applies the chosen goal changes, always emails the
+//   tasks to the student's follow-up teacher(s), and emails the summary to the
+//   student and/or parent only when the counselor ticked them.
 //
 // Caller must be on the student's counselor team (or an admin).
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
@@ -290,7 +291,36 @@ ${notes}
       await admin.from("student_meetings").update({ emailed_to: sentTo }).eq("id", meeting.id);
     }
 
-    return json({ ok: true, meeting_id: meeting.id, todos: todoCount, goals_changed: goalsChanged, emailed: sent > 0 ? sentTo : [] });
+    // Tasks always go to the follow-up teacher(s), who track them.
+    let followupSent: string[] = [];
+    const { data: fus } = await admin.from("counselor_collaborations").select("collaborator_id").eq("student_id", studentId).eq("role", "followup");
+    const fuIds = (fus || []).map((f) => f.collaborator_id).filter(Boolean);
+    if (fuIds.length && tasks.length) {
+      const { data: people } = await admin.from("profiles").select("full_name, email").in("id", fuIds);
+      const list = (people || []).filter((p) => p.email);
+      if (list.length) {
+        const taskRows = tasks
+          .map((t) => `<tr><td style="padding:6px 8px;border-bottom:1px solid #eef2f0">${esc(t.text)}</td><td style="padding:6px 8px;border-bottom:1px solid #eef2f0;white-space:nowrap">${OWNER_ZH[t.owner]}</td><td style="padding:6px 8px;border-bottom:1px solid #eef2f0;white-space:nowrap">${t.due || "—"}</td></tr>`)
+          .join("");
+        const teamNote = str(m.team_note, 3000);
+        const html = layout(
+          `会议待办：${student?.full_name || ""} · ${title}`,
+          `<p style="margin:0 0 12px;color:#6b7c78;font-size:13px">${date} 的会议产生了以下任务，请跟进完成情况。</p>
+           <table style="width:100%;border-collapse:collapse;font-size:14px"><thead><tr style="text-align:left;color:#6b7c78;font-size:12px"><th style="padding:6px 8px">任务</th><th style="padding:6px 8px">负责人</th><th style="padding:6px 8px">截止</th></tr></thead><tbody>${taskRows}</tbody></table>
+           ${summary ? `<p style="margin:16px 0 4px;font-weight:600">会议摘要</p><p style="margin:0;line-height:1.7">${esc(summary)}</p>` : ""}
+           ${teamNote ? `<p style="margin:16px 0 4px;font-weight:600">团队备注（学生看不到）</p><p style="margin:0;line-height:1.7">${esc(teamNote)}</p>` : ""}`,
+          `${SITE}/counselor-dashboard/student/${studentId}`,
+          "打开学生页面",
+        );
+        const n = await sendEmail(list.map((p) => p.email as string), `会议待办：${student?.full_name || ""}（${date}）`, html);
+        if (n > 0) followupSent = list.map((p) => p.full_name || p.email as string);
+      }
+    }
+    if (followupSent.length) {
+      await admin.from("student_meetings").update({ emailed_to: [...sentTo.filter(() => sent > 0), `跟进老师（${followupSent.join("、")}）`] }).eq("id", meeting.id);
+    }
+
+    return json({ ok: true, meeting_id: meeting.id, todos: todoCount, goals_changed: goalsChanged, emailed: sent > 0 ? sentTo : [], followup: followupSent });
   }
 
   return json({ error: "unknown action" }, 400);

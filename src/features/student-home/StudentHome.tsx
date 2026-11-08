@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import ReactMarkdown from "react-markdown";
+import StudentRecordsSheet from "./StudentRecordsSheet";
+import { countMeetings, getCurrentPlanDoc, getOpenUploadRequest, getSharedFolder, listPublishedReports } from "@/shared/studentApi";
 import { toast } from "sonner";
 import {
   BarChart3, ChevronDown, Download, ExternalLink, FileText, FolderOpen, Globe, LogOut, Menu,
@@ -61,7 +62,6 @@ function dueTime(due: string | null | undefined): number | null {
 
 type Goal = { id: string; text: string; completed: boolean };
 type Doc = { id: string; title: string; content: string | null; file_path: string | null; file_name: string | null; source_url: string | null; updated_at: string };
-type Report = { id: string; title: string; final_content: string | null; ai_draft: string | null; created_at: string };
 
 /** One item in the "to do" list: a to-do, a quarter goal, or an upload request. */
 type Item =
@@ -85,7 +85,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   const [due, setDue] = useState("");
   const [showDone, setShowDone] = useState(false);
   const [panel, setPanel] = useState<"grades" | "notes" | "resume" | null>(null);
-  const [dialog, setDialog] = useState<"doc" | "report" | "folder" | null>(null);
+  const [dialog, setDialog] = useState<"doc" | "folder" | null>(null);
   const [uploading, setUploading] = useState(false);
 
   // ---- this quarter ----
@@ -106,46 +106,24 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   // ---- shared by the counselor ----
   const { data: latestDoc } = useQuery({
     queryKey: ["student-home-doc", studentId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("planning_documents")
-        .select("id, title, content, file_path, file_name, source_url, updated_at")
-        .eq("student_id", studentId)
-        .order("is_primary", { ascending: false })
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return (data || null) as Doc | null;
-    },
+    queryFn: () => getCurrentPlanDoc(supabase, studentId),
   });
-  const { data: latestReport } = useQuery({
+  const { data: hasReports = false } = useQuery({
     queryKey: ["student-home-report", studentId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("planning_reports")
-        .select("id, title, final_content, ai_draft, created_at")
-        .eq("student_id", studentId)
-        .eq("status", "published")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return (data || null) as Report | null;
-    },
+    queryFn: async () => (await listPublishedReports(supabase, studentId)).length > 0,
   });
+  const { data: meetingCount = 0 } = useQuery({
+    queryKey: ["student-home-meetings", studentId],
+    queryFn: () => countMeetings(supabase, studentId),
+  });
+  const [records, setRecords] = useState<"meetings" | "reports" | null>(null);
   const { data: folder } = useQuery({
     queryKey: ["shared-folder", studentId],
-    queryFn: async () => {
-      const { data } = await supabase.from("shared_folders").select("*").eq("created_by", studentId).maybeSingle();
-      return data || null;
-    },
+    queryFn: () => getSharedFolder(supabase, studentId),
   });
   const { data: request } = useQuery({
     queryKey: ["report-request", studentId],
-    queryFn: async () => {
-      const { data } = await db.from("academic_report_requests").select("*").eq("student_id", studentId)
-        .is("fulfilled_at", null).order("due_date").limit(1).maybeSingle();
-      return (data || null) as UploadRequest | null;
-    },
+    queryFn: () => getOpenUploadRequest(supabase, studentId),
   });
   const folderUrl = folder && isSafeHttpUrl(folder.folder_url) ? folder.folder_url : null;
 
@@ -279,7 +257,8 @@ export default function StudentHome({ studentId }: { studentId: string }) {
 
   const shared = [
     latestDoc && { key: "doc", icon: FileText, label: t("home.planDoc"), onClick: () => setDialog("doc") },
-    latestReport && { key: "report", icon: BarChart3, label: t("home3.report"), onClick: () => setDialog("report") },
+    meetingCount > 0 && { key: "meetings", icon: NotebookPen, label: lang === "zh" ? "会议纪要" : "Meeting notes", onClick: () => setRecords("meetings") },
+    hasReports && { key: "report", icon: BarChart3, label: lang === "zh" ? "规划报告" : "Planning reports", onClick: () => setRecords("reports") },
     folderUrl && { key: "folder", icon: FolderOpen, label: t("plan.folder.title"), href: folderUrl },
   ].filter(Boolean) as { key: string; icon: typeof FileText; label: string; onClick?: () => void; href?: string }[];
 
@@ -374,7 +353,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
       {shared.length > 0 && (
         <section className="mt-10" aria-labelledby="shared-heading">
           <h2 id="shared-heading" className="font-serif text-xl font-semibold text-pine">{t("home3.shared")}</h2>
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {shared.map((s) =>
               s.href ? (
                 <Button key={s.key} variant="outline" className="h-12 justify-start" asChild>
@@ -433,20 +412,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
         </DialogContent>
       </Dialog>
 
-      {/* Quarterly report */}
-      <Dialog open={dialog === "report"} onOpenChange={(o) => setDialog(o ? "report" : null)}>
-        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
-          {latestReport && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="font-serif text-pine">{latestReport.title}</DialogTitle>
-                <p className="text-xs text-muted-foreground">{dateFmt(latestReport.created_at)}</p>
-              </DialogHeader>
-              <div className="prose prose-sm max-w-none"><ReactMarkdown>{latestReport.final_content || latestReport.ai_draft || ""}</ReactMarkdown></div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <StudentRecordsSheet studentId={studentId} kind={records} onClose={() => setRecords(null)} />
 
       <SharedFolderDialog open={dialog === "folder"} onOpenChange={(o) => setDialog(o ? "folder" : null)} onSubmit={saveFolder} initialData={folder || undefined} />
     </div>

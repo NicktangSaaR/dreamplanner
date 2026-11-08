@@ -76,6 +76,16 @@ export default function MeetingsPanel({
     queryKey: key,
     queryFn: () => loadMeetings((q) => q.eq("student_id", studentId).eq("academic_year", year).eq("quarter", quarter).order("meeting_date", { ascending: false })),
   });
+  const { data: followups = [] } = useQuery({
+    queryKey: ["plan-followups", studentId],
+    queryFn: async () => {
+      const { data: rows } = await db.from("counselor_collaborations").select("collaborator_id").eq("student_id", studentId).eq("role", "followup");
+      const ids = (rows || []).map((r: { collaborator_id: string }) => r.collaborator_id);
+      if (!ids.length) return [] as string[];
+      const { data: people } = await db.from("profiles").select("full_name, email").in("id", ids);
+      return (people || []).map((p: { full_name: string | null; email: string | null }) => p.full_name || p.email || "").filter(Boolean) as string[];
+    },
+  });
   const { data: lastMeeting } = useQuery({
     queryKey: ["plan-last-meeting", studentId],
     queryFn: async () => (await loadMeetings((q) => q.eq("student_id", studentId).order("meeting_date", { ascending: false }).limit(1)))[0] ?? null,
@@ -116,7 +126,7 @@ export default function MeetingsPanel({
   const [tasks, setTasks] = useState<DraftTask[]>([]);
   const [updates, setUpdates] = useState<GoalUpdate[]>([]);
   const [teamNote, setTeamNote] = useState("");
-  const [mailStudent, setMailStudent] = useState(true);
+  const [mailStudent, setMailStudent] = useState(false);
   const [mailParent, setMailParent] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -125,7 +135,7 @@ export default function MeetingsPanel({
     setDate(todayIso());
     setTitle("");
     setNotes("");
-    setMailStudent(true);
+    setMailStudent(false);
     setMailParent(false);
     setDialog(true);
   };
@@ -165,6 +175,8 @@ export default function MeetingsPanel({
   };
 
   const save = async () => {
+    const who = [mailStudent && L("学生", "the student"), mailParent && L("家长", "the parent")].filter(Boolean).join(L("和", " and "));
+    if (who && !window.confirm(L(`确认把会议纪要（摘要、决定事项、任务）发邮件给${who}？`, `Email the meeting summary to ${who}?`))) return;
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("meeting-assistant", {
@@ -184,6 +196,7 @@ export default function MeetingsPanel({
       const parts = [L("会议已保存", "Meeting saved")];
       if (data.todos) parts.push(L(`${data.todos} 项任务已加入学生待办`, `${data.todos} tasks added to the student's to-dos`));
       if (data.goals_changed) parts.push(L("季度目标已更新", "goals updated"));
+      if (data.followup?.length) parts.push(L(`待办已发给跟进老师 ${data.followup.join("、")}`, `tasks sent to ${data.followup.join(", ")}`));
       if (data.emailed?.length) parts.push(L(`纪要已发给${data.emailed.join("、")}`, "summary emailed"));
       toast.success(parts.join(lang === "zh" ? "，" : ", "));
       setDialog(false);
@@ -386,10 +399,18 @@ export default function MeetingsPanel({
                 <Label className="flex items-center gap-1"><Lock className="h-3.5 w-3.5" /> {L("团队备注", "Team note")} <span className="font-normal text-muted-foreground">· {L("只有服务团队能看到", "team only")}</span></Label>
                 <Textarea rows={2} value={teamNote} onChange={(e) => setTeamNote(e.target.value)} />
               </div>
-              <div className="flex flex-wrap items-center gap-4 rounded-md bg-muted/40 px-3 py-2.5">
-                <span className="flex items-center gap-1.5 text-muted-foreground"><Mail className="h-4 w-4" /> {L("发送会议纪要（摘要 + 决定 + 任务）：", "Email the summary to:")}</span>
-                <label className="flex items-center gap-2"><Checkbox checked={mailStudent} onCheckedChange={(v) => setMailStudent(!!v)} /> {L("学生", "Student")}</label>
-                <label className="flex items-center gap-2"><Checkbox checked={mailParent} onCheckedChange={(v) => setMailParent(!!v)} /> {L("家长", "Parent")}</label>
+              <div className="space-y-2 rounded-md bg-muted/40 px-3 py-2.5">
+                <p className="flex items-start gap-1.5 text-muted-foreground">
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0" />
+                  {followups.length
+                    ? L(`保存后，任务会自动发邮件给跟进老师：${followups.join("、")}`, `On save, tasks are emailed to the follow-up teacher: ${followups.join(", ")}`)
+                    : L("这个学生还没有跟进老师，任务不会自动发邮件。可在「概览」的服务团队里添加。", "No follow-up teacher yet, so tasks won't be emailed. Add one in the team card.")}
+                </p>
+                <div className="flex flex-wrap items-center gap-4">
+                  <span className="text-muted-foreground">{L("另外发送会议纪要给（需确认）：", "Also email the summary to (asks to confirm):")}</span>
+                  <label className="flex items-center gap-2"><Checkbox checked={mailStudent} onCheckedChange={(v) => setMailStudent(!!v)} /> {L("学生", "Student")}</label>
+                  <label className="flex items-center gap-2"><Checkbox checked={mailParent} onCheckedChange={(v) => setMailParent(!!v)} /> {L("家长", "Parent")}</label>
+                </div>
               </div>
             </div>
           )}

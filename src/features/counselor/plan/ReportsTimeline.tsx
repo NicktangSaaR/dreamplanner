@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { downloadReportDocx, downloadReportPdf } from "@/components/engines/reportExport";
+import { MD } from "@/components/engines/markdownStyles";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
@@ -31,19 +32,6 @@ type Report = {
 };
 
 export type ReportRequest = { kind: "quarterly" | "annual"; quarter: QuarterKey; nonce: number } | null;
-
-/** Markdown styled without the typography plugin. */
-const MD = {
-  h1: (p: { children?: React.ReactNode }) => <p className="pt-2 text-base font-semibold text-pine">{p.children}</p>,
-  h2: (p: { children?: React.ReactNode }) => <p className="pt-2 text-base font-semibold text-pine">{p.children}</p>,
-  h3: (p: { children?: React.ReactNode }) => <p className="pt-2 font-semibold text-pine">{p.children}</p>,
-  h4: (p: { children?: React.ReactNode }) => <p className="pt-1 font-medium">{p.children}</p>,
-  ul: (p: { children?: React.ReactNode }) => <ul className="list-disc space-y-1 pl-5">{p.children}</ul>,
-  ol: (p: { children?: React.ReactNode }) => <ol className="list-decimal space-y-1 pl-5">{p.children}</ol>,
-  strong: (p: { children?: React.ReactNode }) => <strong className="font-semibold">{p.children}</strong>,
-  hr: () => <hr className="my-2" />,
-  table: (p: { children?: React.ReactNode }) => <div className="overflow-x-auto"><table className="w-full border-collapse text-xs [&_td]:border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:bg-muted/40 [&_th]:px-2 [&_th]:py-1">{p.children}</table></div>,
-};
 
 const PHASE_EN: Record<string, string> = { exploration: "Exploration", positioning: "Positioning", consolidation: "Consolidation", application: "Application" };
 
