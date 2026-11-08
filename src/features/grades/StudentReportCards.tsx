@@ -1,13 +1,13 @@
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, FileText, Loader2, Upload } from "lucide-react";
+import { CheckCircle2, FileText, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import {
-  REPORT_CARD_ACCEPT, ReportCardError, db, openReportCard, uploadReportCard,
+  REPORT_CARD_ACCEPT, ReportCardError, db, deleteReportCard, openReportCard, uploadReportCard,
   type ReportCard, type UploadRequest,
 } from "./reportCards";
 
@@ -70,6 +70,21 @@ export default function StudentReportCards({ studentId }: { studentId: string })
     }
   };
 
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const remove = async (r: ReportCard) => {
+    if (!window.confirm(t("grades.deleteConfirm", { name: r.period_label || r.file_name || "" }))) return;
+    setDeleting(r.id);
+    try {
+      await deleteReportCard(r);
+      toast.success(t("grades.deleted"));
+      queryClient.invalidateQueries({ queryKey: ["report-cards", studentId] });
+    } catch {
+      toast.error(t("grades.deleteFailed"));
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   const fmt = (iso: string) => new Date(iso).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-CA");
 
   return (
@@ -118,8 +133,17 @@ export default function StudentReportCards({ studentId }: { studentId: string })
               >
                 {r.period_label || r.file_name}
               </button>
+              {r.uploaded_by !== studentId && (
+                <span className="shrink-0 text-xs text-muted-foreground">{t("grades.byTeam")}</span>
+              )}
               <span className="shrink-0 text-xs text-muted-foreground">{fmt(r.created_at)}</span>
               <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" aria-label={t("grades.sent")} />
+              {r.uploaded_by === studentId && (
+                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label={t("grades.delete")}
+                  disabled={deleting === r.id} onClick={() => void remove(r)}>
+                  {deleting === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                </Button>
+              )}
             </li>
           ))}
         </ul>

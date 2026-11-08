@@ -68,3 +68,25 @@ export async function openReportCard(path: string) {
   if (error || !data?.signedUrl) throw error || new Error("no url");
   window.open(data.signedUrl, "_blank", "noopener,noreferrer");
 }
+
+/**
+ * Delete a report card: its file, its record and (by cascade) its brief.
+ * The database decides who may: students only their own uploads, the
+ * counselor team any of their student's report cards.
+ */
+export async function deleteReportCard(report: Pick<ReportCard, "id" | "file_path">) {
+  if (report.file_path) {
+    const { data, error } = await supabase.storage.from("academic-reports").remove([report.file_path]);
+    if (error) throw error;
+    if (!data?.length) {
+      // Nothing removed: either not allowed, or the file is already gone.
+      const { data: still } = await supabase.storage
+        .from("academic-reports")
+        .list(report.file_path.split("/")[0], { search: report.file_path.split("/").pop() });
+      if (still?.length) throw new ReportCardError("forbidden");
+    }
+  }
+  const { data: rows, error } = await db.from("academic_reports").delete().eq("id", report.id).select("id");
+  if (error) throw error;
+  if (!rows?.length) throw new ReportCardError("forbidden");
+}
