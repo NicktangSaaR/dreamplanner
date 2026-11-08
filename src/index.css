@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    /* Nexus Admission palette: teal #2C6E63, pine #183F38, brass #A9792F */
+    /* Brand palette: teal #2C6E63, pine #183F38, brass #A9792F */
     --background: 150 12% 97%;
     --foreground: 169 30% 13%;
 
