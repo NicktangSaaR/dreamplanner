@@ -6,7 +6,7 @@ import { countMeetings, getCurrentPlanDoc, getOpenUploadRequest, getSharedFolder
 import { toast } from "sonner";
 import {
   BarChart3, ChevronDown, Download, ExternalLink, FileText, FolderOpen, Globe, LogOut, Menu,
-  NotebookPen, Plus, Trash2, Upload, User, Video, FileUser,
+  NotebookPen, Pencil, Plus, Trash2, Upload, User, Video, FileUser,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -138,22 +138,45 @@ export default function StudentHome({ studentId }: { studentId: string }) {
     return { open: sorted.filter((i) => !i.done), done: sorted.filter((i) => i.done) };
   }, [todos, goals]);
 
-  const toggleGoal = async (goal: Goal) => {
-    if (!quarterRow || !tickable) return;
-    const next = goals.map((g) => (g.id === goal.id ? { ...g, completed: !g.completed } : g));
-    const { error } = await supabase.from("student_quarters").update({ quarter_kpi: JSON.stringify(next) } as never).eq("id", quarterRow.id);
-    if (error) toast.error(t("home.goalSaveFailed"));
+  // Students may add, tick and reword goals; deleting is for the counselor team
+  // (the database enforces this too).
+  const saveGoals = async (next: Goal[]) => {
+    if (!tickable) return false;
+    const kpi = JSON.stringify(next);
+    const { error } = quarterRow
+      ? await supabase.from("student_quarters").update({ quarter_kpi: kpi } as never).eq("id", quarterRow.id)
+      : await supabase.from("student_quarters").insert({ student_id: studentId, quarter: quarterKey, academic_year: currentAcademicYear(), quarter_kpi: kpi } as never);
     queryClient.invalidateQueries({ queryKey: ["student-quarters", studentId] });
+    if (error) {
+      toast.error(t("home.goalSaveFailed"));
+      return false;
+    }
+    return true;
   };
+  const toggleGoal = (goal: Goal) => void saveGoals(goals.map((g) => (g.id === goal.id ? { ...g, completed: !g.completed } : g)));
+  const [editingGoal, setEditingGoal] = useState<string | null>(null);
+  const [goalDraft, setGoalDraft] = useState("");
+  const renameGoal = async (goal: Goal) => {
+    const text = goalDraft.trim();
+    setEditingGoal(null);
+    if (!text || text === goal.text) return;
+    await saveGoals(goals.map((g) => (g.id === goal.id ? { ...g, text: text.slice(0, 300) } : g)));
+  };
+  const [addAs, setAddAs] = useState<"todo" | "goal">("todo");
 
   const toggle = (item: Item) =>
     item.kind === "todo"
       ? toggleTodoStatus.mutate({ id: item.todo.id, completed: !item.todo.completed })
-      : void toggleGoal(item.goal);
+      : toggleGoal(item.goal);
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    if (addAs === "goal") {
+      const ok = await saveGoals([...goals, { id: `kpi-s-${Date.now()}`, text: title.trim().slice(0, 300), completed: false }]);
+      if (ok) setTitle("");
+      return;
+    }
     await createTodo.mutateAsync({ title: title.trim(), authorId: studentId, due_date: due || undefined });
     setTitle("");
     setDue("");
@@ -232,14 +255,40 @@ export default function StudentHome({ studentId }: { studentId: string }) {
           onCheckedChange={() => toggle(item)}
           className="mt-0.5"
         />
-        <label htmlFor={item.key} className={`min-w-0 flex-1 leading-snug ${item.done ? "text-muted-foreground line-through" : ""}`}>
-          {item.title}
-          {item.kind === "goal" && <span className="ml-2 text-xs text-primary">{t("home3.goalTag")}</span>}
-        </label>
+        {item.kind === "goal" && editingGoal === item.goal.id ? (
+          <Input
+            autoFocus
+            value={goalDraft}
+            maxLength={300}
+            onChange={(e) => setGoalDraft(e.target.value)}
+            onBlur={() => void renameGoal(item.goal)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void renameGoal(item.goal);
+              if (e.key === "Escape") setEditingGoal(null);
+            }}
+            className="h-8 min-w-0 flex-1"
+            aria-label={lang === "zh" ? "修改目标" : "Edit goal"}
+          />
+        ) : (
+          <label htmlFor={item.key} className={`min-w-0 flex-1 leading-snug ${item.done ? "text-muted-foreground line-through" : ""}`}>
+            {item.title}
+            {item.kind === "goal" && <span className="ml-2 text-xs text-primary">{t("home3.goalTag")}</span>}
+          </label>
+        )}
         {item.due !== null && (
           <span className={`shrink-0 text-sm ${overdue ? "font-medium text-destructive" : "text-muted-foreground"}`}>
             {overdue ? t("home3.overdue", { date: fmtDue(item.due) || "" }) : fmtDue(item.due)}
           </span>
+        )}
+        {item.kind === "goal" && tickable && editingGoal !== item.goal.id && (
+          <button
+            type="button"
+            onClick={() => { setEditingGoal(item.goal.id); setGoalDraft(item.goal.text); }}
+            className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+            aria-label={lang === "zh" ? "修改目标" : "Edit goal"}
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
         )}
         {item.kind === "todo" && (
           <button
@@ -330,12 +379,26 @@ export default function StudentHome({ studentId }: { studentId: string }) {
         )}
 
         <form onSubmit={add} className="mt-2 flex gap-2">
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("home.todo.placeholder")} aria-label={t("home.todo.placeholder")} />
-          <Input type="date" value={due} onChange={(e) => setDue(e.target.value)} aria-label={t("home.todo.dueDate")} className="w-[9.5rem] shrink-0" />
+          <Input value={title} onChange={(e) => setTitle(e.target.value)}
+            placeholder={addAs === "goal" ? (lang === "zh" ? "添加一个本季目标" : "Add a goal for this quarter") : t("home.todo.placeholder")}
+            aria-label={addAs === "goal" ? (lang === "zh" ? "添加本季目标" : "Add a quarter goal") : t("home.todo.placeholder")} />
+          {addAs === "todo" && (
+            <Input type="date" value={due} onChange={(e) => setDue(e.target.value)} aria-label={t("home.todo.dueDate")} className="w-[9.5rem] shrink-0" />
+          )}
           <Button type="submit" size="icon" className="shrink-0" disabled={!title.trim() || createTodo.isPending} aria-label={t("home.todo.add")}>
             <Plus className="h-4 w-4" />
           </Button>
         </form>
+        {tickable && (
+          <div className="mt-1.5 flex gap-1 text-xs" role="radiogroup" aria-label={lang === "zh" ? "添加为" : "Add as"}>
+            {(["todo", "goal"] as const).map((k) => (
+              <button key={k} type="button" role="radio" aria-checked={addAs === k} onClick={() => setAddAs(k)}
+                className={`rounded-full px-2.5 py-0.5 ${addAs === k ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                {k === "todo" ? (lang === "zh" ? "待办" : "To-do") : (lang === "zh" ? "本季目标" : "Quarter goal")}
+              </button>
+            ))}
+          </div>
+        )}
 
         {done.length > 0 && (
           <div className="mt-4">
