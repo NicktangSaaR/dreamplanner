@@ -8,19 +8,7 @@ import { MD } from "@/components/engines/markdownStyles";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/utils";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
-
-type Meeting = {
-  id: string;
-  meeting_date: string;
-  title: string | null;
-  summary: string | null;
-  decision_list: string[] | null;
-  tasks: { id: string; title: string; owner: string; due_date: string | null; completed: boolean }[];
-};
-type Report = { id: string; report_type: string; title: string; final_content: string | null; ai_draft: string | null; created_at: string };
+import { listMeetingNotes, listPublishedReports } from "@/shared/studentApi";
 
 /**
  * Read-only views for the student: meeting summaries and published reports.
@@ -42,43 +30,13 @@ export default function StudentRecordsSheet({
   const meetings = useQuery({
     queryKey: ["student-meetings", studentId],
     enabled: kind === "meetings",
-    queryFn: async () => {
-      const { data } = await db
-        .from("student_meetings")
-        .select("id, meeting_date, title, summary, decision_list")
-        .eq("student_id", studentId)
-        .order("meeting_date", { ascending: false });
-      const list = (data || []) as Omit<Meeting, "tasks">[];
-      if (!list.length) return [] as Meeting[];
-      const { data: items } = await db
-        .from("meeting_action_items")
-        .select("id, meeting_id, title, owner, due_date, completed, todo_id, created_at")
-        .in("meeting_id", list.map((m) => m.id))
-        .order("created_at");
-      const todoIds = (items || []).map((i: { todo_id: string | null }) => i.todo_id).filter(Boolean);
-      const { data: todos } = todoIds.length ? await db.from("todos").select("id, completed").in("id", todoIds) : { data: [] };
-      const done = new Map((todos || []).map((t: { id: string; completed: boolean }) => [t.id, t.completed]));
-      return list.map((m) => ({
-        ...m,
-        tasks: (items || [])
-          .filter((i: { meeting_id: string }) => i.meeting_id === m.id)
-          .map((i: Meeting["tasks"][number] & { todo_id: string | null }) => ({ ...i, completed: i.todo_id && done.has(i.todo_id) ? !!done.get(i.todo_id) : i.completed })),
-      })) as Meeting[];
-    },
+    queryFn: () => listMeetingNotes(supabase, studentId),
   });
 
   const reports = useQuery({
     queryKey: ["student-reports", studentId],
     enabled: kind === "reports",
-    queryFn: async () => {
-      const { data } = await db
-        .from("planning_reports")
-        .select("id, report_type, title, final_content, ai_draft, created_at")
-        .eq("student_id", studentId)
-        .eq("status", "published")
-        .order("created_at", { ascending: false });
-      return (data || []) as Report[];
-    },
+    queryFn: () => listPublishedReports(supabase, studentId),
   });
 
   const loading = kind === "meetings" ? meetings.isLoading : reports.isLoading;
