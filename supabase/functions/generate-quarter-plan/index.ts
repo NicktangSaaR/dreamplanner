@@ -1,15 +1,13 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { studentId, quarter, academicYear, currentPhase, scheme, schemeDescription, documentContent, documentTitle } = await req.json();
+    const { studentId, quarter, academicYear, currentPhase, scheme, schemeDescription, documentContent, documentTitle, previousReport, unfinishedGoals } = await req.json();
     
     const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
@@ -39,10 +37,17 @@ serve(async (req) => {
       ? `\n\n以下是该学生的规划方案文档「${documentTitle || "规划方案"}」的内容，请基于此方案内容生成具体的季度执行建议：\n---\n${docContent}\n---\n请务必结合上述规划方案的具体内容来生成建议，而非泛泛而谈。`
       : "";
 
+    const prevContext = previousReport
+      ? `\n\n上一季度的评估报告（摘要）：\n---\n${String(previousReport).substring(0, 2500)}\n---\n请延续上季度的结论和建议。`
+      : "";
+    const unfinishedContext = Array.isArray(unfinishedGoals) && unfinishedGoals.length
+      ? `\n\n上一季度未完成的目标：\n${unfinishedGoals.map((g: string) => `- ${g}`).join("\n")}\n如果仍然重要，请纳入本季度目标。`
+      : "";
+
     const prompt = `你是一位资深的美国大学申请规划顾问。请根据以下信息，为学生生成${quarterNames[quarter] || quarter}的规划建议。
 
 当前阶段: ${currentPhase || "exploration"}
-学年: ${academicYear}${schemeContext}${documentContext}
+学年: ${academicYear}${schemeContext}${documentContext}${prevContext}${unfinishedContext}
 
 请用JSON格式返回：
 {
