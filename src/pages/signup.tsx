@@ -10,6 +10,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, X, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+/**
+ * The school year changes in September, when the yearly grade update moves
+ * students up a grade. In July and August students pick the grade they just
+ * finished; September moves them up automatically.
+ */
+const NOW = new Date();
+const SCHOOL_YEAR_START = NOW.getMonth() >= 8 ? NOW.getFullYear() : NOW.getFullYear() - 1;
+const SCHOOL_YEAR = `${SCHOOL_YEAR_START}–${String(SCHOOL_YEAR_START + 1).slice(2)}`;
+const IS_SUMMER = NOW.getMonth() === 6 || NOW.getMonth() === 7;
+
 export default function SignUp() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -59,12 +69,29 @@ export default function SignUp() {
     e.preventDefault();
     setLoading(true);
 
-    // For students, require majors or undecided
-    if (formData.userType === "student" && !formData.isUndecided && formData.interestedMajors.length === 0) {
+    if (formData.userType === "student" && !formData.grade) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please add at least one interested major or select Undecided.",
+        description: "Please choose your current grade. (请选择当前年级)",
+      });
+      setLoading(false);
+      return;
+    }
+
+    // A major typed but not yet added with "Add" still counts.
+    const pendingMajor = majorInput.trim();
+    const interestedMajors =
+      pendingMajor && !formData.interestedMajors.includes(pendingMajor)
+        ? [...formData.interestedMajors, pendingMajor]
+        : formData.interestedMajors;
+
+    // For students, require majors or undecided
+    if (formData.userType === "student" && !formData.isUndecided && interestedMajors.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please add at least one interested major or select Undecided. (请填写至少一个感兴趣的专业，或勾选「未确定」)",
       });
       setLoading(false);
       return;
@@ -73,7 +100,7 @@ export default function SignUp() {
     try {
       const majors = formData.isUndecided
         ? ["Undecided"]
-        : formData.interestedMajors;
+        : interestedMajors;
 
       const { data, error } = await supabase.auth.signUp({
         email: formData.email.trim(),
@@ -190,7 +217,7 @@ export default function SignUp() {
 
             {/* Full Name (Chinese/Real Name) */}
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name (真名)</Label>
+              <Label htmlFor="fullName">Full Name (真名)<span className="text-destructive"> *</span></Label>
               <Input
                 id="fullName"
                 type="text"
@@ -205,7 +232,7 @@ export default function SignUp() {
 
             {/* English Name */}
             <div className="space-y-2">
-              <Label htmlFor="englishName">English Name (英文名)</Label>
+              <Label htmlFor="englishName">English Name (英文名)<span className="text-destructive"> *</span></Label>
               <Input
                 id="englishName"
                 type="text"
@@ -221,7 +248,7 @@ export default function SignUp() {
             {/* School */}
             {isStudent && (
               <div className="space-y-2">
-                <Label htmlFor="school">School (所在学校)</Label>
+                <Label htmlFor="school">School (所在学校)<span className="text-destructive"> *</span></Label>
                 <Input
                   id="school"
                   type="text"
@@ -238,7 +265,9 @@ export default function SignUp() {
             {/* Grade */}
             {isStudent && (
               <div className="space-y-2">
-                <Label htmlFor="grade">Current Grade (当前年级)</Label>
+                <Label htmlFor="grade">
+                  Grade in the {SCHOOL_YEAR} school year ({SCHOOL_YEAR} 学年所在年级)<span className="text-destructive"> *</span>
+                </Label>
                 <select
                   id="grade"
                   required
@@ -248,21 +277,31 @@ export default function SignUp() {
                   }
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  <option value="">Select grade...</option>
-                  <option value="G7">G7 (七年级)</option>
-                  <option value="G8">G8 (八年级)</option>
+                  <option value="">Select grade... (请选择)</option>
+                  <option value="G8">G8 or below (八年级及以下)</option>
                   <option value="G9">G9 (九年级)</option>
                   <option value="G10">G10 (十年级)</option>
                   <option value="G11">G11 (十一年级)</option>
                   <option value="G12">G12 (十二年级)</option>
+                  <option value="Transfer">University student, applying to transfer (大学在读，申请转学)</option>
                 </select>
+                <p className="text-xs text-muted-foreground">
+                  Choose the grade you are in now. Your plan, reminders and the yearly grade update all start from it.
+                  （请选择你现在就读的年级。规划阶段、提醒和每年自动升年级都以此为准。）
+                </p>
+                {IS_SUMMER && (
+                  <p className="text-xs text-muted-foreground">
+                    It's summer break: choose the grade you just finished. You will move up automatically in September.
+                    （现在是暑假：请选择刚读完的年级，9 月会自动升一级。）
+                  </p>
+                )}
               </div>
             )}
 
             {/* Student Email */}
             <div className="space-y-2">
               <Label htmlFor="email">
-                {isStudent ? "Student Email (学生邮箱)" : "Email"}
+                {isStudent ? "Student Email (学生邮箱)" : "Email"}<span className="text-destructive"> *</span>
               </Label>
               <Input
                 id="email"
@@ -279,7 +318,7 @@ export default function SignUp() {
             {/* Parent Email */}
             {isStudent && (
               <div className="space-y-2">
-                <Label htmlFor="parentEmail">Parent Email (家长邮箱)</Label>
+                <Label htmlFor="parentEmail">Parent Email (家长邮箱) <span className="font-normal text-muted-foreground">· optional 选填</span></Label>
                 <Input
                   id="parentEmail"
                   type="email"
@@ -294,7 +333,7 @@ export default function SignUp() {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Password (密码，至少 6 位)<span className="text-destructive"> *</span></Label>
               <Input
                 id="password"
                 type="password"
@@ -310,7 +349,7 @@ export default function SignUp() {
             {/* Interested Majors */}
             {isStudent && (
               <div className="space-y-2">
-                <Label>Interested Majors (感兴趣的专业方向)</Label>
+                <Label>Interested Majors (感兴趣的专业方向)<span className="text-destructive"> *</span></Label>
 
                 <div className="flex items-center gap-2">
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -374,6 +413,10 @@ export default function SignUp() {
                 )}
               </div>
             )}
+
+            <p className="text-xs text-muted-foreground">
+              <span className="text-destructive">*</span> Required (必填)
+            </p>
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Creating account..." : "Sign Up"}
