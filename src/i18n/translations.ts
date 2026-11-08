@@ -544,6 +544,11 @@ const zh = {
   "plan.reports.downloadWord": "下载 Word 文件",
   "plan.reports.printPdf": "下载 PDF 文件",
   "plan.reports.language": "报告语言",
+  "plan.phase.grad_positioning": "定位",
+  "plan.phase.grad_background": "背景提升",
+  "plan.phase.grad_materials": "材料准备",
+  "plan.phase.grad_application": "申请",
+  "plan.phase.grad_admission": "录取",
 } as const;
 
 export type MessageKey = keyof typeof zh;
@@ -1092,6 +1097,11 @@ const en: Messages = {
   "plan.reports.downloadWord": "Download as Word",
   "plan.reports.printPdf": "Download as PDF",
   "plan.reports.language": "Report language",
+  "plan.phase.grad_positioning": "Positioning",
+  "plan.phase.grad_background": "Profile building",
+  "plan.phase.grad_materials": "Materials",
+  "plan.phase.grad_application": "Applications",
+  "plan.phase.grad_admission": "Admissions",
 };
 
 export const messages: Record<"zh" | "en", Messages> = { zh, en };

@@ -7,7 +7,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { studentId, quarter, academicYear, currentPhase, scheme, schemeDescription, documentContent, documentTitle, previousReport, unfinishedGoals } = await req.json();
+    const { studentId, quarter, academicYear, currentPhase, scheme, schemeDescription, documentContent, documentTitle, previousReport, unfinishedGoals, applicantType, applicantProfile, gradDegree } = await req.json();
+    const isGrad = applicantType === "graduate";
     
     const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
@@ -44,9 +45,23 @@ Deno.serve(async (req) => {
       ? `\n\n上一季度未完成的目标：\n${unfinishedGoals.map((g: string) => `- ${g}`).join("\n")}\n如果仍然重要，请纳入本季度目标。`
       : "";
 
-    const prompt = `你是一位资深的美国大学申请规划顾问。请根据以下信息，为学生生成${quarterNames[quarter] || quarter}的规划建议。
+    const gradPhaseNames: Record<string, string> = {
+      grad_positioning: "定位（选方向、选校、差距分析）",
+      grad_background: "背景提升（考试、实习/工作、科研/项目、GPA）",
+      grad_materials: "材料准备（简历、文书/Essay、推荐人、作品集）",
+      grad_application: "申请（网申提交、面试准备）",
+      grad_admission: "录取（等待结果、补材料、选校决定、押金）",
+    };
+    const role = isGrad
+      ? `你是一位资深的${gradDegree === "mba" ? "MBA" : "硕士研究生"}申请规划顾问。学生情况：${applicantProfile || "研究生申请者"}。${
+          gradDegree === "mba"
+            ? "MBA 申请重点：工作经历与职业目标、领导力、GMAT/GRE、Essay、推荐人、面试、分轮次（R1/R2/R3）申请。"
+            : "硕士申请重点：GPA 与相关课程、GRE/雅思/托福、实习与科研/项目经历、选校与项目匹配、文书（SOP/PS）、推荐人（教授/主管）。"
+        }目标只写到录取为止，不涉及签证。`
+      : "你是一位资深的美国大学申请规划顾问。";
+    const prompt = `${role}请根据以下信息，为学生生成${quarterNames[quarter] || quarter}的规划建议。
 
-当前阶段: ${currentPhase || "exploration"}
+当前阶段: ${isGrad ? gradPhaseNames[currentPhase] || currentPhase : currentPhase || "exploration"}
 学年: ${academicYear}${schemeContext}${documentContext}${prevContext}${unfinishedContext}
 
 请用JSON格式返回：

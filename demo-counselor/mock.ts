@@ -162,6 +162,13 @@ class Query {
 const user = { id: DEMO_COUNSELOR, email: "nick@example.com", user_metadata: { full_name: "Nick Tang" } };
 const session = { user, access_token: "demo", expires_at: Math.floor(Date.now() / 1000) + 36000 };
 
+// A graduate (MBA) applicant for the demo.
+const G1 = "g0000001-0000-0000-0000-000000000000";
+tables.profiles.push({ id: G1, full_name: "Lucy Wang", user_type: "student", status: "Graduate", applicant_type: "graduate", grad_status: "graduated", grad_degree: "mba", target_entry_term: "fall", target_entry_year: today.getFullYear() + 2, school: "University of British Columbia", email: "lucy@example.com", interested_majors: ["MBA"], background_intro: "UBC 商科毕业，在温哥华科技公司做产品经理 3 年，计划申请 MBA。", created_at: nowIso(-20) });
+tables.counselor_student_relationships.push({ student_id: G1, counselor_id: DEMO_COUNSELOR });
+tables.student_phases.push({ student_id: G1, current_phase: "grad_positioning", phase_start_date: iso(-20), compression_mode: false, phase_notes: "" });
+tables.student_quarters.push({ id: `q-${G1}`, student_id: G1, academic_year: `${y}-${y + 1}`, quarter, quarter_focus: "确定 MBA 申请方向和目标项目，制定 GMAT 备考计划", quarter_kpi: JSON.stringify([{ id: "g1", text: "完成 GMAT 诊断测试", completed: true }, { id: "g2", text: "列出 10 个目标 MBA 项目并对比", completed: false }, { id: "g3", text: "梳理 3 段代表性工作经历", completed: false }]), quarter_risk: "" });
+
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function demoFunction(name: string, body: any): Promise<any> {
   await wait(900);

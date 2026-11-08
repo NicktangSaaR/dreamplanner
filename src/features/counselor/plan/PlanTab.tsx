@@ -5,14 +5,15 @@ import QuarterCard from "./QuarterCard";
 import ReportsTimeline, { type ReportRequest } from "./ReportsTimeline";
 import StageRow from "./StageRow";
 import { db, type PlanDoc } from "./planData";
+import type { Track } from "@/shared/planning";
 
 /**
  * Counselor "规划" tab, ordered by how the work happens:
  * this quarter (goals + meetings) → current stage and plan → reports.
  */
-export default function PlanTab({ studentId, studentName }: { studentId: string; studentName: string }) {
+export default function PlanTab({ studentId, studentName, track }: { studentId: string; studentName: string; track: Track }) {
   const { phase } = useStudentPhase(studentId);
-  const phaseKey = phase?.current_phase || "exploration";
+  const phaseKey = phase?.current_phase || (track.applicantType === "graduate" ? "grad_positioning" : "exploration");
   const [reportRequest, setReportRequest] = useState<ReportRequest>(null);
 
   const docsQuery = useQuery({
@@ -33,14 +34,15 @@ export default function PlanTab({ studentId, studentName }: { studentId: string;
   return (
     <div className="space-y-5">
       <QuarterCard
+        track={track}
         studentId={studentId}
         phase={phaseKey}
         docs={docs}
         currentDoc={currentDoc}
         onWriteQuarterlyReport={(q) => setReportRequest({ kind: "quarterly", quarter: q, nonce: Date.now() })}
       />
-      <StageRow studentId={studentId} docs={docs} currentDoc={currentDoc} onDocsChanged={() => docsQuery.refetch()} />
-      <ReportsTimeline studentId={studentId} studentName={studentName} phase={phaseKey} request={reportRequest} />
+      <StageRow studentId={studentId} docs={docs} currentDoc={currentDoc} onDocsChanged={() => docsQuery.refetch()} track={track} />
+      <ReportsTimeline studentId={studentId} studentName={studentName} phase={phaseKey} request={reportRequest} track={track} />
     </div>
   );
 }

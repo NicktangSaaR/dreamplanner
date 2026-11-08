@@ -8,7 +8,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { reportType, studentName, phase, quarter, academicYear, kpiData, courseSummary, activitySummary, planningDocContent, language } = await req.json();
+    const { reportType, studentName, phase, quarter, academicYear, kpiData, courseSummary, activitySummary, planningDocContent, language, applicantType, applicantProfile, gradDegree } = await req.json();
+    const isGrad = applicantType === "graduate";
+    const isMba = gradDegree === "mba";
     const english = language === "en";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -46,6 +48,11 @@ Deno.serve(async (req) => {
     };
 
     const phaseNames: Record<string, string> = {
+      grad_positioning: "定位阶段",
+      grad_background: "背景提升阶段",
+      grad_materials: "材料准备阶段",
+      grad_application: "申请阶段",
+      grad_admission: "录取阶段",
       exploration: "探索阶段",
       positioning: "定位阶段",
       consolidation: "聚焦阶段",
@@ -56,8 +63,11 @@ Deno.serve(async (req) => {
       ? `\n\n规划方案文档内容（摘要）：\n${planningDocContent.substring(0, 3000)}`
       : "";
 
+    const zhRole = isGrad
+      ? `你是一位资深${isMba ? "MBA" : "硕士研究生"}申请规划顾问（学生情况：${applicantProfile || "研究生申请者"}）。评估时关注${isMba ? "工作经历、领导力、GMAT/GRE、Essay、推荐人和面试" : "GPA、标化考试、实习与科研/项目、选校匹配、文书和推荐人"}；规划只到录取为止，不涉及签证。`
+      : "你是一位资深美国大学申请规划顾问。";
     const zhPrompt = isQuarterly
-      ? `你是一位资深美国大学申请规划顾问。请为学生「${studentName || "学生"}」生成${quarterNames[quarter] || quarter} (${academicYear}) 的季度规划工作完成情况评估报告。
+      ? `${zhRole}请为学生「${studentName || "学生"}」生成${quarterNames[quarter] || quarter} (${academicYear}) 的季度规划工作完成情况评估报告。
 
 当前阶段: ${phaseNames[phase] || phase}
 
@@ -87,7 +97,7 @@ ${activitySummary || "暂无活动数据"}${docContext}
 
 请确保内容具体、有针对性，避免泛泛而谈。`
 
-      : `你是一位资深美国大学申请规划顾问。请为学生「${studentName || "学生"}」生成${phaseNames[phase] || phase}的阶段总结报告。
+      : `${zhRole}请为学生「${studentName || "学生"}」生成${phaseNames[phase] || phase}的阶段总结报告。
 
 学年: ${academicYear}
 
@@ -128,6 +138,11 @@ ${kpiData || "暂无KPI数据"}${docContext}
       Q4_summer: "Summer (Jun–Aug)",
     };
     const phaseNamesEn: Record<string, string> = {
+      grad_positioning: "Positioning stage",
+      grad_background: "Profile-building stage",
+      grad_materials: "Materials stage",
+      grad_application: "Applications stage",
+      grad_admission: "Admissions stage",
       exploration: "Exploration stage",
       positioning: "Positioning stage",
       consolidation: "Consolidation stage",
@@ -138,8 +153,11 @@ ${kpiData || "暂无KPI数据"}${docContext}
       : "";
     const name = studentName || "the student";
 
+    const enRole = isGrad
+      ? `You are a senior ${isMba ? "MBA" : "master's"} admissions planning counselor (student: ${applicantProfile || "graduate applicant"}). Focus on ${isMba ? "work experience, leadership, GMAT/GRE, essays, recommenders and interviews" : "GPA, test scores, internships and research/projects, program fit, statement of purpose and recommenders"}; the plan ends at admission and does not cover visas.`
+      : "You are a senior US college admissions planning counselor.";
     const enPrompt = isQuarterly
-      ? `You are a senior US college admissions planning counselor. Write a quarterly progress review for ${name} covering ${quarterNamesEn[quarter] || quarter} (${academicYear}).
+      ? `${enRole} Write a quarterly progress review for ${name} covering ${quarterNamesEn[quarter] || quarter} (${academicYear}).
 
 Current stage: ${phaseNamesEn[phase] || phase}
 
@@ -163,7 +181,7 @@ Assess each goal and give an overall completion rate.
 ### 4. Risks to watch
 
 Be specific to this student and avoid generic advice. Translate any Chinese input into English.`
-      : `You are a senior US college admissions planning counselor. Write a stage summary report for ${name} for the ${phaseNamesEn[phase] || phase}.
+      : `${enRole} Write a stage summary report for ${name} for the ${phaseNamesEn[phase] || phase}.
 
 Academic year: ${academicYear}
 

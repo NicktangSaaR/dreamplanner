@@ -16,14 +16,16 @@ import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
 import { downloadDriveFile, pickDriveFile } from "@/lib/googleDrive";
 import { cn } from "@/lib/utils";
+import { gradTimeline, type Track } from "@/shared/planning";
 import {
-  PHASES, PlanDocError, fmtDate, openPlanDocument, setCurrentPlan, uploadPlanDocument, type PlanDoc,
+  GRAD_PHASES, PHASES, PlanDocError, fmtDate, openPlanDocument, setCurrentPlan, uploadPlanDocument, type PlanDoc,
 } from "./planData";
 
 export default function StageRow({
-  studentId, docs, currentDoc, onDocsChanged,
+  studentId, docs, currentDoc, onDocsChanged, track,
 }: {
   studentId: string;
+  track: Track;
   docs: PlanDoc[];
   currentDoc: PlanDoc | null;
   onDocsChanged: () => Promise<unknown> | void;
@@ -31,7 +33,13 @@ export default function StageRow({
   const { t, lang } = useLanguage();
   const L = (zh: string, en: string) => (lang === "zh" ? zh : en);
   const { phase, upsertPhase } = useStudentPhase(studentId);
-  const phaseKey = phase?.current_phase || "exploration";
+  const isGrad = track.applicantType === "graduate";
+  const phaseKey = phase?.current_phase || (isGrad ? "grad_positioning" : "exploration");
+  const phaseOptions: string[] = isGrad ? GRAD_PHASES : PHASES;
+  const timeline = isGrad && track.entryYear
+    ? gradTimeline(track.entryTerm, track.entryYear, track.start ? new Date(track.start) : new Date())
+    : null;
+  const monthFmt = (d: Date) => d.toLocaleDateString(lang === "zh" ? "zh-CN" : "en-CA", { year: "numeric", month: "short" });
   const phaseName = (p: string) => t(`plan.phase.${p}` as MessageKey);
   const history = docs.filter((d) => d.id !== currentDoc?.id);
 
@@ -175,6 +183,25 @@ export default function StageRow({
             </Button>
           </span>
         </div>
+        {isGrad && (
+          <div className="border-t px-6 py-3">
+            {timeline ? (
+              <ol className="grid grid-cols-5 gap-1 text-xs">
+                {timeline.map((s) => {
+                  const current = s.phase === phaseKey;
+                  return (
+                    <li key={s.phase} className={cn("rounded-sm border-t-4 px-1.5 pt-1.5", current ? "border-primary" : s.skipped ? "border-muted opacity-50" : "border-primary/25")}>
+                      <span className={cn("block font-medium", current ? "text-primary" : "text-foreground/80")}>{phaseName(s.phase)}</span>
+                      <span className="text-muted-foreground">{s.skipped ? L("已跳过", "skipped") : `${monthFmt(s.from)} – ${monthFmt(s.to)}`}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : (
+              <p className="text-xs text-muted-foreground">{L("还没有设置计划入学时间。点右上角「编辑资料」设置后，系统会自动划分时间轴。", "No planned start yet. Set it in Edit profile and the timeline is laid out automatically.")}</p>
+            )}
+          </div>
+        )}
         {note && (
           <p className="flex items-center gap-2 border-t bg-primary/5 px-6 py-2.5 text-sm text-primary"><Check className="h-4 w-4" /> {note}</p>
         )}
@@ -259,7 +286,7 @@ export default function StageRow({
                 <Label>{L("当前阶段", "Stage")}</Label>
                 <Select value={form.current_phase} onValueChange={(v) => setForm({ ...form, current_phase: v as StudentPhase["current_phase"] })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{PHASES.map((p) => <SelectItem key={p} value={p}>{phaseName(p)}</SelectItem>)}</SelectContent>
+                  <SelectContent>{phaseOptions.map((p) => <SelectItem key={p} value={p}>{phaseName(p)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
@@ -276,8 +303,11 @@ export default function StageRow({
                 placeholder={L("记录当前阶段的关键决策和方向…", "Key decisions and direction for this stage…")} />
             </div>
             <p className="text-xs text-muted-foreground">
-              {L("阶段每年 9 月自动推进；11 年级结束时（7 月）自动进入申请阶段。手动修改后，之后在此基础上继续推进。",
-                "Stages move forward automatically each September, and to Applications when Grade 11 ends (July). Manual changes are kept and carried forward.")}
+              {isGrad
+                ? L("研究生阶段按计划入学时间自动推进（到达时间轴上的下一阶段那天切换）。手动修改会保留到下一个节点。",
+                  "Graduate stages move forward on the timeline dates. A manual change stays until the next date on the timeline.")
+                : L("阶段每年 9 月自动推进；11 年级结束时（7 月）自动进入申请阶段。手动修改后，之后在此基础上继续推进。",
+                  "Stages move forward automatically each September, and to Applications when Grade 11 ends (July). Manual changes are kept and carried forward.")}
             </p>
           </div>
           <DialogFooter>

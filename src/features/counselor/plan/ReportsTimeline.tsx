@@ -17,6 +17,7 @@ import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
 import { useProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
+import { gradSummary, type Track } from "@/shared/planning";
 import { QUARTERS, academicYear, currentQuarter, db, fmtDate, parseGoals, type QuarterKey } from "./planData";
 
 type Report = {
@@ -33,11 +34,15 @@ type Report = {
 
 export type ReportRequest = { kind: "quarterly" | "annual"; quarter: QuarterKey; nonce: number } | null;
 
-const PHASE_EN: Record<string, string> = { exploration: "Exploration", positioning: "Positioning", consolidation: "Consolidation", application: "Application" };
+const PHASE_EN: Record<string, string> = {
+  exploration: "Exploration", positioning: "Positioning", consolidation: "Consolidation", application: "Application",
+  grad_positioning: "Positioning", grad_background: "Profile Building", grad_materials: "Materials", grad_application: "Applications", grad_admission: "Admissions",
+};
 
 export default function ReportsTimeline({
-  studentId, studentName, phase, request,
+  studentId, studentName, phase, request, track,
 }: {
+  track: Track;
   studentId: string;
   studentName: string;
   phase: string;
@@ -149,6 +154,9 @@ export default function ReportsTimeline({
           activitySummary: (activities.data || []).map((a) => `${a.name} - ${a.role}: ${a.description || ""}`).join("\n") || "暂无",
           planningDocContent: docs.data?.[0]?.content || "",
           language: reportLang,
+          applicantType: track.applicantType,
+          applicantProfile: track.applicantType === "graduate" ? gradSummary(track, "zh") : undefined,
+          gradDegree: track.gradDegree || undefined,
         },
       });
       if (error || !data?.report) throw new Error(data?.error || error?.message || "");

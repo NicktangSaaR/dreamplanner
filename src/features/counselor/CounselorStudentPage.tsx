@@ -15,6 +15,7 @@ import TodoSection from "@/components/college-planning/TodoSection";
 import NotesSection from "@/components/college-planning/NotesSection";
 import PlanningMilestones from "@/components/college-planning/google-drive/PlanningMilestones";
 import PlanTab from "./plan/PlanTab";
+import { gradSummary, type EntryTerm, type GradDegree, type GradStatus, type Track } from "@/shared/planning";
 import StudentTeamCard from "@/features/team/StudentTeamCard";
 import AcademicBriefCard from "@/features/grades/AcademicBriefCard";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
@@ -49,8 +50,16 @@ const isoDay = (offset: number) => {
  * tabs. Overview answers "how is this student doing right now".
  */
 export default function CounselorStudentPage({ studentId }: { studentId: string }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { profile, activities, isLoading } = useStudentData(studentId);
+  const track: Track = {
+    applicantType: profile?.applicant_type === "graduate" ? "graduate" : "undergrad",
+    gradStatus: (profile?.grad_status as GradStatus) || null,
+    gradDegree: (profile?.grad_degree as GradDegree) || null,
+    entryTerm: (profile?.target_entry_term as EntryTerm) || null,
+    entryYear: profile?.target_entry_year || null,
+    start: profile?.created_at || null,
+  };
   const { phase } = useStudentPhase(studentId);
   const { quarters } = useStudentQuarters(studentId);
   const [editing, setEditing] = useState(false);
@@ -117,7 +126,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
           </Button>
         </div>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-          <span>{profile.status || profile.grade || "—"}</span>
+          <span>{track.applicantType === "graduate" ? gradSummary(track, lang) + (profile.status === "Completed" ? " · Completed" : "") : profile.status || profile.grade || "—"}</span>
           {profile.school && <><span aria-hidden="true">·</span><span>{profile.school}</span></>}
           {phase?.current_phase && <><span aria-hidden="true">·</span><span>{t(`plan.phase.${phase.current_phase}` as MessageKey)}</span></>}
           {goals.length > 0 && <><span aria-hidden="true">·</span><span>{t("home3.goalsLine", { done, total: goals.length })}</span></>}
@@ -188,7 +197,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
         </TabsContent>
 
         <TabsContent value="plan" className="mt-6 space-y-6">
-          <PlanTab studentId={studentId} studentName={profile.full_name || ""} />
+          <PlanTab studentId={studentId} studentName={profile.full_name || ""} track={track} />
         </TabsContent>
 
         <TabsContent value="follow" className="mt-6 space-y-6">

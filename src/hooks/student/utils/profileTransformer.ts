@@ -63,6 +63,12 @@ export const transformProfile = (rawProfile: RawProfile | null) => {
     career_interest_test: careerInterestTest,
     email: rawProfile.email,
     status: rawProfile.status,
+    // Graduate-track fields (newer columns, not yet in the generated types).
+    applicant_type: ((rawProfile as Record<string, unknown>).applicant_type as string | null) ?? "undergrad",
+    grad_status: ((rawProfile as Record<string, unknown>).grad_status as string | null) ?? null,
+    grad_degree: ((rawProfile as Record<string, unknown>).grad_degree as string | null) ?? null,
+    target_entry_year: ((rawProfile as Record<string, unknown>).target_entry_year as number | null) ?? null,
+    target_entry_term: ((rawProfile as Record<string, unknown>).target_entry_term as string | null) ?? null,
     created_at: rawProfile.created_at,
     updated_at: rawProfile.updated_at
   };

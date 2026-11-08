@@ -1,6 +1,7 @@
 // Daily automation for DreamPlanner, called once a day by pg_cron.
 //
 //   * July (end of Grade 11): every G11 student becomes "College Bound"
+//   * Daily: graduate students move to the next stage on their timeline dates
 //     and moves to the application stage; the lead counselor and team are
 //     emailed to start application-season preparation.
 //   * September: G9 and G10 students move up one grade, and their stage
@@ -217,6 +218,56 @@ Deno.serve(async (req) => {
     }
     report.applicationPrep = (g11 || []).map((s) => ({ id: s.id, name: s.full_name }));
     await markRan(prepKey, { count: (g11 || []).length });
+  }
+
+  // ---------- 2b) Daily: graduate students move along their timeline ----------
+  // A graduate student's stage changes on the day the timeline (counted back
+  // from their planned start) reaches the next stage. Only on that day, so a
+  // counselor's manual change in between is kept.
+  {
+    const { data: grads } = await db
+      .from("profiles")
+      .select("id, full_name, target_entry_term, target_entry_year, created_at")
+      .eq("user_type", "student")
+      .eq("applicant_type", "graduate")
+      .neq("status", "Completed")
+      .not("target_entry_year", "is", null);
+    const yesterday = addDays(today, -1);
+    const moved: { student: Student; to: string }[] = [];
+    for (const g of grads || []) {
+      const start = String(g.created_at).slice(0, 10);
+      const [{ data: now }, { data: before }] = await Promise.all([
+        db.rpc("grad_phase_for", { p_term: g.target_entry_term, p_year: g.target_entry_year, p_start: start, p_on: today }),
+        db.rpc("grad_phase_for", { p_term: g.target_entry_term, p_year: g.target_entry_year, p_start: start, p_on: yesterday }),
+      ]);
+      if (!now || now === before) continue;
+      if (!dry) {
+        await db.from("student_phases").upsert(
+          { student_id: g.id, current_phase: now, phase_start_date: today },
+          { onConflict: "student_id" },
+        );
+      }
+      moved.push({ student: { id: g.id, full_name: g.full_name } as unknown as Student, to: now as string });
+    }
+    const GRAD_NAMES: Record<string, string> = {
+      grad_background: "背景提升", grad_materials: "材料准备", grad_application: "申请", grad_admission: "录取",
+    };
+    const byRecipient = new Map<string, typeof moved>();
+    for (const m of moved) {
+      if (completed.has(m.student.id)) continue;
+      for (const email of teamEmails(m.student.id)) byRecipient.set(email, [...(byRecipient.get(email) || []), m]);
+    }
+    for (const [email, list] of byRecipient) {
+      outbox.push({
+        to: email,
+        subject: `研究生规划：${list.length} 位学生进入新阶段`,
+        html: layout(
+          "研究生规划阶段更新",
+          `<p>按计划入学时间，以下学生今天进入新阶段：</p><ul>${list.map((m) => `<li>${esc(m.student.full_name || "学生")} → ${GRAD_NAMES[m.to] || m.to}</li>`).join("")}</ul>`,
+        ),
+      });
+    }
+    report.gradAdvance = moved.map((m) => ({ id: m.student.id, name: m.student.full_name, to: m.to }));
   }
 
   // ---------- 3) Daily: milestones due within 7 days ----------

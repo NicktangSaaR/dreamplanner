@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/utils";
+import { gradSummary, type Track } from "@/shared/planning";
 import MeetingsPanel from "./MeetingsPanel";
 import {
   QUARTERS, academicYear, currentQuarter, db, newGoalId, parseGoals, previousQuarter, quarterEnd,
@@ -32,8 +33,9 @@ const STYLES: { key: string; zh: string; en: string; desc: string }[] = [
 type QuarterRow = { id: string; quarter: QuarterKey; academic_year: string; quarter_focus: string | null; quarter_kpi: string | null };
 
 export default function QuarterCard({
-  studentId, phase, docs, currentDoc, onWriteQuarterlyReport,
+  studentId, phase, docs, currentDoc, onWriteQuarterlyReport, track,
 }: {
+  track: Track;
   studentId: string;
   phase: string;
   docs: PlanDoc[];
@@ -152,6 +154,9 @@ export default function QuarterCard({
           documentContent: doc?.content || undefined, documentTitle: doc?.title,
           previousReport: usePrev ? prevInfo?.report?.final_content || prevInfo?.report?.ai_draft || undefined : undefined,
           unfinishedGoals: usePrev ? prevInfo?.unfinished : undefined,
+          applicantType: track.applicantType,
+          applicantProfile: track.applicantType === "graduate" ? gradSummary(track, "zh") : undefined,
+          gradDegree: track.gradDegree || undefined,
         },
       });
       if (error) throw error;
