@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { BankQuestion, CustomQuestion, InterviewBank, QuestionType } from "./types";
+import type { BankKind, BankQuestion, BlueprintSection, CustomQuestion, InterviewBank, QuestionType } from "./types";
 
 // The new columns/table are not in the generated Supabase types yet, so the
 // queries go through an untyped client view and are typed at the edges.
@@ -8,7 +8,7 @@ import type { BankQuestion, CustomQuestion, InterviewBank, QuestionType } from "
 const db = supabase as any;
 
 const BANK_COLUMNS =
-  "id, title, description, school, program, preparation_time, response_time, is_active, created_at";
+  "id, kind, title, description, school, program, preparation_time, response_time, is_active, created_at, blueprint, sim_shuffle, sim_retakes";
 const QUESTION_COLUMNS =
   "id, bank_id, title, description, question_type, preparation_time, response_time, sort_order";
 const CUSTOM_COLUMNS =
@@ -19,7 +19,7 @@ export function useBanks() {
   return useQuery({
     queryKey: ["mi-banks"],
     queryFn: async (): Promise<InterviewBank[]> => {
-      const { data, error } = await db.from("mock_interview_questions").select(BANK_COLUMNS).order("title");
+      const { data, error } = await db.from("mock_interview_questions").select(BANK_COLUMNS).order("created_at");
       if (error) throw error;
       return data ?? [];
     },
@@ -75,8 +75,10 @@ export function useCustomQuestionMutations(userId: string | null | undefined) {
   const refresh = () => qc.invalidateQueries({ queryKey: ["mi-custom", userId] });
 
   const add = useMutation({
-    mutationFn: async (input: CustomQuestionInput) => {
-      const { error } = await db.from("mock_interview_custom_questions").insert({ ...input, user_id: userId });
+    mutationFn: async (input: CustomQuestionInput | CustomQuestionInput[]) => {
+      const rows = (Array.isArray(input) ? input : [input]).map((r) => ({ ...r, user_id: userId }));
+      if (!rows.length) return;
+      const { error } = await db.from("mock_interview_custom_questions").insert(rows);
       if (error) throw error;
     },
     onSuccess: refresh,
@@ -96,6 +98,7 @@ export function useCustomQuestionMutations(userId: string | null | undefined) {
 // ------------------------------------------------------------- admin -------
 
 export interface BankInput {
+  kind: BankKind;
   title: string;
   description: string | null;
   school: string | null;
@@ -103,6 +106,9 @@ export interface BankInput {
   preparation_time: number;
   response_time: number;
   is_active: boolean;
+  blueprint: BlueprintSection[];
+  sim_shuffle: boolean;
+  sim_retakes: number;
 }
 
 export interface BankQuestionInput {
@@ -145,6 +151,18 @@ export function useBankAdmin() {
       if (qErr) throw qErr;
       const { error } = await db.from("mock_interview_questions").delete().eq("id", id);
       if (error) throw error;
+      // Take a deleted pool out of every school interview that drew from it.
+      const { data: schools } = await db
+        .from("mock_interview_questions")
+        .select("id, blueprint")
+        .eq("kind", "school")
+        .contains("blueprint", [{ pool_id: id }]);
+      for (const s of (schools ?? []) as { id: string; blueprint: BlueprintSection[] }[]) {
+        await db
+          .from("mock_interview_questions")
+          .update({ blueprint: s.blueprint.filter((sec) => sec.pool_id !== id) })
+          .eq("id", s.id);
+      }
     },
     onSuccess: refresh,
   });

@@ -1,8 +1,25 @@
 export type QuestionType = "video" | "written";
 
-/** An admin-managed question bank (table mock_interview_questions). */
+export type BankKind = "pool" | "school";
+
+/** One part of a school interview: draw `count` questions from a shared pool. */
+export interface BlueprintSection {
+  pool_id: string;
+  count: number;
+  /** null = keep each question's own type */
+  question_type: QuestionType | null;
+  prep: number; // seconds
+  response: number; // seconds
+}
+
+/**
+ * A row of mock_interview_questions.
+ *  - kind "pool":   a shared question category; its questions are in mock_interview_bank_questions.
+ *  - kind "school": a university/program interview built from pools by its blueprint.
+ */
 export interface InterviewBank {
   id: string;
+  kind: BankKind;
   title: string;
   description: string | null;
   school: string | null;
@@ -10,6 +27,10 @@ export interface InterviewBank {
   preparation_time: number;
   response_time: number;
   is_active: boolean;
+  blueprint: BlueprintSection[];
+  /** School interviews: shuffle the drawn questions instead of keeping section order. */
+  sim_shuffle: boolean;
+  sim_retakes: number;
   created_at: string;
 }
 
@@ -86,4 +107,53 @@ export function parsePastedQuestions(text: string): string[] {
     .map((line) => line.replace(/^\s*(?:[-*•·]|\d+[.)、]|[（(]\d+[)）])\s*/, "").trim())
     .filter((line) => line.length > 0)
     .map((line) => line.slice(0, 1000));
+}
+
+/** Fisher–Yates shuffle (returns a new array). */
+export function shuffled<T>(list: T[]): T[] {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/** Total questions a blueprint asks for. */
+export const blueprintTotal = (b: BlueprintSection[]) => b.reduce((n, s) => n + s.count, 0);
+
+/** Estimated length of a blueprint, in seconds. */
+export const blueprintSeconds = (b: BlueprintSection[]) => b.reduce((n, s) => n + s.count * (s.prep + s.response), 0);
+
+/**
+ * Build a school interview: for each section, draw random questions from its
+ * pool (never the same question twice), with the section's type and timing.
+ */
+export function drawFromBlueprint(
+  school: InterviewBank,
+  questionsByPool: Record<string, BankQuestion[]>,
+): SessionQuestion[] {
+  const used = new Set<string>();
+  const out: SessionQuestion[] = [];
+  for (const sec of school.blueprint) {
+    const candidates = shuffled((questionsByPool[sec.pool_id] ?? []).filter((q) => !used.has(q.id)));
+    for (const q of candidates.slice(0, sec.count)) {
+      used.add(q.id);
+      out.push({
+        key: `bank:${q.id}`,
+        text: q.title,
+        type: sec.question_type ?? q.question_type,
+        prep: sec.prep,
+        response: sec.response,
+      });
+    }
+  }
+  return school.sim_shuffle ? shuffled(out) : out;
+}
+
+/** How many questions a blueprint can actually draw with the pools as they are now. */
+export function blueprintAvailable(school: InterviewBank, questionsByPool: Record<string, BankQuestion[]>): number {
+  const asked: Record<string, number> = {};
+  for (const s of school.blueprint) asked[s.pool_id] = (asked[s.pool_id] ?? 0) + s.count;
+  return Object.entries(asked).reduce((n, [pool, want]) => n + Math.min(want, questionsByPool[pool]?.length ?? 0), 0);
 }

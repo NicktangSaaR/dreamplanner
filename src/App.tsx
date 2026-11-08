@@ -51,7 +51,7 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route element={<AuthLayout />}>
             <Route path="/mock-interview" element={
-              <ProtectedRoute allowedUserTypes={["student", "admin"]}>
+              <ProtectedRoute allowedUserTypes={["student", "counselor", "admin"]}>
                 <MockInterview />
               </ProtectedRoute>
             } />
