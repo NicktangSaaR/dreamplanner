@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import MeetingsPreview from "./MeetingsPreview";
 
 /**
  * Preview of a reorganised counselor "规划" tab, with sample data and local
@@ -98,6 +99,7 @@ export default function PlanTabPreview() {
   const [quarter, setQuarter] = useState("Q1");
   const [data, setData] = useState(SAMPLE);
   const [newGoal, setNewGoal] = useState("");
+  const [view, setView] = useState<"goals" | "meetings">("goals");
   const [savedHint, setSavedHint] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -239,6 +241,23 @@ export default function PlanTabPreview() {
               </div>
             )}
 
+            <div className="flex border-b text-sm">
+              {([["goals", `目标 ${done}/${q.goals.length}`], ["meetings", quarter === "Q1" ? "会议记录" : "会议记录（0）"]] as const).map(([k, label]) => (
+                <button key={k} onClick={() => setView(k)}
+                  className={cn("-mb-px border-b-2 px-4 py-2", view === k ? "border-primary font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {view === "meetings" ? (
+              quarter === "Q1" ? (
+                <MeetingsPreview goals={q.goals} onGoals={(goals) => touch({ goals })} />
+              ) : (
+                <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">这个季度还没有会议记录。</p>
+              )
+            ) : (
+            <>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="focus">季度重点</Label>
@@ -294,6 +313,8 @@ export default function PlanTabPreview() {
                 </Button>
               </div>
             </div>
+            </>
+            )}
           </CardContent>
         </Card>
 
