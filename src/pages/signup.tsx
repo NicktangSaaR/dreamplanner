@@ -79,12 +79,19 @@ export default function SignUp() {
       return;
     }
 
+    // A major typed but not yet added with "Add" still counts.
+    const pendingMajor = majorInput.trim();
+    const interestedMajors =
+      pendingMajor && !formData.interestedMajors.includes(pendingMajor)
+        ? [...formData.interestedMajors, pendingMajor]
+        : formData.interestedMajors;
+
     // For students, require majors or undecided
-    if (formData.userType === "student" && !formData.isUndecided && formData.interestedMajors.length === 0) {
+    if (formData.userType === "student" && !formData.isUndecided && interestedMajors.length === 0) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please add at least one interested major or select Undecided.",
+        description: "Please add at least one interested major or select Undecided. (请填写至少一个感兴趣的专业，或勾选「未确定」)",
       });
       setLoading(false);
       return;
@@ -93,7 +100,7 @@ export default function SignUp() {
     try {
       const majors = formData.isUndecided
         ? ["Undecided"]
-        : formData.interestedMajors;
+        : interestedMajors;
 
       const { data, error } = await supabase.auth.signUp({
         email: formData.email.trim(),
@@ -210,7 +217,7 @@ export default function SignUp() {
 
             {/* Full Name (Chinese/Real Name) */}
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name (真名)</Label>
+              <Label htmlFor="fullName">Full Name (真名)<span className="text-destructive"> *</span></Label>
               <Input
                 id="fullName"
                 type="text"
@@ -225,7 +232,7 @@ export default function SignUp() {
 
             {/* English Name */}
             <div className="space-y-2">
-              <Label htmlFor="englishName">English Name (英文名)</Label>
+              <Label htmlFor="englishName">English Name (英文名)<span className="text-destructive"> *</span></Label>
               <Input
                 id="englishName"
                 type="text"
@@ -241,7 +248,7 @@ export default function SignUp() {
             {/* School */}
             {isStudent && (
               <div className="space-y-2">
-                <Label htmlFor="school">School (所在学校)</Label>
+                <Label htmlFor="school">School (所在学校)<span className="text-destructive"> *</span></Label>
                 <Input
                   id="school"
                   type="text"
@@ -259,7 +266,7 @@ export default function SignUp() {
             {isStudent && (
               <div className="space-y-2">
                 <Label htmlFor="grade">
-                  Grade in the {SCHOOL_YEAR} school year ({SCHOOL_YEAR} 学年所在年级)
+                  Grade in the {SCHOOL_YEAR} school year ({SCHOOL_YEAR} 学年所在年级)<span className="text-destructive"> *</span>
                 </Label>
                 <select
                   id="grade"
@@ -294,7 +301,7 @@ export default function SignUp() {
             {/* Student Email */}
             <div className="space-y-2">
               <Label htmlFor="email">
-                {isStudent ? "Student Email (学生邮箱)" : "Email"}
+                {isStudent ? "Student Email (学生邮箱)" : "Email"}<span className="text-destructive"> *</span>
               </Label>
               <Input
                 id="email"
@@ -311,7 +318,7 @@ export default function SignUp() {
             {/* Parent Email */}
             {isStudent && (
               <div className="space-y-2">
-                <Label htmlFor="parentEmail">Parent Email (家长邮箱)</Label>
+                <Label htmlFor="parentEmail">Parent Email (家长邮箱) <span className="font-normal text-muted-foreground">· optional 选填</span></Label>
                 <Input
                   id="parentEmail"
                   type="email"
@@ -326,7 +333,7 @@ export default function SignUp() {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Password (密码，至少 6 位)<span className="text-destructive"> *</span></Label>
               <Input
                 id="password"
                 type="password"
@@ -342,7 +349,7 @@ export default function SignUp() {
             {/* Interested Majors */}
             {isStudent && (
               <div className="space-y-2">
-                <Label>Interested Majors (感兴趣的专业方向)</Label>
+                <Label>Interested Majors (感兴趣的专业方向)<span className="text-destructive"> *</span></Label>
 
                 <div className="flex items-center gap-2">
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -406,6 +413,10 @@ export default function SignUp() {
                 )}
               </div>
             )}
+
+            <p className="text-xs text-muted-foreground">
+              <span className="text-destructive">*</span> Required (必填)
+            </p>
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Creating account..." : "Sign Up"}
