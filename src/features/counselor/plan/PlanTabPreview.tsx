@@ -124,6 +124,41 @@ export default function PlanTabPreview() {
   const [stageOpen, setStageOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [compressed, setCompressed] = useState(false);
+  type Doc = { id: number; name: string; stage: string; date: string };
+  const [docs, setDocs] = useState<Doc[]>([
+    { id: 2, name: "Evan 定位期规划方案.docx", stage: "定位阶段", date: "2026/9/10" },
+    { id: 1, name: "Evan 探索期规划方案.docx", stage: "探索阶段", date: "2025/9/12" },
+  ]);
+  const [currentDocId, setCurrentDocId] = useState(2);
+  const [swapOpen, setSwapOpen] = useState(false);
+  const [swapMode, setSwapMode] = useState<"upload" | "pick">("upload");
+  const [pending, setPending] = useState<Doc | null>(null);
+  const [pickId, setPickId] = useState<number | null>(null);
+  const [swapNote, setSwapNote] = useState("");
+  const currentDoc = docs.find((d) => d.id === currentDocId)!;
+  const historyDocs = docs.filter((d) => d.id !== currentDocId);
+
+  const openSwap = () => {
+    setSwapMode("upload");
+    setPending(null);
+    setPickId(historyDocs[0]?.id ?? null);
+    setSwapOpen(true);
+  };
+  const confirmSwap = () => {
+    let next: Doc | undefined;
+    if (swapMode === "upload" && pending) {
+      next = pending;
+      setDocs((ds) => [pending, ...ds]);
+    } else if (swapMode === "pick" && pickId) {
+      next = docs.find((d) => d.id === pickId);
+    }
+    if (!next) return;
+    const old = currentDoc.name;
+    setCurrentDocId(next.id);
+    setSwapOpen(false);
+    setSwapNote(`已更换为「${next.name}」，「${old}」已移到历史方案。`);
+    window.setTimeout(() => setSwapNote(""), 5000);
+  };
 
   // ---------- reports ----------
   const [reports, setReports] = useState<Report[]>(INITIAL_REPORTS);
@@ -271,26 +306,40 @@ export default function PlanTabPreview() {
               <span className="flex min-w-0 items-center gap-1.5">
                 <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span className="text-muted-foreground">依据方案：</span>
-                <button className="truncate font-medium text-primary hover:underline">Evan 定位期规划方案.docx</button>
+                <button className="truncate font-medium text-primary hover:underline">{currentDoc.name}</button>
               </span>
               <span className="ml-auto flex gap-1">
                 <Button variant="ghost" size="sm" onClick={() => setHistoryOpen((v) => !v)}>
-                  <History className="mr-1 h-4 w-4" /> 历史方案（1）
+                  <History className="mr-1 h-4 w-4" /> 历史方案（{historyDocs.length}）
                   <ChevronDown className={cn("ml-1 h-3.5 w-3.5 transition-transform", historyOpen && "rotate-180")} />
                 </Button>
-                <Button variant="ghost" size="sm">更换方案</Button>
+                <Button variant="ghost" size="sm" onClick={openSwap}>更换方案</Button>
                 <Button variant="outline" size="sm" onClick={() => setStageOpen(true)}>
                   <Settings2 className="mr-1 h-4 w-4" /> 调整阶段
                 </Button>
               </span>
             </div>
+            {swapNote && (
+              <p className="flex items-center gap-2 border-t bg-primary/5 px-6 py-2.5 text-sm text-primary">
+                <Check className="h-4 w-4" /> {swapNote}
+              </p>
+            )}
             {historyOpen && (
-              <ul className="border-t bg-muted/20 px-6 py-3 text-sm">
-                <li className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  <span className="flex-1">Evan 探索期规划方案.docx</span>
-                  <span className="text-xs text-muted-foreground">探索阶段 · 2025/9/12</span>
-                </li>
+              <ul className="space-y-2 border-t bg-muted/20 px-6 py-3 text-sm">
+                {historyDocs.length === 0 && <li className="text-muted-foreground">还没有历史方案</li>}
+                {historyDocs.map((d) => (
+                  <li key={d.id} className="flex flex-wrap items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <button className="flex-1 truncate text-left hover:underline">{d.name}</button>
+                    <span className="text-xs text-muted-foreground">{d.stage} · {d.date}</span>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => {
+                      const old = currentDoc.name;
+                      setCurrentDocId(d.id);
+                      setSwapNote(`已切回「${d.name}」，「${old}」已移到历史方案。`);
+                      window.setTimeout(() => setSwapNote(""), 5000);
+                    }}>设为当前方案</Button>
+                  </li>
+                ))}
               </ul>
             )}
           </CardContent>
@@ -358,7 +407,7 @@ export default function PlanTabPreview() {
               <Label>依据方案</Label>
               <Select defaultValue="doc"><SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="doc">Evan 定位期规划方案.docx（当前阶段）</SelectItem>
+                  <SelectItem value="doc">{currentDoc.name}（当前方案）</SelectItem>
                   <SelectItem value="none">不依据方案</SelectItem>
                 </SelectContent>
               </Select>
@@ -384,6 +433,67 @@ export default function PlanTabPreview() {
             <Button onClick={generateGoals} disabled={generating}>
               {generating && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />} 生成
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Swap plan dialog */}
+      <Dialog open={swapOpen} onOpenChange={setSwapOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader><DialogTitle>更换规划方案</DialogTitle></DialogHeader>
+          <div className="space-y-4 text-sm">
+            <p className="text-muted-foreground">当前方案：<span className="text-foreground">{currentDoc.name}</span>。更换后它会移到「历史方案」，不会删除。</p>
+            <div className="grid grid-cols-2 gap-2">
+              {(["upload", "pick"] as const).map((m) => (
+                <button key={m} onClick={() => setSwapMode(m)}
+                  className={cn("rounded-md border p-3 text-left", swapMode === m ? "border-primary bg-primary/5" : "hover:bg-muted/50")}>
+                  <span className="block font-medium">{m === "upload" ? "上传新方案" : "选已上传的方案"}</span>
+                  <span className="text-xs text-muted-foreground">{m === "upload" ? "从电脑或 Google Drive 选择" : `历史方案 ${historyDocs.length} 份`}</span>
+                </button>
+              ))}
+            </div>
+            {swapMode === "upload" ? (
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <label className="inline-flex cursor-pointer items-center rounded-md border px-3 py-2 text-sm hover:bg-muted/50">
+                    <FileText className="mr-1.5 h-4 w-4" /> 从电脑选择
+                    <input type="file" accept=".docx,.txt" className="hidden" onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) setPending({ id: Date.now(), name: f.name, stage: "定位阶段", date: "2026/11/8" });
+                    }} />
+                  </label>
+                  <Button variant="outline" onClick={() => setPending({ id: Date.now(), name: "Evan 定位期规划方案 v2.docx", stage: "定位阶段", date: "2026/11/8" })}>
+                    从 Google Drive 选择
+                  </Button>
+                </div>
+                {pending ? (
+                  <p className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2"><FileText className="h-4 w-4" /> {pending.name}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">支持 .docx 和 .txt。预览页里选 Google Drive 会放入一个示例文件。</p>
+                )}
+              </div>
+            ) : historyDocs.length === 0 ? (
+              <p className="text-muted-foreground">还没有历史方案。</p>
+            ) : (
+              <ul className="divide-y rounded-md border">
+                {historyDocs.map((d) => (
+                  <li key={d.id}>
+                    <label className="flex cursor-pointer items-center gap-3 px-3 py-2.5">
+                      <input type="radio" name="pick" checked={pickId === d.id} onChange={() => setPickId(d.id)} className="accent-[hsl(var(--primary))]" />
+                      <span className="flex-1">{d.name}</span>
+                      <span className="text-xs text-muted-foreground">{d.stage} · {d.date}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="rounded-md bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+              更换后：之后「生成季度重点目标」默认依据新方案；学生首页的规划方案也换成新方案。已有的季度目标不变，需要时可以重新生成。
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSwapOpen(false)}>取消</Button>
+            <Button onClick={confirmSwap} disabled={swapMode === "upload" ? !pending : !pickId}>确认更换</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
