@@ -48,3 +48,6 @@ verify_jwt = false
 
 [functions.academic-report]
 verify_jwt = true
+
+[functions.meeting-assistant]
+verify_jwt = true

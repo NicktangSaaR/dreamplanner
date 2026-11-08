@@ -111,6 +111,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
         .from("planning_documents")
         .select("id, title, content, file_path, file_name, source_url, updated_at")
         .eq("student_id", studentId)
+        .order("is_primary", { ascending: false })
         .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();

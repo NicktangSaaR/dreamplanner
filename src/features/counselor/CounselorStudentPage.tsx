@@ -14,10 +14,7 @@ import SharedFolderSection from "@/components/college-planning/student-summary/S
 import TodoSection from "@/components/college-planning/TodoSection";
 import NotesSection from "@/components/college-planning/NotesSection";
 import PlanningMilestones from "@/components/college-planning/google-drive/PlanningMilestones";
-import StageEngine from "@/components/engines/StageEngine";
-import QuarterEngine from "@/components/engines/QuarterEngine";
-import PlanningReports from "@/components/engines/PlanningReports";
-import PlanningDocumentSection from "@/components/college-planning/google-drive/PlanningDocumentSection";
+import PlanTab from "./plan/PlanTab";
 import StudentTeamCard from "@/features/team/StudentTeamCard";
 import AcademicBriefCard from "@/features/grades/AcademicBriefCard";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
@@ -191,10 +188,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
         </TabsContent>
 
         <TabsContent value="plan" className="mt-6 space-y-6">
-          <StageEngine studentId={studentId} grade={profile.status || profile.grade} />
-          <PlanningDocumentSection studentId={studentId} currentPhase={phase?.current_phase} />
-          <QuarterEngine studentId={studentId} currentPhase={phase?.current_phase} />
-          <PlanningReports studentId={studentId} studentName={profile.full_name || undefined} currentPhase={phase?.current_phase} />
+          <PlanTab studentId={studentId} studentName={profile.full_name || ""} />
         </TabsContent>
 
         <TabsContent value="follow" className="mt-6 space-y-6">
