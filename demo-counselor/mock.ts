@@ -200,7 +200,7 @@ async function demoFunction(name: string, body: any): Promise<any> {
       q.quarter_kpi = JSON.stringify(goals);
     }
     const emailed = [body.email?.student && "学生", body.email?.parent && "家长"].filter(Boolean);
-    return { data: { ok: true, meeting_id: id, todos, goals_changed: !!body.goal_updates?.length, emailed }, error: null };
+    return { data: { ok: true, meeting_id: id, todos, goals_changed: !!body.goal_updates?.length, emailed, followup: ["Jamma Wu"] }, error: null };
   }
   if (name === "generate-quarter-plan") {
     return { data: { suggestions: { focus: "冲刺 SHAD 申请，落实冬季研究机会", kpi: ["提交 SHAD 申请终稿（12/1 前）", "确定冬季研究助理安排，每周 4 小时", "AP Chem 期中考试 ≥ 90%", "开始 Euclid 备赛，每周两套真题"] } }, error: null };

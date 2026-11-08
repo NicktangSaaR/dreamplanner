@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
+import StudentRecordsSheet from "./StudentRecordsSheet";
 import { toast } from "sonner";
 import {
   BarChart3, ChevronDown, Download, ExternalLink, FileText, FolderOpen, Globe, LogOut, Menu,
@@ -132,6 +133,15 @@ export default function StudentHome({ studentId }: { studentId: string }) {
       return (data || null) as Report | null;
     },
   });
+  const { data: meetingCount = 0 } = useQuery({
+    queryKey: ["student-home-meetings", studentId],
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { count } = await (supabase as any).from("student_meetings").select("id", { count: "exact", head: true }).eq("student_id", studentId);
+      return (count || 0) as number;
+    },
+  });
+  const [records, setRecords] = useState<"meetings" | "reports" | null>(null);
   const { data: folder } = useQuery({
     queryKey: ["shared-folder", studentId],
     queryFn: async () => {
@@ -279,7 +289,8 @@ export default function StudentHome({ studentId }: { studentId: string }) {
 
   const shared = [
     latestDoc && { key: "doc", icon: FileText, label: t("home.planDoc"), onClick: () => setDialog("doc") },
-    latestReport && { key: "report", icon: BarChart3, label: t("home3.report"), onClick: () => setDialog("report") },
+    meetingCount > 0 && { key: "meetings", icon: NotebookPen, label: lang === "zh" ? "会议纪要" : "Meeting notes", onClick: () => setRecords("meetings") },
+    latestReport && { key: "report", icon: BarChart3, label: lang === "zh" ? "规划报告" : "Planning reports", onClick: () => setRecords("reports") },
     folderUrl && { key: "folder", icon: FolderOpen, label: t("plan.folder.title"), href: folderUrl },
   ].filter(Boolean) as { key: string; icon: typeof FileText; label: string; onClick?: () => void; href?: string }[];
 
@@ -374,7 +385,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
       {shared.length > 0 && (
         <section className="mt-10" aria-labelledby="shared-heading">
           <h2 id="shared-heading" className="font-serif text-xl font-semibold text-pine">{t("home3.shared")}</h2>
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {shared.map((s) =>
               s.href ? (
                 <Button key={s.key} variant="outline" className="h-12 justify-start" asChild>
@@ -447,6 +458,8 @@ export default function StudentHome({ studentId }: { studentId: string }) {
           )}
         </DialogContent>
       </Dialog>
+
+      <StudentRecordsSheet studentId={studentId} kind={records} onClose={() => setRecords(null)} />
 
       <SharedFolderDialog open={dialog === "folder"} onOpenChange={(o) => setDialog(o ? "folder" : null)} onSubmit={saveFolder} initialData={folder || undefined} />
     </div>
