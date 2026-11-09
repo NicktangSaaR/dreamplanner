@@ -43,19 +43,10 @@ create policy "Team manages student milestones" on public.planning_milestones
   using (public.can_access_student_data(auth.uid(), student_id) or public.is_admin(auth.uid()))
   with check (public.can_access_student_data(auth.uid(), student_id) or public.is_admin(auth.uid()));
 
--- Communication log (notes): follow-up teachers can add and edit notes too.
+-- Notes (a counselor tool): follow-up teachers can add and edit notes too.
 drop policy if exists "Team writes student notes" on public.notes;
 create policy "Team writes student notes" on public.notes
   for all to authenticated
   using (public.can_access_student_data(auth.uid(), author_id))
   with check (public.can_access_student_data(auth.uid(), author_id));
 
--- Quick notes can be team-only (e.g. a call with the parent about budget).
-alter table public.notes add column if not exists team_only boolean not null default false;
-drop policy if exists "Enable read access for users" on public.notes;
-create policy "Enable read access for users" on public.notes
-  for select to authenticated
-  using (
-    (author_id = auth.uid() and not team_only)
-    or exists (select 1 from public.counselor_student_relationships c where c.counselor_id = auth.uid() and c.student_id = notes.author_id)
-  );

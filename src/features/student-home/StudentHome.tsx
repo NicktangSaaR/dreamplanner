@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import StudentRecordsSheet from "./StudentRecordsSheet";
-import { getCurrentPlanDoc, getOpenUploadRequest, getSharedFolder, listPublishedReports } from "@/shared/studentApi";
+import { countMeetings, getCurrentPlanDoc, getOpenUploadRequest, getSharedFolder, listPublishedReports } from "@/shared/studentApi";
 import { toast } from "sonner";
 import {
   BarChart3, ChevronDown, Download, ExternalLink, FileText, FolderOpen, Globe, LogOut, Menu,
@@ -110,6 +110,10 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   const { data: hasReports = false } = useQuery({
     queryKey: ["student-home-report", studentId],
     queryFn: async () => (await listPublishedReports(supabase, studentId)).length > 0,
+  });
+  const { data: meetingCount = 0 } = useQuery({
+    queryKey: ["student-home-meetings", studentId],
+    queryFn: () => countMeetings(supabase, studentId),
   });
   const [records, setRecords] = useState<"meetings" | "reports" | null>(null);
   const { data: folder } = useQuery({
@@ -301,7 +305,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
 
   const shared = [
     latestDoc && { key: "doc", icon: FileText, label: t("home.planDoc"), onClick: () => setDialog("doc") },
-    { key: "meetings", icon: NotebookPen, label: lang === "zh" ? "沟通记录" : "Communication log", onClick: () => setRecords("meetings") },
+    meetingCount > 0 && { key: "meetings", icon: NotebookPen, label: lang === "zh" ? "会议纪要" : "Meeting notes", onClick: () => setRecords("meetings") },
     hasReports && { key: "report", icon: BarChart3, label: lang === "zh" ? "规划报告" : "Planning reports", onClick: () => setRecords("reports") },
     folderUrl && { key: "folder", icon: FolderOpen, label: t("plan.folder.title"), href: folderUrl },
   ].filter(Boolean) as { key: string; icon: typeof FileText; label: string; onClick?: () => void; href?: string }[];
@@ -468,7 +472,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
         </DialogContent>
       </Dialog>
 
-      <StudentRecordsSheet studentId={studentId} kind={records} onClose={() => setRecords(null)} authorName={profile?.full_name || ""} />
+      <StudentRecordsSheet studentId={studentId} kind={records} onClose={() => setRecords(null)} />
 
       <SharedFolderDialog open={dialog === "folder"} onOpenChange={(o) => setDialog(o ? "folder" : null)} onSubmit={saveFolder} initialData={folder || undefined} />
     </div>

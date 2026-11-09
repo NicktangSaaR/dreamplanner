@@ -111,22 +111,22 @@ export async function removeKeyDate(id: string) {
   if (error) throw error;
 }
 
-// ---------------------------------------------------------------- notes (communication log)
+// ---------------------------------------------------------------- notes (counselor tool)
 
-export type QuickNote = { id: string; title: string; content: string; author_name: string | null; created_at: string; is_pinned: boolean | null; team_only: boolean | null };
+export type QuickNote = { id: string; title: string; content: string; author_name: string | null; created_at: string; is_pinned: boolean | null };
 
 export async function loadNotes(studentId: string): Promise<QuickNote[]> {
-  const { data, error } = await db.from("notes").select("id, title, content, author_name, created_at, is_pinned, team_only")
+  const { data, error } = await db.from("notes").select("id, title, content, author_name, created_at, is_pinned")
     .eq("author_id", studentId).order("created_at", { ascending: false });
   if (error) throw error;
   return (data || []) as QuickNote[];
 }
 
-export async function addNote(studentId: string, content: string, authorName: string, teamOnly = false) {
+export async function addNote(studentId: string, content: string, authorName: string) {
   const text = content.trim();
   const firstLine = text.split("\n")[0];
   const title = firstLine.length > 40 ? `${firstLine.slice(0, 40)}…` : firstLine;
-  const { error } = await db.from("notes").insert({ author_id: studentId, title, content: text, author_name: authorName, team_only: teamOnly });
+  const { error } = await db.from("notes").insert({ author_id: studentId, title, content: text, author_name: authorName });
   if (error) throw error;
 }
 

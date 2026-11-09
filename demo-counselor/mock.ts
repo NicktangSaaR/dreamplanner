@@ -59,7 +59,7 @@ const tables: Record<string, any[]> = {
   notes: [
     { id: "n1", title: "11 月会议记录", content: "确认推荐人：化学老师和物理老师。", author_id: S(1), created_at: nowIso(-2), date: iso(-2) },
     { id: "n2", title: "暑期安排", content: "考虑 UBC 夏校或实验室实习。", author_id: S(2), author_name: "Evan Liu", created_at: nowIso(-6), date: iso(-6) },
-    { id: "n3", title: "电话：妈妈", content: "电话：妈妈问 SHAD 面试一般在什么时候，已解释 2 月左右通知；她希望暑期项目控制在 5000 加元以内。", author_id: S(2), author_name: "Nick Tang", team_only: true, created_at: nowIso(-3), date: iso(-3) },
+    { id: "n3", title: "电话：妈妈", content: "电话：妈妈问 SHAD 面试一般在什么时候，已解释 2 月左右通知；她希望暑期项目控制在 5000 加元以内。", author_id: S(2), author_name: "Nick Tang", created_at: nowIso(-3), date: iso(-3) },
     { id: "n4", title: "微信：王教授回复", content: "微信：王教授回复可以 11 月中旬面谈，Evan 已确认时间。", author_id: S(2), author_name: "Jamma Wu", created_at: nowIso(-1), date: iso(-1) },
   ],
   planning_milestones: [

@@ -12,7 +12,8 @@ import StudentProfile from "@/components/college-planning/student-summary/Studen
 import ActivitiesSection from "@/components/college-planning/student-summary/ActivitiesSection";
 import SharedFolderSection from "@/components/college-planning/student-summary/SharedFolderSection";
 import TaskBoard from "@/features/counselor/follow/TaskBoard";
-import CommsTimeline from "@/features/counselor/follow/CommsTimeline";
+import MeetingLog from "@/features/counselor/follow/MeetingLog";
+import NotesCard from "@/features/counselor/follow/NotesCard";
 import { loadTasks } from "@/features/counselor/follow/followData";
 import PlanTab from "./plan/PlanTab";
 import { gradSummary, type EntryTerm, type GradDegree, type GradStatus, type Track } from "@/shared/planning";
@@ -204,7 +205,8 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
 
         <TabsContent value="follow" className="mt-6 space-y-6">
           <TaskBoard studentId={studentId} />
-          <CommsTimeline studentId={studentId} />
+          <MeetingLog studentId={studentId} />
+          <NotesCard studentId={studentId} />
         </TabsContent>
 
         <TabsContent value="materials" className="mt-6 space-y-6">
