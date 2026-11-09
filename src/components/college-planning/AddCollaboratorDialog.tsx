@@ -25,11 +25,9 @@ export default function AddCollaboratorDialog({ studentId, open, onOpenChange }:
       const { data: { session } } = await supabase.auth.getSession();
       const currentUserId = session?.user?.id;
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email")
-        .eq("user_type", "counselor")
-        .neq("id", currentUserId);
+      const { data: rows, error } = await (supabase as any).rpc("staff_directory");
+      const data = ((rows || []) as { id: string; full_name: string | null; email: string | null; user_type: string }[])
+        .filter((r) => r.user_type === "counselor" && r.id !== currentUserId);
 
       if (error) {
         console.error("Error fetching counselors:", error);

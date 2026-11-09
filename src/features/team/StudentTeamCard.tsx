@@ -38,9 +38,8 @@ export default function StudentTeamCard({ studentId }: { studentId: string }) {
         db.from("counselor_collaborations").select("id, role, collaborator_id").eq("student_id", studentId),
       ]);
       const ids = [rel?.counselor_id, ...(members || []).map((m: Member) => m.collaborator_id)].filter(Boolean);
-      const { data: people } = ids.length
-        ? await db.from("profiles").select("id, full_name, email").in("id", ids)
-        : { data: [] };
+      // Counselors can't read each other's profiles directly; staff_directory returns names.
+      const { data: people } = ids.length ? await db.rpc("staff_directory") : { data: [] };
       const byId = new Map<string, Staff>((people || []).map((p: Staff) => [p.id, p]));
       return {
         leadId: (rel?.counselor_id as string) || null,
@@ -61,8 +60,8 @@ export default function StudentTeamCard({ studentId }: { studentId: string }) {
     queryKey: ["staff-list"],
     enabled: adding,
     queryFn: async () => {
-      const { data: rows } = await supabase.from("profiles").select("id, full_name, email").eq("user_type", "counselor").order("full_name");
-      return (rows || []) as Staff[];
+      const { data: rows } = await (supabase as any).rpc("staff_directory");
+      return ((rows || []) as (Staff & { user_type: string })[]).filter((r) => r.user_type === "counselor");
     },
   });
   const taken = new Set([data?.leadId, ...(data?.members || []).map((m) => m.collaborator_id)]);
