@@ -200,10 +200,13 @@ class Query {
 const user = { id: DEMO_COUNSELOR, email: "nick@example.com", user_metadata: { full_name: "Nick Tang" } };
 const session = { user, access_token: "demo", expires_at: Math.floor(Date.now() / 1000) + 36000 };
 export const DEMO_STUDENT_VIEW = S(2);
-/** Switch the signed-in demo user between the counselor and Evan (student view). */
-export function setDemoUser(asStudent: boolean) {
-  const p = tables.profiles.find((r) => r.id === (asStudent ? S(2) : DEMO_COUNSELOR));
-  user.id = asStudent ? S(2) : DEMO_COUNSELOR;
+export const DEMO_NEW_STUDENT = "n0000001-0000-0000-0000-000000000000";
+tables.profiles.push({ id: DEMO_NEW_STUDENT, full_name: "Amy Wu", user_type: "student", status: "G10", grade: "10", school: "Magee Secondary", email: "amy@example.com", created_at: new Date().toISOString() });
+/** Switch the signed-in demo user: the counselor, Evan, or a brand-new student with no counselor. */
+export function setDemoUser(who: boolean | "new") {
+  const id = who === "new" ? DEMO_NEW_STUDENT : who ? S(2) : DEMO_COUNSELOR;
+  const p = tables.profiles.find((r) => r.id === id);
+  user.id = id;
   user.email = p?.email || "";
   user.user_metadata = { full_name: p?.full_name || "" };
 }
@@ -321,6 +324,19 @@ async function demoFunction(name: string, body: any): Promise<any> {
 export const supabase: any = {
   from: (t: string) => new Query(t),
   rpc: async (name: string, args: any) => {
+    const nameOf = (id: string) => tables.profiles.find((p) => p.id === id)?.full_name || null;
+    if (name === "my_counselor_name") {
+      const r = tables.counselor_student_relationships.find((x) => x.student_id === user.id);
+      return { data: r ? nameOf(r.counselor_id) : null, error: null };
+    }
+    if (name === "list_counselors_for_student") {
+      return { data: tables.profiles.filter((p) => p.user_type === "counselor").map((p) => ({ id: p.id, full_name: p.full_name })), error: null };
+    }
+    if (name === "link_my_counselor") {
+      if (tables.counselor_student_relationships.some((x) => x.student_id === user.id)) return { data: null, error: { message: "already linked" } };
+      tables.counselor_student_relationships.push({ student_id: user.id, counselor_id: args.p_counselor_id });
+      return { data: null, error: null };
+    }
     if (name === "set_current_plan") {
       const doc = tables.planning_documents.find((d) => d.id === args.p_doc_id);
       tables.planning_documents.forEach((d) => { if (d.student_id === doc?.student_id) d.is_primary = d.id === args.p_doc_id; });

@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import StudentRecordsSheet from "./StudentRecordsSheet";
+import LinkCounselorPrompt from "./LinkCounselor";
 import { countMeetings, getCurrentPlanDoc, getOpenUploadRequest, getSharedFolder, listPublishedReports } from "@/shared/studentApi";
 import { toast } from "sonner";
 import {
@@ -353,6 +354,8 @@ export default function StudentHome({ studentId }: { studentId: string }) {
           </DropdownMenu>
         </div>
       </header>
+
+      <LinkCounselorPrompt studentId={studentId} />
 
       {/* To do */}
       <section className="mt-10" aria-labelledby="todo-heading">

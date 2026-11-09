@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import CounselorHome from "@/features/counselor/CounselorHome";
 import CounselorStudentPage from "@/features/counselor/CounselorStudentPage";
 import StudentHome from "@/features/student-home/StudentHome";
-import { DEMO_STUDENT_VIEW, setDemoUser } from "./mock";
+import { DEMO_NEW_STUDENT, DEMO_STUDENT_VIEW, setDemoUser } from "./mock";
 import "@/index.css";
 
 try {
@@ -27,18 +27,23 @@ function StudentRoute() {
 function DemoBanner() {
   const nav = useNavigate();
   const loc = useLocation();
-  const student = loc.pathname === "/student-view";
-  const go = (asStudent: boolean) => {
-    setDemoUser(asStudent);
+  const student = loc.pathname === "/student-view" || loc.pathname === "/new-student";
+  const go = (who: boolean | "new") => {
+    setDemoUser(who);
     qc.clear();
-    nav(asStudent ? "/student-view" : "/counselor-dashboard/student/s0000002-0000-0000-0000-000000000000");
+    nav(who === "new" ? "/new-student" : who ? "/student-view" : "/counselor-dashboard/student/s0000002-0000-0000-0000-000000000000");
   };
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b border-brass/40 bg-brass/10 px-4 py-2 text-center text-xs text-foreground/80">
       <span>演示页面 · 示例数据，所有操作只在这个页面里生效，不会保存到系统</span>
       <button className="rounded border border-brass/50 bg-background px-2 py-0.5 font-medium hover:bg-brass/10" onClick={() => go(!student)}>
-        {student ? "← 回到顾问视角（Evan Liu）" : "切换到学生视角（Evan Liu）→"}
+        {student ? "← 回到顾问视角" : "切换到学生视角（Evan Liu）→"}
       </button>
+      {loc.pathname !== "/new-student" && (
+        <button className="rounded border border-brass/50 bg-background px-2 py-0.5 font-medium hover:bg-brass/10" onClick={() => go("new")}>
+          新注册学生（还没关联顾问）→
+        </button>
+      )}
     </div>
   );
 }
@@ -53,6 +58,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/counselor-dashboard" element={<CounselorHome />} />
             <Route path="/counselor-dashboard/student/:studentId" element={<StudentRoute />} />
             <Route path="/student-view" element={<StudentHome studentId={DEMO_STUDENT_VIEW} />} />
+            <Route path="/new-student" element={<StudentHome studentId={DEMO_NEW_STUDENT} />} />
             <Route path="*" element={<Navigate to="/counselor-dashboard" replace />} />
           </Routes>
           <Toaster />
