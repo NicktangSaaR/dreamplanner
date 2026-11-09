@@ -16,9 +16,10 @@ import MeetingLog from "@/features/counselor/follow/MeetingLog";
 import NotesCard from "@/features/counselor/follow/NotesCard";
 import { loadTasks } from "@/features/counselor/follow/followData";
 import PlanTab from "./plan/PlanTab";
-import { gradSummary, type EntryTerm, type GradDegree, type GradStatus, type Track } from "@/shared/planning";
+import { gradSummary, studentKind, type EntryTerm, type GradDegree, type GradStatus, type Track } from "@/shared/planning";
 import StudentTeamCard from "@/features/team/StudentTeamCard";
 import AcademicBriefCard from "@/features/grades/AcademicBriefCard";
+import StudentKindBadge from "@/components/StudentKindBadge";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
 import StudentCustomQuestionsCard from "@/features/mock-interview/StudentCustomQuestionsCard";
 import { useStudentQuarters } from "@/components/engines/hooks/useStudentQuarters";
@@ -128,9 +129,12 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
             <Pencil className="mr-1.5 h-4 w-4" /> {t("st.edit")}
           </Button>
         </div>
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-          <span>{track.applicantType === "graduate" ? gradSummary(track, lang) + (profile.status === "Completed" ? " · Completed" : "") : profile.status || profile.grade || "—"}</span>
-          {profile.school && <><span aria-hidden="true">·</span><span>{profile.school}</span></>}
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <StudentKindBadge kind={studentKind(profile)} />
+          {track.applicantType === "graduate"
+            ? <span>{gradSummary(track, lang).split(" · ").slice(1).join(" · ")}{profile.status === "Completed" ? " · Completed" : ""}</span>
+            : studentKind(profile) !== "transfer" && <span>{profile.status || profile.grade || "—"}</span>}
+          {profile.school && <>{studentKind(profile) !== "transfer" && <span aria-hidden="true">·</span>}<span>{profile.school}</span></>}
           {phase?.current_phase && <><span aria-hidden="true">·</span><span>{t(`plan.phase.${phase.current_phase}` as MessageKey)}</span></>}
           {goals.length > 0 && <><span aria-hidden="true">·</span><span>{t("home3.goalsLine", { done, total: goals.length })}</span></>}
         </p>
@@ -210,7 +214,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
         </TabsContent>
 
         <TabsContent value="materials" className="mt-6 space-y-6">
-          <StudentProfile profile={profile} />
+          <StudentProfile profile={profile} statusText={track.applicantType === "graduate" ? gradSummary(track, lang).split(" · ").slice(1).join(" · ") : undefined} />
           {track.applicantType !== "graduate" && <ActivitiesSection activities={activities || []} />}
           <SharedFolderSection studentId={studentId} />
           <StudentCustomQuestionsCard studentId={studentId} />

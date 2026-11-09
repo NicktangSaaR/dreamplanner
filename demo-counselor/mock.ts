@@ -26,6 +26,7 @@ const students = [
   { id: S(4), full_name: "Harry Pu", status: "G10", school: "Point Grey Secondary", phase: "positioning", g: [3, 3] },
   { id: S(5), full_name: "Chengyi Zhou", status: "G9", school: "Crofton House", phase: "exploration", g: [1, 2] },
   { id: S(6), full_name: "Sophia Sun", status: "G10", school: "York House", phase: "exploration", g: [0, 0] },
+  { id: S(9), full_name: "Leo Zhang", status: "Transfer Student", school: "UC Irvine", phase: "application", g: [1, 3] },
   { id: S(7), full_name: "Chris Liu", status: "Completed", school: "Eric Hamber", phase: "application", g: [0, 0] },
   { id: S(8), full_name: "Yi Cui", status: "Completed", school: "Prince of Wales", phase: "application", g: [0, 0] },
 ];

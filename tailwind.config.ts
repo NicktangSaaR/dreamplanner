@@ -25,6 +25,11 @@ export default {
       colors: {
         pine: "hsl(var(--pine))",
         brass: "hsl(var(--brass))",
+        track: {
+          ug: "hsl(var(--track-ug))",
+          tr: "hsl(var(--track-tr))",
+          grad: "hsl(var(--track-grad))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

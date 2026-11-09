@@ -39,6 +39,11 @@
     --pine: 169 45% 17%;
     --brass: 36 56% 42%;
 
+    /* Student type colour cards: undergraduate / transfer / graduate */
+    --track-ug: 170 43% 30%;
+    --track-tr: 28 70% 42%;
+    --track-grad: 232 38% 45%;
+
     --sidebar-background: 150 12% 97%;
     --sidebar-foreground: 169 30% 13%;
     --sidebar-primary: 170 43% 30%;
@@ -50,6 +55,9 @@
   }
 
   .dark {
+    --track-ug: 170 40% 55%;
+    --track-tr: 30 75% 60%;
+    --track-grad: 232 55% 72%;
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 

@@ -173,3 +173,16 @@ export function gradSummary(t: Track, lang: string): string {
     entryLabel(t.entryTerm, t.entryYear, lang),
   ].filter(Boolean).join(" · ");
 }
+
+/** Which colour card a student gets: undergraduate, transfer or graduate. */
+export type StudentKind = "undergrad" | "transfer" | "graduate";
+export function studentKind(p: { applicant_type?: string | null; status?: string | null; grade?: string | null } | null | undefined): StudentKind {
+  if (p?.applicant_type === "graduate" || p?.status === "Graduate") return "graduate";
+  if (p?.status === "Transfer Student" || p?.grade === "Transfer") return "transfer";
+  return "undergrad";
+}
+export const STUDENT_KIND_LABEL: Record<StudentKind, { zh: string; en: string }> = {
+  undergrad: { zh: "本科", en: "Undergraduate" },
+  transfer: { zh: "转学", en: "Transfer" },
+  graduate: { zh: "研究生", en: "Graduate" },
+};
