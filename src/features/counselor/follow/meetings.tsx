@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/utils";
+import ReschedulePopover from "./ReschedulePopover";
+import { rescheduleTask } from "./followData";
 import { academicYear, currentQuarter, db, fmtDate, parseGoals, todayIso, type Goal, type QuarterKey } from "@/features/counselor/plan/planData";
 
 export type Owner = "student" | "counselor" | "parent";
@@ -74,7 +76,7 @@ export async function toggleMeetingTask(t: Task): Promise<boolean> {
 const overdue = (d: string | null) => !!d && d < todayIso();
 
 /** The expanded content of one meeting. */
-export function MeetingBody({ meeting: m, onToggleTask, onDelete }: { meeting: Meeting; onToggleTask: (t: Task) => void; onDelete: () => void }) {
+export function MeetingBody({ meeting: m, onToggleTask, onDelete, onChanged }: { meeting: Meeting; onToggleTask: (t: Task) => void; onDelete: () => void; onChanged?: () => void }) {
   const { lang } = useLanguage();
   const L = (zh: string, en: string) => (lang === "zh" ? zh : en);
   const OWNER = useOwnerLabels();
@@ -101,7 +103,20 @@ export function MeetingBody({ meeting: m, onToggleTask, onDelete }: { meeting: M
                 <Checkbox checked={t.completed} onCheckedChange={() => onToggleTask(t)} />
                 <span className={cn("min-w-0 flex-1", t.completed && "text-muted-foreground line-through")}>{t.title}</span>
                 <Badge variant="outline" className="font-normal">{OWNER[t.owner] || t.owner}</Badge>
-                <span className={cn("w-24 text-right text-xs", !t.completed && overdue(t.due_date) ? "text-destructive" : "text-muted-foreground")}>{t.due_date || ""}</span>
+                <ReschedulePopover current={t.due_date}
+                  onConfirm={async (d, r) => {
+                    try {
+                      await rescheduleTask(t.todo_id ? "todos" : "meeting_action_items", t.todo_id || t.id, d, r);
+                    } catch {
+                      toast.error(lang === "zh" ? "没能改期" : "Couldn't change the date");
+                    }
+                    onChanged?.();
+                  }}>
+                  <button className={cn("w-24 text-right text-xs underline-offset-2 hover:underline", !t.completed && overdue(t.due_date) ? "text-destructive" : "text-muted-foreground")}
+                    title={lang === "zh" ? "改期" : "Change date"}>
+                    {t.due_date || (lang === "zh" ? "设日期" : "Set date")}
+                  </button>
+                </ReschedulePopover>
               </li>
             ))}
           </ul>

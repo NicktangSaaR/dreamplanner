@@ -18,6 +18,7 @@ import KeyDates from "./KeyDates";
 import { splitGoalText } from "@/shared/planning";
 import {
   QUARTERS, academicYear, currentQuarter, db, newGoalId, parseGoals, previousQuarter, quarterEnd,
+  nextQuarter,
   type Goal, type PlanDoc, type QuarterKey,
 } from "./planData";
 
@@ -128,6 +129,35 @@ export default function QuarterCard({
   // ---- quarter-end reminder ----
   const end = quarterEnd();
   const daysLeft = Math.ceil((end.getTime() - Date.now()) / 86400000);
+
+  // ---- carry unfinished goals into the next quarter ----
+  const nextQ = nextQuarter(quarter, year);
+  const qIndex = QUARTERS.findIndex((x) => x.key === quarter);
+  const nowIndex = QUARTERS.findIndex((x) => x.key === nowQ);
+  const carryable = (qIndex < nowIndex || (quarter === nowQ && daysLeft <= 21)) ? goals.filter((g) => !g.completed && !g.carried) : [];
+  const [carrying, setCarrying] = useState(false);
+  const carryOver = async () => {
+    setCarrying(true);
+    try {
+      const { data: target } = await db.from("student_quarters").select("id, quarter_kpi")
+        .eq("student_id", studentId).eq("academic_year", nextQ.year).eq("quarter", nextQ.quarter).maybeSingle();
+      const existing = parseGoals(target?.quarter_kpi);
+      const add = carryable.filter((g) => !existing.some((e) => e.text === g.text))
+        .map((g) => ({ id: newGoalId(), text: g.text, completed: false, from: qMeta.short }));
+      const kpi = JSON.stringify([...existing, ...add]);
+      const res = target
+        ? await db.from("student_quarters").update({ quarter_kpi: kpi }).eq("id", target.id).select("id")
+        : await db.from("student_quarters").insert({ student_id: studentId, academic_year: nextQ.year, quarter: nextQ.quarter, quarter_kpi: kpi }).select("id");
+      if (res.error || !res.data?.length) throw res.error || new Error("not saved");
+      await saveGoals(goals.map((g) => (carryable.some((c) => c.id === g.id) ? { ...g, carried: true } : g)));
+      queryClient.invalidateQueries({ queryKey: ["plan-quarters", studentId] });
+      toast.success(L(`已顺延 ${add.length} 条目标到 ${QUARTERS.find((x) => x.key === nextQ.quarter)!.short}`, `${add.length} goal(s) carried over`));
+    } catch {
+      toast.error(L("顺延失败", "Couldn't carry the goals over"));
+    } finally {
+      setCarrying(false);
+    }
+  };
   const showReminder = quarter === nowQ && daysLeft <= 21;
 
   // ---- generate goals ----
@@ -261,7 +291,11 @@ export default function QuarterCard({
                   {goals.map((g) => (
                     <li key={g.id} className="group flex items-center gap-3 px-3 py-2.5">
                       <Checkbox checked={g.completed} onCheckedChange={(v) => void saveGoals(goals.map((x) => (x.id === g.id ? { ...x, completed: !!v } : x)))} />
-                      <span className={cn("flex-1 text-sm", g.completed && "text-muted-foreground line-through")}>{g.text}</span>
+                      <span className={cn("flex-1 text-sm", g.completed && "text-muted-foreground line-through")}>
+                        {g.text}
+                        {g.from && <span className="ml-2 whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{L(`顺延自 ${g.from}`, `from ${g.from}`)}</span>}
+                        {g.carried && !g.completed && <span className="ml-2 whitespace-nowrap text-xs text-muted-foreground">{L("已顺延到下季度", "carried over")}</span>}
+                      </span>
                       <button className="text-muted-foreground opacity-0 hover:text-destructive focus:opacity-100 group-hover:opacity-100" aria-label={L("删除", "Delete")}
                         onClick={() => void saveGoals(goals.filter((x) => x.id !== g.id))}>
                         <Trash2 className="h-4 w-4" />
@@ -269,6 +303,16 @@ export default function QuarterCard({
                     </li>
                   ))}
                 </ul>
+              )}
+              {carryable.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed px-3 py-2 text-sm">
+                  <span className="flex-1 text-muted-foreground">
+                    {L(`${carryable.length} 条目标还没完成，可以顺延到 ${QUARTERS.find((x) => x.key === nextQ.quarter)!.short}`, `${carryable.length} goal(s) unfinished — carry them into ${QUARTERS.find((x) => x.key === nextQ.quarter)!.short}?`)}
+                  </span>
+                  <Button size="sm" variant="outline" onClick={() => void carryOver()} disabled={carrying}>
+                    {carrying && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}{L("顺延到下季度", "Carry over")}
+                  </Button>
+                </div>
               )}
               <div className="flex flex-wrap gap-2">
                 <Input className="min-w-[220px] flex-1" value={newGoal} placeholder={L("添加一个目标，回车保存", "Add a goal, press Enter")}

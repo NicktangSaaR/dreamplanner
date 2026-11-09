@@ -66,7 +66,7 @@ export default function MeetingLog({ studentId }: { studentId: string }) {
                     <div className="border-t px-4 py-4">
                       <MeetingBody meeting={m}
                         onToggleTask={async (t) => { if (!(await toggleMeetingTask(t))) toast.error(L("没能更新任务", "Couldn't update the task")); refresh(); }}
-                        onDelete={() => void deleteMeeting(m)} />
+                        onDelete={() => void deleteMeeting(m)} onChanged={refresh} />
                     </div>
                   )}
                 </li>
