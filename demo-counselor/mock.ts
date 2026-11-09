@@ -100,6 +100,29 @@ const tables: Record<string, any[]> = {
   shared_folders: [],
   extracurricular_activities: [{ id: "e1", student_id: S(1), name: "Robotics Club", role: "Team Captain", description: "带领团队参加 FRC 比赛", time_commitment: "6 小时/周" }],
   mock_interview_custom_questions: [],
+  mock_interview_sessions: [
+    { id: "is1", student_id: S(2), mode: "simulation", title: "University of Toronto · Engineering", status: "completed", total: 4, answered: 4, started_at: nowIso(-1), updated_at: nowIso(-1),
+      questions: [
+        { key: "a", text: "Tell us about a time you worked on a team that faced a setback. What did you do?", type: "video", answered: true, attempts: 1 },
+        { key: "b", text: "Why are you interested in engineering at the University of Toronto?", type: "video", answered: true, attempts: 2 },
+        { key: "c", text: "A city wants to reduce traffic at one busy intersection. How would you approach the problem?", type: "video", answered: true, attempts: 1 },
+        { key: "d", text: "Describe something you taught yourself recently.", type: "video", answered: true, attempts: 1 },
+      ] },
+    { id: "is2", student_id: S(2), mode: "practice", title: "通用题库", status: "exited", total: 5, answered: 2, started_at: nowIso(-4), updated_at: nowIso(-4),
+      questions: [
+        { key: "e", text: "What is a challenge facing your community, and how would you address it?", type: "video", answered: true, attempts: 1 },
+        { key: "f", text: "Tell us about a failure and what you learned.", type: "video", answered: true, attempts: 3 },
+        { key: "g", text: "If you could change one thing about your school, what would it be?", type: "video", answered: false, attempts: 0 },
+        { key: "h", text: "Describe a time you disagreed with someone.", type: "video", answered: false, attempts: 0 },
+        { key: "i", text: "What do you do outside of school?", type: "video", answered: false, attempts: 0 },
+      ] },
+    { id: "is3", student_id: S(2), mode: "practice", title: "工程专业", status: "in_progress", total: 3, answered: 1, started_at: nowIso(-9), updated_at: nowIso(-9),
+      questions: [
+        { key: "j", text: "How would you design a bridge for a small river crossing?", type: "video", answered: true, attempts: 1 },
+        { key: "k", text: "What engineering project are you proudest of?", type: "video", answered: false, attempts: 0 },
+        { key: "l", text: "Explain a technical idea to a ten-year-old.", type: "video", answered: false, attempts: 0 },
+      ] },
+  ],
 };
 let seq = 100;
 type Filter = (row: any) => boolean;
@@ -177,10 +200,13 @@ class Query {
 const user = { id: DEMO_COUNSELOR, email: "nick@example.com", user_metadata: { full_name: "Nick Tang" } };
 const session = { user, access_token: "demo", expires_at: Math.floor(Date.now() / 1000) + 36000 };
 export const DEMO_STUDENT_VIEW = S(2);
-/** Switch the signed-in demo user between the counselor and Evan (student view). */
-export function setDemoUser(asStudent: boolean) {
-  const p = tables.profiles.find((r) => r.id === (asStudent ? S(2) : DEMO_COUNSELOR));
-  user.id = asStudent ? S(2) : DEMO_COUNSELOR;
+export const DEMO_NEW_STUDENT = "n0000001-0000-0000-0000-000000000000";
+tables.profiles.push({ id: DEMO_NEW_STUDENT, full_name: "Amy Wu", user_type: "student", status: "G10", grade: "10", school: "Magee Secondary", email: "amy@example.com", created_at: new Date().toISOString() });
+/** Switch the signed-in demo user: the counselor, Evan, or a brand-new student with no counselor. */
+export function setDemoUser(who: boolean | "new") {
+  const id = who === "new" ? DEMO_NEW_STUDENT : who ? S(2) : DEMO_COUNSELOR;
+  const p = tables.profiles.find((r) => r.id === id);
+  user.id = id;
   user.email = p?.email || "";
   user.user_metadata = { full_name: p?.full_name || "" };
 }
@@ -298,6 +324,19 @@ async function demoFunction(name: string, body: any): Promise<any> {
 export const supabase: any = {
   from: (t: string) => new Query(t),
   rpc: async (name: string, args: any) => {
+    const nameOf = (id: string) => tables.profiles.find((p) => p.id === id)?.full_name || null;
+    if (name === "my_counselor_name") {
+      const r = tables.counselor_student_relationships.find((x) => x.student_id === user.id);
+      return { data: r ? nameOf(r.counselor_id) : null, error: null };
+    }
+    if (name === "list_counselors_for_student") {
+      return { data: tables.profiles.filter((p) => p.user_type === "counselor").map((p) => ({ id: p.id, full_name: p.full_name })), error: null };
+    }
+    if (name === "link_my_counselor") {
+      if (tables.counselor_student_relationships.some((x) => x.student_id === user.id)) return { data: null, error: { message: "already linked" } };
+      tables.counselor_student_relationships.push({ student_id: user.id, counselor_id: args.p_counselor_id });
+      return { data: null, error: null };
+    }
     if (name === "set_current_plan") {
       const doc = tables.planning_documents.find((d) => d.id === args.p_doc_id);
       tables.planning_documents.forEach((d) => { if (d.student_id === doc?.student_id) d.is_primary = d.id === args.p_doc_id; });

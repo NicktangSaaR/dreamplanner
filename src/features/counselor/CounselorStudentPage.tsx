@@ -19,6 +19,7 @@ import PlanTab from "./plan/PlanTab";
 import { gradSummary, studentKind, type EntryTerm, type GradDegree, type GradStatus, type Track } from "@/shared/planning";
 import StudentTeamCard from "@/features/team/StudentTeamCard";
 import AcademicBriefCard from "@/features/grades/AcademicBriefCard";
+import InterviewHistoryCard from "@/features/counselor/InterviewHistoryCard";
 import StudentKindBadge from "@/components/StudentKindBadge";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
 import StudentCustomQuestionsCard from "@/features/mock-interview/StudentCustomQuestionsCard";
@@ -199,6 +200,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
             </div>
             <div className="space-y-6">
               <StudentTeamCard studentId={studentId} />
+              <InterviewHistoryCard studentId={studentId} />
             </div>
           </div>
         </TabsContent>
