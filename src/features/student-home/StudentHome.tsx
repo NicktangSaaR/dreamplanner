@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import StudentRecordsSheet from "./StudentRecordsSheet";
-import { countMeetings, getCurrentPlanDoc, getOpenUploadRequest, getSharedFolder, listPublishedReports } from "@/shared/studentApi";
+import { getCurrentPlanDoc, getOpenUploadRequest, getSharedFolder, listPublishedReports } from "@/shared/studentApi";
 import { toast } from "sonner";
 import {
   BarChart3, ChevronDown, Download, ExternalLink, FileText, FolderOpen, Globe, LogOut, Menu,
@@ -21,7 +21,6 @@ import { useProfile } from "@/hooks/useProfile";
 import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
 import type { Todo } from "@/hooks/todos/useTodoQuery";
 import { useStudentQuarters } from "@/components/engines/hooks/useStudentQuarters";
-import NotesSection from "@/components/college-planning/NotesSection";
 import SharedFolderDialog from "@/components/college-planning/SharedFolderDialog";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
 import StudentReportCards from "@/features/grades/StudentReportCards";
@@ -84,7 +83,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("");
   const [showDone, setShowDone] = useState(false);
-  const [panel, setPanel] = useState<"grades" | "notes" | "resume" | null>(null);
+  const [panel, setPanel] = useState<"grades" | "resume" | null>(null);
   const [dialog, setDialog] = useState<"doc" | "folder" | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -112,10 +111,6 @@ export default function StudentHome({ studentId }: { studentId: string }) {
     queryKey: ["student-home-report", studentId],
     queryFn: async () => (await listPublishedReports(supabase, studentId)).length > 0,
   });
-  const { data: meetingCount = 0 } = useQuery({
-    queryKey: ["student-home-meetings", studentId],
-    queryFn: () => countMeetings(supabase, studentId),
-  });
   const [records, setRecords] = useState<"meetings" | "reports" | null>(null);
   const { data: folder } = useQuery({
     queryKey: ["shared-folder", studentId],
@@ -130,7 +125,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   // ---- one list ----
   const { open, done } = useMemo(() => {
     const items: Item[] = [
-      ...todos.map((todo): Item => ({ kind: "todo", key: `t-${todo.id}`, title: todo.title, done: !!todo.completed, due: dueTime(todo.due_date), todo })),
+      ...todos.map((todo): Item => ({ kind: "todo", key: `t-${todo.id}`, title: todo.title.replace(/^📌\s*/u, ""), done: !!todo.completed, due: dueTime(todo.due_date), todo })),
       ...goals.map((goal): Item => ({ kind: "goal", key: `g-${goal.id}`, title: goal.text, done: !!goal.completed, due: null, goal })),
     ];
     const rank = (i: Item) => (i.due !== null ? 0 : i.kind === "goal" ? 1 : 2);
@@ -306,7 +301,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
 
   const shared = [
     latestDoc && { key: "doc", icon: FileText, label: t("home.planDoc"), onClick: () => setDialog("doc") },
-    meetingCount > 0 && { key: "meetings", icon: NotebookPen, label: lang === "zh" ? "会议纪要" : "Meeting notes", onClick: () => setRecords("meetings") },
+    { key: "meetings", icon: NotebookPen, label: lang === "zh" ? "沟通记录" : "Communication log", onClick: () => setRecords("meetings") },
     hasReports && { key: "report", icon: BarChart3, label: lang === "zh" ? "规划报告" : "Planning reports", onClick: () => setRecords("reports") },
     folderUrl && { key: "folder", icon: FolderOpen, label: t("plan.folder.title"), href: folderUrl },
   ].filter(Boolean) as { key: string; icon: typeof FileText; label: string; onClick?: () => void; href?: string }[];
@@ -344,7 +339,6 @@ export default function StudentHome({ studentId }: { studentId: string }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onSelect={() => setPanel("grades")}><Upload className="mr-2 h-4 w-4" />{t("grades.tab")}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setPanel("notes")}><NotebookPen className="mr-2 h-4 w-4" />{t("dash.tab.notes")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setPanel("resume")}><FileUser className="mr-2 h-4 w-4" />{t("dash.info.resume")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setDialog("folder")}><FolderOpen className="mr-2 h-4 w-4" />{folderUrl ? t("plan.folder.edit") : t("plan.folder.add")}</DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -437,12 +431,11 @@ export default function StudentHome({ studentId }: { studentId: string }) {
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
           <SheetHeader>
             <SheetTitle className="font-serif text-pine">
-              {panel === "grades" ? t("grades.tab") : panel === "notes" ? t("dash.tab.notes") : t("dash.info.resume")}
+              {panel === "grades" ? t("grades.tab") : t("dash.info.resume")}
             </SheetTitle>
           </SheetHeader>
           <div className="mt-6">
             {panel === "grades" && <StudentReportCards studentId={studentId} />}
-            {panel === "notes" && <NotesSection onNotesChange={() => undefined} studentId={studentId} />}
             {panel === "resume" && <StudentResumeForm />}
           </div>
         </SheetContent>
@@ -475,7 +468,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
         </DialogContent>
       </Dialog>
 
-      <StudentRecordsSheet studentId={studentId} kind={records} onClose={() => setRecords(null)} />
+      <StudentRecordsSheet studentId={studentId} kind={records} onClose={() => setRecords(null)} authorName={profile?.full_name || ""} />
 
       <SharedFolderDialog open={dialog === "folder"} onOpenChange={(o) => setDialog(o ? "folder" : null)} onSubmit={saveFolder} initialData={folder || undefined} />
     </div>

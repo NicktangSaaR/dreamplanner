@@ -106,6 +106,21 @@ export async function listMeetingNotes(client: Client, studentId: string): Promi
   }));
 }
 
+export type LogNote = { id: string; title: string; content: string; author_name: string | null; created_at: string };
+
+/** Quick notes in the student's communication log (written by the team or the student). */
+export async function listLogNotes(client: Client, studentId: string): Promise<LogNote[]> {
+  const { data } = await client.from("notes").select("id, title, content, author_name, created_at").eq("author_id", studentId).neq("team_only", true).order("created_at", { ascending: false });
+  return (data || []) as LogNote[];
+}
+
+export async function addLogNote(client: Client, studentId: string, content: string, authorName: string) {
+  const text = content.trim();
+  const first = text.split("\n")[0];
+  const { error } = await client.from("notes").insert({ author_id: studentId, title: first.length > 40 ? `${first.slice(0, 40)}…` : first, content: text, author_name: authorName });
+  if (error) throw error;
+}
+
 /** The earliest open request from the counselor to upload a report card. */
 export async function getOpenUploadRequest(client: Client, studentId: string): Promise<UploadRequest | null> {
   const { data } = await client

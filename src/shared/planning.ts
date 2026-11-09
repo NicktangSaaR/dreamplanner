@@ -39,6 +39,16 @@ export function quarterEnd(d = new Date()): Date {
   return new Date(y, 7, 31);
 }
 
+/** First and last day (YYYY-MM-DD) of a quarter in an academic year like "2026-2027". */
+export function quarterRange(q: QuarterKey, year: string): { from: string; to: string } {
+  const y = Number(year.slice(0, 4));
+  const lastFeb = new Date(y + 1, 2, 0).getDate();
+  if (q === "Q1_fall") return { from: `${y}-09-01`, to: `${y}-11-30` };
+  if (q === "Q2_winter") return { from: `${y}-12-01`, to: `${y + 1}-02-${lastFeb}` };
+  if (q === "Q3_spring") return { from: `${y + 1}-03-01`, to: `${y + 1}-05-31` };
+  return { from: `${y + 1}-06-01`, to: `${y + 1}-08-31` };
+}
+
 export function previousQuarter(q: QuarterKey, year: string): { quarter: QuarterKey; year: string } {
   const i = QUARTERS.findIndex((x) => x.key === q);
   if (i > 0) return { quarter: QUARTERS[i - 1].key, year };

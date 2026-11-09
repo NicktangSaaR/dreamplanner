@@ -9,9 +9,10 @@ import type { Track } from "@/shared/planning";
 
 /**
  * Counselor "规划" tab, ordered by how the work happens:
- * this quarter (goals + meetings) → current stage and plan → reports.
+ * this quarter (goals + key dates) → current stage and plan → reports.
+ * Meetings, notes and tasks live in the 跟进 tab.
  */
-export default function PlanTab({ studentId, studentName, track }: { studentId: string; studentName: string; track: Track }) {
+export default function PlanTab({ studentId, studentName, track, onOpenFollow }: { studentId: string; studentName: string; track: Track; onOpenFollow?: () => void }) {
   const { phase } = useStudentPhase(studentId);
   const phaseKey = phase?.current_phase || (track.applicantType === "graduate" ? "grad_positioning" : "exploration");
   const [reportRequest, setReportRequest] = useState<ReportRequest>(null);
@@ -39,6 +40,7 @@ export default function PlanTab({ studentId, studentName, track }: { studentId: 
         phase={phaseKey}
         docs={docs}
         currentDoc={currentDoc}
+        onOpenFollow={onOpenFollow}
         onWriteQuarterlyReport={(q) => setReportRequest({ kind: "quarterly", quarter: q, nonce: Date.now() })}
       />
       <StageRow studentId={studentId} docs={docs} currentDoc={currentDoc} onDocsChanged={() => docsQuery.refetch()} track={track} />

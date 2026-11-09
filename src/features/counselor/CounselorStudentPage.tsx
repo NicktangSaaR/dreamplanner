@@ -11,9 +11,9 @@ import { useStudentData } from "@/hooks/student/useStudentData";
 import StudentProfile from "@/components/college-planning/student-summary/StudentProfile";
 import ActivitiesSection from "@/components/college-planning/student-summary/ActivitiesSection";
 import SharedFolderSection from "@/components/college-planning/student-summary/SharedFolderSection";
-import TodoSection from "@/components/college-planning/TodoSection";
-import NotesSection from "@/components/college-planning/NotesSection";
-import PlanningMilestones from "@/components/college-planning/google-drive/PlanningMilestones";
+import TaskBoard from "@/features/counselor/follow/TaskBoard";
+import CommsTimeline from "@/features/counselor/follow/CommsTimeline";
+import { loadTasks } from "@/features/counselor/follow/followData";
 import PlanTab from "./plan/PlanTab";
 import { gradSummary, type EntryTerm, type GradDegree, type GradStatus, type Track } from "@/shared/planning";
 import StudentTeamCard from "@/features/team/StudentTeamCard";
@@ -63,6 +63,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
   const { phase } = useStudentPhase(studentId);
   const { quarters } = useStudentQuarters(studentId);
   const [editing, setEditing] = useState(false);
+  const [tab, setTab] = useState("overview");
 
   // Lead counselor, follow-up teachers and admins may change grade / service status.
   const { data: canManage = false } = useQuery({
@@ -91,15 +92,16 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
     queryKey: ["cs-upcoming", studentId],
     queryFn: async () => {
       const today = isoDay(0);
-      const [ms, todos] = await Promise.all([
+      const [ms, tasks] = await Promise.all([
         db.from("planning_milestones").select("title, due_date").eq("student_id", studentId).gte("due_date", today).lte("due_date", isoDay(14)),
-        db.from("todos").select("title, due_date, completed").eq("author_id", studentId).eq("completed", false),
+        loadTasks(studentId),
       ]);
+      const ownerZh: Record<string, string> = { student: "", counselor: lang === "zh" ? "顾问 · " : "Counselor · ", parent: lang === "zh" ? "家长 · " : "Parent · " };
       const items: { title: string; due: string; kind: "milestone" | "todo" }[] = [
         ...(ms.data || []).map((m: { title: string; due_date: string }) => ({ title: m.title, due: m.due_date, kind: "milestone" as const })),
-        ...(todos.data || [])
-          .filter((x: { due_date: string | null }) => x.due_date && String(x.due_date).slice(0, 10) <= isoDay(14))
-          .map((x: { title: string; due_date: string }) => ({ title: x.title, due: String(x.due_date).slice(0, 10), kind: "todo" as const })),
+        ...tasks
+          .filter((x) => !x.completed && x.due && x.due <= isoDay(14) && x.source.kind !== "keydate")
+          .map((x) => ({ title: `${ownerZh[x.owner] || ""}${x.title}`, due: x.due as string, kind: "todo" as const })),
       ];
       return items.sort((a, b) => a.due.localeCompare(b.due));
     },
@@ -137,7 +139,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
         <StudentStatusDialog open={editing} onOpenChange={setEditing} profile={profile} canChangeStatus={canManage} />
       )}
 
-      <Tabs defaultValue="overview" className="mt-6">
+      <Tabs value={tab} onValueChange={setTab} className="mt-6">
         <TabsList className="flex h-auto w-full flex-wrap justify-start sm:inline-flex sm:w-auto">
           <TabsTrigger value="overview">{t("cs.tab.overview")}</TabsTrigger>
           <TabsTrigger value="plan">{t("cs.tab.plan")}</TabsTrigger>
@@ -197,13 +199,12 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
         </TabsContent>
 
         <TabsContent value="plan" className="mt-6 space-y-6">
-          <PlanTab studentId={studentId} studentName={profile.full_name || ""} track={track} />
+          <PlanTab studentId={studentId} studentName={profile.full_name || ""} track={track} onOpenFollow={() => setTab("follow")} />
         </TabsContent>
 
         <TabsContent value="follow" className="mt-6 space-y-6">
-          <TodoSection />
-          <NotesSection studentId={studentId} />
-          <PlanningMilestones studentId={studentId} refreshTrigger={0} />
+          <TaskBoard studentId={studentId} />
+          <CommsTimeline studentId={studentId} />
         </TabsContent>
 
         <TabsContent value="materials" className="mt-6 space-y-6">

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, Check, Loader2, Sparkles, Trash2 } from "lucide-react";
+import { CalendarClock, Check, Loader2, MessagesSquare, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/utils";
 import { gradSummary, type Track } from "@/shared/planning";
-import MeetingsPanel from "./MeetingsPanel";
+import KeyDates from "./KeyDates";
 import {
   QUARTERS, academicYear, currentQuarter, db, newGoalId, parseGoals, previousQuarter, quarterEnd,
   type Goal, type PlanDoc, type QuarterKey,
@@ -42,8 +42,9 @@ const GRAD_STYLES: { key: string; zh: string; en: string; desc: string }[] = [
 type QuarterRow = { id: string; quarter: QuarterKey; academic_year: string; quarter_focus: string | null; quarter_kpi: string | null };
 
 export default function QuarterCard({
-  studentId, phase, docs, currentDoc, onWriteQuarterlyReport, track,
+  studentId, phase, docs, currentDoc, onWriteQuarterlyReport, track, onOpenFollow,
 }: {
+  onOpenFollow?: () => void;
   track: Track;
   studentId: string;
   phase: string;
@@ -57,7 +58,6 @@ export default function QuarterCard({
   const year = academicYear();
   const nowQ = currentQuarter();
   const [quarter, setQuarter] = useState<QuarterKey>(nowQ);
-  const [view, setView] = useState<"goals" | "meetings">("goals");
   const qMeta = QUARTERS.find((q) => q.key === quarter)!;
   const key = ["plan-quarters", studentId, year];
 
@@ -74,6 +74,14 @@ export default function QuarterCard({
     },
   });
   const row = rows.find((r) => r.quarter === quarter);
+  const { data: meetingCount = 0 } = useQuery({
+    queryKey: ["plan-meeting-count", studentId, year, quarter],
+    queryFn: async () => {
+      const { count } = await db.from("student_meetings").select("id", { count: "exact", head: true })
+        .eq("student_id", studentId).eq("academic_year", year).eq("quarter", quarter);
+      return (count || 0) as number;
+    },
+  });
   const goals = useMemo(() => parseGoals(row?.quarter_kpi), [row?.quarter_kpi]);
   const done = goals.filter((g) => g.completed).length;
 
@@ -221,24 +229,15 @@ export default function QuarterCard({
           </div>
         )}
 
-        <div className="flex border-b text-sm" role="tablist">
-          {([["goals", `${L("目标", "Goals")} ${done}/${goals.length}`], ["meetings", L("会议记录", "Meetings")]] as const).map(([k, label]) => (
-            <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)}
-              className={cn("-mb-px border-b-2 px-4 py-2", view === k ? "border-primary font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}>
-              {label}
-            </button>
-          ))}
-          <span className={cn("ml-auto flex items-center gap-1 self-center text-xs text-muted-foreground transition-opacity", saved ? "opacity-100" : "opacity-0")}>
-            <Check className="h-3 w-3" /> {L("已自动保存", "Saved")}
-          </span>
-        </div>
-
-        {view === "meetings" ? (
-          <MeetingsPanel studentId={studentId} quarter={quarter} year={year} goals={goals} onSaved={() => { queryClient.invalidateQueries({ queryKey: key }); queryClient.invalidateQueries({ queryKey: ["student-quarters", studentId] }); }} />
-        ) : (
+        {(
           <>
             <div className="space-y-2">
-              <Label htmlFor="q-focus">{L("季度重点", "Focus")}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="q-focus">{L("季度重点", "Focus")}</Label>
+                <span className={cn("ml-auto flex items-center gap-1 text-xs text-muted-foreground transition-opacity", saved ? "opacity-100" : "opacity-0")}>
+                  <Check className="h-3 w-3" /> {L("已自动保存", "Saved")}
+                </span>
+              </div>
               <Textarea id="q-focus" rows={2} value={focus} placeholder={L("这个季度最重要的方向，一两句话即可", "The main direction for this quarter, in a sentence or two")}
                 onChange={(e) => onFocusChange(e.target.value)} />
             </div>
@@ -286,6 +285,15 @@ export default function QuarterCard({
                   <Sparkles className="mr-1.5 h-4 w-4" /> {L("生成季度重点目标", "Generate quarterly goals")}
                 </Button>
               </div>
+            </div>
+            <KeyDates studentId={studentId} quarter={quarter} year={year} currentDoc={currentDoc} />
+
+            <div className="flex flex-wrap items-center gap-2 rounded-md bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              <MessagesSquare className="h-4 w-4" />
+              <span className="flex-1">{meetingCount > 0
+                ? L(`本季度开会 ${meetingCount} 次，会议纪要和任务在「跟进」里`, `${meetingCount} meetings this quarter — notes and tasks are under Follow-up`)
+                : L("本季度还没有会议记录。会议纪要和任务在「跟进」里记录", "No meetings this quarter yet. Record meetings and tasks under Follow-up")}</span>
+              {onOpenFollow && <Button variant="link" size="sm" className="h-auto p-0" onClick={onOpenFollow}>{L("去跟进 →", "Open Follow-up →")}</Button>}
             </div>
           </>
         )}
