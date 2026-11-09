@@ -15,6 +15,7 @@ import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/utils";
 import { gradSummary, type Track } from "@/shared/planning";
 import KeyDates from "./KeyDates";
+import { splitGoalText } from "@/shared/planning";
 import {
   QUARTERS, academicYear, currentQuarter, db, newGoalId, parseGoals, previousQuarter, quarterEnd,
   type Goal, type PlanDoc, type QuarterKey,
@@ -180,10 +181,7 @@ export default function QuarterCard({
       });
       if (error) throw error;
       const s = data?.suggestions || {};
-      let lines: string[] = [];
-      if (Array.isArray(s.kpi)) lines = s.kpi.map((k: unknown) => (typeof k === "string" ? k : (k as { text?: string; title?: string })?.text || (k as { title?: string })?.title || ""));
-      else if (typeof s.kpi === "string") lines = s.kpi.split("\n");
-      const next = lines.map((l) => l.replace(/^[•\-\d.、\s]+/, "").trim()).filter(Boolean).map((text) => ({ id: newGoalId(), text, completed: false }));
+      const next = splitGoalText(s.kpi).map((text) => ({ id: newGoalId(), text, completed: false }));
       const patch: { quarter_kpi?: string; quarter_focus?: string } = {};
       if (next.length) patch.quarter_kpi = JSON.stringify(next);
       if (s.focus && typeof s.focus === "string") patch.quarter_focus = s.focus;

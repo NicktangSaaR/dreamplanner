@@ -186,3 +186,23 @@ export const STUDENT_KIND_LABEL: Record<StudentKind, { zh: string; en: string }>
   transfer: { zh: "转学", en: "Transfer" },
   graduate: { zh: "研究生", en: "Graduate" },
 };
+
+/**
+ * Turn AI goal output into one goal per item. Handles arrays, one goal per
+ * line, and a single paragraph numbered inline ("1）… 2）… 3)…", "①…②…").
+ */
+export function splitGoalText(raw: unknown): string[] {
+  const parts: string[] = Array.isArray(raw)
+    ? raw.map((k) => (typeof k === "string" ? k : (k as { text?: string; title?: string })?.text || (k as { title?: string })?.title || ""))
+    : typeof raw === "string" ? [raw] : [];
+  return parts
+    .flatMap((p) =>
+      p
+        // a number marker at the start or after a space / punctuation: 1） 2) (3) 4、 5. — but not 3.8
+        .replace(/(^|[\s；;，,。])[（(]?\d{1,2}(?:[)）、]|\.(?!\d))/g, "$1\n")
+        .replace(/[①②③④⑤⑥⑦⑧⑨⑩]/g, "\n")
+        .split("\n"),
+    )
+    .map((l) => l.replace(/^[\s•\-–—*）)]+/, "").replace(/[；;，,\s]+$/, "").trim())
+    .filter((l) => l.length > 1);
+}
