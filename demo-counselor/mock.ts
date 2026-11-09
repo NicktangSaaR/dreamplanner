@@ -26,6 +26,7 @@ const students = [
   { id: S(4), full_name: "Harry Pu", status: "G10", school: "Point Grey Secondary", phase: "positioning", g: [3, 3] },
   { id: S(5), full_name: "Chengyi Zhou", status: "G9", school: "Crofton House", phase: "exploration", g: [1, 2] },
   { id: S(6), full_name: "Sophia Sun", status: "G10", school: "York House", phase: "exploration", g: [0, 0] },
+  { id: S(9), full_name: "Leo Zhang", status: "Transfer Student", school: "UC Irvine", phase: "application", g: [1, 3] },
   { id: S(7), full_name: "Chris Liu", status: "Completed", school: "Eric Hamber", phase: "application", g: [0, 0] },
   { id: S(8), full_name: "Yi Cui", status: "Completed", school: "Prince of Wales", phase: "application", g: [0, 0] },
 ];
@@ -51,14 +52,23 @@ const tables: Record<string, any[]> = {
     { id: "t3", title: "联系 UBC 实验室导师", completed: false, author_id: S(1), due_date: iso(9), created_at: nowIso(-1) },
     { id: "t4", title: "整理活动清单", completed: true, author_id: S(4), due_date: iso(-20), created_at: nowIso(-12) },
     { id: "t5", title: "准备 AMC 10", completed: false, author_id: S(5), due_date: iso(6), created_at: nowIso(-8) },
+    { id: "t6", title: "SHAD 文书修改第二稿", completed: true, author_id: S(2), due_date: iso(-8), created_at: nowIso(-15) },
+    { id: "t7", title: "准备与王教授面谈的研究兴趣介绍（1 页）", completed: false, author_id: S(2), due_date: iso(-1), created_at: nowIso(-15) },
+    { id: "t8", title: "📌 SHAD 申请截止", completed: false, author_id: S(2), due_date: iso(4), created_at: nowIso(-20) },
+    { id: "t9", title: "整理 Python 数据分析小项目到 GitHub", completed: false, author_id: S(2), due_date: null, created_at: nowIso(-2) },
   ],
   notes: [
     { id: "n1", title: "11 月会议记录", content: "确认推荐人：化学老师和物理老师。", author_id: S(1), created_at: nowIso(-2), date: iso(-2) },
-    { id: "n2", title: "暑期安排", content: "考虑 UBC 夏校或实验室实习。", author_id: S(2), created_at: nowIso(-6), date: iso(-6) },
+    { id: "n2", title: "暑期安排", content: "考虑 UBC 夏校或实验室实习。", author_id: S(2), author_name: "Evan Liu", created_at: nowIso(-6), date: iso(-6) },
+    { id: "n3", title: "电话：妈妈", content: "电话：妈妈问 SHAD 面试一般在什么时候，已解释 2 月左右通知；她希望暑期项目控制在 5000 加元以内。", author_id: S(2), author_name: "Nick Tang", created_at: nowIso(-3), date: iso(-3) },
+    { id: "n4", title: "微信：王教授回复", content: "微信：王教授回复可以 11 月中旬面谈，Evan 已确认时间。", author_id: S(2), author_name: "Jamma Wu", created_at: nowIso(-1), date: iso(-1) },
   ],
   planning_milestones: [
     { id: "m1", student_id: S(1), title: "确定推荐人名单", due_date: iso(5), description: "", phase: "consolidation" },
     { id: "m2", student_id: S(3), title: "提交 SHAD 申请", due_date: iso(4), description: "", phase: "positioning" },
+    { id: "m3", student_id: S(2), title: "SHAD 申请截止", due_date: iso(4), description: "", document_id: "d2" },
+    { id: "m4", student_id: S(2), title: "AMC 10A 考试", due_date: iso(9), description: "", document_id: "d2" },
+    { id: "m5", student_id: S(2), title: "UBC 化学夏校报名开放", due_date: iso(-20), description: "", document_id: "d2" },
   ],
   academic_report_requests: [{ id: "a1", student_id: S(3), due_date: iso(-3), message: "请上传期中成绩单", fulfilled_at: null }],
   academic_reports: [
@@ -79,9 +89,12 @@ const tables: Record<string, any[]> = {
     { id: "m1", student_id: S(2), meeting_date: nowIso(-15), title: "SHAD 申请与研究机会", quarter, academic_year: `${y}-${y + 1}`, summary: "SHAD 文书完成初稿，主题定为水质检测项目；UBC 研究机会已联系两位教授，一位回复需要面谈。", decision_list: ["SHAD 文书围绕水质检测项目展开", "优先跟进回复了的王教授"], emailed_to: ["学生"] },
   ],
   meeting_action_items: [
-    { id: "a1", meeting_id: "m1", title: "SHAD 文书修改第二稿", owner: "student", due_date: iso(-8), completed: true, todo_id: null, created_at: nowIso(-15) },
-    { id: "a2", meeting_id: "m1", title: "准备与王教授面谈的研究兴趣介绍（1 页）", owner: "student", due_date: iso(-1), completed: false, todo_id: null, created_at: nowIso(-15) },
-    { id: "a3", meeting_id: "m1", title: "帮学生约推荐信老师", owner: "counselor", due_date: iso(-5), completed: true, todo_id: null, created_at: nowIso(-15) },
+    { id: "a1", meeting_id: "m1", student_id: S(2), title: "SHAD 文书修改第二稿", owner: "student", due_date: iso(-8), completed: true, todo_id: "t6", created_at: nowIso(-15) },
+    { id: "a2", meeting_id: "m1", student_id: S(2), title: "准备与王教授面谈的研究兴趣介绍（1 页）", owner: "student", due_date: iso(-1), completed: false, todo_id: "t7", created_at: nowIso(-15) },
+    { id: "a3", meeting_id: "m1", student_id: S(2), title: "帮学生约推荐信老师", owner: "counselor", due_date: iso(-5), completed: true, todo_id: null, created_at: nowIso(-15) },
+    { id: "a4", meeting_id: "m1", student_id: S(2), title: "整理 3 个暑期项目选项（预算 5000 加元内）", owner: "counselor", due_date: iso(6), completed: false, todo_id: null, created_at: nowIso(-15) },
+    { id: "a5", meeting_id: null, student_id: S(2), title: "确认 UBC 夏校报名费和住宿安排", owner: "parent", due_date: iso(12), completed: false, todo_id: null, created_at: nowIso(-3) },
+    { id: "a6", meeting_id: null, student_id: S(2), title: "给王教授发感谢邮件并抄送 Evan", owner: "counselor", due_date: iso(1), completed: false, todo_id: null, created_at: nowIso(-1) },
   ],
   meeting_private: [{ meeting_id: "m1", team_note: "学生对研究很积极，但时间管理偏弱，近期功课压力大，注意任务量。" }],
   shared_folders: [],
@@ -101,7 +114,8 @@ class Query {
   constructor(private table: string) {
     tables[table] ||= [];
   }
-  select() { return this; }
+  private countMode = false;
+  select(_cols?: string, o?: { count?: string; head?: boolean }) { if (o?.count) this.countMode = true; return this; }
   insert(v: any) { this.mode = "insert"; this.payload = v; return this; }
   update(v: any) { this.mode = "update"; this.payload = v; return this; }
   upsert(v: any) { this.mode = "upsert"; this.payload = v; return this; }
@@ -153,6 +167,7 @@ class Query {
     return this.shape(out);
   }
   private shape(list: any[]) {
+    if (this.countMode) return { data: null, count: list.length, error: null };
     const copy = JSON.parse(JSON.stringify(list));
     if (this.singleMode) return { data: copy[0] ?? null, error: null };
     return { data: copy, error: null };
@@ -161,9 +176,70 @@ class Query {
 
 const user = { id: DEMO_COUNSELOR, email: "nick@example.com", user_metadata: { full_name: "Nick Tang" } };
 const session = { user, access_token: "demo", expires_at: Math.floor(Date.now() / 1000) + 36000 };
+export const DEMO_STUDENT_VIEW = S(2);
+/** Switch the signed-in demo user between the counselor and Evan (student view). */
+export function setDemoUser(asStudent: boolean) {
+  const p = tables.profiles.find((r) => r.id === (asStudent ? S(2) : DEMO_COUNSELOR));
+  user.id = asStudent ? S(2) : DEMO_COUNSELOR;
+  user.email = p?.email || "";
+  user.user_metadata = { full_name: p?.full_name || "" };
+}
+
+// A graduate (MBA) applicant for the demo.
+const G1 = "g0000001-0000-0000-0000-000000000000";
+tables.profiles.push({ id: G1, full_name: "Lucy Wang", user_type: "student", status: "Graduate", applicant_type: "graduate", grad_status: "graduated", grad_degree: "mba", target_entry_term: "fall", target_entry_year: today.getFullYear() + 2, school: "University of British Columbia", email: "lucy@example.com", interested_majors: ["MBA"], background_intro: "UBC 商科毕业，在温哥华科技公司做产品经理 3 年，计划申请 MBA。", created_at: nowIso(-20) });
+tables.counselor_student_relationships.push({ student_id: G1, counselor_id: DEMO_COUNSELOR });
+tables.student_phases.push({ student_id: G1, current_phase: "grad_positioning", phase_start_date: iso(-20), compression_mode: false, phase_notes: "" });
+tables.student_quarters.push({ id: `q-${G1}`, student_id: G1, academic_year: `${y}-${y + 1}`, quarter, quarter_focus: "确定 MBA 申请方向和目标项目，制定 GMAT 备考计划", quarter_kpi: JSON.stringify([{ id: "g1", text: "完成 GMAT 诊断测试", completed: true }, { id: "g2", text: "列出 10 个目标 MBA 项目并对比", completed: false }, { id: "g3", text: "梳理 3 段代表性工作经历", completed: false }]), quarter_risk: "" });
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const LUCY_RESUME = {
+  full_name: "Lucy Wang", email: "lucy.wang@gmail.com", phone: "+1 604-555-0182", address: "Vancouver, BC", linkedin_url: "linkedin.com/in/lucywang", personal_website: "",
+  education: [{ school: "University of British Columbia, Sauder School of Business", degree: "Bachelor of Commerce", field: "Business Technology Management", startDate: "2017-09", endDate: "2021-05", gpa: "3.7/4.0", description: "Dean's List 2019–2021" }],
+  work_experience: [
+    { company: "Clio", position: "Product Manager", startDate: "2023-03", endDate: "Present", description: "- 负责计费模块，带 8 人跨职能团队\n- 上线自动对账功能，客户续费率提升 6%\n- 和销售、客服一起梳理需求，季度路线图按时交付" },
+    { company: "Clio", position: "Associate Product Manager", startDate: "2021-07", endDate: "2023-02", description: "- 做用户访谈 40+ 次，重新设计新手引导\n- 新用户 7 日留存从 41% 提到 52%" },
+  ],
+  activities: [],
+  projects: [{ name: "Women in Product Vancouver", role: "Co-organizer", startDate: "2022-01", endDate: "Present", description: "- 组织季度分享会，社区成员从 120 人增长到 600 人", technologies: [] }],
+  awards: [{ name: "Clio Customer Impact Award", issuer: "Clio", date: "2024-12", description: "" }],
+  skills: ["SQL", "Figma", "A/B testing", "Jira"], certifications: ["GMAT 705"],
+  languages: [{ language: "English", proficiency: "Fluent" }, { language: "Mandarin", proficiency: "Native" }],
+};
+const LUCY_MD = `# Lucy Wang
+Vancouver, BC · lucy.wang@gmail.com · +1 604-555-0182 · linkedin.com/in/lucywang
+
+## Professional Experience
+### Clio — Product Manager (Mar 2023 – Present)
+- Lead billing product with an 8-person cross-functional team (engineering, design, data)
+- Launched automated reconciliation, lifting customer renewal rate by 6%
+- Aligned sales and support input into a quarterly roadmap delivered on schedule
+
+### Clio — Associate Product Manager (Jul 2021 – Feb 2023)
+- Ran 40+ customer interviews and redesigned onboarding
+- Raised new-user 7-day retention from 41% to 52%
+
+## Education
+### University of British Columbia, Sauder School of Business (Sep 2017 – May 2021)
+- Bachelor of Commerce, Business Technology Management · GPA 3.7/4.0 · Dean's List 2019–2021
+
+## Additional Information
+- **Leadership:** Co-organizer, Women in Product Vancouver — grew community from 120 to 600 members
+- **Awards:** Clio Customer Impact Award (2024)
+- **Test:** GMAT 705
+- **Skills:** SQL, Figma, A/B testing, Jira
+- **Languages:** English (fluent), Mandarin (native)`;
+
 async function demoFunction(name: string, body: any): Promise<any> {
+  if (name === "resume-import") {
+    await sleep(2500);
+    return { data: { data: LUCY_RESUME }, error: null };
+  }
+  if (name === "generate-resume") {
+    await sleep(2500);
+    return { data: { resume: LUCY_MD }, error: null };
+  }
   await wait(900);
   if (name === "meeting-assistant" && body.action === "organize") {
     const ubc = (body.goals || []).find((g: any) => /UBC/.test(g.text) && !g.completed);
@@ -187,8 +263,13 @@ async function demoFunction(name: string, body: any): Promise<any> {
     tables.meeting_private.push({ meeting_id: id, team_note: m.team_note });
     let todos = 0;
     for (const t of m.tasks) {
-      if (t.owner === "student") todos++;
-      tables.meeting_action_items.push({ id: `a${seq++}`, meeting_id: id, title: t.text, owner: t.owner, due_date: t.due, completed: false, todo_id: null, created_at: new Date().toISOString() });
+      let todoId = null;
+      if (t.owner === "student") {
+        todos++;
+        todoId = `t${seq++}`;
+        tables.todos.push({ id: todoId, title: t.text, completed: false, author_id: body.student_id, due_date: t.due, created_at: new Date().toISOString() });
+      }
+      tables.meeting_action_items.push({ id: `a${seq++}`, meeting_id: id, student_id: body.student_id, title: t.text, owner: t.owner, due_date: t.due, completed: false, todo_id: todoId, created_at: new Date().toISOString() });
     }
     const q = tables.student_quarters.find((r) => r.student_id === body.student_id && r.quarter === m.quarter && r.academic_year === m.academic_year);
     if (q && body.goal_updates?.length) {

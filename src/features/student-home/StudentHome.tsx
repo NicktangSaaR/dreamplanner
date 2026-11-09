@@ -21,7 +21,6 @@ import { useProfile } from "@/hooks/useProfile";
 import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
 import type { Todo } from "@/hooks/todos/useTodoQuery";
 import { useStudentQuarters } from "@/components/engines/hooks/useStudentQuarters";
-import NotesSection from "@/components/college-planning/NotesSection";
 import SharedFolderDialog from "@/components/college-planning/SharedFolderDialog";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
 import StudentReportCards from "@/features/grades/StudentReportCards";
@@ -84,7 +83,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("");
   const [showDone, setShowDone] = useState(false);
-  const [panel, setPanel] = useState<"grades" | "notes" | "resume" | null>(null);
+  const [panel, setPanel] = useState<"grades" | "resume" | null>(null);
   const [dialog, setDialog] = useState<"doc" | "folder" | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -130,7 +129,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   // ---- one list ----
   const { open, done } = useMemo(() => {
     const items: Item[] = [
-      ...todos.map((todo): Item => ({ kind: "todo", key: `t-${todo.id}`, title: todo.title, done: !!todo.completed, due: dueTime(todo.due_date), todo })),
+      ...todos.map((todo): Item => ({ kind: "todo", key: `t-${todo.id}`, title: todo.title.replace(/^📌\s*/u, ""), done: !!todo.completed, due: dueTime(todo.due_date), todo })),
       ...goals.map((goal): Item => ({ kind: "goal", key: `g-${goal.id}`, title: goal.text, done: !!goal.completed, due: null, goal })),
     ];
     const rank = (i: Item) => (i.due !== null ? 0 : i.kind === "goal" ? 1 : 2);
@@ -344,7 +343,6 @@ export default function StudentHome({ studentId }: { studentId: string }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onSelect={() => setPanel("grades")}><Upload className="mr-2 h-4 w-4" />{t("grades.tab")}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setPanel("notes")}><NotebookPen className="mr-2 h-4 w-4" />{t("dash.tab.notes")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setPanel("resume")}><FileUser className="mr-2 h-4 w-4" />{t("dash.info.resume")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setDialog("folder")}><FolderOpen className="mr-2 h-4 w-4" />{folderUrl ? t("plan.folder.edit") : t("plan.folder.add")}</DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -437,12 +435,11 @@ export default function StudentHome({ studentId }: { studentId: string }) {
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
           <SheetHeader>
             <SheetTitle className="font-serif text-pine">
-              {panel === "grades" ? t("grades.tab") : panel === "notes" ? t("dash.tab.notes") : t("dash.info.resume")}
+              {panel === "grades" ? t("grades.tab") : t("dash.info.resume")}
             </SheetTitle>
           </SheetHeader>
           <div className="mt-6">
             {panel === "grades" && <StudentReportCards studentId={studentId} />}
-            {panel === "notes" && <NotesSection onNotesChange={() => undefined} studentId={studentId} />}
             {panel === "resume" && <StudentResumeForm />}
           </div>
         </SheetContent>

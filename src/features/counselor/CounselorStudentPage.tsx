@@ -11,12 +11,15 @@ import { useStudentData } from "@/hooks/student/useStudentData";
 import StudentProfile from "@/components/college-planning/student-summary/StudentProfile";
 import ActivitiesSection from "@/components/college-planning/student-summary/ActivitiesSection";
 import SharedFolderSection from "@/components/college-planning/student-summary/SharedFolderSection";
-import TodoSection from "@/components/college-planning/TodoSection";
-import NotesSection from "@/components/college-planning/NotesSection";
-import PlanningMilestones from "@/components/college-planning/google-drive/PlanningMilestones";
+import TaskBoard from "@/features/counselor/follow/TaskBoard";
+import MeetingLog from "@/features/counselor/follow/MeetingLog";
+import NotesCard from "@/features/counselor/follow/NotesCard";
+import { loadTasks } from "@/features/counselor/follow/followData";
 import PlanTab from "./plan/PlanTab";
+import { gradSummary, studentKind, type EntryTerm, type GradDegree, type GradStatus, type Track } from "@/shared/planning";
 import StudentTeamCard from "@/features/team/StudentTeamCard";
 import AcademicBriefCard from "@/features/grades/AcademicBriefCard";
+import StudentKindBadge from "@/components/StudentKindBadge";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
 import StudentCustomQuestionsCard from "@/features/mock-interview/StudentCustomQuestionsCard";
 import { useStudentQuarters } from "@/components/engines/hooks/useStudentQuarters";
@@ -49,11 +52,20 @@ const isoDay = (offset: number) => {
  * tabs. Overview answers "how is this student doing right now".
  */
 export default function CounselorStudentPage({ studentId }: { studentId: string }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { profile, activities, isLoading } = useStudentData(studentId);
+  const track: Track = {
+    applicantType: profile?.applicant_type === "graduate" ? "graduate" : "undergrad",
+    gradStatus: (profile?.grad_status as GradStatus) || null,
+    gradDegree: (profile?.grad_degree as GradDegree) || null,
+    entryTerm: (profile?.target_entry_term as EntryTerm) || null,
+    entryYear: profile?.target_entry_year || null,
+    start: profile?.created_at || null,
+  };
   const { phase } = useStudentPhase(studentId);
   const { quarters } = useStudentQuarters(studentId);
   const [editing, setEditing] = useState(false);
+  const [tab, setTab] = useState("overview");
 
   // Lead counselor, follow-up teachers and admins may change grade / service status.
   const { data: canManage = false } = useQuery({
@@ -82,15 +94,16 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
     queryKey: ["cs-upcoming", studentId],
     queryFn: async () => {
       const today = isoDay(0);
-      const [ms, todos] = await Promise.all([
+      const [ms, tasks] = await Promise.all([
         db.from("planning_milestones").select("title, due_date").eq("student_id", studentId).gte("due_date", today).lte("due_date", isoDay(14)),
-        db.from("todos").select("title, due_date, completed").eq("author_id", studentId).eq("completed", false),
+        loadTasks(studentId),
       ]);
+      const ownerZh: Record<string, string> = { student: "", counselor: lang === "zh" ? "顾问 · " : "Counselor · ", parent: lang === "zh" ? "家长 · " : "Parent · " };
       const items: { title: string; due: string; kind: "milestone" | "todo" }[] = [
         ...(ms.data || []).map((m: { title: string; due_date: string }) => ({ title: m.title, due: m.due_date, kind: "milestone" as const })),
-        ...(todos.data || [])
-          .filter((x: { due_date: string | null }) => x.due_date && String(x.due_date).slice(0, 10) <= isoDay(14))
-          .map((x: { title: string; due_date: string }) => ({ title: x.title, due: String(x.due_date).slice(0, 10), kind: "todo" as const })),
+        ...tasks
+          .filter((x) => !x.completed && x.due && x.due <= isoDay(14) && x.source.kind !== "keydate")
+          .map((x) => ({ title: `${ownerZh[x.owner] || ""}${x.title}`, due: x.due as string, kind: "todo" as const })),
       ];
       return items.sort((a, b) => a.due.localeCompare(b.due));
     },
@@ -116,9 +129,12 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
             <Pencil className="mr-1.5 h-4 w-4" /> {t("st.edit")}
           </Button>
         </div>
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-          <span>{profile.status || profile.grade || "—"}</span>
-          {profile.school && <><span aria-hidden="true">·</span><span>{profile.school}</span></>}
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <StudentKindBadge kind={studentKind(profile)} />
+          {track.applicantType === "graduate"
+            ? <span>{gradSummary(track, lang).split(" · ").slice(1).join(" · ")}{profile.status === "Completed" ? " · Completed" : ""}</span>
+            : studentKind(profile) !== "transfer" && <span>{profile.status || profile.grade || "—"}</span>}
+          {profile.school && <>{studentKind(profile) !== "transfer" && <span aria-hidden="true">·</span>}<span>{profile.school}</span></>}
           {phase?.current_phase && <><span aria-hidden="true">·</span><span>{t(`plan.phase.${phase.current_phase}` as MessageKey)}</span></>}
           {goals.length > 0 && <><span aria-hidden="true">·</span><span>{t("home3.goalsLine", { done, total: goals.length })}</span></>}
         </p>
@@ -128,7 +144,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
         <StudentStatusDialog open={editing} onOpenChange={setEditing} profile={profile} canChangeStatus={canManage} />
       )}
 
-      <Tabs defaultValue="overview" className="mt-6">
+      <Tabs value={tab} onValueChange={setTab} className="mt-6">
         <TabsList className="flex h-auto w-full flex-wrap justify-start sm:inline-flex sm:w-auto">
           <TabsTrigger value="overview">{t("cs.tab.overview")}</TabsTrigger>
           <TabsTrigger value="plan">{t("cs.tab.plan")}</TabsTrigger>
@@ -188,18 +204,18 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
         </TabsContent>
 
         <TabsContent value="plan" className="mt-6 space-y-6">
-          <PlanTab studentId={studentId} studentName={profile.full_name || ""} />
+          <PlanTab studentId={studentId} studentName={profile.full_name || ""} track={track} onOpenFollow={() => setTab("follow")} />
         </TabsContent>
 
         <TabsContent value="follow" className="mt-6 space-y-6">
-          <TodoSection />
-          <NotesSection studentId={studentId} />
-          <PlanningMilestones studentId={studentId} refreshTrigger={0} />
+          <TaskBoard studentId={studentId} />
+          <MeetingLog studentId={studentId} />
+          <NotesCard studentId={studentId} />
         </TabsContent>
 
         <TabsContent value="materials" className="mt-6 space-y-6">
-          <StudentProfile profile={profile} />
-          <ActivitiesSection activities={activities || []} />
+          <StudentProfile profile={profile} statusText={track.applicantType === "graduate" ? gradSummary(track, lang).split(" · ").slice(1).join(" · ") : undefined} />
+          {track.applicantType !== "graduate" && <ActivitiesSection activities={activities || []} />}
           <SharedFolderSection studentId={studentId} />
           <StudentCustomQuestionsCard studentId={studentId} />
           {canManage && (

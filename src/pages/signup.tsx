@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GRAD_DEGREE_LABEL, GRAD_STATUSES, GRAD_STATUS_LABEL } from "@/shared/planning";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 const NOW = new Date();
 const SCHOOL_YEAR_START = NOW.getMonth() >= 8 ? NOW.getFullYear() : NOW.getFullYear() - 1;
 const SCHOOL_YEAR = `${SCHOOL_YEAR_START}–${String(SCHOOL_YEAR_START + 1).slice(2)}`;
+const ENTRY_YEARS = Array.from({ length: 5 }, (_, i) => NOW.getFullYear() + i);
 const IS_SUMMER = NOW.getMonth() === 6 || NOW.getMonth() === 7;
 
 export default function SignUp() {
@@ -36,6 +38,11 @@ export default function SignUp() {
     interestedMajors: [] as string[],
     isUndecided: false,
     userType: "student" as "student" | "counselor",
+    applicantType: "undergrad" as "undergrad" | "graduate",
+    gradStatus: "",
+    gradDegree: "",
+    entryTerm: "fall",
+    entryYear: "",
   });
 
   const handleAddMajor = () => {
@@ -69,7 +76,18 @@ export default function SignUp() {
     e.preventDefault();
     setLoading(true);
 
-    if (formData.userType === "student" && !formData.grade) {
+    const isGradSignup = formData.userType === "student" && formData.applicantType === "graduate";
+    if (isGradSignup && (!formData.gradStatus || !formData.gradDegree)) {
+      toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please choose your current status and the degree you are applying for. (请选择目前状态和申请方向)",
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (formData.userType === "student" && !isGradSignup && !formData.grade) {
       toast({
         variant: "destructive",
         title: "Missing Information",
@@ -112,7 +130,16 @@ export default function SignUp() {
             english_name: formData.englishName,
             user_type: formData.userType,
             school: formData.school,
-            grade: formData.grade,
+            grade: formData.applicantType === "graduate" ? "" : formData.grade,
+            applicant_type: formData.applicantType,
+            ...(formData.applicantType === "graduate"
+              ? {
+                  grad_status: formData.gradStatus,
+                  grad_degree: formData.gradDegree,
+                  target_entry_term: formData.entryYear ? formData.entryTerm : "",
+                  target_entry_year: formData.entryYear,
+                }
+              : {}),
             parent_email: formData.parentEmail,
             interested_majors: majors.join(","),
           },
@@ -170,6 +197,7 @@ export default function SignUp() {
   };
 
   const isStudent = formData.userType === "student";
+  const isGrad = isStudent && formData.applicantType === "graduate";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
@@ -215,6 +243,25 @@ export default function SignUp() {
               </RadioGroup>
             </div>
 
+            {/* Undergraduate or graduate applicant */}
+            {isStudent && (
+              <div className="space-y-2">
+                <Label>Applying for (申请类型)<span className="text-destructive"> *</span></Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["undergrad", "graduate"] as const).map((k) => (
+                    <button key={k} type="button" onClick={() => setFormData({ ...formData, applicantType: k })}
+                      aria-pressed={formData.applicantType === k}
+                      className={`rounded-md border px-3 py-2.5 text-left text-sm ${formData.applicantType === k ? "border-primary bg-primary/5 font-medium" : "hover:bg-muted/50"}`}>
+                      {k === "undergrad" ? "Undergraduate (申请本科)" : "Graduate (申请研究生)"}
+                      <span className="block text-xs font-normal text-muted-foreground">
+                        {k === "undergrad" ? "High school students 高中生" : "Master's / MBA 硕士、MBA"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Full Name (Chinese/Real Name) */}
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name (真名)<span className="text-destructive"> *</span></Label>
@@ -248,12 +295,14 @@ export default function SignUp() {
             {/* School */}
             {isStudent && (
               <div className="space-y-2">
-                <Label htmlFor="school">School (所在学校)<span className="text-destructive"> *</span></Label>
+                <Label htmlFor="school">
+                  {isGrad ? "University (本科/所在大学)" : "School (所在学校)"}<span className="text-destructive"> *</span>
+                </Label>
                 <Input
                   id="school"
                   type="text"
                   required
-                  placeholder="e.g. Beijing No.4 High School"
+                  placeholder={isGrad ? "e.g. University of British Columbia" : "e.g. Beijing No.4 High School"}
                   value={formData.school}
                   onChange={(e) =>
                     setFormData({ ...formData, school: e.target.value })
@@ -262,8 +311,56 @@ export default function SignUp() {
               </div>
             )}
 
+            {/* Graduate applicant details */}
+            {isGrad && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="gradStatus">Current status (目前状态)<span className="text-destructive"> *</span></Label>
+                  <select id="gradStatus" required value={formData.gradStatus}
+                    onChange={(e) => setFormData({ ...formData, gradStatus: e.target.value })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                    <option value="">Select... (请选择)</option>
+                    {GRAD_STATUSES.map((g) => <option key={g} value={g}>{GRAD_STATUS_LABEL[g].en} ({GRAD_STATUS_LABEL[g].zh})</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Applying for (申请方向)<span className="text-destructive"> *</span></Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["masters", "mba"] as const).map((k) => (
+                      <button key={k} type="button" onClick={() => setFormData({ ...formData, gradDegree: k })}
+                        aria-pressed={formData.gradDegree === k}
+                        className={`rounded-md border px-3 py-2 text-sm ${formData.gradDegree === k ? "border-primary bg-primary/5 font-medium" : "hover:bg-muted/50"}`}>
+                        {GRAD_DEGREE_LABEL[k].en} ({GRAD_DEGREE_LABEL[k].zh})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="entryYear">Planned start (计划入学时间)</Label>
+                  <div className="flex gap-2">
+                    <select id="entryYear" value={formData.entryYear}
+                      onChange={(e) => setFormData({ ...formData, entryYear: e.target.value })}
+                      className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                      <option value="">Not sure yet (还不确定)</option>
+                      {ENTRY_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                    <select aria-label="Term" value={formData.entryTerm} disabled={!formData.entryYear}
+                      onChange={(e) => setFormData({ ...formData, entryTerm: e.target.value })}
+                      className="flex h-10 w-36 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                      <option value="fall">Fall (秋季)</option>
+                      <option value="spring">Spring (春季)</option>
+                    </select>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Your plan is laid out backwards from this date. Not sure? Leave it blank and your counselor will set it.
+                    （规划时间轴会以入学时间为终点倒推。不确定可以留空，顾问会帮你设置。）
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Grade */}
-            {isStudent && (
+            {isStudent && !isGrad && (
               <div className="space-y-2">
                 <Label htmlFor="grade">
                   Grade in the {SCHOOL_YEAR} school year ({SCHOOL_YEAR} 学年所在年级)<span className="text-destructive"> *</span>

@@ -88,6 +88,60 @@ export async function downloadReportDocx(title: string, markdown: string, dateLa
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
+/**
+ * Download a resume (Markdown: "# Name", contact line, "## Section", bullets)
+ * as a compact one-column Word file: centered name, ruled section headings.
+ */
+export async function downloadResumeDocx(fileName: string, markdown: string) {
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } = await import("docx");
+  const font = { ascii: "Calibri", hAnsi: "Calibri", eastAsia: "Microsoft YaHei", cs: "Calibri" };
+  const run = (text: string, bold = false, size?: number) => new TextRun({ text, bold, font, size });
+
+  const children: InstanceType<typeof Paragraph>[] = [];
+  let afterName = false;
+  for (const blk of parseMarkdown(markdown)) {
+    if (blk.kind === "heading" && blk.level === 1) {
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 60 }, children: inlineRuns(blk.text).map((r) => run(r.text, true, 32)) }));
+      afterName = true;
+      continue;
+    }
+    if (afterName && blk.kind === "para") {
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 160 }, children: inlineRuns(blk.text).map((r) => run(r.text, r.bold, 19)) }));
+      continue;
+    }
+    afterName = false;
+    if (blk.kind === "heading" && blk.level === 2) {
+      children.push(
+        new Paragraph({
+          spacing: { before: 200, after: 80 },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "1F3A34", space: 1 } },
+          children: [run(blk.text.replace(/\*/g, "").toUpperCase(), true, 22)],
+        }),
+      );
+    } else if (blk.kind === "heading") {
+      children.push(new Paragraph({ spacing: { before: 100, after: 40 }, children: inlineRuns(blk.text).map((r) => run(r.text, true, 21)) }));
+    } else if (blk.kind === "bullet") {
+      children.push(new Paragraph({ bullet: { level: 0 }, spacing: { after: 30 }, children: inlineRuns(blk.text).map((r) => run(r.text, r.bold, 20)) }));
+    } else {
+      children.push(new Paragraph({ spacing: { after: 40 }, children: inlineRuns(blk.text).map((r) => run(r.text, r.bold, 20)) }));
+    }
+  }
+
+  const doc = new Document({
+    styles: { default: { document: { run: { font, size: 20 } } } },
+    sections: [{ properties: { page: { margin: { top: 720, bottom: 720, left: 864, right: 864 } } }, children }],
+  });
+  const blob = await Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${safeName(fileName)}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
 const EMOJI = /[\p{Extended_Pictographic}\uFE0F\u200D]/gu;
 
 async function fontBase64(url: string) {

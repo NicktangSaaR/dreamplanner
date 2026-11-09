@@ -39,6 +39,16 @@ export function quarterEnd(d = new Date()): Date {
   return new Date(y, 7, 31);
 }
 
+/** First and last day (YYYY-MM-DD) of a quarter in an academic year like "2026-2027". */
+export function quarterRange(q: QuarterKey, year: string): { from: string; to: string } {
+  const y = Number(year.slice(0, 4));
+  const lastFeb = new Date(y + 1, 2, 0).getDate();
+  if (q === "Q1_fall") return { from: `${y}-09-01`, to: `${y}-11-30` };
+  if (q === "Q2_winter") return { from: `${y}-12-01`, to: `${y + 1}-02-${lastFeb}` };
+  if (q === "Q3_spring") return { from: `${y + 1}-03-01`, to: `${y + 1}-05-31` };
+  return { from: `${y + 1}-06-01`, to: `${y + 1}-08-31` };
+}
+
 export function previousQuarter(q: QuarterKey, year: string): { quarter: QuarterKey; year: string } {
   const i = QUARTERS.findIndex((x) => x.key === q);
   if (i > 0) return { quarter: QUARTERS[i - 1].key, year };
@@ -85,3 +95,94 @@ export function goalsAreTickable(raw: string | null | undefined): boolean {
     return false;
   }
 }
+
+// ---------------------------------------------------------------- graduate track
+
+export type ApplicantType = "undergrad" | "graduate";
+export type GradPhase = "grad_positioning" | "grad_background" | "grad_materials" | "grad_application" | "grad_admission";
+export type GradStatus = "year1" | "year2" | "year3" | "year4" | "graduated" | "masters";
+export type GradDegree = "masters" | "mba";
+export type EntryTerm = "fall" | "spring";
+
+export const GRAD_PHASES: GradPhase[] = ["grad_positioning", "grad_background", "grad_materials", "grad_application", "grad_admission"];
+export const GRAD_STATUSES: GradStatus[] = ["year1", "year2", "year3", "year4", "graduated", "masters"];
+
+export const GRAD_STATUS_LABEL: Record<GradStatus, { zh: string; en: string }> = {
+  year1: { zh: "大一", en: "Undergrad year 1" },
+  year2: { zh: "大二", en: "Undergrad year 2" },
+  year3: { zh: "大三", en: "Undergrad year 3" },
+  year4: { zh: "大四", en: "Undergrad year 4" },
+  graduated: { zh: "已毕业（工作中）", en: "Graduated, working" },
+  masters: { zh: "在读硕士", en: "In a master's program" },
+};
+export const GRAD_DEGREE_LABEL: Record<GradDegree, { zh: string; en: string }> = {
+  masters: { zh: "硕士", en: "Master's" },
+  mba: { zh: "MBA", en: "MBA" },
+};
+export const entryLabel = (term: EntryTerm | null | undefined, year: number | null | undefined, lang: string) =>
+  year ? (lang === "zh" ? `${year} ${term === "spring" ? "春季" : "秋季"}入学` : `${term === "spring" ? "Spring" : "Fall"} ${year} entry`) : "";
+
+const addMonths = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth() + n, d.getDate());
+
+/** First day of the target term (fall = Sep 1, spring = Jan 1). */
+export const entryDate = (term: EntryTerm | null | undefined, year: number) => new Date(year, term === "spring" ? 0 : 8, 1);
+
+/**
+ * Graduate timeline, counting back from entry (same rule as the database's
+ * grad_phase_for): 录取 from 8 months before entry, 申请 from 12, 材料准备 from
+ * 16; 定位 for the first 2 months after starting, then 背景提升.
+ */
+export function gradTimeline(term: EntryTerm | null | undefined, year: number, start: Date) {
+  const entry = entryDate(term, year);
+  const materials = addMonths(entry, -16);
+  const positioningEnd = new Date(Math.min(addMonths(start, 2).getTime(), materials.getTime()));
+  const bounds: { phase: GradPhase; from: Date; to: Date }[] = [
+    { phase: "grad_positioning", from: start, to: positioningEnd },
+    { phase: "grad_background", from: positioningEnd, to: materials },
+    { phase: "grad_materials", from: materials, to: addMonths(entry, -12) },
+    { phase: "grad_application", from: addMonths(entry, -12), to: addMonths(entry, -8) },
+    { phase: "grad_admission", from: addMonths(entry, -8), to: entry },
+  ];
+  // Stages that are already over before the student started have no room.
+  return bounds.map((b) => ({ ...b, skipped: b.to.getTime() <= start.getTime() }));
+}
+
+export function gradPhaseOn(term: EntryTerm | null | undefined, year: number | null | undefined, start: Date, on = new Date()): GradPhase {
+  if (!year) return "grad_positioning";
+  const tl = gradTimeline(term, year, start);
+  for (let i = tl.length - 1; i >= 0; i--) if (on.getTime() >= tl[i].from.getTime()) return tl[i].phase;
+  return "grad_positioning";
+}
+
+export type Track = {
+  applicantType: ApplicantType;
+  gradStatus?: GradStatus | null;
+  gradDegree?: GradDegree | null;
+  entryTerm?: EntryTerm | null;
+  entryYear?: number | null;
+  start?: string | null; // when the student joined (ISO)
+};
+
+/** "研究生 · MBA · 大三 · 2028 秋季入学" */
+export function gradSummary(t: Track, lang: string): string {
+  const L = (x: { zh: string; en: string }) => (lang === "zh" ? x.zh : x.en);
+  return [
+    lang === "zh" ? "研究生" : "Graduate",
+    t.gradDegree ? L(GRAD_DEGREE_LABEL[t.gradDegree]) : "",
+    t.gradStatus ? L(GRAD_STATUS_LABEL[t.gradStatus]) : "",
+    entryLabel(t.entryTerm, t.entryYear, lang),
+  ].filter(Boolean).join(" · ");
+}
+
+/** Which colour card a student gets: undergraduate, transfer or graduate. */
+export type StudentKind = "undergrad" | "transfer" | "graduate";
+export function studentKind(p: { applicant_type?: string | null; status?: string | null; grade?: string | null } | null | undefined): StudentKind {
+  if (p?.applicant_type === "graduate" || p?.status === "Graduate") return "graduate";
+  if (p?.status === "Transfer Student" || p?.grade === "Transfer") return "transfer";
+  return "undergrad";
+}
+export const STUDENT_KIND_LABEL: Record<StudentKind, { zh: string; en: string }> = {
+  undergrad: { zh: "本科", en: "Undergraduate" },
+  transfer: { zh: "转学", en: "Transfer" },
+  graduate: { zh: "研究生", en: "Graduate" },
+};

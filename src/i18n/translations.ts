@@ -422,8 +422,8 @@ const zh = {
   "cs.noGoals": "本季度还没有设定目标，可在「规划」里设置。",
   "cs.upcoming": "未来两周",
   "cs.nothingDue": "未来两周没有到期事项。",
-  "cs.kind.milestone": "规划节点",
-  "cs.kind.todo": "待办",
+  "cs.kind.milestone": "关键日期",
+  "cs.kind.todo": "任务",
   "st.edit": "编辑资料",
   "st.title": "编辑学生资料",
   "st.name": "姓名",
@@ -544,6 +544,11 @@ const zh = {
   "plan.reports.downloadWord": "下载 Word 文件",
   "plan.reports.printPdf": "下载 PDF 文件",
   "plan.reports.language": "报告语言",
+  "plan.phase.grad_positioning": "定位",
+  "plan.phase.grad_background": "背景提升",
+  "plan.phase.grad_materials": "材料准备",
+  "plan.phase.grad_application": "申请",
+  "plan.phase.grad_admission": "录取",
 } as const;
 
 export type MessageKey = keyof typeof zh;
@@ -970,8 +975,8 @@ const en: Messages = {
   "cs.noGoals": "No goals set for this quarter yet. Set them under Plan.",
   "cs.upcoming": "Next two weeks",
   "cs.nothingDue": "Nothing due in the next two weeks.",
-  "cs.kind.milestone": "Milestone",
-  "cs.kind.todo": "To-do",
+  "cs.kind.milestone": "Key date",
+  "cs.kind.todo": "Task",
   "st.edit": "Edit profile",
   "st.title": "Edit student profile",
   "st.name": "Name",
@@ -1092,6 +1097,11 @@ const en: Messages = {
   "plan.reports.downloadWord": "Download as Word",
   "plan.reports.printPdf": "Download as PDF",
   "plan.reports.language": "Report language",
+  "plan.phase.grad_positioning": "Positioning",
+  "plan.phase.grad_background": "Profile building",
+  "plan.phase.grad_materials": "Materials",
+  "plan.phase.grad_application": "Applications",
+  "plan.phase.grad_admission": "Admissions",
 };
 
 export const messages: Record<"zh" | "en", Messages> = { zh, en };

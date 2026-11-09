@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const db = supabase as any;
 
 export {
-  QUARTERS, PHASES, academicYear, currentQuarter, quarterEnd, previousQuarter, parseGoals, newGoalId, fmtDate, todayIso,
+  QUARTERS, PHASES, GRAD_PHASES, academicYear, currentQuarter, quarterEnd, previousQuarter, parseGoals, newGoalId, fmtDate, todayIso,
 } from "@/shared/planning";
 export type { QuarterKey, Goal, Phase } from "@/shared/planning";
 

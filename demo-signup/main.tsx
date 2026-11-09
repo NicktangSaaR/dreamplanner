@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import SignUp from "@/pages/signup";
 import { lastSignup } from "./mock";
 import "@/index.css";
+import { gradPhaseOn, gradSummary, type EntryTerm, type GradDegree, type GradStatus } from "@/shared/planning";
+
+const GRAD_ZH: Record<string, string> = { grad_positioning: "定位", grad_background: "背景提升", grad_materials: "材料准备", grad_application: "申请", grad_admission: "录取" };
 
 const box: React.CSSProperties = { maxWidth: 560, margin: "32px auto", padding: 24, border: "1px solid hsl(var(--border))", borderRadius: 8, background: "hsl(var(--card))" };
 const muted: React.CSSProperties = { color: "hsl(var(--muted-foreground))", fontSize: 14, lineHeight: 1.6 };
@@ -23,7 +26,11 @@ function AfterSignup() {
   const navigate = useNavigate();
   const [step, setStep] = useState<"email" | "home">("email");
   const d = lastSignup.data ?? {};
-  const status = statusFor(d.grade);
+  const isGrad = d.applicant_type === "graduate";
+  const status = isGrad
+    ? gradSummary({ applicantType: "graduate", gradStatus: d.grad_status as GradStatus, gradDegree: d.grad_degree as GradDegree, entryTerm: (d.target_entry_term || null) as EntryTerm | null, entryYear: d.target_entry_year ? Number(d.target_entry_year) : null }, "zh")
+    : statusFor(d.grade);
+  const gradPhase = isGrad ? GRAD_ZH[gradPhaseOn((d.target_entry_term || "fall") as EntryTerm, d.target_entry_year ? Number(d.target_entry_year) : null, new Date())] : "";
   return (
     <div style={{ padding: "0 16px" }}>
       {step === "email" ? (
@@ -49,7 +56,7 @@ function AfterSignup() {
               {[
                 ["学校", d.school],
                 ["年级 / 服务状态", status],
-                ["规划阶段", PHASE[status] ?? "—（顾问手动设置）"],
+                ["规划阶段", isGrad ? gradPhase + (d.target_entry_year ? "（按入学时间自动推进）" : "（入学时间未定，顾问设置后自动划分时间轴）") : PHASE[status] ?? "—（顾问手动设置）"],
                 ["感兴趣的专业", d.interested_majors],
                 ["家长邮箱", d.parent_email || "未填写"],
               ].map(([k, v]) => (

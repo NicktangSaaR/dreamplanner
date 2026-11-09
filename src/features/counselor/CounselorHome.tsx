@@ -14,11 +14,14 @@ import InviteStudentDialog from "@/components/college-planning/InviteStudentDial
 import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
 import { roleLabelKey } from "@/features/team/teamRoles";
+import StudentKindBadge, { KIND_STYLE } from "@/components/StudentKindBadge";
+import { cn } from "@/lib/utils";
+import { studentKind, type StudentKind } from "@/shared/planning";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
 const DAY = 24 * 60 * 60 * 1000;
-const ACTIVE = ["G9", "G10", "G11", "G12", "College Bound", "Transfer Student"];
+const ACTIVE = ["G9", "G10", "G11", "G12", "College Bound", "Transfer Student", "Graduate"];
 
 function academicYear(d = new Date()) {
   const y = d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1;
@@ -38,9 +41,11 @@ const isoDay = (offset: number) => {
 };
 
 type Row = {
+  kind: StudentKind;
   id: string;
   name: string;
   status: string | null;
+  degree: string | null; // graduate applicants: masters / mba
   role: string; // "lead" or a team role
   phase: string | null;
   goalsDone: number;
@@ -79,7 +84,7 @@ export default function CounselorHome() {
 
       const today = isoDay(0);
       const [students, phases, quarters, requests, milestones, todos, notes, reports] = await Promise.all([
-        db.from("profiles").select("id, full_name, status").in("id", ids),
+        db.from("profiles").select("*").in("id", ids),
         db.from("student_phases").select("student_id, current_phase").in("student_id", ids),
         db.from("student_quarters").select("student_id, quarter_kpi").in("student_id", ids).eq("academic_year", academicYear()).eq("quarter", quarterKey()),
         db.from("academic_report_requests").select("student_id, due_date").in("student_id", ids).is("fulfilled_at", null),
@@ -109,10 +114,12 @@ export default function CounselorHome() {
       }
       const phaseOf = new Map<string, string>((phases.data || []).map((p: { student_id: string; current_phase: string }) => [p.student_id, p.current_phase]));
 
-      const rows: Row[] = (students.data || []).map((s: { id: string; full_name: string | null; status: string | null }) => ({
+      const rows: Row[] = (students.data || []).map((s: { id: string; full_name: string | null; status: string | null; grad_degree: string | null; applicant_type?: string | null; grade?: string | null }) => ({
+        kind: studentKind(s),
         id: s.id,
         name: s.full_name || "—",
         status: s.status,
+        degree: s.grad_degree,
         role: roleOf.get(s.id) || "other",
         phase: phaseOf.get(s.id) || null,
         goalsDone: goals.get(s.id)?.done ?? 0,
@@ -162,10 +169,15 @@ export default function CounselorHome() {
     () =>
       rows
         .filter((r) => !search.trim() || r.name.toLowerCase().includes(search.trim().toLowerCase()))
-        .filter((r) => grade === "all" || r.status === grade)
+        .filter((r) => grade === "all" || (grade === "undergrad" ? r.kind !== "graduate" : grade === "Graduate" ? r.kind === "graduate" : r.status === grade))
         .sort((a, b) => a.name.localeCompare(b.name)),
     [rows, search, grade],
   );
+  const statusLabel = (r: Row) => {
+    if (r.kind === "graduate") return [r.degree ? (r.degree === "mba" ? "MBA" : lang === "zh" ? "硕士" : "Master's") : "", r.status === "Completed" ? "Completed" : ""].filter(Boolean).join(" · ");
+    if (r.kind === "transfer") return r.status === "Transfer Student" ? "" : r.status || "";
+    return r.status || "—";
+  };
   const active = filtered.filter((r) => ACTIVE.includes(r.status || "") || !r.status);
   const finished = filtered.filter((r) => !(ACTIVE.includes(r.status || "") || !r.status));
 
@@ -195,10 +207,10 @@ export default function CounselorHome() {
         <tbody className="divide-y">
           {list.map((r) => (
             <tr key={r.id} className="cursor-pointer hover:bg-muted/40" onClick={() => navigate(`/counselor-dashboard/student/${r.id}`)}>
-              <td className="px-4 py-3 font-medium">
+              <td className={cn("border-l-4 px-4 py-3 font-medium", KIND_STYLE[r.kind].card)}>
                 <Link to={`/counselor-dashboard/student/${r.id}`} className="hover:underline" onClick={(e) => e.stopPropagation()}>{r.name}</Link>
               </td>
-              <td className="px-4 py-3 tabular-nums">{r.status || "—"}</td>
+              <td className="px-4 py-3"><StudentKindBadge kind={r.kind} detail={statusLabel(r)} /></td>
               <td className="px-4 py-3">{r.phase ? t(`plan.phase.${r.phase}` as MessageKey) : "—"}</td>
               <td className="px-4 py-3">
                 {r.goalsTotal > 0 ? (
@@ -289,7 +301,9 @@ export default function CounselorHome() {
             <SelectTrigger className="w-36" aria-label={t("ch.col.grade")}><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("ch.allGrades")}</SelectItem>
+              <SelectItem value="undergrad">{lang === "zh" ? "本科（全部）" : "Undergrad (all)"}</SelectItem>
               {["G9", "G10", "G11", "G12", "College Bound", "Transfer Student"].map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+              <SelectItem value="Graduate">{lang === "zh" ? "研究生" : "Graduate"}</SelectItem>
             </SelectContent>
           </Select>
         </div>
