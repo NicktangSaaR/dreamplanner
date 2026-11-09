@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MainNav from "@/components/layout/MainNav";
@@ -7,6 +7,7 @@ import SetupView from "./SetupView";
 import InterviewRunner from "./InterviewRunner";
 import ReviewView from "./ReviewView";
 import type { Answer, SessionQuestion, SessionSettings } from "./types";
+import { startSession, updateSession, type SessionMeta } from "./sessionLog";
 
 const SETTINGS_KEY = "dreamplanner.mockInterview.settings";
 
@@ -22,8 +23,8 @@ function loadSettings(): SessionSettings {
 
 type Stage =
   | { name: "setup" }
-  | { name: "interview"; questions: SessionQuestion[]; run: number }
-  | { name: "review"; questions: SessionQuestion[]; answers: Answer[] };
+  | { name: "interview"; questions: SessionQuestion[]; run: number; meta: SessionMeta }
+  | { name: "review"; questions: SessionQuestion[]; answers: Answer[]; meta: SessionMeta };
 
 export default function MockInterviewPage() {
   const navigate = useNavigate();
@@ -31,6 +32,16 @@ export default function MockInterviewPage() {
   const [settings, setSettings] = useState<SessionSettings>(loadSettings);
   const [selection, setSelection] = useState<string[]>([]);
   const [stage, setStage] = useState<Stage>({ name: "setup" });
+  // The record of the current run (for the student's counselors), if it could be created.
+  const sessionId = useRef<Promise<string | null> | null>(null);
+  const begin = (questions: SessionQuestion[], meta: SessionMeta) => {
+    sessionId.current = startSession(meta, questions);
+    setStage({ name: "interview", questions, run: Date.now(), meta });
+  };
+  const log = (questions: SessionQuestion[], answers: Answer[], status?: "completed" | "exited") => {
+    const pending = sessionId.current;
+    if (pending) void pending.then((id) => updateSession(id, questions, answers, status));
+  };
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -72,10 +83,10 @@ export default function MockInterviewPage() {
           userId={userId}
           initialSettings={settings}
           initialSelection={selection}
-          onStart={(questions, s, sel) => {
+          onStart={(questions, s, sel, meta) => {
             setSettings(s);
             setSelection(sel);
-            setStage({ name: "interview", questions, run: Date.now() });
+            begin(questions, meta);
           }}
         />
       )}
@@ -84,8 +95,15 @@ export default function MockInterviewPage() {
           key={stage.run}
           questions={stage.questions}
           settings={settings}
-          onExit={() => setStage({ name: "setup" })}
-          onFinish={(answers) => setStage({ name: "review", questions: stage.questions, answers })}
+          onProgress={(answers) => log(stage.questions, answers)}
+          onExit={(answers) => {
+            log(stage.questions, answers, "exited");
+            setStage({ name: "setup" });
+          }}
+          onFinish={(answers) => {
+            log(stage.questions, answers, "completed");
+            setStage({ name: "review", questions: stage.questions, answers, meta: stage.meta });
+          }}
         />
       )}
       {stage.name === "review" && (
@@ -94,7 +112,7 @@ export default function MockInterviewPage() {
           settings={settings}
           onAgain={() => {
             discard(stage.answers);
-            setStage({ name: "interview", questions: stage.questions, run: Date.now() });
+            begin(stage.questions, stage.meta);
           }}
           onBackToSetup={() => {
             discard(stage.answers);

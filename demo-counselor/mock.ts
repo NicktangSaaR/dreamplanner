@@ -100,6 +100,29 @@ const tables: Record<string, any[]> = {
   shared_folders: [],
   extracurricular_activities: [{ id: "e1", student_id: S(1), name: "Robotics Club", role: "Team Captain", description: "带领团队参加 FRC 比赛", time_commitment: "6 小时/周" }],
   mock_interview_custom_questions: [],
+  mock_interview_sessions: [
+    { id: "is1", student_id: S(2), mode: "simulation", title: "University of Toronto · Engineering", status: "completed", total: 4, answered: 4, started_at: nowIso(-1), updated_at: nowIso(-1),
+      questions: [
+        { key: "a", text: "Tell us about a time you worked on a team that faced a setback. What did you do?", type: "video", answered: true, attempts: 1 },
+        { key: "b", text: "Why are you interested in engineering at the University of Toronto?", type: "video", answered: true, attempts: 2 },
+        { key: "c", text: "A city wants to reduce traffic at one busy intersection. How would you approach the problem?", type: "video", answered: true, attempts: 1 },
+        { key: "d", text: "Describe something you taught yourself recently.", type: "video", answered: true, attempts: 1 },
+      ] },
+    { id: "is2", student_id: S(2), mode: "practice", title: "通用题库", status: "exited", total: 5, answered: 2, started_at: nowIso(-4), updated_at: nowIso(-4),
+      questions: [
+        { key: "e", text: "What is a challenge facing your community, and how would you address it?", type: "video", answered: true, attempts: 1 },
+        { key: "f", text: "Tell us about a failure and what you learned.", type: "video", answered: true, attempts: 3 },
+        { key: "g", text: "If you could change one thing about your school, what would it be?", type: "video", answered: false, attempts: 0 },
+        { key: "h", text: "Describe a time you disagreed with someone.", type: "video", answered: false, attempts: 0 },
+        { key: "i", text: "What do you do outside of school?", type: "video", answered: false, attempts: 0 },
+      ] },
+    { id: "is3", student_id: S(2), mode: "practice", title: "工程专业", status: "in_progress", total: 3, answered: 1, started_at: nowIso(-9), updated_at: nowIso(-9),
+      questions: [
+        { key: "j", text: "How would you design a bridge for a small river crossing?", type: "video", answered: true, attempts: 1 },
+        { key: "k", text: "What engineering project are you proudest of?", type: "video", answered: false, attempts: 0 },
+        { key: "l", text: "Explain a technical idea to a ten-year-old.", type: "video", answered: false, attempts: 0 },
+      ] },
+  ],
 };
 let seq = 100;
 type Filter = (row: any) => boolean;

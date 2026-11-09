@@ -14,12 +14,13 @@ import {
   PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, drawFromBlueprint, drawRandom, recentQuestionKeys, rememberQuestions, fillPlaceholders, formatSeconds,
   type InterviewBank, type QuestionType, type SessionQuestion, type SessionSettings,
 } from "./types";
+import type { SessionMeta } from "./sessionLog";
 
 interface Props {
   userId: string;
   initialSettings: SessionSettings;
   initialSelection: string[];
-  onStart: (questions: SessionQuestion[], settings: SessionSettings, selection: string[]) => void;
+  onStart: (questions: SessionQuestion[], settings: SessionSettings, selection: string[], meta: SessionMeta) => void;
 }
 
 type Mode = "simulation" | "practice";
@@ -133,7 +134,10 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
       const drawn = drawFromBlueprint(sim, bankQuestions, recentQuestionKeys());
       if (!drawn.length) return;
       rememberQuestions(drawn.map((q) => q.key));
-      onStart(drawn, { school: sim.school || "", program: sim.program || "", retakes: sim.sim_retakes, shuffle: false }, []);
+      onStart(drawn, { school: sim.school || "", program: sim.program || "", retakes: sim.sim_retakes, shuffle: false }, [], {
+        mode: "simulation",
+        title: [sim.school, sim.program].filter(Boolean).join(" · ") || sim.title,
+      });
       return;
     }
     let qs: SessionQuestion[];
@@ -147,7 +151,10 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
       toast.error(t("mi.selectAtLeastOne"));
       return;
     }
-    onStart(withTiming(qs), { school, program, retakes, shuffle: false }, qs.map((q) => q.key));
+    onStart(withTiming(qs), { school, program, retakes, shuffle: false }, qs.map((q) => q.key), {
+      mode: "practice",
+      title: pool === ALL ? "" : pool === MINE ? t("mi.tabMine") : poolTitle[pool] || "",
+    });
   };
 
   const handleAdd = async () => {

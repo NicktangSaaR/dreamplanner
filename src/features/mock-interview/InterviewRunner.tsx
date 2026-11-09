@@ -12,7 +12,9 @@ interface Props {
   questions: SessionQuestion[];
   settings: SessionSettings;
   onFinish: (answers: Answer[]) => void;
-  onExit: () => void;
+  onExit: (answers: Answer[]) => void;
+  /** Called after each answer, so the session record stays current if the tab is closed. */
+  onProgress?: (answers: Answer[]) => void;
 }
 
 const MIME_CANDIDATES = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"];
@@ -52,7 +54,7 @@ function Ring({ remaining, total, tone }: { remaining: number; total: number; to
   );
 }
 
-export default function InterviewRunner({ questions, settings, onFinish, onExit }: Props) {
+export default function InterviewRunner({ questions, settings, onFinish, onExit, onProgress }: Props) {
   const { t } = useLanguage();
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("check");
@@ -70,6 +72,10 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit 
   const chunksRef = useRef<Blob[]>([]);
   const answersRef = useRef<Answer[]>([]);
   answersRef.current = answers;
+  useEffect(() => {
+    if (answers.length) onProgress?.(answers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answers]);
 
   const question = questions[index];
   const isWritten = question?.type === "written";
@@ -226,8 +232,9 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit 
 
   const handleExit = () => {
     if (window.confirm(t("mi.exitConfirm"))) {
-      answersRef.current.forEach((a) => a.videoUrl && URL.revokeObjectURL(a.videoUrl));
-      onExit();
+      const done = [...answersRef.current];
+      done.forEach((a) => a.videoUrl && URL.revokeObjectURL(a.videoUrl));
+      onExit(done);
     }
   };
 
