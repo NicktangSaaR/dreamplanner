@@ -173,8 +173,9 @@ export function RecordMeetingDialog({
       const { data: rows } = await db.from("counselor_collaborations").select("collaborator_id").eq("student_id", studentId).eq("role", "followup");
       const ids = (rows || []).map((r: { collaborator_id: string }) => r.collaborator_id);
       if (!ids.length) return [] as string[];
-      const { data: people } = await db.from("profiles").select("full_name, email").in("id", ids);
-      return (people || []).map((p: { full_name: string | null; email: string | null }) => p.full_name || p.email || "").filter(Boolean) as string[];
+      const { data: staff } = await db.rpc("staff_directory");
+      const people = (staff || []).filter((p: { id: string }) => ids.includes(p.id));
+      return people.map((p: { full_name: string | null; email: string | null }) => p.full_name || p.email || "").filter(Boolean) as string[];
     },
   });
   const { data: lastMeeting, refetch: refetchLast } = useQuery({
