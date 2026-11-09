@@ -88,6 +88,12 @@ const tables: Record<string, any[]> = {
   student_meetings: [
     { id: "m1", student_id: S(2), meeting_date: nowIso(-15), title: "SHAD 申请与研究机会", quarter, academic_year: `${y}-${y + 1}`, summary: "SHAD 文书完成初稿，主题定为水质检测项目；UBC 研究机会已联系两位教授，一位回复需要面谈。", decision_list: ["SHAD 文书围绕水质检测项目展开", "优先跟进回复了的王教授"], emailed_to: ["学生"] },
   ],
+  task_postponements: [
+    { id: "pp1", student_id: S(2), task_table: "meeting_action_items", task_id: "a4", old_due: iso(-2), new_due: iso(6), reason: "等家长确认预算", via: "team", created_at: nowIso(-2) },
+  ],
+  task_extension_requests: [
+    { id: "er1", student_id: S(2), todo_id: "t7", current_due: iso(-1), requested_due: iso(5), reason: "王教授改到下周面谈", status: "pending", created_at: nowIso(0) },
+  ],
   meeting_action_items: [
     { id: "a1", meeting_id: "m1", student_id: S(2), title: "SHAD 文书修改第二稿", owner: "student", due_date: iso(-8), completed: true, todo_id: "t6", created_at: nowIso(-15) },
     { id: "a2", meeting_id: "m1", student_id: S(2), title: "准备与王教授面谈的研究兴趣介绍（1 页）", owner: "student", due_date: iso(-1), completed: false, todo_id: "t7", created_at: nowIso(-15) },
@@ -335,6 +341,28 @@ export const supabase: any = {
     if (name === "link_my_counselor") {
       if (tables.counselor_student_relationships.some((x) => x.student_id === user.id)) return { data: null, error: { message: "already linked" } };
       tables.counselor_student_relationships.push({ student_id: user.id, counselor_id: args.p_counselor_id });
+      return { data: null, error: null };
+    }
+    if (name === "reschedule_task") {
+      const tbl = tables[args.p_table] as any[];
+      const row = tbl.find((r) => r.id === args.p_task_id);
+      if (!row) return { data: null, error: { message: "task not found" } };
+      const sid = row.author_id || row.student_id;
+      const old = row.due_date ? String(row.due_date).slice(0, 10) : null;
+      row.due_date = args.p_due;
+      if (old && old !== args.p_due) tables.task_postponements.push({ id: `pp${seq++}`, student_id: sid, task_table: args.p_table, task_id: row.id, old_due: old, new_due: args.p_due, reason: args.p_reason, via: user.id === sid ? "student" : args.p_via || "team", created_at: new Date().toISOString() });
+      return { data: null, error: null };
+    }
+    if (name === "decide_extension") {
+      const r = tables.task_extension_requests.find((x: any) => x.id === args.p_request_id);
+      if (!r) return { data: null, error: { message: "not found" } };
+      if (args.p_approve) {
+        const todo = tables.todos.find((x: any) => x.id === r.todo_id);
+        const old = todo?.due_date ? String(todo.due_date).slice(0, 10) : null;
+        if (todo) todo.due_date = r.requested_due;
+        tables.task_postponements.push({ id: `pp${seq++}`, student_id: r.student_id, task_table: "todos", task_id: r.todo_id, old_due: old, new_due: r.requested_due, reason: r.reason, via: "request", created_at: new Date().toISOString() });
+      }
+      r.status = args.p_approve ? "approved" : "declined";
       return { data: null, error: null };
     }
     if (name === "set_current_plan") {

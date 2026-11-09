@@ -4,7 +4,8 @@
  */
 
 export type QuarterKey = "Q1_fall" | "Q2_winter" | "Q3_spring" | "Q4_summer";
-export type Goal = { id: string; text: string; completed: boolean };
+/** `from`: the quarter it was carried over from (e.g. "Q1"); `carried`: already copied to the next quarter. */
+export type Goal = { id: string; text: string; completed: boolean; from?: string; carried?: boolean };
 export type Phase = "exploration" | "positioning" | "consolidation" | "application";
 
 export const QUARTERS: { key: QuarterKey; short: string; zh: string; en: string; rangeZh: string; rangeEn: string }[] = [
@@ -49,6 +50,13 @@ export function quarterRange(q: QuarterKey, year: string): { from: string; to: s
   return { from: `${y + 1}-06-01`, to: `${y + 1}-08-31` };
 }
 
+export function nextQuarter(q: QuarterKey, year: string): { quarter: QuarterKey; year: string } {
+  const i = QUARTERS.findIndex((x) => x.key === q);
+  if (i < QUARTERS.length - 1) return { quarter: QUARTERS[i + 1].key, year };
+  const start = Number(year.slice(0, 4)) + 1;
+  return { quarter: "Q1_fall", year: `${start}-${start + 1}` };
+}
+
 export function previousQuarter(q: QuarterKey, year: string): { quarter: QuarterKey; year: string } {
   const i = QUARTERS.findIndex((x) => x.key === q);
   if (i > 0) return { quarter: QUARTERS[i - 1].key, year };
@@ -63,7 +71,10 @@ export function parseGoals(raw: string | null | undefined): Goal[] {
     if (Array.isArray(parsed)) {
       return parsed
         .filter((g) => g && typeof g.text === "string")
-        .map((g, i) => ({ id: String(g.id ?? `kpi-${i}`), text: g.text, completed: !!g.completed }));
+        .map((g, i) => ({
+          id: String(g.id ?? `kpi-${i}`), text: g.text, completed: !!g.completed,
+          ...(typeof g.from === "string" ? { from: g.from } : {}), ...(g.carried ? { carried: true } : {}),
+        }));
     }
   } catch {
     /* plain text below */

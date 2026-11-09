@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, FileSearch, Loader2, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, FileSearch, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/utils";
 import { quarterRange } from "@/shared/planning";
-import { addKeyDate, loadKeyDates, removeKeyDate } from "@/features/counselor/follow/followData";
+import { addKeyDate, loadKeyDates, removeKeyDate, updateKeyDate } from "@/features/counselor/follow/followData";
 import { todayIso, type PlanDoc, type QuarterKey } from "./planData";
 
 /**
@@ -28,6 +28,19 @@ export default function KeyDates({ studentId, quarter, year, currentDoc }: { stu
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("");
   const [extracting, setExtracting] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDue, setEditDue] = useState("");
+  const saveEdit = async () => {
+    if (!editId || !editTitle.trim() || !editDue) return;
+    try {
+      await updateKeyDate(editId, { title: editTitle.trim(), due_date: editDue });
+      setEditId(null);
+      refresh();
+    } catch {
+      toast.error(L("没能保存", "Couldn't save"));
+    }
+  };
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["plan-keydates", studentId] });
@@ -87,10 +100,22 @@ export default function KeyDates({ studentId, quarter, year, currentDoc }: { stu
         <p className="text-sm text-muted-foreground">{L("这个季度还没有关键日期。", "No key dates this quarter.")}</p>
       ) : (
         <ul className="divide-y rounded-md border">
-          {dates.map((d) => (
+          {dates.map((d) => editId === d.id ? (
+            <li key={d.id} className="flex flex-wrap items-center gap-2 bg-muted/30 px-3 py-2">
+              <Input type="date" className="h-8 w-[9.5rem]" value={editDue} onChange={(e) => setEditDue(e.target.value)} aria-label={L("日期", "Date")} />
+              <Input autoFocus className="h-8 min-w-[180px] flex-1" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void saveEdit(); } if (e.key === "Escape") setEditId(null); }} aria-label={L("名称", "Title")} />
+              <Button size="sm" className="h-8" onClick={() => void saveEdit()} disabled={!editTitle.trim() || !editDue}>{L("保存", "Save")}</Button>
+              <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditId(null)}>{L("取消", "Cancel")}</Button>
+            </li>
+          ) : (
             <li key={d.id} className="group flex items-center gap-3 px-3 py-2 text-sm">
               <span className={cn("w-14 shrink-0 tabular-nums", d.due_date < today ? "text-muted-foreground line-through" : "font-medium text-pine")}>{d.due_date.slice(5).replace("-", "/")}</span>
               <span className={cn("min-w-0 flex-1", d.due_date < today && "text-muted-foreground")}>{d.title}</span>
+              <button className="text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100" aria-label={L("修改", "Edit")}
+                onClick={() => { setEditId(d.id); setEditTitle(d.title); setEditDue(d.due_date); }}>
+                <Pencil className="h-4 w-4" />
+              </button>
               <button className="text-muted-foreground opacity-0 hover:text-destructive focus:opacity-100 group-hover:opacity-100" aria-label={L("删除", "Delete")}
                 onClick={async () => { if (window.confirm(L(`删除关键日期「${d.title}」？`, `Delete "${d.title}"?`))) { await removeKeyDate(d.id).catch(() => toast.error(L("删除失败", "Couldn't delete"))); refresh(); } }}>
                 <Trash2 className="h-4 w-4" />

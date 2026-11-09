@@ -2,11 +2,13 @@ import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import StudentRecordsSheet from "./StudentRecordsSheet";
+import ReschedulePopover from "@/features/counselor/follow/ReschedulePopover";
 import LinkCounselorPrompt from "./LinkCounselor";
 import { countMeetings, getCurrentPlanDoc, getOpenUploadRequest, getSharedFolder, listPublishedReports } from "@/shared/studentApi";
 import { toast } from "sonner";
 import {
-  BarChart3, ChevronDown, Download, ExternalLink, FileText, FolderOpen, Globe, LogOut, Menu,
+  BarChart3,
+  CalendarClock, ChevronDown, Download, ExternalLink, FileText, FolderOpen, Globe, LogOut, Menu,
   NotebookPen, Pencil, Plus, Trash2, Upload, User, Video, FileUser,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,7 +62,7 @@ function dueTime(due: string | null | undefined): number | null {
   return d.getTime();
 }
 
-type Goal = { id: string; text: string; completed: boolean };
+type Goal = { id: string; text: string; completed: boolean; from?: string; carried?: boolean };
 type Doc = { id: string; title: string; content: string | null; file_path: string | null; file_name: string | null; source_url: string | null; updated_at: string };
 
 /** One item in the "to do" list: a to-do, a quarter goal, or an upload request. */
@@ -126,6 +128,62 @@ export default function StudentHome({ studentId }: { studentId: string }) {
     queryFn: () => getOpenUploadRequest(supabase, studentId),
   });
   const folderUrl = folder && isSafeHttpUrl(folder.folder_url) ? folder.folder_url : null;
+
+  // ---- which to-dos the team assigned, and pending extension requests ----
+  const { data: assignment } = useQuery({
+    queryKey: ["student-todo-assignment", studentId],
+    queryFn: async () => {
+      const db = supabase as never as { from: (t: string) => any }; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const [{ data: links }, { data: reqs }] = await Promise.all([
+        db.from("meeting_action_items").select("todo_id").eq("student_id", studentId).not("todo_id", "is", null),
+        db.from("task_extension_requests").select("id, todo_id, requested_due, status").eq("student_id", studentId).eq("status", "pending"),
+      ]);
+      return {
+        fromMeetings: new Set(((links || []) as { todo_id: string }[]).map((l) => l.todo_id)),
+        pending: new Map(((reqs || []) as { todo_id: string; requested_due: string }[]).map((r) => [r.todo_id, r.requested_due])),
+      };
+    },
+  });
+  const isAssigned = (todo: { id: string; title: string; assigned_by?: string | null }) =>
+    !!todo.assigned_by || todo.title.startsWith("📌") || !!assignment?.fromMeetings.has(todo.id);
+  const refreshTodos = () => {
+    queryClient.invalidateQueries({ queryKey: ["student-todos", studentId] });
+    queryClient.invalidateQueries({ queryKey: ["todos"] });
+    queryClient.invalidateQueries({ queryKey: ["student-todo-assignment", studentId] });
+  };
+  const [editingTodo, setEditingTodo] = useState<string | null>(null);
+  const [todoDraft, setTodoDraft] = useState("");
+  const [todoDueDraft, setTodoDueDraft] = useState("");
+  const saveTodo = async (todo: { id: string; title: string; due_date?: string | null }) => {
+    const text = todoDraft.trim();
+    const oldDue = todo.due_date ? String(todo.due_date).slice(0, 10) : "";
+    setEditingTodo(null);
+    try {
+      if (text && text !== todo.title) {
+        const { error } = await supabase.from("todos").update({ title: text.slice(0, 300) } as never).eq("id", todo.id);
+        if (error) throw error;
+      }
+      if (todoDueDraft !== oldDue) {
+        const { error } = await (supabase as never as { rpc: (n: string, a: object) => Promise<{ error: unknown }> })
+          .rpc("reschedule_task", { p_table: "todos", p_task_id: todo.id, p_due: todoDueDraft || null, p_reason: null });
+        if (error) throw error;
+      }
+    } catch {
+      toast.error(lang === "zh" ? "没能保存修改" : "Couldn't save");
+    }
+    refreshTodos();
+  };
+  const requestExtension = async (todo: { id: string; due_date?: string | null }, due: string, reason: string) => {
+    const { error } = await (supabase as never as { from: (t: string) => { insert: (r: object) => Promise<{ error: unknown }> } })
+      .from("task_extension_requests")
+      .insert({ student_id: studentId, status: "pending", todo_id: todo.id, current_due: todo.due_date ? String(todo.due_date).slice(0, 10) : null, requested_due: due, reason });
+    if (error) {
+      toast.error(lang === "zh" ? "没能提交申请" : "Couldn't send the request");
+      return;
+    }
+    toast.success(lang === "zh" ? "已提交延期申请，等待顾问确认" : "Request sent to your counselor");
+    refreshTodos();
+  };
 
   // ---- one list ----
   const { open, done } = useMemo(() => {
@@ -269,10 +327,25 @@ export default function StudentHome({ studentId }: { studentId: string }) {
             className="h-8 min-w-0 flex-1"
             aria-label={lang === "zh" ? "修改目标" : "Edit goal"}
           />
+        ) : item.kind === "todo" && editingTodo === item.todo.id ? (
+          <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+            <Input autoFocus value={todoDraft} maxLength={300} onChange={(e) => setTodoDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") void saveTodo(item.todo); if (e.key === "Escape") setEditingTodo(null); }}
+              className="h-8 min-w-[160px] flex-1" aria-label={lang === "zh" ? "修改待办" : "Edit to-do"} />
+            <Input type="date" value={todoDueDraft} onChange={(e) => setTodoDueDraft(e.target.value)} className="h-8 w-[9.5rem]" aria-label={lang === "zh" ? "截止日期" : "Due date"} />
+            <Button size="sm" className="h-8" onClick={() => void saveTodo(item.todo)}>{lang === "zh" ? "保存" : "Save"}</Button>
+            <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditingTodo(null)}>{lang === "zh" ? "取消" : "Cancel"}</Button>
+          </div>
         ) : (
           <label htmlFor={item.key} className={`min-w-0 flex-1 leading-snug ${item.done ? "text-muted-foreground line-through" : ""}`}>
             {item.title}
             {item.kind === "goal" && <span className="ml-2 text-xs text-primary">{t("home3.goalTag")}</span>}
+            {item.kind === "goal" && item.goal.from && <span className="ml-2 text-xs text-muted-foreground">{lang === "zh" ? `顺延自 ${item.goal.from}` : `from ${item.goal.from}`}</span>}
+            {item.kind === "todo" && !item.done && assignment?.pending.has(item.todo.id) && (
+              <span className="ml-2 whitespace-nowrap rounded bg-brass/10 px-1.5 py-0.5 text-xs text-brass">
+                {lang === "zh" ? `已申请延期至 ${assignment.pending.get(item.todo.id)!.slice(5).replace("-", "/")} · 等待顾问确认` : `Extension to ${assignment.pending.get(item.todo.id)} requested`}
+              </span>
+            )}
           </label>
         )}
         {item.due !== null && (
@@ -290,7 +363,26 @@ export default function StudentHome({ studentId }: { studentId: string }) {
             <Pencil className="h-4 w-4" />
           </button>
         )}
-        {item.kind === "todo" && (
+        {item.kind === "todo" && editingTodo !== item.todo.id && !item.done && isAssigned(item.todo) && !assignment?.pending.has(item.todo.id) && (
+          <ReschedulePopover current={item.todo.due_date ? String(item.todo.due_date).slice(0, 10) : null} reasonRequired
+            title={lang === "zh" ? "申请延期" : "Ask for more time"} confirmLabel={lang === "zh" ? "提交申请" : "Send request"}
+            onConfirm={(d, r) => requestExtension(item.todo, d, r)}>
+            <button type="button" className="shrink-0 text-xs text-muted-foreground hover:text-foreground" title={lang === "zh" ? "这是顾问布置的任务，改期需要顾问同意" : "Assigned by your counselor; changing the date needs their OK"}>
+              <CalendarClock className="mr-0.5 inline h-4 w-4" />{lang === "zh" ? "申请延期" : "Extend"}
+            </button>
+          </ReschedulePopover>
+        )}
+        {item.kind === "todo" && editingTodo !== item.todo.id && !isAssigned(item.todo) && (
+          <button
+            type="button"
+            onClick={() => { setEditingTodo(item.todo.id); setTodoDraft(item.todo.title); setTodoDueDraft(item.todo.due_date ? String(item.todo.due_date).slice(0, 10) : ""); }}
+            className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+            aria-label={lang === "zh" ? "修改待办" : "Edit to-do"}
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+        )}
+        {item.kind === "todo" && editingTodo !== item.todo.id && !isAssigned(item.todo) && (
           <button
             type="button"
             onClick={() => deleteTodo.mutate(item.todo.id)}
