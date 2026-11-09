@@ -66,6 +66,10 @@ Deno.serve(async (req) => {
     const zhRole = isGrad
       ? `你是一位资深${isMba ? "MBA" : "硕士研究生"}申请规划顾问（学生情况：${applicantProfile || "研究生申请者"}）。评估时关注${isMba ? "工作经历、领导力、GMAT/GRE、Essay、推荐人和面试" : "GPA、标化考试、实习与科研/项目、选校匹配、文书和推荐人"}；规划只到录取为止，不涉及签证。`
       : "你是一位资深美国大学申请规划顾问。";
+    const zhExpLabel = isGrad ? "工作/实习与科研/项目经历（来自简历）" : "课外活动";
+    const zhSection3 = isGrad
+      ? `### 3. 背景经历评估\n评估${isMba ? "工作经历的成长轨迹、领导力和量化成果" : "实习、科研/项目经历与目标专业的匹配度和深度"}，以及申请故事线的构建（研究生申请不评估课外活动）。`
+      : "### 3. 课外活动发展评估\n评估活动深度、广度和个人叙事线的构建。";
     const zhPrompt = isQuarterly
       ? `${zhRole}请为学生「${studentName || "学生"}」生成${quarterNames[quarter] || quarter} (${academicYear}) 的季度规划工作完成情况评估报告。
 
@@ -77,8 +81,8 @@ ${kpiData || "暂无KPI数据"}
 学术情况:
 ${courseSummary || "暂无课程数据"}
 
-课外活动:
-${activitySummary || "暂无活动数据"}${docContext}
+${zhExpLabel}:
+${activitySummary || "暂无"}${docContext}
 
 请生成以下内容（使用Markdown格式）：
 ## 季度评估报告
@@ -104,8 +108,8 @@ ${activitySummary || "暂无活动数据"}${docContext}
 学术情况:
 ${courseSummary || "暂无课程数据"}
 
-课外活动:
-${activitySummary || "暂无活动数据"}
+${zhExpLabel}:
+${activitySummary || "暂无"}
 
 KPI完成概况:
 ${kpiData || "暂无KPI数据"}${docContext}
@@ -119,8 +123,7 @@ ${kpiData || "暂无KPI数据"}${docContext}
 ### 2. 学术发展评估
 分析GPA趋势、课程选择合理性、学术竞争力。
 
-### 3. 课外活动发展评估
-评估活动深度、广度和个人叙事线的构建。
+${zhSection3}
 
 ### 4. 下一阶段战略建议
 给出3-5条具体的、可执行的下一阶段核心行动建议。
@@ -156,6 +159,10 @@ ${kpiData || "暂无KPI数据"}${docContext}
     const enRole = isGrad
       ? `You are a senior ${isMba ? "MBA" : "master's"} admissions planning counselor (student: ${applicantProfile || "graduate applicant"}). Focus on ${isMba ? "work experience, leadership, GMAT/GRE, essays, recommenders and interviews" : "GPA, test scores, internships and research/projects, program fit, statement of purpose and recommenders"}; the plan ends at admission and does not cover visas.`
       : "You are a senior US college admissions planning counselor.";
+    const enExpLabel = isGrad ? "Work, internship, research and project experience (from resume)" : "Activities";
+    const enSection3 = isGrad
+      ? `### 3. Professional and academic experience\n${isMba ? "Career progression, leadership and quantified impact" : "How internships, research and projects fit the target program, and their depth"}, and how the application story is taking shape (no extracurricular-activities assessment for graduate applicants).`
+      : "### 3. Activities and personal narrative\nDepth, breadth and how the student's story is taking shape.";
     const enPrompt = isQuarterly
       ? `${enRole} Write a quarterly progress review for ${name} covering ${quarterNamesEn[quarter] || quarter} (${academicYear}).
 
@@ -167,8 +174,8 @@ ${kpiData || "No goal data"}
 Academics:
 ${courseSummary || "No course data"}
 
-Activities:
-${activitySummary || "No activity data"}${docContextEn}
+${enExpLabel}:
+${activitySummary || "None"}${docContextEn}
 
 Write the report in clear, professional English, in Markdown, with these sections:
 ## Quarterly Review
@@ -188,8 +195,8 @@ Academic year: ${academicYear}
 Academics:
 ${courseSummary || "No course data"}
 
-Activities:
-${activitySummary || "No activity data"}
+${enExpLabel}:
+${activitySummary || "None"}
 
 Goal completion overview (may be in Chinese):
 ${kpiData || "No goal data"}${docContextEn}
@@ -200,8 +207,7 @@ Write the report in clear, professional English, in Markdown, with these section
 ### 1. Key milestones this stage
 ### 2. Academic development
 GPA trend, course choices and academic competitiveness.
-### 3. Activities and personal narrative
-Depth, breadth and how the student's story is taking shape.
+${enSection3}
 ### 4. Strategy for the next stage
 3–5 specific, actionable recommendations.
 ### 5. Overall competitiveness

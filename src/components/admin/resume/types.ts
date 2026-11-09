@@ -32,6 +32,16 @@ export interface Award {
   description?: string;
 }
 
+export interface Project {
+  name: string;
+  role?: string;
+  startDate?: string;
+  endDate?: string;
+  description: string;
+  technologies: string[];
+  url?: string;
+}
+
 export interface ResumeData {
   id?: string;
   request_id?: string;
@@ -48,9 +58,10 @@ export interface ResumeData {
   awards: Award[];
   skills: string[];
   certifications: string[];
-  projects: { name: string; description: string; technologies: string[]; url?: string }[];
+  projects: Project[];
   languages: { language: string; proficiency: string }[];
   generated_resume?: string;
+  uploaded_file_path?: string | null;
 }
 
 export interface ResumeRequest {

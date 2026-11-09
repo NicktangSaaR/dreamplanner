@@ -39,6 +39,12 @@ const PHASE_EN: Record<string, string> = {
   grad_positioning: "Positioning", grad_background: "Profile Building", grad_materials: "Materials", grad_application: "Applications", grad_admission: "Admissions",
 };
 
+type ResumeRow = { work_experience?: { company?: string; position?: string; startDate?: string; endDate?: string; description?: string }[]; projects?: { name?: string; role?: string; description?: string }[] };
+const experienceLines = (row: ResumeRow | undefined): string[] => [
+  ...(row?.work_experience || []).map((w) => `工作/实习：${w.company || ""} ${w.position || ""}（${w.startDate || ""}–${w.endDate || ""}）${(w.description || "").replace(/\s+/g, " ").slice(0, 300)}`),
+  ...(row?.projects || []).map((p) => `科研/项目：${p.name || ""}${p.role ? ` - ${p.role}` : ""} ${(p.description || "").replace(/\s+/g, " ").slice(0, 300)}`),
+];
+
 export default function ReportsTimeline({
   studentId, studentName, phase, request, track,
 }: {
@@ -123,9 +129,13 @@ export default function ReportsTimeline({
   const generate = async () => {
     setGenerating(true);
     try {
+      const grad = track.applicantType === "graduate";
       const [courses, activities, quarters, docs, meetings] = await Promise.all([
         supabase.from("courses").select("name, grade, course_type").eq("student_id", studentId),
-        supabase.from("extracurricular_activities").select("name, role, description").eq("student_id", studentId),
+        // Graduate applicants have no extracurriculars: use the experience and projects from their resume.
+        grad
+          ? db.from("resume_data").select("work_experience, projects").eq("student_id", studentId).order("updated_at", { ascending: false }).limit(1)
+          : supabase.from("extracurricular_activities").select("name, role, description").eq("student_id", studentId),
         db.from("student_quarters").select("quarter, quarter_focus, quarter_kpi").eq("student_id", studentId).eq("academic_year", year),
         db.from("planning_documents").select("content, is_primary, updated_at").eq("student_id", studentId).order("is_primary", { ascending: false }).order("updated_at", { ascending: false }).limit(1),
         db.from("student_meetings").select("meeting_date, title, summary, quarter").eq("student_id", studentId).eq("academic_year", year).order("meeting_date"),
@@ -151,7 +161,7 @@ export default function ReportsTimeline({
           academicYear: year,
           kpiData: [...kpiLines, ...(meetingLines.length ? ["", "本期会议记录：", ...meetingLines] : [])].join("\n") || "暂无",
           courseSummary: (courses.data || []).map((c) => `${c.name} (${c.course_type || "Regular"}) - ${c.grade}`).join("\n") || "暂无",
-          activitySummary: (activities.data || []).map((a) => `${a.name} - ${a.role}: ${a.description || ""}`).join("\n") || "暂无",
+          activitySummary: (grad ? experienceLines(activities.data?.[0]) : (activities.data || []).map((a: { name: string; role: string; description: string | null }) => `${a.name} - ${a.role}: ${a.description || ""}`)).join("\n") || "暂无",
           planningDocContent: docs.data?.[0]?.content || "",
           language: reportLang,
           applicantType: track.applicantType,

@@ -30,6 +30,15 @@ const STYLES: { key: string; zh: string; en: string; desc: string }[] = [
   { key: "humanities", zh: "人文社科", en: "Humanities focus", desc: "针对文科方向深耕" },
 ];
 
+// Graduate applicants: no extracurricular-activities track.
+const GRAD_STYLES: { key: string; zh: string; en: string; desc: string }[] = [
+  { key: "balanced", zh: "均衡推进", en: "Balanced", desc: "标化、背景经历、文书材料均衡推进" },
+  { key: "tests", zh: "标化优先", en: "Tests first", desc: "以GMAT/GRE、托福/雅思出分为核心" },
+  { key: "experience", zh: "背景提升", en: "Experience building", desc: "以实习、工作成果、科研/项目经历为核心" },
+  { key: "fit", zh: "定位与选校", en: "Positioning & school fit", desc: "梳理职业目标，确定项目匹配和选校梯度" },
+  { key: "materials", zh: "文书与推荐", en: "Essays & recommenders", desc: "以简历、文书、推荐人准备为核心" },
+];
+
 type QuarterRow = { id: string; quarter: QuarterKey; academic_year: string; quarter_focus: string | null; quarter_kpi: string | null };
 
 export default function QuarterCard({
@@ -137,6 +146,8 @@ export default function QuarterCard({
     },
   });
 
+  const styles = track.applicantType === "graduate" ? GRAD_STYLES : STYLES;
+
   const openGenerate = () => {
     setGenDoc(currentDoc?.id ?? "none");
     setGenOpen(true);
@@ -146,7 +157,7 @@ export default function QuarterCard({
     setGenerating(true);
     try {
       const doc = docs.find((d) => d.id === genDoc);
-      const style = STYLES.find((s) => s.key === genStyle);
+      const style = styles.find((s) => s.key === genStyle);
       const { data, error } = await supabase.functions.invoke("generate-quarter-plan", {
         body: {
           studentId, quarter, academicYear: year, currentPhase: phase,
@@ -301,7 +312,7 @@ export default function QuarterCard({
               <Select value={genStyle} onValueChange={setGenStyle}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {STYLES.map((s) => <SelectItem key={s.key} value={s.key}>{L(`${s.zh}：${s.desc}`, s.en)}</SelectItem>)}
+                  {styles.map((s) => <SelectItem key={s.key} value={s.key}>{L(`${s.zh}：${s.desc}`, s.en)}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

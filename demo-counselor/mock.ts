@@ -170,7 +170,53 @@ tables.student_phases.push({ student_id: G1, current_phase: "grad_positioning", 
 tables.student_quarters.push({ id: `q-${G1}`, student_id: G1, academic_year: `${y}-${y + 1}`, quarter, quarter_focus: "确定 MBA 申请方向和目标项目，制定 GMAT 备考计划", quarter_kpi: JSON.stringify([{ id: "g1", text: "完成 GMAT 诊断测试", completed: true }, { id: "g2", text: "列出 10 个目标 MBA 项目并对比", completed: false }, { id: "g3", text: "梳理 3 段代表性工作经历", completed: false }]), quarter_risk: "" });
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const LUCY_RESUME = {
+  full_name: "Lucy Wang", email: "lucy.wang@gmail.com", phone: "+1 604-555-0182", address: "Vancouver, BC", linkedin_url: "linkedin.com/in/lucywang", personal_website: "",
+  education: [{ school: "University of British Columbia, Sauder School of Business", degree: "Bachelor of Commerce", field: "Business Technology Management", startDate: "2017-09", endDate: "2021-05", gpa: "3.7/4.0", description: "Dean's List 2019–2021" }],
+  work_experience: [
+    { company: "Clio", position: "Product Manager", startDate: "2023-03", endDate: "Present", description: "- 负责计费模块，带 8 人跨职能团队\n- 上线自动对账功能，客户续费率提升 6%\n- 和销售、客服一起梳理需求，季度路线图按时交付" },
+    { company: "Clio", position: "Associate Product Manager", startDate: "2021-07", endDate: "2023-02", description: "- 做用户访谈 40+ 次，重新设计新手引导\n- 新用户 7 日留存从 41% 提到 52%" },
+  ],
+  activities: [],
+  projects: [{ name: "Women in Product Vancouver", role: "Co-organizer", startDate: "2022-01", endDate: "Present", description: "- 组织季度分享会，社区成员从 120 人增长到 600 人", technologies: [] }],
+  awards: [{ name: "Clio Customer Impact Award", issuer: "Clio", date: "2024-12", description: "" }],
+  skills: ["SQL", "Figma", "A/B testing", "Jira"], certifications: ["GMAT 705"],
+  languages: [{ language: "English", proficiency: "Fluent" }, { language: "Mandarin", proficiency: "Native" }],
+};
+const LUCY_MD = `# Lucy Wang
+Vancouver, BC · lucy.wang@gmail.com · +1 604-555-0182 · linkedin.com/in/lucywang
+
+## Professional Experience
+### Clio — Product Manager (Mar 2023 – Present)
+- Lead billing product with an 8-person cross-functional team (engineering, design, data)
+- Launched automated reconciliation, lifting customer renewal rate by 6%
+- Aligned sales and support input into a quarterly roadmap delivered on schedule
+
+### Clio — Associate Product Manager (Jul 2021 – Feb 2023)
+- Ran 40+ customer interviews and redesigned onboarding
+- Raised new-user 7-day retention from 41% to 52%
+
+## Education
+### University of British Columbia, Sauder School of Business (Sep 2017 – May 2021)
+- Bachelor of Commerce, Business Technology Management · GPA 3.7/4.0 · Dean's List 2019–2021
+
+## Additional Information
+- **Leadership:** Co-organizer, Women in Product Vancouver — grew community from 120 to 600 members
+- **Awards:** Clio Customer Impact Award (2024)
+- **Test:** GMAT 705
+- **Skills:** SQL, Figma, A/B testing, Jira
+- **Languages:** English (fluent), Mandarin (native)`;
+
 async function demoFunction(name: string, body: any): Promise<any> {
+  if (name === "resume-import") {
+    await sleep(2500);
+    return { data: { data: LUCY_RESUME }, error: null };
+  }
+  if (name === "generate-resume") {
+    await sleep(2500);
+    return { data: { resume: LUCY_MD }, error: null };
+  }
   await wait(900);
   if (name === "meeting-assistant" && body.action === "organize") {
     const ubc = (body.goals || []).find((g: any) => /UBC/.test(g.text) && !g.completed);

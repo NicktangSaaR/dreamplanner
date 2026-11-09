@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,667 +9,481 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, FileText, Calendar } from "lucide-react";
+import { Save, Plus, Trash2, Calendar, Upload, PencilLine, Loader2, Info } from "lucide-react";
 import { format } from "date-fns";
-import { ResumeData, Education, WorkExperience, Activity, Award } from "@/components/admin/resume/types";
+import type { ResumeData } from "@/components/admin/resume/types";
+import OptimizedResume from "./OptimizedResume";
+import {
+  ResumeUploadError, emptyResume, loadResumeContext, mergeImported, optimizeResume, prefillFromProfile, uploadAndImport,
+  type ResumeContext,
+} from "./resumeApi";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
+
+type ListKey = "education" | "work_experience" | "activities" | "projects" | "awards";
+type Field = { key: string; label: string; kind?: "month" | "text" | "area"; placeholder?: string; wide?: boolean };
+
+const SECTIONS: Record<ListKey, { item: string; add: string; blank: () => Record<string, unknown>; fields: Field[] }> = {
+  education: {
+    item: "教育经历", add: "添加教育经历",
+    blank: () => ({ school: "", degree: "", field: "", startDate: "", endDate: "", gpa: "", description: "" }),
+    fields: [
+      { key: "school", label: "学校名称 *" }, { key: "degree", label: "学位/学历", placeholder: "如：高中、本科、硕士" },
+      { key: "field", label: "专业方向" }, { key: "gpa", label: "GPA", placeholder: "如：3.8/4.0" },
+      { key: "startDate", label: "开始时间", kind: "month" }, { key: "endDate", label: "结束时间", kind: "month" },
+      { key: "description", label: "描述", kind: "area", placeholder: "相关课程、成就等", wide: true },
+    ],
+  },
+  work_experience: {
+    item: "工作/实习经历", add: "添加工作/实习经历",
+    blank: () => ({ company: "", position: "", startDate: "", endDate: "", description: "", achievements: [] }),
+    fields: [
+      { key: "company", label: "公司/组织名称 *" }, { key: "position", label: "职位 *" },
+      { key: "startDate", label: "开始时间", kind: "month" }, { key: "endDate", label: "结束时间", kind: "month" },
+      { key: "description", label: "工作内容与成果", kind: "area", placeholder: "每行一条：做了什么、结果如何（尽量有数字）", wide: true },
+    ],
+  },
+  activities: {
+    item: "课外活动", add: "添加课外活动",
+    blank: () => ({ name: "", role: "", startDate: "", endDate: "", description: "" }),
+    fields: [
+      { key: "name", label: "活动名称 *", placeholder: "活动/组织名称" }, { key: "role", label: "角色/职位" },
+      { key: "startDate", label: "开始时间", kind: "month" }, { key: "endDate", label: "结束时间", kind: "month" },
+      { key: "description", label: "活动描述", kind: "area", placeholder: "描述您的参与和贡献…", wide: true },
+    ],
+  },
+  projects: {
+    item: "科研/项目经历", add: "添加科研/项目经历",
+    blank: () => ({ name: "", role: "", startDate: "", endDate: "", description: "", technologies: [] }),
+    fields: [
+      { key: "name", label: "项目名称 *" }, { key: "role", label: "角色" },
+      { key: "startDate", label: "开始时间", kind: "month" }, { key: "endDate", label: "结束时间", kind: "month" },
+      { key: "description", label: "内容与成果", kind: "area", placeholder: "研究问题、方法、你的贡献、产出（论文/报告/获奖）", wide: true },
+    ],
+  },
+  awards: {
+    item: "奖项/荣誉", add: "添加奖项/荣誉",
+    blank: () => ({ name: "", issuer: "", date: "", description: "" }),
+    fields: [
+      { key: "name", label: "奖项名称 *" }, { key: "issuer", label: "颁发机构" }, { key: "date", label: "获得时间", kind: "month" },
+      { key: "description", label: "描述（可选）", kind: "area", wide: true },
+    ],
+  },
+};
+
+const IMPORT_STEPS = ["上传文件", "读取简历内容", "保存到简历信息", "生成优化版"];
 
 /**
- * Resume information form. Without `studentId` it edits the signed-in
- * student's own resume; with `studentId` the student's team (lead
- * counselor, follow-up teacher, admin) edits it on their behalf.
+ * Resume. Without `studentId` the signed-in student edits their own; with
+ * `studentId` the student's team (lead counselor, follow-up teacher, admin)
+ * works on it. Two ways in: fill the form (personal info is read from the
+ * student's profile), or upload an existing resume, which is read into the
+ * form, saved, and polished by AI. Graduate applicants have no
+ * extracurricular-activities section.
  */
 export default function StudentResumeForm({ studentId }: { studentId?: string } = {}) {
   const queryClient = useQueryClient();
   const teamMode = !!studentId;
-  const targetId = async () => studentId || (await supabase.auth.getUser()).data.user?.id;
-  const [formData, setFormData] = useState<ResumeData>({
-    full_name: "",
-    email: "",
-    phone: "",
-    address: "",
-    linkedin_url: "",
-    personal_website: "",
-    education: [],
-    work_experience: [],
-    activities: [],
-    awards: [],
-    skills: [],
-    certifications: [],
-    projects: [],
-    languages: [],
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState<ResumeData>(emptyResume());
+  const [started, setStarted] = useState(false);
+  const [prefilled, setPrefilled] = useState<string[]>([]);
+  const [importStep, setImportStep] = useState<number | null>(null);
+  const [optimizing, setOptimizing] = useState(false);
+  const [tab, setTab] = useState("personal");
+
+  const { data: target } = useQuery({
+    queryKey: ["resume-target", studentId ?? "me"],
+    queryFn: async () => studentId || (await supabase.auth.getUser()).data.user?.id || null,
   });
 
-  // Fetch pending resume request
-  const { data: pendingRequest, isLoading: isLoadingRequest } = useQuery({
-    queryKey: ["my-resume-request", studentId ?? "me"],
+  const { data: ctx } = useQuery({
+    queryKey: ["resume-context", target],
+    queryFn: () => loadResumeContext(target as string),
+    enabled: !!target,
+  });
+  const graduate = ctx?.applicantType === "graduate";
+
+  const { data: request, isLoading: loadingRequest } = useQuery({
+    queryKey: ["my-resume-request", target],
     queryFn: async () => {
-      const target = await targetId();
-      if (!target) throw new Error("未登录");
-      
-      const { data, error } = await supabase
-        .from("resume_requests")
-        .select("*")
-        .eq("student_id", target)
-        .in("status", teamMode ? ["pending", "submitted", "generated"] : ["pending", "submitted"])
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
-      
-      if (error && error.code !== "PGRST116") throw error;
-      return data;
+      const { data, error } = await db
+        .from("resume_requests").select("*").eq("student_id", target)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (error) throw error;
+      return data as { id: string; status: string; due_date: string | null; message: string | null } | null;
     },
+    enabled: !!target,
   });
 
-  // Fetch existing resume data
-  const { data: existingData } = useQuery({
-    queryKey: ["my-resume-data", pendingRequest?.id],
+  const { data: existing, isLoading: loadingData } = useQuery({
+    queryKey: ["my-resume-data", request?.id],
     queryFn: async () => {
-      if (!pendingRequest) return null;
-      
-      const { data, error } = await supabase
-        .from("resume_data")
-        .select("*")
-        .eq("request_id", pendingRequest.id)
-        .single();
-      
-      if (error && error.code !== "PGRST116") throw error;
-      return data;
+      const { data, error } = await db.from("resume_data").select("*").eq("request_id", request!.id).maybeSingle();
+      if (error) throw error;
+      return data as (ResumeData & { id: string }) | null;
     },
-    enabled: !!pendingRequest,
+    enabled: !!request,
   });
 
-  // Load existing data into form
   useEffect(() => {
-    if (existingData) {
-      setFormData({
-        ...formData,
-        full_name: existingData.full_name || "",
-        email: existingData.email || "",
-        phone: existingData.phone || "",
-        address: existingData.address || "",
-        linkedin_url: existingData.linkedin_url || "",
-        personal_website: existingData.personal_website || "",
-        education: (existingData.education as unknown as Education[]) || [],
-        work_experience: (existingData.work_experience as unknown as WorkExperience[]) || [],
-        activities: (existingData.activities as unknown as Activity[]) || [],
-        awards: (existingData.awards as unknown as Award[]) || [],
-        skills: (existingData.skills as unknown as string[]) || [],
-        certifications: (existingData.certifications as unknown as string[]) || [],
-        projects: (existingData.projects as unknown as ResumeData['projects']) || [],
-        languages: (existingData.languages as unknown as ResumeData['languages']) || [],
-      });
-    }
-  }, [existingData]);
+    if (!existing) return;
+    const base = emptyResume();
+    setFormData({
+      ...base,
+      ...Object.fromEntries(Object.entries(existing).filter(([k, v]) => k in base && v != null)),
+    } as ResumeData);
+    setStarted(true);
+  }, [existing]);
 
-  // Save mutation
+  const requestIdRef = useRef<string | null>(null);
+  const ensureRequest = async (): Promise<string> => {
+    if (request) return request.id;
+    if (requestIdRef.current) return requestIdRef.current;
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user || !target) throw new Error("未登录");
+    const { data, error } = await db
+      .from("resume_requests")
+      .insert({ student_id: target, admin_id: teamMode ? auth.user.id : null, status: "pending" })
+      .select("id").single();
+    if (error) throw error;
+    requestIdRef.current = data.id as string;
+    await queryClient.invalidateQueries({ queryKey: ["my-resume-request", target] });
+    return data.id as string;
+  };
+
+  /** Write the form (plus any extra columns) to resume_data; returns the row id. */
+  const persist = async (data: ResumeData, extra: Record<string, unknown> = {}) => {
+    const requestId = await ensureRequest();
+    const row = {
+      request_id: requestId, student_id: target,
+      full_name: data.full_name, email: data.email, phone: data.phone, address: data.address,
+      linkedin_url: data.linkedin_url, personal_website: data.personal_website,
+      education: data.education, work_experience: data.work_experience,
+      activities: graduate ? [] : data.activities, awards: data.awards, skills: data.skills,
+      certifications: data.certifications, projects: data.projects, languages: data.languages,
+      ...extra,
+    };
+    const { data: current } = await db.from("resume_data").select("id").eq("request_id", requestId).maybeSingle();
+    const { error } = current
+      ? await db.from("resume_data").update(row).eq("id", current.id)
+      : await db.from("resume_data").insert(row);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: ["my-resume-data"] });
+    return requestId;
+  };
+
   const saveMutation = useMutation({
     mutationFn: async (submit: boolean) => {
-      const target = await targetId();
-      if (!target || !pendingRequest) throw new Error("无效请求");
-      
-      // Convert to JSON-compatible format for Supabase
-      const dataToSave = {
-        request_id: pendingRequest.id,
-        student_id: target,
-        full_name: formData.full_name,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        linkedin_url: formData.linkedin_url,
-        personal_website: formData.personal_website,
-        education: JSON.parse(JSON.stringify(formData.education)),
-        work_experience: JSON.parse(JSON.stringify(formData.work_experience)),
-        activities: JSON.parse(JSON.stringify(formData.activities)),
-        awards: JSON.parse(JSON.stringify(formData.awards)),
-        skills: JSON.parse(JSON.stringify(formData.skills)),
-        certifications: JSON.parse(JSON.stringify(formData.certifications)),
-        projects: JSON.parse(JSON.stringify(formData.projects)),
-        languages: JSON.parse(JSON.stringify(formData.languages)),
-      };
-      
-      if (existingData) {
-        const { error } = await supabase
-          .from("resume_data")
-          .update(dataToSave)
-          .eq("id", existingData.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("resume_data")
-          .insert(dataToSave);
-        if (error) throw error;
-      }
-      
-      if (submit && pendingRequest.status === "pending") {
-        const { error } = await supabase
-          .from("resume_requests")
-          .update({ status: "submitted" })
-          .eq("id", pendingRequest.id);
+      const requestId = await persist(formData);
+      if (submit && (request?.status ?? "pending") === "pending") {
+        const { error } = await db.from("resume_requests").update({ status: "submitted" }).eq("id", requestId);
         if (error) throw error;
       }
     },
     onSuccess: (_, submit) => {
-      queryClient.invalidateQueries({ queryKey: ["my-resume-data"] });
-      queryClient.invalidateQueries({ queryKey: ["my-resume-request"] });
-      toast.success(submit ? "简历信息已提交" : "保存成功");
+      queryClient.invalidateQueries({ queryKey: ["my-resume-request", target] });
+      toast.success(submit ? "简历信息已提交" : "已保存");
     },
-    onError: (error) => {
-      toast.error("保存失败: " + error.message);
-    },
+    onError: (e: Error) => toast.error("保存失败：" + e.message),
   });
 
-  // Array field helpers
-  const addEducation = () => {
-    setFormData({
-      ...formData,
-      education: [...formData.education, { school: "", degree: "", field: "", startDate: "", endDate: "", gpa: "", description: "" }],
-    });
+  const runOptimize = async (data: ResumeData, context: ResumeContext, language: "en" | "zh") => {
+    setOptimizing(true);
+    try {
+      const md = await optimizeResume(data, context, language);
+      const requestId = await persist(data, { generated_resume: md });
+      if (teamMode) await db.from("resume_requests").update({ status: "generated" }).eq("id", requestId);
+      queryClient.invalidateQueries({ queryKey: ["my-resume-request", target] });
+      return true;
+    } catch (e) {
+      toast.error("优化失败：" + (e instanceof Error ? e.message : ""));
+      return false;
+    } finally {
+      setOptimizing(false);
+    }
   };
 
-  const addWorkExperience = () => {
-    setFormData({
-      ...formData,
-      work_experience: [...formData.work_experience, { company: "", position: "", startDate: "", endDate: "", description: "", achievements: [] }],
-    });
+  const startFill = () => {
+    if (!ctx) return;
+    const { form, filled } = prefillFromProfile(formData, ctx);
+    setFormData(form);
+    setPrefilled(filled);
+    setStarted(true);
   };
 
-  const addActivity = () => {
-    setFormData({
-      ...formData,
-      activities: [...formData.activities, { name: "", role: "", startDate: "", endDate: "", description: "" }],
-    });
+  const onFile = async (file: File | undefined) => {
+    if (!file || !target || !ctx) return;
+    try {
+      setImportStep(0);
+      const stepTimer = setTimeout(() => setImportStep(1), 1200);
+      const { path, data } = await uploadAndImport(target, file, ctx);
+      clearTimeout(stepTimer);
+      setImportStep(2);
+      const base = prefillFromProfile(formData, ctx).form;
+      const merged = mergeImported(base, data);
+      setFormData(merged);
+      setPrefilled([]);
+      setStarted(true);
+      await persist(merged, { uploaded_file_path: path });
+      setImportStep(3);
+      const ok = await runOptimize(merged, ctx, "en");
+      toast.success(ok ? "简历已读取、保存并生成优化版，请核对各栏信息" : "简历已读取并保存，请核对各栏信息");
+    } catch (e) {
+      const code = e instanceof ResumeUploadError ? e.message : "";
+      toast.error(
+        code === "type" ? "请上传 PDF、Word（.docx）或文本文件"
+          : code === "size" ? "文件不能超过 10MB"
+            : code === "empty" ? "没有读到文字内容，请换一个文件，或改用在线填写"
+              : "读取简历失败，请稍后再试，或改用在线填写",
+      );
+    } finally {
+      setImportStep(null);
+      if (fileRef.current) fileRef.current.value = "";
+    }
   };
 
-  const addAward = () => {
-    setFormData({
-      ...formData,
-      awards: [...formData.awards, { name: "", issuer: "", date: "", description: "" }],
-    });
+  const updateItem = (key: ListKey, index: number, field: string, value: string) => {
+    const list = [...(formData[key] as unknown as Record<string, unknown>[])];
+    list[index] = { ...list[index], [field]: value };
+    setFormData({ ...formData, [key]: list });
   };
+  const addItem = (key: ListKey) =>
+    setFormData({ ...formData, [key]: [...(formData[key] as unknown[]), SECTIONS[key].blank()] });
+  const removeItem = (key: keyof ResumeData, index: number) =>
+    setFormData({ ...formData, [key]: (formData[key] as unknown[]).filter((_, i) => i !== index) });
 
-  const removeItem = (field: keyof ResumeData, index: number) => {
-    const arr = formData[field] as any[];
-    setFormData({
-      ...formData,
-      [field]: arr.filter((_, i) => i !== index),
-    });
-  };
-
-  const updateArrayField = <T,>(field: keyof ResumeData, index: number, updates: Partial<T>) => {
-    const arr = [...(formData[field] as T[])];
-    arr[index] = { ...arr[index], ...updates };
-    setFormData({ ...formData, [field]: arr });
-  };
-
-  if (isLoadingRequest) {
-    return <div className="text-center py-8">加载中...</div>;
+  if (loadingRequest || (request && loadingData) || !ctx) {
+    return <div className="py-8 text-center text-sm text-muted-foreground">加载中…</div>;
   }
 
-  if (!pendingRequest) {
-    const start = async () => {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user || !studentId) return;
-      const { error } = await supabase
-        .from("resume_requests")
-        .insert({ student_id: studentId, admin_id: auth.user.id, status: "pending" });
-      if (error) {
-        toast.error("没能创建简历信息表：" + error.message);
-        return;
-      }
-      queryClient.invalidateQueries({ queryKey: ["my-resume-request", studentId] });
-    };
+  const fileInput = (
+    <input ref={fileRef} type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+      className="hidden" onChange={(e) => void onFile(e.target.files?.[0])} />
+  );
+
+  if (importStep !== null) {
     return (
       <Card>
-        <CardContent className="py-8">
-          <div className="text-center text-muted-foreground">
-            <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <p>{teamMode ? "这位学生还没有简历信息表" : "暂无待填写的简历信息表"}</p>
-            {teamMode && (
-              <Button className="mt-4" onClick={() => void start()}>开始填写简历</Button>
-            )}
-          </div>
+        <CardContent className="space-y-3 py-8">
+          {IMPORT_STEPS.map((s, i) => (
+            <p key={s} className={`flex items-center gap-2 text-sm ${i > importStep ? "text-muted-foreground/60" : i < importStep ? "text-muted-foreground" : "font-medium"}`}>
+              {i === importStep ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <span className={`h-2 w-2 rounded-full ${i < importStep ? "bg-primary" : "bg-muted-foreground/30"} mx-1`} />}
+              {s}{i < importStep ? " ✓" : ""}
+            </p>
+          ))}
         </CardContent>
       </Card>
     );
   }
 
+  if (!started) {
+    return (
+      <div className="space-y-4">
+        {fileInput}
+        {request?.message && <p className="text-sm text-muted-foreground">备注：{request.message}</p>}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <button type="button" onClick={startFill}
+            className="rounded-lg border bg-card p-5 text-left transition hover:border-primary/60 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <PencilLine className="mb-3 h-6 w-6 text-primary" />
+            <p className="font-medium">在线填写</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {teamMode ? "老师代填或和学生一起填。" : "一步步填写经历。"}姓名、邮箱、学校等已有信息会自动读取。
+            </p>
+          </button>
+          <button type="button" onClick={() => fileRef.current?.click()}
+            className="rounded-lg border bg-card p-5 text-left transition hover:border-primary/60 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Upload className="mb-3 h-6 w-6 text-primary" />
+            <p className="font-medium">上传已有简历</p>
+            <p className="mt-1 text-sm text-muted-foreground">PDF 或 Word。系统自动读取内容、保存到各栏，并生成优化版。</p>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const listTab = (key: ListKey) => {
+    const sec = SECTIONS[key];
+    const list = formData[key] as unknown as Record<string, unknown>[];
+    return (
+      <TabsContent value={key}>
+        <Card>
+          <CardContent className="space-y-4 pt-6">
+            {list.map((item, index) => (
+              <div key={index} className="space-y-4 rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">{sec.item} {index + 1}</h4>
+                  <Button variant="ghost" size="sm" onClick={() => removeItem(key, index)} aria-label={`删除${sec.item} ${index + 1}`}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {sec.fields.map((f) => (
+                    <div key={f.key} className={`space-y-2 ${f.wide ? "md:col-span-2" : ""}`}>
+                      <Label>{f.label}</Label>
+                      {f.kind === "area" ? (
+                        <Textarea rows={3} value={String(item[f.key] ?? "")} placeholder={f.placeholder}
+                          onChange={(e) => updateItem(key, index, f.key, e.target.value)} />
+                      ) : (
+                        <Input value={String(item[f.key] ?? "")} placeholder={f.kind === "month" ? (f.key === "endDate" ? "如：2024-06 或 至今" : "如：2021-09") : f.placeholder}
+                          onChange={(e) => updateItem(key, index, f.key, e.target.value)} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <Button variant="outline" onClick={() => addItem(key)} className="w-full">
+              <Plus className="mr-2 h-4 w-4" />{sec.add}
+            </Button>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    );
+  };
+
+  const personal: { key: keyof ResumeData; label: string; placeholder: string; type?: string }[] = [
+    { key: "full_name", label: "姓名 *", placeholder: "请输入姓名" },
+    { key: "email", label: "邮箱 *", placeholder: "请输入邮箱", type: "email" },
+    { key: "phone", label: "电话", placeholder: "请输入电话号码" },
+    { key: "address", label: "所在城市/地址", placeholder: "如：Vancouver, BC" },
+    { key: "linkedin_url", label: "LinkedIn", placeholder: "LinkedIn 个人主页链接" },
+    { key: "personal_website", label: "个人网站", placeholder: "个人网站链接" },
+  ];
+
   return (
     <div className="space-y-6">
+      {fileInput}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <CardTitle>填写简历信息</CardTitle>
+              <CardTitle>简历信息</CardTitle>
               <CardDescription>
-                请完整填写以下信息，用于生成专业简历
+                {graduate ? "研究生申请简历：重点写工作/实习、科研和项目经历。" : "填写或核对以下信息，用于生成专业简历。"}
               </CardDescription>
             </div>
-            <Badge variant={pendingRequest.status === "submitted" ? "default" : "secondary"}>
-              {pendingRequest.status === "submitted" ? "已提交" : "待填写"}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                <Upload className="mr-1.5 h-4 w-4" />上传简历重新读取
+              </Button>
+              {request && (
+                <Badge variant={request.status === "pending" ? "secondary" : "default"}>
+                  {request.status === "pending" ? "待填写" : request.status === "submitted" ? "已提交" : "已生成"}
+                </Badge>
+              )}
+            </div>
           </div>
-          {pendingRequest.due_date && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-              <Calendar className="h-4 w-4" />
-              截止日期: {format(new Date(pendingRequest.due_date), "yyyy年MM月dd日")}
+          {request?.due_date && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4" />截止日期：{format(new Date(request.due_date), "yyyy年MM月dd日")}
             </div>
           )}
-          {pendingRequest.message && (
-            <p className="text-sm text-muted-foreground mt-2">备注: {pendingRequest.message}</p>
+          {request?.message && <p className="mt-2 text-sm text-muted-foreground">备注：{request.message}</p>}
+          {prefilled.length > 0 && (
+            <p className="mt-2 flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+              <Info className="h-4 w-4 shrink-0 text-primary" />已从学生资料自动读取姓名、邮箱、学校等信息，请核对后补充其余内容。
+            </p>
           )}
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="personal" className="w-full">
-        <TabsList className="w-full flex-wrap h-auto">
+      <Tabs value={tab} onValueChange={setTab} className="w-full">
+        <TabsList className="h-auto w-full flex-wrap">
           <TabsTrigger value="personal">个人信息</TabsTrigger>
           <TabsTrigger value="education">教育背景</TabsTrigger>
-          <TabsTrigger value="experience">工作经历</TabsTrigger>
-          <TabsTrigger value="activities">课外活动</TabsTrigger>
+          <TabsTrigger value="work_experience">工作/实习</TabsTrigger>
+          {graduate ? <TabsTrigger value="projects">科研/项目</TabsTrigger> : <TabsTrigger value="activities">课外活动</TabsTrigger>}
+          {!graduate && <TabsTrigger value="projects">科研/项目</TabsTrigger>}
           <TabsTrigger value="awards">奖项荣誉</TabsTrigger>
           <TabsTrigger value="skills">技能语言</TabsTrigger>
         </TabsList>
 
         <TabsContent value="personal">
           <Card>
-            <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>姓名 *</Label>
-                  <Input
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    placeholder="请输入姓名"
-                  />
+            <CardContent className="grid grid-cols-1 gap-4 pt-6 md:grid-cols-2">
+              {personal.map((f) => (
+                <div key={f.key} className="space-y-2">
+                  <Label>{f.label}</Label>
+                  <Input type={f.type || "text"} value={String(formData[f.key] ?? "")} placeholder={f.placeholder}
+                    onChange={(e) => setFormData({ ...formData, [f.key]: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label>邮箱 *</Label>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="请输入邮箱"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>电话</Label>
-                  <Input
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="请输入电话号码"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>地址</Label>
-                  <Input
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    placeholder="请输入地址"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>LinkedIn</Label>
-                  <Input
-                    value={formData.linkedin_url}
-                    onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
-                    placeholder="LinkedIn个人主页URL"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>个人网站</Label>
-                  <Input
-                    value={formData.personal_website}
-                    onChange={(e) => setFormData({ ...formData, personal_website: e.target.value })}
-                    placeholder="个人网站URL"
-                  />
-                </div>
-              </div>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="education">
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              {formData.education.map((edu, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">教育经历 {index + 1}</h4>
-                    <Button variant="ghost" size="sm" onClick={() => removeItem("education", index)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>学校名称 *</Label>
-                      <Input
-                        value={edu.school}
-                        onChange={(e) => updateArrayField<Education>("education", index, { school: e.target.value })}
-                        placeholder="学校名称"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>学位/学历</Label>
-                      <Input
-                        value={edu.degree}
-                        onChange={(e) => updateArrayField<Education>("education", index, { degree: e.target.value })}
-                        placeholder="如: 高中、本科"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>专业方向</Label>
-                      <Input
-                        value={edu.field}
-                        onChange={(e) => updateArrayField<Education>("education", index, { field: e.target.value })}
-                        placeholder="专业方向"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>GPA</Label>
-                      <Input
-                        value={edu.gpa || ""}
-                        onChange={(e) => updateArrayField<Education>("education", index, { gpa: e.target.value })}
-                        placeholder="如: 3.8/4.0"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>开始时间</Label>
-                      <Input
-                        type="month"
-                        value={edu.startDate}
-                        onChange={(e) => updateArrayField<Education>("education", index, { startDate: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>结束时间</Label>
-                      <Input
-                        type="month"
-                        value={edu.endDate}
-                        onChange={(e) => updateArrayField<Education>("education", index, { endDate: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>描述</Label>
-                    <Textarea
-                      value={edu.description || ""}
-                      onChange={(e) => updateArrayField<Education>("education", index, { description: e.target.value })}
-                      placeholder="相关课程、成就等"
-                    />
-                  </div>
-                </div>
-              ))}
-              <Button variant="outline" onClick={addEducation} className="w-full">
-                <Plus className="mr-2 h-4 w-4" />
-                添加教育经历
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="experience">
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              {formData.work_experience.map((exp, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">工作/实习经历 {index + 1}</h4>
-                    <Button variant="ghost" size="sm" onClick={() => removeItem("work_experience", index)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>公司/组织名称 *</Label>
-                      <Input
-                        value={exp.company}
-                        onChange={(e) => updateArrayField<WorkExperience>("work_experience", index, { company: e.target.value })}
-                        placeholder="公司名称"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>职位 *</Label>
-                      <Input
-                        value={exp.position}
-                        onChange={(e) => updateArrayField<WorkExperience>("work_experience", index, { position: e.target.value })}
-                        placeholder="职位名称"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>开始时间</Label>
-                      <Input
-                        type="month"
-                        value={exp.startDate}
-                        onChange={(e) => updateArrayField<WorkExperience>("work_experience", index, { startDate: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>结束时间</Label>
-                      <Input
-                        type="month"
-                        value={exp.endDate}
-                        onChange={(e) => updateArrayField<WorkExperience>("work_experience", index, { endDate: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>工作描述</Label>
-                    <Textarea
-                      value={exp.description}
-                      onChange={(e) => updateArrayField<WorkExperience>("work_experience", index, { description: e.target.value })}
-                      placeholder="描述您的职责和成就..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              ))}
-              <Button variant="outline" onClick={addWorkExperience} className="w-full">
-                <Plus className="mr-2 h-4 w-4" />
-                添加工作/实习经历
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="activities">
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              {formData.activities.map((activity, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">课外活动 {index + 1}</h4>
-                    <Button variant="ghost" size="sm" onClick={() => removeItem("activities", index)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>活动名称 *</Label>
-                      <Input
-                        value={activity.name}
-                        onChange={(e) => updateArrayField<Activity>("activities", index, { name: e.target.value })}
-                        placeholder="活动/组织名称"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>角色/职位</Label>
-                      <Input
-                        value={activity.role}
-                        onChange={(e) => updateArrayField<Activity>("activities", index, { role: e.target.value })}
-                        placeholder="您在活动中的角色"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>开始时间</Label>
-                      <Input
-                        type="month"
-                        value={activity.startDate}
-                        onChange={(e) => updateArrayField<Activity>("activities", index, { startDate: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>结束时间</Label>
-                      <Input
-                        type="month"
-                        value={activity.endDate}
-                        onChange={(e) => updateArrayField<Activity>("activities", index, { endDate: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>活动描述</Label>
-                    <Textarea
-                      value={activity.description}
-                      onChange={(e) => updateArrayField<Activity>("activities", index, { description: e.target.value })}
-                      placeholder="描述您的参与和贡献..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              ))}
-              <Button variant="outline" onClick={addActivity} className="w-full">
-                <Plus className="mr-2 h-4 w-4" />
-                添加课外活动
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="awards">
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              {formData.awards.map((award, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">奖项/荣誉 {index + 1}</h4>
-                    <Button variant="ghost" size="sm" onClick={() => removeItem("awards", index)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>奖项名称 *</Label>
-                      <Input
-                        value={award.name}
-                        onChange={(e) => updateArrayField<Award>("awards", index, { name: e.target.value })}
-                        placeholder="奖项名称"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>颁发机构</Label>
-                      <Input
-                        value={award.issuer}
-                        onChange={(e) => updateArrayField<Award>("awards", index, { issuer: e.target.value })}
-                        placeholder="颁发机构"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>获得时间</Label>
-                      <Input
-                        type="month"
-                        value={award.date}
-                        onChange={(e) => updateArrayField<Award>("awards", index, { date: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>描述（可选）</Label>
-                    <Textarea
-                      value={award.description || ""}
-                      onChange={(e) => updateArrayField<Award>("awards", index, { description: e.target.value })}
-                      placeholder="奖项描述..."
-                    />
-                  </div>
-                </div>
-              ))}
-              <Button variant="outline" onClick={addAward} className="w-full">
-                <Plus className="mr-2 h-4 w-4" />
-                添加奖项/荣誉
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {listTab("education")}
+        {listTab("work_experience")}
+        {!graduate && listTab("activities")}
+        {listTab("projects")}
+        {listTab("awards")}
 
         <TabsContent value="skills">
           <Card>
-            <CardContent className="pt-6 space-y-6">
+            <CardContent className="space-y-6 pt-6">
               <div className="space-y-2">
                 <Label>技能（用逗号分隔）</Label>
-                <Textarea
-                  value={formData.skills.join(", ")}
-                  onChange={(e) => setFormData({ ...formData, skills: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
-                  placeholder="如: Python, JavaScript, 数据分析, 项目管理"
-                  rows={2}
-                />
+                <Textarea rows={2} value={formData.skills.join(", ")} placeholder="如：Python, Excel, 数据分析, 项目管理"
+                  onChange={(e) => setFormData({ ...formData, skills: e.target.value.split(/[,，]/).map((s) => s.trim()).filter(Boolean) })} />
               </div>
-              
               <div className="space-y-2">
                 <Label>语言能力</Label>
                 {formData.languages.map((lang, index) => (
-                  <div key={index} className="flex gap-2 items-center">
-                    <Input
-                      placeholder="语言"
-                      value={lang.language}
-                      onChange={(e) => {
-                        const newLangs = [...formData.languages];
-                        newLangs[index] = { ...newLangs[index], language: e.target.value };
-                        setFormData({ ...formData, languages: newLangs });
-                      }}
-                    />
-                    <Input
-                      placeholder="水平"
-                      value={lang.proficiency}
-                      onChange={(e) => {
-                        const newLangs = [...formData.languages];
-                        newLangs[index] = { ...newLangs[index], proficiency: e.target.value };
-                        setFormData({ ...formData, languages: newLangs });
-                      }}
-                    />
-                    <Button variant="ghost" size="sm" onClick={() => removeItem("languages", index)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <div key={index} className="flex items-center gap-2">
+                    <Input placeholder="语言" value={lang.language} onChange={(e) => {
+                      const next = [...formData.languages]; next[index] = { ...next[index], language: e.target.value };
+                      setFormData({ ...formData, languages: next });
+                    }} />
+                    <Input placeholder="水平" value={lang.proficiency} onChange={(e) => {
+                      const next = [...formData.languages]; next[index] = { ...next[index], proficiency: e.target.value };
+                      setFormData({ ...formData, languages: next });
+                    }} />
+                    <Button variant="ghost" size="sm" onClick={() => removeItem("languages", index)} aria-label="删除语言"><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFormData({ ...formData, languages: [...formData.languages, { language: "", proficiency: "" }] })}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  添加语言
+                <Button variant="outline" size="sm" onClick={() => setFormData({ ...formData, languages: [...formData.languages, { language: "", proficiency: "" }] })}>
+                  <Plus className="mr-2 h-4 w-4" />添加语言
                 </Button>
               </div>
-              
               <div className="space-y-2">
-                <Label>证书（用逗号分隔）</Label>
-                <Textarea
-                  value={formData.certifications.join(", ")}
-                  onChange={(e) => setFormData({ ...formData, certifications: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
-                  placeholder="如: AWS认证, Google Analytics认证"
-                  rows={2}
-                />
+                <Label>{graduate ? "证书与考试（用逗号分隔）" : "证书（用逗号分隔）"}</Label>
+                <Textarea rows={2} value={formData.certifications.join(", ")}
+                  placeholder={graduate ? "如：GMAT 720, TOEFL 108, CFA Level I" : "如：AWS 认证"}
+                  onChange={(e) => setFormData({ ...formData, certifications: e.target.value.split(/[,，]/).map((s) => s.trim()).filter(Boolean) })} />
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      <div className="flex gap-4 justify-end">
-        <Button
-          variant="outline"
-          onClick={() => saveMutation.mutate(false)}
-          disabled={saveMutation.isPending}
-        >
-          <Save className="mr-2 h-4 w-4" />
-          保存草稿
+      <div className="flex justify-end gap-3">
+        <Button variant="outline" onClick={() => saveMutation.mutate(false)} disabled={saveMutation.isPending}>
+          <Save className="mr-2 h-4 w-4" />保存
         </Button>
-        <Button
-          onClick={() => saveMutation.mutate(true)}
-          disabled={saveMutation.isPending || (!teamMode && pendingRequest.status === "submitted")}
-        >
-          {saveMutation.isPending ? "提交中..." : "提交信息"}
-        </Button>
+        {!teamMode && (request?.status ?? "pending") === "pending" && (
+          <Button onClick={() => saveMutation.mutate(true)} disabled={saveMutation.isPending}>
+            {saveMutation.isPending ? "提交中…" : "提交给老师"}
+          </Button>
+        )}
       </div>
+
+      <OptimizedResume
+        markdown={existing?.generated_resume || ""}
+        busy={optimizing}
+        onOptimize={(language) => void runOptimize(formData, ctx, language)}
+        onSave={async (md) => {
+          try {
+            await persist(formData, { generated_resume: md });
+            toast.success("已保存");
+          } catch (e) {
+            toast.error("保存失败：" + (e instanceof Error ? e.message : ""));
+          }
+        }}
+        fileName={`${formData.full_name || "Resume"} Resume`}
+        originalPath={existing?.uploaded_file_path || null}
+      />
     </div>
   );
 }

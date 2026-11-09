@@ -208,7 +208,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
 
         <TabsContent value="materials" className="mt-6 space-y-6">
           <StudentProfile profile={profile} />
-          <ActivitiesSection activities={activities || []} />
+          {track.applicantType !== "graduate" && <ActivitiesSection activities={activities || []} />}
           <SharedFolderSection studentId={studentId} />
           <StudentCustomQuestionsCard studentId={studentId} />
           {canManage && (
