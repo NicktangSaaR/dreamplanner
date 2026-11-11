@@ -13,6 +13,7 @@ import { useBankQuestions, useBanks, useCustomQuestionMutations, useCustomQuesti
 import {
   PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, drawFromBlueprint, drawRandom, recentQuestionKeys, rememberQuestions, fillPlaceholders, formatSeconds,
   type InterviewBank, type QuestionType, type SessionQuestion, type SessionSettings,
+  sectionPools,
 } from "./types";
 import type { SessionMeta } from "./sessionLog";
 
@@ -244,7 +245,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
                   <span className="mt-2 flex flex-wrap gap-1.5">
                     {b.blueprint.map((sec, i) => (
                       <span key={i} className="rounded-sm bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                        {poolTitle[sec.pool_id] ?? "?"} ×{sec.count} · {formatSeconds(sec.prep)}/{formatSeconds(sec.response)}
+                        {sectionPools(sec).map((id) => poolTitle[id] ?? "?").join(" / ")} ×{sec.count} · {formatSeconds(sec.prep)}/{formatSeconds(sec.response)}
                       </span>
                     ))}
                   </span>

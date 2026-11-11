@@ -9,11 +9,14 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { useBankAdmin, useBankQuestions, useBanks, type BankInput } from "../useInterviewData";
 import {
   PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, blueprintTotal, formatSeconds,
   type BankKind, type BankQuestion, type BlueprintSection, type InterviewBank, type QuestionType,
+  sectionPools, withPools,
 } from "../types";
 import BulkQuestionInput, { useBulkQuestions } from "../BulkQuestionInput";
 
@@ -139,6 +142,53 @@ function PoolDialog({
 
 // ---------------------------------------------------------- school form ---
 
+/** Pick one or more pools for a part; with several, its questions are drawn from all of them. */
+function PoolPicker({
+  pools, questions, value, onChange,
+}: {
+  pools: InterviewBank[];
+  questions: Record<string, BankQuestion[]>;
+  value: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const { t } = useLanguage();
+  const names = value.map((id) => pools.find((p) => p.id === id)?.title ?? t("mi3.missingPool"));
+  const total = new Set(value.flatMap((id) => (questions[id] ?? []).map((q) => q.id))).size;
+  const toggle = (id: string, on: boolean) => {
+    const next = on ? [...value, id] : value.filter((x) => x !== id);
+    if (next.length) onChange(next); // a part needs at least one pool
+  };
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="h-9 w-52 justify-between px-3 font-normal">
+          <span className="truncate text-left">
+            {names.length === 0 ? t("mi3.pickPool") : names.length === 1 ? names[0] : t("mi3.poolsMixed", { first: names[0], n: names.length - 1 })}
+          </span>
+          <span className="ml-2 shrink-0 text-xs text-muted-foreground">{total}</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 p-2">
+        <p className="px-1 pb-2 text-xs text-muted-foreground">{t("mi3.poolsHint")}</p>
+        <ul className="max-h-72 space-y-0.5 overflow-y-auto">
+          {pools.map((p) => {
+            const on = value.includes(p.id);
+            return (
+              <li key={p.id}>
+                <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1.5 text-sm hover:bg-muted">
+                  <Checkbox checked={on} disabled={on && value.length === 1} onCheckedChange={(c) => toggle(p.id, c === true)} />
+                  <span className="flex-1">{p.title}</span>
+                  <span className="text-xs text-muted-foreground">{questions[p.id]?.length ?? 0}</span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 const KEEP = "keep";
 
 function SchoolDialog({
@@ -164,7 +214,7 @@ function SchoolDialog({
     setForm({ ...form, blueprint: form.blueprint.map((s, j) => (j === i ? { ...s, ...patch } : s)) });
   const addSection = () => {
     const last = form.blueprint[form.blueprint.length - 1];
-    const used = new Set(form.blueprint.map((s) => s.pool_id));
+    const used = new Set(form.blueprint.flatMap(sectionPools));
     const next = pools.find((p) => !used.has(p.id)) ?? pools[0];
     if (!next) return;
     setForm({
@@ -180,10 +230,15 @@ function SchoolDialog({
     setForm({ ...form, blueprint: b });
   };
 
-  // Warn when the pools cannot supply what the blueprint asks for.
-  const asked: Record<string, number> = {};
-  for (const s of form.blueprint) asked[s.pool_id] = (asked[s.pool_id] ?? 0) + s.count;
-  const short = Object.entries(asked).filter(([id, n]) => (questions[id]?.length ?? 0) < n);
+  // Warn when the pools cannot supply what the blueprint asks for: parts
+  // drawing from the same set of pools share its questions.
+  const asked: Record<string, { ids: string[]; n: number }> = {};
+  for (const s of form.blueprint) {
+    const ids = sectionPools(s);
+    const k = [...ids].sort().join("+");
+    asked[k] = { ids, n: (asked[k]?.n ?? 0) + s.count };
+  }
+  const short = Object.values(asked).filter(({ ids, n }) => new Set(ids.flatMap((id) => (questions[id] ?? []).map((q) => q.id))).size < n);
 
   const valid = !!form.school?.trim() && form.blueprint.length > 0;
   const submit = async () => {
@@ -239,14 +294,12 @@ function SchoolDialog({
               {form.blueprint.map((sec, i) => (
                 <li key={i} className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 p-2">
                   <span className="w-5 text-center text-sm text-muted-foreground">{i + 1}</span>
-                  <Select value={sec.pool_id} onValueChange={(v) => setSection(i, { pool_id: v })}>
-                    <SelectTrigger className="w-44"><SelectValue placeholder={t("mi3.pickPool")} /></SelectTrigger>
-                    <SelectContent>
-                      {pools.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>{p.title}（{questions[p.id]?.length ?? 0}）</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <PoolPicker
+                    pools={pools}
+                    questions={questions}
+                    value={sectionPools(sec)}
+                    onChange={(ids) => setForm({ ...form, blueprint: form.blueprint.map((s, j) => (j === i ? withPools(s, ids) : s)) })}
+                  />
                   <Select value={String(sec.count)} onValueChange={(v) => setSection(i, { count: Number(v) })}>
                     <SelectTrigger className="w-[92px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -288,7 +341,7 @@ function SchoolDialog({
             </p>
             {short.length > 0 && (
               <p className="text-sm text-destructive">
-                {t("mi3.shortWarning", { pools: short.map(([id]) => pools.find((p) => p.id === id)?.title ?? "?").join("、") })}
+                {t("mi3.shortWarning", { pools: short.map(({ ids }) => ids.map((id) => pools.find((p) => p.id === id)?.title ?? "?").join(" + ")).join("、") })}
               </p>
             )}
           </div>
@@ -476,7 +529,7 @@ export default function InterviewBankAdmin() {
     .filter((b) => b.kind === "school")
     .sort((a, b) => (a.school || a.title).localeCompare(b.school || b.title));
   const poolTitle = Object.fromEntries(pools.map((p) => [p.id, p.title]));
-  const usedBy = (poolId: string) => schools.filter((s) => s.blueprint.some((sec) => sec.pool_id === poolId));
+  const usedBy = (poolId: string) => schools.filter((s) => s.blueprint.some((sec) => sectionPools(sec).includes(poolId)));
 
   const removeBank = async (bank: InterviewBank) => {
     let msg: string;
@@ -575,7 +628,7 @@ export default function InterviewBankAdmin() {
                     <ol className="mt-3 flex flex-wrap gap-2">
                       {bank.blueprint.map((sec, i) => (
                         <li key={i} className="rounded-md border bg-muted/30 px-2.5 py-1 text-xs">
-                          <span className="font-medium">{i + 1}. {poolTitle[sec.pool_id] ?? t("mi3.missingPool")}</span>
+                          <span className="font-medium">{i + 1}. {sectionPools(sec).map((id) => poolTitle[id] ?? t("mi3.missingPool")).join(" / ")}</span>
                           <span className="text-muted-foreground">
                             {" "}×{sec.count} · {sec.question_type ? t(sec.question_type === "written" ? "mi.written" : "mi.video") + " · " : ""}
                             {formatSeconds(sec.prep)} / {formatSeconds(sec.response)}

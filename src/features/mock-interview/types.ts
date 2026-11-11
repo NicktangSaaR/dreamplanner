@@ -2,9 +2,15 @@ export type QuestionType = "video" | "written";
 
 export type BankKind = "pool" | "school";
 
-/** One part of a school interview: draw `count` questions from a shared pool. */
+/**
+ * One part of a school interview: draw `count` questions from one shared pool,
+ * or at random from several pools together (`pool_ids`).
+ */
 export interface BlueprintSection {
+  /** The first pool; kept so older saved interviews keep working. */
   pool_id: string;
+  /** All pools this part draws from (when it uses more than one). */
+  pool_ids?: string[];
   count: number;
   /** null = keep each question's own type */
   question_type: QuestionType | null;
@@ -159,9 +165,19 @@ export function freshFirst<T extends { key: string }>(list: T[], recent: Set<str
   return [...mixed.filter((q) => !recent.has(q.key)), ...mixed.filter((q) => recent.has(q.key))];
 }
 
+/** The pools a section draws from. */
+export const sectionPools = (sec: BlueprintSection): string[] =>
+  sec.pool_ids?.length ? sec.pool_ids : sec.pool_id ? [sec.pool_id] : [];
+
+/** Set a section's pools (first one also stored as `pool_id`). */
+export const withPools = (sec: BlueprintSection, ids: string[]): BlueprintSection => {
+  const { pool_ids: _old, ...rest } = sec;
+  return ids.length > 1 ? { ...rest, pool_id: ids[0], pool_ids: ids } : { ...rest, pool_id: ids[0] ?? "" };
+};
+
 /**
  * Build a school interview: for each section, draw random questions from its
- * pool. A question is never used twice in one interview, even when several
+ * pool(s) — several pools are mixed into one draw. A question is never used twice in one interview, even when several
  * sections draw from the same pool or the same text sits in two pools.
  */
 export function drawFromBlueprint(
@@ -173,7 +189,7 @@ export function drawFromBlueprint(
   const usedTexts = new Set<string>();
   const out: SessionQuestion[] = [];
   for (const sec of school.blueprint) {
-    const pool = (questionsByPool[sec.pool_id] ?? []).map((q) => ({ ...q, key: `bank:${q.id}` }));
+    const pool = sectionPools(sec).flatMap((id) => questionsByPool[id] ?? []).map((q) => ({ ...q, key: `bank:${q.id}` }));
     let taken = 0;
     for (const q of freshFirst(pool, recent)) {
       if (taken >= sec.count) break;
@@ -210,7 +226,6 @@ export function drawRandom(list: SessionQuestion[], n: number, recent: Set<strin
 
 /** How many questions a blueprint can actually draw with the pools as they are now. */
 export function blueprintAvailable(school: InterviewBank, questionsByPool: Record<string, BankQuestion[]>): number {
-  const asked: Record<string, number> = {};
-  for (const s of school.blueprint) asked[s.pool_id] = (asked[s.pool_id] ?? 0) + s.count;
-  return Object.entries(asked).reduce((n, [pool, want]) => n + Math.min(want, questionsByPool[pool]?.length ?? 0), 0);
+  // a dry run of the real draw, so shared and overlapping pools are counted right
+  return drawFromBlueprint({ ...school, sim_shuffle: false }, questionsByPool).length;
 }
