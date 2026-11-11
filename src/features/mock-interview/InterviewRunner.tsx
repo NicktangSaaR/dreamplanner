@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Volume2 } from "lucide-react";
+import { readAloud } from "./readAloud";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { fillPlaceholders, formatSeconds, type Answer, type SessionQuestion, type SessionSettings } from "./types";
 
-type Phase = "check" | "prep" | "answer" | "done";
+/** "reading": the question is read aloud twice; prep time starts after. */
+type Phase = "check" | "reading" | "prep" | "answer" | "done";
 type CameraState = "pending" | "ready" | "denied" | "missing" | "busy" | "unsupported" | "skipped";
 
 interface Props {
@@ -65,6 +68,8 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
   const [written, setWritten] = useState("");
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
+  const [reading, setReading] = useState(1);
+  const stopReading = useRef<() => void>(() => {});
 
   const streamRef = useRef<MediaStream | null>(null);
   const liveRef = useRef<HTMLVideoElement | null>(null);
@@ -104,6 +109,7 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
   useEffect(() => {
     connectCamera();
     return () => {
+      stopReading.current();
       if (recorderRef.current?.state === "recording") recorderRef.current.stop();
       streamRef.current?.getTracks().forEach((tr) => tr.stop());
     };
@@ -162,23 +168,40 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
     });
 
   // ------------------------------------------------------------ phases ---
-  const beginPrep = useCallback(() => {
-    setPlaybackUrl(null);
-    setWritten("");
-    setAttempts(0);
+  /** Prep countdown, once the question has been read. */
+  const startPrep = () => {
+    stopReading.current();
     if (question.prep > 0) {
       setPhase("prep");
+      setNow(Date.now()); // the clock doesn't tick while the question is read
       setEndsAt(Date.now() + question.prep * 1000);
     } else {
       beginAnswer();
     }
+  };
+
+  /** New question: read it aloud twice, then start the prep countdown. */
+  const beginPrep = useCallback(() => {
+    setPlaybackUrl(null);
+    setWritten("");
+    setAttempts(0);
+    setEndsAt(null);
+    setPhase("reading");
+    setReading(1);
+    stopReading.current = readAloud(fillPlaceholders(question.text, settings.school, settings.program), {
+      times: 2,
+      onRead: setReading,
+      onDone: startPrep,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [question]);
 
   const beginAnswer = () => {
+    stopReading.current();
     setPlaybackUrl(null);
     setAttempts((a) => a + 1);
     setPhase("answer");
+    setNow(Date.now());
     setEndsAt(Date.now() + question.response * 1000);
     if (!isWritten) startRecording();
   };
@@ -232,6 +255,7 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
 
   const handleExit = () => {
     if (window.confirm(t("mi.exitConfirm"))) {
+      stopReading.current();
       const done = [...answersRef.current];
       done.forEach((a) => a.videoUrl && URL.revokeObjectURL(a.videoUrl));
       onExit(done);
@@ -247,7 +271,8 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
   const cameraProblem = camera !== "pending" && camera !== "ready" && camera !== "skipped";
   const text = fillPlaceholders(question.text, settings.school, settings.program);
   const phaseLabel =
-    phase === "prep" ? t("mi.preparing")
+    phase === "reading" ? t("mi.reading", { n: reading })
+    : phase === "prep" ? t("mi.preparing")
     : phase === "answer" ? (isWritten ? t("mi.writing") : t("mi.recording"))
     : phase === "done" ? t("mi.answered") : t("mi.cameraCheck");
   const ringTotal = phase === "prep" ? question.prep : question.response;
@@ -288,7 +313,18 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
               <p className="mt-3 leading-relaxed text-muted-foreground">{t("mi.cameraCheckBody")}</p>
             </>
           ) : (
-            <p className="mt-3 font-serif text-xl leading-relaxed text-foreground sm:text-2xl">{text}</p>
+            (() => {
+              // "Do you agree or disagree with the following statement: …" — the statement on its own line
+              const m = text.match(/^(.*?following statement\s*[:：])\s*(.+)$/is);
+              return m ? (
+                <>
+                  <p className="mt-3 text-base text-muted-foreground">{m[1]}</p>
+                  <blockquote className="mt-3 border-l-4 border-brass pl-4 font-serif text-xl leading-relaxed text-foreground sm:text-2xl">{m[2]}</blockquote>
+                </>
+              ) : (
+                <p className="mt-3 font-serif text-xl leading-relaxed text-foreground sm:text-2xl">{text}</p>
+              );
+            })()
           )}
           <dl className="mt-6 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-md bg-muted/50 px-3 py-2">
@@ -341,7 +377,11 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
               <Ring remaining={remaining} total={ringTotal} tone={phase === "prep" ? "prep" : "rec"} />
             )}
             <div className="min-w-0 flex-1">
-              <div className="font-semibold">{phaseLabel}</div>
+              <div className="flex items-center gap-2 font-semibold">
+                {phase === "reading" && <Volume2 className="h-4 w-4 animate-pulse text-brass" aria-hidden />}
+                {phaseLabel}
+              </div>
+              {phase === "reading" && <div className="text-xs text-muted-foreground">{t("mi.readingHint")}</div>}
             </div>
             <div className="flex flex-wrap gap-2">
               {phase === "check" && !started && (
@@ -357,6 +397,7 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
                   </Button>
                 </>
               )}
+              {phase === "reading" && <Button variant="outline" onClick={startPrep}>{t("mi.skipReading")}</Button>}
               {phase === "prep" && <Button onClick={beginAnswer}>{t("mi.startNow")}</Button>}
               {phase === "answer" && <Button onClick={finishAnswer}>{t("mi.finish")}</Button>}
               {phase === "done" && (
