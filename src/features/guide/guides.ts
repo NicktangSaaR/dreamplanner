@@ -18,8 +18,8 @@ export const STUDENT_HOME_GUIDE: TourStep[] = [
   },
   {
     target: "student-todo",
-    zh: { title: "待办和目标", body: "顾问布置的任务、你自己添加的待办和本季目标都在这一个列表里，有截止日期的按日期排在前面。完成后点左边的圆圈打勾。\n顾问布置的任务如果需要延期，点任务旁的「申请延期」，顾问同意后日期会自动更新。" },
-    en: { title: "To-dos and goals", body: "Tasks from your counselor, your own to-dos and this quarter's goals in one list, dated items first. Tick the circle when one is done.\nNeed more time on a counselor's task? Use “Ask for more time”; the date updates once they agree." },
+    zh: { title: "要做的事", body: "顾问布置的任务、你自己添加的待办和本季目标都在这一个列表里，有截止日期的按日期排在前面。完成后点左边的圆圈打勾。\n顾问布置的任务如果需要延期，点任务旁的「申请延期」，顾问同意后日期会自动更新。" },
+    en: { title: "To do", body: "Tasks from your counselor, your own to-dos and this quarter's goals in one list, dated items first. Tick the circle when one is done.\nNeed more time on a counselor's task? Use “Ask for more time”; the date updates once they agree." },
   },
   {
     target: "student-add",
@@ -28,7 +28,7 @@ export const STUDENT_HOME_GUIDE: TourStep[] = [
   },
   {
     target: "student-shared",
-    zh: { title: "顾问分享给你的资料", body: "规划方案、会议纪要、规划报告和共享文件夹都会出现在这里，点开就能查看或下载。" },
+    zh: { title: "顾问分享给我的", body: "规划方案、会议纪要、规划报告和共享文件夹都会出现在这里，点开就能查看或下载。" },
     en: { title: "From your counselor", body: "Your plan, meeting notes, planning reports and shared folder appear here. Open one to read or download it." },
   },
   {
@@ -56,12 +56,12 @@ export const COUNSELOR_HOME_GUIDE: TourStep[] = [
   },
   {
     target: "invite-student",
-    zh: { title: "邀请学生", body: "输入新学生的邮箱发送邀请，学生通过邀请注册后会自动关联到你。已注册的学生也可以自己选择你作为顾问。" },
-    en: { title: "Invite a student", body: "Enter a new student's email to invite them; they're linked to you when they sign up through it. Registered students can also pick you as their counselor." },
+    zh: { title: "邀请学生", body: "输入新学生的邮箱，系统会给学生发一封注册邀请邮件。学生注册后，在主页点「选择我的顾问」选择你，就完成关联。" },
+    en: { title: "Invite a student", body: "Enter a new student's email and they get a sign-up invitation. Once registered, they click “Choose my counselor” on their home page and pick you." },
   },
   {
     target: "counselor-attention",
-    zh: { title: "需要关注", body: "系统自动列出需要你处理的事：逾期的待办、即将到期的待办和规划节点、逾期未上传的成绩单、很久没有更新的学生。红色最紧急。" },
+    zh: { title: "需要处理", body: "系统自动列出需要你处理的事：逾期的待办、即将到期的待办和规划节点、逾期未上传的成绩单、很久没有更新的学生。红色最紧急。" },
     en: { title: "Needs attention", body: "What needs you now: overdue and upcoming to-dos and milestones, missing report cards, students who've gone quiet. Red is most urgent." },
   },
   {
@@ -105,25 +105,25 @@ export const COUNSELOR_STUDENT_GUIDE: TourStep[] = [
   },
   {
     target: "tab-materials",
-    zh: { title: "材料", body: "学生资料、课外活动、共享文件夹、为学生定制的面试题和简历都在这里。" },
-    en: { title: "Materials", body: "Profile, activities, the shared folder, custom interview questions for this student and the résumé." },
+    zh: { title: "资料", body: "学生的基本资料、课外活动、共享文件夹、学生自己添加的面试题和简历都在这里。" },
+    en: { title: "Materials", body: "Profile, activities, the shared folder, the student's own interview questions and the résumé." },
   },
 ];
 
 /** Mock interview setup. */
 export const MOCK_INTERVIEW_GUIDE: TourStep[] = [
   {
-    zh: { title: "模拟面试怎么用", body: "按真实录像面试的形式练习：每道题会先朗读两遍，然后开始准备计时，再自动录像作答。练完可以回看录像。" },
+    zh: { title: "模拟面试怎么用", body: "按真实录像面试的形式练习：每道题会先朗读两遍，然后开始准备时间倒计时，倒计时结束自动录像回答。练完可以回看录像。" },
     en: { title: "How mock interviews work", body: "Practise like the real video interviews: each question is read aloud twice, then prep time starts and your answer is recorded. Watch it back afterwards." },
   },
   {
     target: "mi-mode",
-    zh: { title: "两种模式", body: "「学校模拟考试」完全按某所学校的面试形式出题和计时，最接近真实。\n「自由练习」可以自己挑题库、挑题目、调整时间，适合针对性练习。" },
-    en: { title: "Two modes", body: "“School simulation” follows a school's real format and timing — closest to the real thing.\n“Free practice” lets you choose pools, questions and timing." },
+    zh: { title: "两种模式", body: "「全真模拟」完全按某所学校的面试形式出题和计时，最接近真实面试。\n「自选练习」可以自己挑题目来源、挑题目、调整时间，适合针对性练习。" },
+    en: { title: "Two modes", body: "“Full simulation” follows a school's real format and timing — closest to the real thing.\n“Practice” lets you choose where questions come from, which ones, and the timing." },
   },
   {
     target: "mi-content",
-    zh: { title: "选择学校或题目", body: "模拟考试：选择要练的学校和项目，系统每次随机组卷。\n自由练习：先选题库，再选「单题 / 多选 / 随机」，左边可以设置准备时间、作答时间和计时方式。" },
+    zh: { title: "选择学校或题目", body: "全真模拟：选择要练的学校和项目，每次随机抽题组成一场面试。\n自选练习：先选题目来源，再选「一道题 / 多选 / 随机」；左边可以设置准备时间、回答时间和计时方式。" },
     en: { title: "Pick a school or questions", body: "Simulation: pick the school and programme; a fresh set is drawn each time.\nPractice: pick a pool, then one, several or random questions; set timing on the left." },
   },
   {

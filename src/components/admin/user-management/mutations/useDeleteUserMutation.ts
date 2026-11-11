@@ -67,7 +67,7 @@ export const useDeleteUserMutation = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      const userType = data.user_type === 'counselor' ? '辅导员' : '学生';
+      const userType = data.user_type === 'counselor' ? '顾问' : '学生';
       toast.success(`${userType}${data.full_name ? ` ${data.full_name}` : ''} 已成功删除`);
     },
     onError: (error: Error) => {

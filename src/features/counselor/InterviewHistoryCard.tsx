@@ -90,7 +90,7 @@ export default function InterviewHistoryCard({ studentId }: { studentId: string 
                   <button className="flex w-full items-start gap-2 px-3 py-2.5 text-left" onClick={() => setOpenId(open ? null : s.id)} aria-expanded={open}>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">
-                        {s.mode === "simulation" ? L("全真模拟", "Full simulation") : L("专项练习", "Practice")}
+                        {s.mode === "simulation" ? L("全真模拟", "Full simulation") : L("自选练习", "Practice")}
                         {s.title ? <span className="font-normal text-muted-foreground"> · {s.title}</span> : null}
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">{when(s.started_at)} · {L(`${s.total} 题`, `${s.total} questions`)}</p>

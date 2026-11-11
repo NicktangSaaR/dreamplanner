@@ -27,7 +27,7 @@ export default function ProtectedRoute({
 
       // Only check user type if both allowedUserTypes and profile exist
       if (allowedUserTypes && profile && !allowedUserTypes.includes(profile.user_type)) {
-        toast.error("您没有权限访问此页面");
+        toast.error("你没有权限访问这个页面");
         navigate("/");
       }
     }

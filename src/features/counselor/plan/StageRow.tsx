@@ -158,7 +158,7 @@ export default function StageRow({
           {phase?.phase_start_date && (
             <span className="text-muted-foreground">
               {L(`${fmtDate(phase.phase_start_date, lang)} 开始`, `since ${fmtDate(phase.phase_start_date, lang)}`)}
-              {phase.compression_mode && ` · ${L("压缩模式", "compressed")}`}
+              {phase.compression_mode && ` · ${L("压缩进度", "compressed timeline")}`}
             </span>
           )}
           <span className="flex min-w-0 items-center gap-1.5">
@@ -295,7 +295,7 @@ export default function StageRow({
               </div>
             </div>
             <label className="flex items-center gap-3">
-              <Switch checked={!!form.compression_mode} onCheckedChange={(v) => setForm({ ...form, compression_mode: v })} /> {L("压缩模式", "Compressed timeline")}
+              <Switch checked={!!form.compression_mode} onCheckedChange={(v) => setForm({ ...form, compression_mode: v })} /> {L("压缩进度（起步较晚时加快节奏）", "Compressed timeline")}
             </label>
             <div className="space-y-1.5">
               <Label>{L("阶段备注", "Notes")}</Label>

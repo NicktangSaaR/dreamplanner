@@ -40,7 +40,7 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
       if (existingInvitation) {
         const expirationDate = new Date(existingInvitation.expires_at);
         const remainingTime = Math.ceil((expirationDate.getTime() - new Date().getTime()) / 1000);
-        toast.error(`请等待 ${remainingTime} 秒后再发送邀请。`);
+        toast.error(`刚刚已经给这个邮箱发过邀请，请 ${remainingTime} 秒后再试。`);
         return;
       }
 
@@ -52,7 +52,7 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
         .maybeSingle();
 
       if (userProfile) {
-        toast.error("此邮箱已在系统中注册。");
+        toast.error("这个邮箱已经注册过了。请让学生登录后，在主页点「选择我的顾问」选择你。");
         return;
       }
 
@@ -68,7 +68,7 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
 
       if (invitationError) {
         console.error("Error creating invitation:", invitationError);
-        toast.error("发送邀请失败，请重试。");
+        toast.error("没能发送邀请，请稍后再试。");
         return;
       }
 
@@ -76,22 +76,22 @@ export default function InviteStudentForm({ counselorId, onSuccess }: InviteStud
         body: { 
           email, 
           token,
-          expirationDate: new Date(Date.now() + 60000).toISOString() // 1 minute from now
+          expirationDate: new Date(Date.now() + 60000).toISOString() // only marks this as an invitation email
         }
       });
 
       if (emailError) {
         console.error("Error sending invitation email:", emailError);
-        toast.error("发送邀请邮件失败，请重试。");
+        toast.error("邀请邮件没能发出，请稍后再试。");
         return;
       }
 
-      toast.success("邀请发送成功！链接将在1分钟后过期。");
+      toast.success("邀请邮件已发送。学生注册后，在主页选择你作为顾问就完成关联。");
       setEmail("");
       onSuccess();
     } catch (error) {
       console.error("Error inviting student:", error);
-      toast.error("发生意外错误，请重试。");
+      toast.error("出了点问题，请稍后再试。");
     } finally {
       setIsInviting(false);
     }

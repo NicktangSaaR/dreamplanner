@@ -83,7 +83,8 @@ export const useTodoReminder = (studentId: string | undefined) => {
         toast.error(errorMessage);
       } else {
         // Handle other types of errors
-        toast.error(`提醒失败: ${err.message || '未知错误'}`);
+        console.error("Reminder failed:", err);
+        toast.error("提醒邮件没能发出，请稍后再试。如果一直不行，请联系网站管理员。");
       }
       
       throw err;

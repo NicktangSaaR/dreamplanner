@@ -25,7 +25,7 @@ export default function ProfileWarnings({ profile, isLoading }: ProfileWarningsP
             title: "信息未完善",
             description: (
               <div className="flex flex-col gap-4">
-                <p>请完善学校信息，这对于您的规划非常重要</p>
+                <p>请补充你的学校信息，顾问做规划时需要用到</p>
                 <Button 
                   onClick={() => navigate('/student-profile')}
                   variant="secondary"

@@ -57,7 +57,7 @@ export default function StudentEvaluationManager() {
     : (groupedEvaluations[activeUniversityType] || []);
 
   if (!isAdmin) {
-    return <div className="p-4 text-center">您没有访问该页面的权限</div>;
+    return <div className="p-4 text-center">你没有权限访问这个页面</div>;
   }
 
   return (
