@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { BankKind, BankQuestion, BlueprintSection, CustomQuestion, InterviewBank, QuestionType } from "./types";
+import { sectionPools, withPools, type BankKind, type BankQuestion, type BlueprintSection, type CustomQuestion, type InterviewBank, type QuestionType } from "./types";
 
 // The new columns/table are not in the generated Supabase types yet, so the
 // queries go through an untyped client view and are typed at the edges.
@@ -152,16 +152,14 @@ export function useBankAdmin() {
       const { error } = await db.from("mock_interview_questions").delete().eq("id", id);
       if (error) throw error;
       // Take a deleted pool out of every school interview that drew from it.
-      const { data: schools } = await db
-        .from("mock_interview_questions")
-        .select("id, blueprint")
-        .eq("kind", "school")
-        .contains("blueprint", [{ pool_id: id }]);
+      // A part that also drew from other pools keeps those.
+      const { data: schools } = await db.from("mock_interview_questions").select("id, blueprint").eq("kind", "school");
       for (const s of (schools ?? []) as { id: string; blueprint: BlueprintSection[] }[]) {
-        await db
-          .from("mock_interview_questions")
-          .update({ blueprint: s.blueprint.filter((sec) => sec.pool_id !== id) })
-          .eq("id", s.id);
+        if (!s.blueprint.some((sec) => sectionPools(sec).includes(id))) continue;
+        const blueprint = s.blueprint
+          .map((sec) => withPools(sec, sectionPools(sec).filter((p) => p !== id)))
+          .filter((sec) => sec.pool_id);
+        await db.from("mock_interview_questions").update({ blueprint }).eq("id", s.id);
       }
     },
     onSuccess: refresh,
