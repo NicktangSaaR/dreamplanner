@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blueprintAvailable, drawFromBlueprint, sectionPools, withPools, type BankQuestion, type InterviewBank } from "./types";
+import { blueprintAvailable, blueprintSeconds, blueprintTotal, drawFromBlueprint, sectionPools, withPools, type BankQuestion, type InterviewBank } from "./types";
 
 const q = (pool: string, n: number): BankQuestion[] =>
   Array.from({ length: n }, (_, i) => ({ id: `${pool}${i}`, bank_id: pool, title: `${pool} question ${i}`, description: null, question_type: "video", preparation_time: null, response_time: null, sort_order: i }));
@@ -27,5 +27,26 @@ describe("parts drawing from several pools", () => {
   });
   it("single pool again drops pool_ids", () => {
     expect(withPools({ pool_id: "A", pool_ids: ["A", "B"], count: 1, question_type: null, prep: 30, response: 60 }, ["B"])).toEqual({ pool_id: "B", count: 1, question_type: null, prep: 30, response: 60 });
+  });
+});
+
+describe("fixed questions and combined timing", () => {
+  it("a fixed part always asks its question, once, and drawn parts never repeat it", () => {
+    const fixed = { pool_id: "", fixed_text: "A question 0", count: 3, question_type: null, prep: 30, response: 90, combined: true };
+    const drawn = { pool_id: "A", count: 3, question_type: null, prep: 30, response: 60 };
+    for (let k = 0; k < 50; k++) {
+      const out = drawFromBlueprint(school([fixed, drawn]), pools);
+      expect(out[0]).toMatchObject({ key: "fixed:s:0", text: "A question 0", combined: true, prep: 30, response: 90, type: "video" });
+      expect(out.length).toBe(3); // A has 3, one is the fixed text → 2 drawn
+      expect(out.slice(1).some((o) => o.text === "A question 0")).toBe(false);
+    }
+  });
+  it("time and count account for the new modes", () => {
+    const b = [
+      { pool_id: "", fixed_text: "Why UBC?", count: 4, question_type: null, prep: 30, response: 90, combined: true },
+      { pool_id: "A", count: 2, question_type: null, prep: 30, response: 60 },
+    ];
+    expect(blueprintTotal(b)).toBe(3);
+    expect(blueprintSeconds(b)).toBe(90 + 2 * 90);
   });
 });

@@ -69,6 +69,9 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
   const [reading, setReading] = useState(1);
+  /** Combined clock: when the question's time began, and the length of the current answer. */
+  const windowStart = useRef(0);
+  const [answerTotal, setAnswerTotal] = useState(0);
   const stopReading = useRef<() => void>(() => {});
 
   const streamRef = useRef<MediaStream | null>(null);
@@ -171,10 +174,13 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
   /** Prep countdown, once the question has been read. */
   const startPrep = () => {
     stopReading.current();
-    if (question.prep > 0) {
+    windowStart.current = Date.now();
+    // combined clock: thinking may use at most `prep` of the total
+    const think = question.combined ? Math.min(question.prep, question.response) : question.prep;
+    if (think > 0) {
       setPhase("prep");
       setNow(Date.now()); // the clock doesn't tick while the question is read
-      setEndsAt(Date.now() + question.prep * 1000);
+      setEndsAt(Date.now() + think * 1000);
     } else {
       beginAnswer();
     }
@@ -200,9 +206,14 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
     stopReading.current();
     setPlaybackUrl(null);
     setAttempts((a) => a + 1);
+    // combined clock: answering gets whatever is left of the total (a retake gets the full total)
+    const end = question.combined && phase === "prep"
+      ? windowStart.current + question.response * 1000
+      : Date.now() + question.response * 1000;
+    setAnswerTotal(Math.max(1, Math.round((end - Date.now()) / 1000)));
     setPhase("answer");
     setNow(Date.now());
-    setEndsAt(Date.now() + question.response * 1000);
+    setEndsAt(end);
     if (!isWritten) startRecording();
   };
 
@@ -272,10 +283,10 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
   const text = fillPlaceholders(question.text, settings.school, settings.program);
   const phaseLabel =
     phase === "reading" ? t("mi.reading", { n: reading })
-    : phase === "prep" ? t("mi.preparing")
+    : phase === "prep" ? (question.combined ? t("mi.thinking", { total: formatSeconds(question.response) }) : t("mi.preparing"))
     : phase === "answer" ? (isWritten ? t("mi.writing") : t("mi.recording"))
     : phase === "done" ? t("mi.answered") : t("mi.cameraCheck");
-  const ringTotal = phase === "prep" ? question.prep : question.response;
+  const ringTotal = phase === "prep" ? (question.combined ? Math.min(question.prep, question.response) : question.prep) : answerTotal || question.response;
   const wordCount = written.trim() ? written.trim().split(/\s+/).length : 0;
 
   return (
@@ -328,14 +339,15 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
           )}
           <dl className="mt-6 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-md bg-muted/50 px-3 py-2">
-              <dt className="text-muted-foreground">{t("mi.prep")}</dt>
-              <dd className="font-mono font-semibold">{formatSeconds(question.prep)}</dd>
+              <dt className="text-muted-foreground">{question.combined ? t("mi.totalTime") : t("mi.prep")}</dt>
+              <dd className="font-mono font-semibold">{formatSeconds(question.combined ? question.response : question.prep)}</dd>
             </div>
             <div className="rounded-md bg-muted/50 px-3 py-2">
-              <dt className="text-muted-foreground">{t("mi.response")}</dt>
-              <dd className="font-mono font-semibold">{formatSeconds(question.response)}</dd>
+              <dt className="text-muted-foreground">{question.combined ? t("mi.maxThinking") : t("mi.response")}</dt>
+              <dd className="font-mono font-semibold">{formatSeconds(question.combined ? Math.min(question.prep, question.response) : question.response)}</dd>
             </div>
           </dl>
+          {question.combined && <p className="mt-2 text-xs text-muted-foreground">{t("mi.combinedHint")}</p>}
         </section>
 
         {/* Stage */}

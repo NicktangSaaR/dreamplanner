@@ -11,6 +11,14 @@ export interface BlueprintSection {
   pool_id: string;
   /** All pools this part draws from (when it uses more than one). */
   pool_ids?: string[];
+  /** A fixed question asked every time instead of drawing from pools (count is 1). */
+  fixed_text?: string;
+  /**
+   * One combined clock: `response` is the total time for the question and
+   * `prep` the most of it the student may spend thinking before recording
+   * starts. Otherwise `prep` and `response` are separate.
+   */
+  combined?: boolean;
   count: number;
   /** null = keep each question's own type */
   question_type: QuestionType | null;
@@ -65,12 +73,20 @@ export interface CustomQuestion {
 
 /** A question as it is asked during a session, whatever its source. */
 export interface SessionQuestion {
-  key: string; // "bank:<id>" or "custom:<id>"
+  key: string; // "bank:<id>", "custom:<id>" or "fixed:<school id>:<part>"
   text: string;
   type: QuestionType;
-  prep: number; // seconds
-  response: number; // seconds
+  prep: number; // seconds; with `combined`, the most thinking time inside `response`
+  response: number; // seconds; with `combined`, the total time for the question
+  combined?: boolean;
 }
+
+/** A part that always asks the same question. */
+export const isFixed = (sec: BlueprintSection) => !!sec.fixed_text?.trim();
+/** Questions a part asks. */
+export const sectionCount = (sec: BlueprintSection) => (isFixed(sec) ? 1 : sec.count);
+/** Seconds one question takes, whichever clock it uses. */
+export const questionSeconds = (q: { prep: number; response: number; combined?: boolean }) => (q.combined ? q.response : q.prep + q.response);
 
 export interface SessionSettings {
   school: string;
@@ -126,10 +142,10 @@ export function shuffled<T>(list: T[]): T[] {
 }
 
 /** Total questions a blueprint asks for. */
-export const blueprintTotal = (b: BlueprintSection[]) => b.reduce((n, s) => n + s.count, 0);
+export const blueprintTotal = (b: BlueprintSection[]) => b.reduce((n, s) => n + sectionCount(s), 0);
 
 /** Estimated length of a blueprint, in seconds. */
-export const blueprintSeconds = (b: BlueprintSection[]) => b.reduce((n, s) => n + s.count * (s.prep + s.response), 0);
+export const blueprintSeconds = (b: BlueprintSection[]) => b.reduce((n, s) => n + sectionCount(s) * questionSeconds(s), 0);
 
 const RECENT_KEY = "dreamplanner.mi.recent";
 const RECENT_MAX = 80;
@@ -167,7 +183,7 @@ export function freshFirst<T extends { key: string }>(list: T[], recent: Set<str
 
 /** The pools a section draws from. */
 export const sectionPools = (sec: BlueprintSection): string[] =>
-  sec.pool_ids?.length ? sec.pool_ids : sec.pool_id ? [sec.pool_id] : [];
+  sec.fixed_text?.trim() ? [] : sec.pool_ids?.length ? sec.pool_ids : sec.pool_id ? [sec.pool_id] : [];
 
 /** Set a section's pools (first one also stored as `pool_id`). */
 export const withPools = (sec: BlueprintSection, ids: string[]): BlueprintSection => {
@@ -188,7 +204,14 @@ export function drawFromBlueprint(
   const usedIds = new Set<string>();
   const usedTexts = new Set<string>();
   const out: SessionQuestion[] = [];
-  for (const sec of school.blueprint) {
+  // fixed questions are known up front, so no drawn question repeats one
+  for (const sec of school.blueprint) if (isFixed(sec)) usedTexts.add(sameText(sec.fixed_text!));
+  for (const [i, sec] of school.blueprint.entries()) {
+    if (isFixed(sec)) {
+      const text = sec.fixed_text!.trim();
+      out.push({ key: `fixed:${school.id}:${i}`, text, type: sec.question_type ?? "video", prep: sec.prep, response: sec.response, combined: !!sec.combined });
+      continue;
+    }
     const pool = sectionPools(sec).flatMap((id) => questionsByPool[id] ?? []).map((q) => ({ ...q, key: `bank:${q.id}` }));
     let taken = 0;
     for (const q of freshFirst(pool, recent)) {
@@ -204,6 +227,7 @@ export function drawFromBlueprint(
         type: sec.question_type ?? q.question_type,
         prep: sec.prep,
         response: sec.response,
+        combined: !!sec.combined,
       });
     }
   }

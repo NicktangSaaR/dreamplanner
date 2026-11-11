@@ -15,7 +15,7 @@ import { useBankQuestions, useBanks, useCustomQuestionMutations, useCustomQuesti
 import {
   PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, drawFromBlueprint, drawRandom, recentQuestionKeys, rememberQuestions, fillPlaceholders, formatSeconds,
   type InterviewBank, type QuestionType, type SessionQuestion, type SessionSettings,
-  sectionPools,
+  sectionPools, isFixed, questionSeconds,
 } from "./types";
 import type { SessionMeta } from "./sessionLog";
 
@@ -69,6 +69,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
   const [randomCount, setRandomCount] = useState(3);
   const [prep, setPrep] = useState<string>(DEFAULT);
   const [response, setResponse] = useState<string>(DEFAULT);
+  const [combined, setCombined] = useState(false);
   const [retakes, setRetakes] = useState(initialSettings.retakes ?? 1);
   const [school, setSchool] = useState(initialSettings.school || "");
   const [program, setProgram] = useState(initialSettings.program || "");
@@ -120,7 +121,9 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
     qs.map((q) => ({
       ...q,
       prep: prep === DEFAULT ? q.prep : Number(prep),
-      response: response === DEFAULT ? q.response : Number(response),
+      // combined: the total defaults to the question's prep + answer time
+      response: response === DEFAULT ? (combined ? q.prep + q.response : q.response) : Number(response),
+      combined,
     }));
 
   const practiceChosen: SessionQuestion[] =
@@ -130,7 +133,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
         ? poolQuestions.filter((q) => selected.has(q.key))
         : poolQuestions.slice(0, Math.min(randomCount, poolQuestions.length));
   const practiceCount = pick === "random" ? Math.min(randomCount, poolQuestions.length) : practiceChosen.length;
-  const practiceTime = withTiming(practiceChosen).reduce((s, q) => s + q.prep + q.response, 0);
+  const practiceTime = withTiming(practiceChosen).reduce((s, q) => s + questionSeconds(q), 0);
 
   const start = () => {
     if (mode === "simulation") {
@@ -252,7 +255,8 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
                   <span className="mt-2 flex flex-wrap gap-1.5">
                     {b.blueprint.map((sec, i) => (
                       <span key={i} className="rounded-sm bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                        {sectionPools(sec).map((id) => poolTitle[id] ?? "?").join(" / ")} ×{sec.count} · {formatSeconds(sec.prep)}/{formatSeconds(sec.response)}
+                        {isFixed(sec) ? t("mi3.fixedQuestion") : `${sectionPools(sec).map((id) => poolTitle[id] ?? "?").join(" / ")} ×${sec.count}`} ·{" "}
+                        {sec.combined ? t("mi3.combinedShort", { total: formatSeconds(sec.response), think: formatSeconds(sec.prep) }) : `${formatSeconds(sec.prep)}/${formatSeconds(sec.response)}`}
                       </span>
                     ))}
                   </span>
@@ -268,9 +272,19 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
         <div className="mt-8 grid gap-8 lg:grid-cols-[300px_1fr]" data-tour="mi-content">
           <aside className="h-fit space-y-5 rounded-md border bg-card p-5">
             <h2 className="font-semibold text-pine">{t("mi.settings")}</h2>
+            <div className="space-y-1.5">
+              <Label>{t("mi.timingMode")}</Label>
+              <Select value={combined ? "combined" : "separate"} onValueChange={(v) => setCombined(v === "combined")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="separate">{t("mi3.timingSeparate")}</SelectItem>
+                  <SelectItem value="combined">{t("mi3.timingCombined")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>{t("mi.prep")}</Label>
+                <Label>{combined ? t("mi.maxThinking") : t("mi.prep")}</Label>
                 <Select value={prep} onValueChange={setPrep}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -280,7 +294,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>{t("mi.response")}</Label>
+                <Label>{combined ? t("mi.totalTime") : t("mi.response")}</Label>
                 <Select value={response} onValueChange={setResponse}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -405,8 +419,13 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
                         <span className="flex-1">
                           <span className="block leading-snug">{fill(q.text)}</span>
                           <span className="text-xs text-muted-foreground">
-                            {q.type === "written" ? t("mi.written") : t("mi.video")} · {t("mi.prep")} {formatSeconds(prep === DEFAULT ? q.prep : Number(prep))} · {t("mi.response")}{" "}
-                            {formatSeconds(response === DEFAULT ? q.response : Number(response))}
+                            {q.type === "written" ? t("mi.written") : t("mi.video")} ·{" "}
+                            {(() => {
+                              const [tq] = withTiming([q]);
+                              return tq.combined
+                                ? t("mi3.combinedShort", { total: formatSeconds(tq.response), think: formatSeconds(tq.prep) })
+                                : `${t("mi.prep")} ${formatSeconds(tq.prep)} · ${t("mi.response")} ${formatSeconds(tq.response)}`;
+                            })()}
                             {isCustom && ` · ${t("mi2.mine")}`}
                           </span>
                         </span>
