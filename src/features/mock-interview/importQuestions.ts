@@ -19,7 +19,7 @@ const HEADER_ALIASES = {
   title: ["question", "questions", "title", "prompt", "题目", "问题", "面试题", "题干"],
   type: ["type", "question type", "题型", "类型"],
   prep: ["prep", "preparation", "prep time", "preparation time", "准备", "准备时间", "准备时间(秒)", "准备时间（秒）"],
-  response: ["response", "answer", "response time", "answer time", "答题", "作答", "答题时间", "答题时间(秒)", "答题时间（秒）", "回答时间"],
+  response: ["response", "answer", "response time", "answer time", "答题", "作答", "答题时间", "答题时间(秒)", "答题时间（秒）", "回答时间", "回答时间(秒)", "回答时间（秒）"],
 } as const;
 
 const norm = (v: unknown) => String(v ?? "").trim().toLowerCase();
@@ -112,7 +112,7 @@ export async function readQuestionFile(file: File): Promise<ImportedFile> {
 /** Download a CSV template that opens cleanly in Excel (UTF-8 with BOM). */
 export function downloadQuestionTemplate(lang: "zh" | "en") {
   const rows = lang === "zh"
-    ? [["题目", "题型", "准备时间(秒)", "答题时间(秒)"],
+    ? [["题目", "题型", "准备时间(秒)", "回答时间(秒)"],
        ["Tell us about yourself.", "视频", "30", "60"],
        ["Why do you want to study {program} at {school}?", "视频", "30", "90"],
        ["Describe a challenge you overcame in 150 words.", "书面", "60", "300"]]
