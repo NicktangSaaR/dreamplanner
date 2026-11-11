@@ -131,7 +131,8 @@ export default function ReviewView({ answers, settings, onAgain, onBackToSetup }
           <li key={a.question.key} className="rounded-md border bg-card">
             <div className="border-b p-5">
               <div className="text-sm text-muted-foreground">
-                {t("mi.questionOf", { n: i + 1, total: answers.length })} ·{" "}
+                {t("mi.questionOf", { n: answers.slice(0, i + 1).filter((x) => !x.question.followUp).length, total: answers.filter((x) => !x.question.followUp).length })} ·{" "}
+                {a.question.followUp && <span className="text-brass">{t("mi.followUpOf", { n: a.question.followUp.n, total: a.question.followUp.total })} · </span>}
                 {a.question.type === "written" ? t("mi.written") : t("mi.video")}
               </div>
               <p className="mt-2 font-serif text-lg leading-relaxed">

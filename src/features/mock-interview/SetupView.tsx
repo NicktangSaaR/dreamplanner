@@ -15,7 +15,7 @@ import { useBankQuestions, useBanks, useCustomQuestionMutations, useCustomQuesti
 import {
   PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, drawFromBlueprint, drawRandom, recentQuestionKeys, rememberQuestions, fillPlaceholders, formatSeconds,
   type InterviewBank, type QuestionType, type SessionQuestion, type SessionSettings,
-  sectionPools, isFixed, questionSeconds,
+  sectionPools, isFixed, questionSeconds, cleanFollowUps, expandFollowUps,
 } from "./types";
 import type { SessionMeta } from "./sessionLog";
 
@@ -86,12 +86,13 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
     if (!banksLoading && !questionsLoading && simulations.length === 0) setMode("practice");
   }, [banksLoading, questionsLoading, simulations.length]);
 
-  const toSession = (b: InterviewBank | null, q: { id: string; title: string; question_type: QuestionType; preparation_time: number | null; response_time: number | null }, key: string): SessionQuestion => ({
+  const toSession = (b: InterviewBank | null, q: { id: string; title: string; question_type: QuestionType; preparation_time: number | null; response_time: number | null; follow_ups?: string[][] }, key: string): SessionQuestion => ({
     key,
     text: q.title,
     type: q.question_type,
     prep: q.preparation_time ?? b?.preparation_time ?? 30,
     response: q.response_time ?? b?.response_time ?? 60,
+    followUpPool: q.follow_ups,
   });
 
   // Practice pool
@@ -133,14 +134,15 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
         ? poolQuestions.filter((q) => selected.has(q.key))
         : poolQuestions.slice(0, Math.min(randomCount, poolQuestions.length));
   const practiceCount = pick === "random" ? Math.min(randomCount, poolQuestions.length) : practiceChosen.length;
-  const practiceTime = withTiming(practiceChosen).reduce((s, q) => s + questionSeconds(q), 0);
+  // each follow-up takes as long as its question
+  const practiceTime = withTiming(practiceChosen).reduce((s, q) => s + questionSeconds(q) * (1 + cleanFollowUps(q.followUpPool).length), 0);
 
   const start = () => {
     if (mode === "simulation") {
       if (!sim) return;
       const drawn = drawFromBlueprint(sim, bankQuestions, recentQuestionKeys());
       if (!drawn.length) return;
-      rememberQuestions(drawn.map((q) => q.key));
+      rememberQuestions(drawn.filter((q) => !q.followUp).map((q) => q.key));
       onStart(drawn, { school: sim.school || "", program: sim.program || "", retakes: sim.sim_retakes, shuffle: false }, [], {
         mode: "simulation",
         title: [sim.school, sim.program].filter(Boolean).join(" · ") || sim.title,
@@ -158,7 +160,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
       toast.error(t("mi.selectAtLeastOne"));
       return;
     }
-    onStart(withTiming(qs), { school, program, retakes, shuffle: false }, qs.map((q) => q.key), {
+    onStart(expandFollowUps(withTiming(qs)), { school, program, retakes, shuffle: false }, qs.map((q) => q.key), {
       mode: "practice",
       title: pool === ALL ? "" : pool === MINE ? t("mi.tabMine") : poolTitle[pool] || "",
     });
