@@ -79,16 +79,16 @@ export default function Index() {
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Error logging out:", error);
-        toast.error("Error logging out");
+        toast.error(t("logout.failed"));
       } else {
         setIsAuthenticated(false);
         setUserId(null);
-        toast.success("Logged out successfully");
+        toast.success(t("logout.done"));
         navigate("/");
       }
     } catch (error) {
       console.error("Unexpected error during logout:", error);
-      toast.error("An unexpected error occurred");
+      toast.error(t("logout.failed"));
     }
   };
 

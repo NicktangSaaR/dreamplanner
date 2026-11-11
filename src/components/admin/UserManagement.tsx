@@ -48,7 +48,7 @@ const UserManagement = () => {
     setUserToDelete({
       id: userId,
       name: userName,
-      type: userType === 'counselor' ? '辅导员' : '学生'
+      type: userType === 'counselor' ? '顾问' : '学生'
     });
   };
 
@@ -169,7 +169,7 @@ const UserManagement = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>确认删除用户</AlertDialogTitle>
             <AlertDialogDescription>
-              您确定要删除{userToDelete?.type}{userToDelete?.name ? ` ${userToDelete.name}` : ''}吗？此操作将删除该用户的所有相关数据，且不可撤销。
+              确定要删除{userToDelete?.type}{userToDelete?.name ? ` ${userToDelete.name}` : ''}吗？此操作将删除该用户的所有相关数据，且不可撤销。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

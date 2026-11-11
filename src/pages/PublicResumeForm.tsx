@@ -155,7 +155,7 @@ export default function PublicResumeForm() {
       if (error) throw error;
     },
     onSuccess: (_, submit) => {
-      toast.success(submit ? "简历信息已提交，感谢您的填写！" : "保存成功");
+      toast.success(submit ? "简历信息已提交，感谢你的填写！" : "保存成功");
       if (submit) refetchRequest();
     },
     onError: (error) => {
@@ -228,7 +228,7 @@ export default function PublicResumeForm() {
               <AlertCircle className="mx-auto h-16 w-16 text-destructive mb-4" />
               <h2 className="text-xl font-semibold mb-2">链接无效</h2>
               <p className="text-muted-foreground">
-                此链接可能已过期或无效。请联系您的顾问获取新的表单链接。
+                此链接可能已过期或无效。请联系你的顾问获取新的表单链接。
               </p>
             </div>
           </CardContent>
@@ -247,7 +247,7 @@ export default function PublicResumeForm() {
               <CheckCircle className="mx-auto h-16 w-16 text-primary mb-4" />
               <h2 className="text-xl font-semibold mb-2">信息已提交</h2>
               <p className="text-muted-foreground">
-                您的简历信息已成功提交，感谢您的配合！
+                你的简历信息已提交，谢谢配合！
               </p>
             </div>
           </CardContent>
@@ -292,7 +292,7 @@ export default function PublicResumeForm() {
               上传现有简历（可选）
             </CardTitle>
             <CardDescription>
-              如果您已有现成的简历文件，可以直接上传。支持 PDF、Word 等格式。
+              如果你已经有现成的简历文件，可以直接上传。支持 PDF、Word 等格式。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -554,7 +554,7 @@ export default function PublicResumeForm() {
                       <Textarea
                         value={exp.description}
                         onChange={(e) => updateArrayField<WorkExperience>("work_experience", index, { description: e.target.value })}
-                        placeholder="描述您的工作职责和成就"
+                        placeholder="描述你的工作职责和成果"
                       />
                     </div>
                   </div>
@@ -592,7 +592,7 @@ export default function PublicResumeForm() {
                         <Input
                           value={activity.role}
                           onChange={(e) => updateArrayField<Activity>("activities", index, { role: e.target.value })}
-                          placeholder="您的角色"
+                          placeholder="你的角色"
                         />
                       </div>
                       <div className="space-y-2">
@@ -617,7 +617,7 @@ export default function PublicResumeForm() {
                       <Textarea
                         value={activity.description}
                         onChange={(e) => updateArrayField<Activity>("activities", index, { description: e.target.value })}
-                        placeholder="描述您的贡献和成就"
+                        placeholder="描述你的贡献和成果"
                       />
                     </div>
                   </div>

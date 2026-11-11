@@ -48,17 +48,17 @@ export default function CounselorCheck({ studentId, onCounselorCheck }: Counselo
       if (!counselorRelationship) {
         toast({
           variant: "destructive",
-          title: "未关联辅导员",
+          title: "还没有关联顾问",
           description: (
             <div className="flex flex-col gap-4">
-              <p>您还未关联辅导员，这将影响您获取专业的指导</p>
+              <p>你还没有关联顾问，关联后才能获得顾问的规划和跟进</p>
               <Button 
                 onClick={() => navigate('/student-profile')}
                 variant="secondary"
                 size="sm"
                 className="w-full bg-white hover:bg-gray-100"
               >
-                前往个人主页选择辅导员
+                去主页选择我的顾问
               </Button>
             </div>
           ),

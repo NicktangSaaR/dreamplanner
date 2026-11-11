@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
@@ -58,17 +57,29 @@ const handler = async (req: Request): Promise<Response> => {
         `;
       }
     } else if (token && expirationDate) {
-      // Invitation email format
-      const formattedExpiration = new Date(expirationDate).toLocaleTimeString();
-      emailSubject = "You've been invited to Journey Buddy!";
+      // Invitation email: sign up, then pick the counselor on the home page.
+      const signup = "https://dreamplaneredu.com/signup";
+      const shown = email.replace(/[<>&"']/g, "");
+      emailSubject = "邀请你加入 DreamPlanner 升学规划平台 · You're invited to DreamPlanner";
       emailHtml = `
-        <h1>Welcome to Journey Buddy!</h1>
-        <p>You've been invited to join Journey Buddy as a student. Click the link below to create your account:</p>
-        <p><a href="${Deno.env.get("SUPABASE_URL")}/auth/v1/verify?token=${token}&type=signup">Accept Invitation</a></p>
-        <p><strong>This invitation link will expire at ${formattedExpiration}</strong></p>
-        <p>If you don't accept within 1 minute, the counselor can send you a new invitation.</p>
-        <p>If you didn't expect this invitation, you can safely ignore this email.</p>
-        <p>Best regards,<br>The Journey Buddy Team</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+          <h2>欢迎加入 DreamPlanner</h2>
+          <p>你的升学顾问邀请你使用 DreamPlanner。在这里，你可以看到顾问为你制定的规划方案、每个季度的目标和待办，还可以练习模拟面试。</p>
+          <p><strong>只需两步：</strong></p>
+          <ol>
+            <li>点击下面的按钮，用这个邮箱（${shown}）注册账号。</li>
+            <li>注册后登录，在主页点「选择我的顾问」，选择你的顾问老师，就完成关联了。</li>
+          </ol>
+          <p><a href="${signup}" style="display:inline-block;padding:10px 20px;background:#1f5c4d;color:#fff;text-decoration:none;border-radius:6px;">注册 DreamPlanner</a></p>
+          <hr style="border:none;border-top:1px solid #ddd;margin:24px 0;" />
+          <h2>Welcome to DreamPlanner</h2>
+          <p>Your counselor has invited you to DreamPlanner, where you'll see the plan they've made for you, your goals and to-dos for each quarter, and can practise mock interviews.</p>
+          <ol>
+            <li>Sign up with this email address (${shown}): <a href="${signup}">${signup}</a></li>
+            <li>After signing in, click "Choose my counselor" on your home page and pick your counselor.</li>
+          </ol>
+          <p style="color:#666;font-size:13px;">如果你没有预期收到这封邮件，可以直接忽略。If you weren't expecting this email, you can ignore it.</p>
+        </div>
       `;
     } else {
       throw new Error("Invalid email request: must provide either (subject + content) or (token + expirationDate)");
@@ -124,4 +135,4 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-serve(handler);
+Deno.serve(handler);

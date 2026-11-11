@@ -50,7 +50,7 @@ const SECTIONS: Record<ListKey, { item: string; add: string; blank: () => Record
     fields: [
       { key: "name", label: "活动名称 *", placeholder: "活动/组织名称" }, { key: "role", label: "角色/职位" },
       { key: "startDate", label: "开始时间", kind: "month" }, { key: "endDate", label: "结束时间", kind: "month" },
-      { key: "description", label: "活动描述", kind: "area", placeholder: "描述您的参与和贡献…", wide: true },
+      { key: "description", label: "活动描述", kind: "area", placeholder: "描述你的参与和贡献…", wide: true },
     ],
   },
   projects: {

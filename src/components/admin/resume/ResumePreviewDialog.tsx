@@ -179,7 +179,7 @@ export default function ResumePreviewDialog({ request, open, onOpenChange }: Res
                 <Textarea
                   value={editedResume}
                   onChange={(e) => setEditedResume(e.target.value)}
-                  placeholder="生成的简历将显示在这里，您可以编辑..."
+                  placeholder="生成的简历会显示在这里，可以直接修改…"
                   className="h-[500px] font-mono text-sm"
                 />
               </TabsContent>

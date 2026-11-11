@@ -27,27 +27,28 @@ export const processResponse = (data: any): { message: string, type: "success" |
     if (apiKeyError) return { message: apiKeyError, type: "error" };
     
     // Generic error message
-    const errorMessage = errorInfo.message || errorInfo.error || JSON.stringify(errorInfo);
-    return { message: `提醒发送失败: ${errorMessage}`, type: "error" };
+    console.error("Reminder failed:", errorInfo);
+    return { message: "提醒邮件没能发出，请稍后再试。如果一直不行，请联系网站管理员。", type: "error" };
   }
   
   // Handle warnings
   if (data.warning) {
     return { 
-      message: `${data.warning}: 学生邮箱 (${data.studentEmail}), 辅导员邮箱 (${data.counselorEmail})`, 
+      message: `${data.warning}（学生邮箱：${data.studentEmail || "未填写"}；顾问邮箱：${data.counselorEmail || "未填写"}）`, 
       type: "warning" 
     };
   }
   
   // Handle success
   if (data.success) {
-    const recipientInfo = data.sentTo ? `(发送给: ${data.sentTo.join(", ")})` : "";
+    const recipientInfo = data.sentTo ? `（已发送给：${data.sentTo.join("、")}）` : "";
     const message = `${data.message} ${recipientInfo}`;
     
     // Handle partial errors
     if (data.errors && data.errors.length > 0) {
       setTimeout(() => {
-        toast.warning(`部分发送失败: ${data.errors.join("; ")}`);
+        console.error("Some reminders failed:", data.errors);
+        toast.warning("有部分提醒邮件没能发出，请稍后再试。");
       }, 1000);
     }
     
@@ -56,14 +57,12 @@ export const processResponse = (data: any): { message: string, type: "success" |
   
   // Handle empty todos case
   if (data.message === "No uncompleted todos to remind about") {
-    return { message: "该学生没有未完成的待办事项", type: "info" };
+    return { message: "这位学生没有未完成的待办，不需要提醒。", type: "info" };
   }
   
   // Fallback for unexpected responses
-  return { 
-    message: `操作完成，但返回了意外响应: ${JSON.stringify(data)}`, 
-    type: "warning" 
-  };
+  console.warn("Unexpected reminder response:", data);
+  return { message: "提醒已处理，但没能确认是否发送成功。", type: "warning" };
 };
 
 /**

@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SetupView from "./SetupView";
 import InterviewRunner from "./InterviewRunner";
 import ReviewView from "./ReviewView";
+import LanguageChoice from "./LanguageChoice";
 import type { Answer, SessionQuestion, SessionSettings } from "./types";
 import { startSession, updateSession, type SessionMeta } from "./sessionLog";
 
@@ -77,6 +78,7 @@ export default function MockInterviewPage() {
   return (
     <>
     {stage.name !== "interview" && <MainNav isAuthenticated userId={userId} onLogout={handleLogout} />}
+    <LanguageChoice />
     <div className={stage.name === "interview" ? "container mx-auto px-4 py-6" : "container mx-auto px-4 pb-8 pt-24"}>
       {stage.name === "setup" && (
         <SetupView

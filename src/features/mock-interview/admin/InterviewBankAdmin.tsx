@@ -16,7 +16,7 @@ import { useBankAdmin, useBankQuestions, useBanks, type BankInput } from "../use
 import {
   PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, blueprintTotal, formatSeconds,
   type BankKind, type BankQuestion, type BlueprintSection, type InterviewBank, type QuestionType,
-  sectionPools, withPools,
+  sectionPools, withPools, isFixed, questionSeconds,
 } from "../types";
 import BulkQuestionInput, { useBulkQuestions } from "../BulkQuestionInput";
 
@@ -190,6 +190,8 @@ function PoolPicker({
 }
 
 const KEEP = "keep";
+/** Total times offered for a combined clock. */
+const COMBINED_OPTIONS = [45, 60, 75, 90, 120, 150, 180, 240, 300];
 
 function SchoolDialog({
   bank, pools, questions, open, onOpenChange,
@@ -234,6 +236,7 @@ function SchoolDialog({
   // drawing from the same set of pools share its questions.
   const asked: Record<string, { ids: string[]; n: number }> = {};
   for (const s of form.blueprint) {
+    if (isFixed(s)) continue;
     const ids = sectionPools(s);
     const k = [...ids].sort().join("+");
     asked[k] = { ids, n: (asked[k]?.n ?? 0) + s.count };
@@ -294,30 +297,72 @@ function SchoolDialog({
               {form.blueprint.map((sec, i) => (
                 <li key={i} className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 p-2">
                   <span className="w-5 text-center text-sm text-muted-foreground">{i + 1}</span>
-                  <PoolPicker
-                    pools={pools}
-                    questions={questions}
-                    value={sectionPools(sec)}
-                    onChange={(ids) => setForm({ ...form, blueprint: form.blueprint.map((s, j) => (j === i ? withPools(s, ids) : s)) })}
-                  />
-                  <Select value={String(sec.count)} onValueChange={(v) => setSection(i, { count: Number(v) })}>
-                    <SelectTrigger className="w-[92px]"><SelectValue /></SelectTrigger>
+                  <Select value={sec.fixed_text !== undefined ? "fixed" : "pool"}
+                    onValueChange={(v) => {
+                      if (v === "fixed") setSection(i, { fixed_text: sec.fixed_text ?? "" });
+                      else { const { fixed_text: _f, ...rest } = sec; setForm({ ...form, blueprint: form.blueprint.map((x, j) => (j === i ? rest : x)) }); }
+                    }}>
+                    <SelectTrigger className="w-[136px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {[1, 2, 3, 4, 5, 6, 8, 10].map((n) => <SelectItem key={n} value={String(n)}>{t("mi2.nQuestions", { n })}</SelectItem>)}
+                      <SelectItem value="pool">{t("mi3.fromPools")}</SelectItem>
+                      <SelectItem value="fixed">{t("mi3.fixedQuestion")}</SelectItem>
                     </SelectContent>
                   </Select>
+                  {sec.fixed_text !== undefined ? (
+                    <Input className="h-9 min-w-[16rem] flex-1" value={sec.fixed_text} placeholder={t("mi3.fixedPlaceholder")}
+                      onChange={(e) => setSection(i, { fixed_text: e.target.value })} />
+                  ) : (
+                    <>
+                      <PoolPicker
+                        pools={pools}
+                        questions={questions}
+                        value={sectionPools(sec)}
+                        onChange={(ids) => setForm({ ...form, blueprint: form.blueprint.map((s, j) => (j === i ? withPools(s, ids) : s)) })}
+                      />
+                      <Select value={String(sec.count)} onValueChange={(v) => setSection(i, { count: Number(v) })}>
+                        <SelectTrigger className="w-[112px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5, 6, 8, 10].map((n) => <SelectItem key={n} value={String(n)}>{t("mi2.nQuestions", { n })}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </>
+                  )}
                   <Select value={sec.question_type ?? KEEP} onValueChange={(v) => setSection(i, { question_type: v === KEEP ? null : (v as QuestionType) })}>
-                    <SelectTrigger className="w-[92px]"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value={KEEP}>{t("mi3.typeKeep")}</SelectItem>
                       <SelectItem value="video">{t("mi.video")}</SelectItem>
                       <SelectItem value="written">{t("mi.written")}</SelectItem>
                     </SelectContent>
                   </Select>
-                  <span className="text-xs text-muted-foreground">{t("mi.prep")}</span>
-                  <TimeSelect className="w-[84px]" value={sec.prep} options={PREP_OPTIONS} onChange={(v) => setSection(i, { prep: v ?? 30 })} />
-                  <span className="text-xs text-muted-foreground">{t("mi.response")}</span>
-                  <TimeSelect className="w-[84px]" value={sec.response} options={RESPONSE_OPTIONS} onChange={(v) => setSection(i, { response: v ?? 60 })} />
+                  <span className="basis-full" />
+                  <span className="w-5" />
+                  <Select value={sec.combined ? "combined" : "separate"}
+                    onValueChange={(v) => setSection(i, v === "combined"
+                      // keep the overall time the same when switching
+                      ? { combined: true, response: sec.prep + sec.response, prep: Math.min(sec.prep, sec.prep + sec.response) }
+                      : { combined: false, response: Math.max(15, sec.response - sec.prep) })}>
+                    <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="separate">{t("mi3.timingSeparate")}</SelectItem>
+                      <SelectItem value="combined">{t("mi3.timingCombined")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {sec.combined ? (
+                    <>
+                      <span className="text-xs text-muted-foreground">{t("mi.totalTime")}</span>
+                      <TimeSelect className="w-[84px]" value={sec.response} options={COMBINED_OPTIONS} onChange={(v) => setSection(i, { response: v ?? 90 })} />
+                      <span className="text-xs text-muted-foreground">{t("mi.maxThinking")}</span>
+                      <TimeSelect className="w-[84px]" value={sec.prep} options={PREP_OPTIONS.filter((x) => x < sec.response)} onChange={(v) => setSection(i, { prep: v ?? 30 })} />
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs text-muted-foreground">{t("mi.prep")}</span>
+                      <TimeSelect className="w-[84px]" value={sec.prep} options={PREP_OPTIONS} onChange={(v) => setSection(i, { prep: v ?? 30 })} />
+                      <span className="text-xs text-muted-foreground">{t("mi.response")}</span>
+                      <TimeSelect className="w-[84px]" value={sec.response} options={RESPONSE_OPTIONS} onChange={(v) => setSection(i, { response: v ?? 60 })} />
+                    </>
+                  )}
                   <span className="ml-auto flex">
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveSection(i, -1)} disabled={i === 0} aria-label={t("mi3.moveUp")}>
                       <ArrowUp className="h-4 w-4" />
@@ -628,10 +673,10 @@ export default function InterviewBankAdmin() {
                     <ol className="mt-3 flex flex-wrap gap-2">
                       {bank.blueprint.map((sec, i) => (
                         <li key={i} className="rounded-md border bg-muted/30 px-2.5 py-1 text-xs">
-                          <span className="font-medium">{i + 1}. {sectionPools(sec).map((id) => poolTitle[id] ?? t("mi3.missingPool")).join(" / ")}</span>
+                          <span className="font-medium">{i + 1}. {isFixed(sec) ? `${t("mi3.fixedQuestion")}：${sec.fixed_text}` : sectionPools(sec).map((id) => poolTitle[id] ?? t("mi3.missingPool")).join(" / ")}</span>
                           <span className="text-muted-foreground">
-                            {" "}×{sec.count} · {sec.question_type ? t(sec.question_type === "written" ? "mi.written" : "mi.video") + " · " : ""}
-                            {formatSeconds(sec.prep)} / {formatSeconds(sec.response)}
+                            {isFixed(sec) ? "" : ` ×${sec.count}`} · {sec.question_type ? t(sec.question_type === "written" ? "mi.written" : "mi.video") + " · " : ""}
+                            {sec.combined ? t("mi3.combinedShort", { total: formatSeconds(questionSeconds(sec)), think: formatSeconds(sec.prep) }) : `${formatSeconds(sec.prep)} / ${formatSeconds(sec.response)}`}
                           </span>
                         </li>
                       ))}
