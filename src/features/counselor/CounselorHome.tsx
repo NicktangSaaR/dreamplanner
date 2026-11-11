@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ChevronDown, ChevronRight, Clock, Globe, LogOut, Menu, Search, User } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronRight, Clock, Globe, HelpCircle, LogOut, Menu, Search, User } from "lucide-react";
+import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
+import { COUNSELOR_HOME_GUIDE } from "@/features/guide/guides";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -238,20 +240,24 @@ export default function CounselorHome() {
     </div>
   );
 
+  const guide = useGuide("counselor-home", data?.me?.id);
   const icon = { urgent: AlertTriangle, soon: Clock, quiet: Clock };
   const tone = { urgent: "text-destructive", soon: "text-brass", quiet: "text-muted-foreground" };
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-16 pt-8 sm:pt-12">
+      <Tour steps={COUNSELOR_HOME_GUIDE} open={guide.open} onClose={guide.close} />
       <header className="flex items-start justify-between gap-3">
         <h1 className="font-serif text-3xl font-semibold text-pine">{greeting}{firstName ? `，${firstName}` : ""}</h1>
         <div className="flex items-center gap-2">
-          {data?.me?.id && <InviteStudentDialog counselorId={data.me.id} />}
+          <GuideButton onClick={guide.start} className="hidden sm:inline-flex" />
+          {data?.me?.id && <span data-tour="invite-student"><InviteStudentDialog counselorId={data.me.id} /></span>}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={t("home3.menu")}><Menu className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" aria-label={t("home3.menu")} data-tour="counselor-menu"><Menu className="h-5 w-5" /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem className="sm:hidden" onSelect={guide.start}><HelpCircle className="mr-2 h-4 w-4" />{lang === "zh" ? "使用指南" : "Guide"}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => navigate("/counselor-profile")}><User className="mr-2 h-4 w-4" />{t("dash.profile")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setLang(lang === "zh" ? "en" : "zh")}><Globe className="mr-2 h-4 w-4" />{lang === "zh" ? "English" : "中文"}</DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -261,7 +267,7 @@ export default function CounselorHome() {
         </div>
       </header>
 
-      <section className="mt-10" aria-labelledby="attention-heading">
+      <section className="mt-10" aria-labelledby="attention-heading" data-tour="counselor-attention">
         <h2 id="attention-heading" className="font-serif text-xl font-semibold text-pine">
           {t("ch.attention")} {data?.alerts.length ? <span className="ml-1 font-sans text-base font-normal text-muted-foreground">{data.alerts.length}</span> : null}
         </h2>
@@ -288,7 +294,7 @@ export default function CounselorHome() {
         )}
       </section>
 
-      <section className="mt-10" aria-labelledby="students-heading">
+      <section className="mt-10" aria-labelledby="students-heading" data-tour="counselor-students">
         <h2 id="students-heading" className="font-serif text-xl font-semibold text-pine">
           {t("ch.myStudents")} <span className="ml-1 font-sans text-base font-normal text-muted-foreground">{active.length}</span>
         </h2>

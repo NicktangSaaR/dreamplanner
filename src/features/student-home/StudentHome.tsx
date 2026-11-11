@@ -10,7 +10,10 @@ import {
   BarChart3,
   CalendarClock, ChevronDown, Download, ExternalLink, FileText, FolderOpen, Globe, LogOut, Menu,
   NotebookPen, Pencil, Plus, Trash2, Upload, User, Video, FileUser,
+  HelpCircle,
 } from "lucide-react";
+import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
+import { STUDENT_HOME_GUIDE } from "@/features/guide/guides";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -76,6 +79,7 @@ type Item =
  * Planning settings (stage, notes, engines) are for the counselor team only.
  */
 export default function StudentHome({ studentId }: { studentId: string }) {
+  const guide = useGuide("student-home", studentId);
   const { t, lang, setLang } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -408,8 +412,9 @@ export default function StudentHome({ studentId }: { studentId: string }) {
       <input ref={uploadRef} type="file" accept={REPORT_CARD_ACCEPT} className="hidden" onChange={onUpload} />
 
       {/* Header */}
+      <Tour steps={STUDENT_HOME_GUIDE} open={guide.open} onClose={guide.close} />
       <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0" data-tour="student-progress">
           <h1 className="font-serif text-3xl font-semibold text-pine">{t("home3.hello", { name: firstName })}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {t(`plan.quarter.${quarterKey}` as MessageKey)}
@@ -422,19 +427,21 @@ export default function StudentHome({ studentId }: { studentId: string }) {
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <GuideButton onClick={guide.start} className="hidden sm:inline-flex" />
           {/* Mock interview opens in its own tab so the home page stays put. */}
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="outline" size="sm" asChild data-tour="mock-interview-button">
             <a href="/mock-interview" target="_blank" rel="noopener noreferrer">
               <Video className="mr-1.5 h-4 w-4" /> {t("dash.mockInterview")}
             </a>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={t("home3.menu")}>
+              <Button variant="ghost" size="icon" aria-label={t("home3.menu")} data-tour="student-menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem className="sm:hidden" onSelect={guide.start}><HelpCircle className="mr-2 h-4 w-4" />{lang === "zh" ? "使用指南" : "Guide"}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setPanel("grades")}><Upload className="mr-2 h-4 w-4" />{t("grades.tab")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setPanel("resume")}><FileUser className="mr-2 h-4 w-4" />{t("dash.info.resume")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setDialog("folder")}><FolderOpen className="mr-2 h-4 w-4" />{folderUrl ? t("plan.folder.edit") : t("plan.folder.add")}</DropdownMenuItem>
@@ -450,7 +457,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
       <LinkCounselorPrompt studentId={studentId} />
 
       {/* To do */}
-      <section className="mt-10" aria-labelledby="todo-heading">
+      <section className="mt-10" aria-labelledby="todo-heading" data-tour="student-todo">
         <h2 id="todo-heading" className="font-serif text-xl font-semibold text-pine">{t("home3.todo")}</h2>
 
         {request && (
@@ -471,7 +478,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
           <ul className="mt-2 divide-y">{open.map(row)}</ul>
         )}
 
-        <form onSubmit={add} className="mt-2 flex gap-2">
+        <form onSubmit={add} className="mt-2 flex gap-2" data-tour="student-add">
           <Input value={title} onChange={(e) => setTitle(e.target.value)}
             placeholder={addAs === "goal" ? (lang === "zh" ? "添加一个本季目标" : "Add a goal for this quarter") : t("home.todo.placeholder")}
             aria-label={addAs === "goal" ? (lang === "zh" ? "添加本季目标" : "Add a quarter goal") : t("home.todo.placeholder")} />
@@ -507,7 +514,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
 
       {/* From the counselor */}
       {shared.length > 0 && (
-        <section className="mt-10" aria-labelledby="shared-heading">
+        <section className="mt-10" aria-labelledby="shared-heading" data-tour="student-shared">
           <h2 id="shared-heading" className="font-serif text-xl font-semibold text-pine">{t("home3.shared")}</h2>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {shared.map((s) =>

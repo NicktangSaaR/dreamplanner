@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/utils";
 import BulkQuestionInput, { useBulkQuestions } from "./BulkQuestionInput";
+import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
+import { MOCK_INTERVIEW_GUIDE } from "@/features/guide/guides";
 import { useBankQuestions, useBanks, useCustomQuestionMutations, useCustomQuestions } from "./useInterviewData";
 import {
   PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, drawFromBlueprint, drawRandom, recentQuestionKeys, rememberQuestions, fillPlaceholders, formatSeconds,
@@ -39,6 +41,7 @@ const DEFAULT = "default";
  */
 export default function SetupView({ userId, initialSettings, onStart }: Props) {
   const { t } = useLanguage();
+  const guide = useGuide("mock-interview", userId);
   const { data: banks = [], isLoading: banksLoading } = useBanks();
   const { data: bankQuestions = {}, isLoading: questionsLoading } = useBankQuestions();
   const { data: custom = [] } = useCustomQuestions(userId);
@@ -185,13 +188,17 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
 
   return (
     <div className="pb-28">
+      <Tour steps={MOCK_INTERVIEW_GUIDE} open={guide.open} onClose={guide.close} />
       <header className="max-w-3xl">
-        <h1 className="font-serif text-3xl font-bold text-pine sm:text-4xl">{t("mi.title")}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="font-serif text-3xl font-bold text-pine sm:text-4xl">{t("mi.title")}</h1>
+          <GuideButton onClick={guide.start} />
+        </div>
         <p className="mt-3 leading-relaxed text-muted-foreground">{t("mi2.subtitle")}</p>
       </header>
 
       {/* Mode switch */}
-      <div className="mt-8 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={t("mi2.mode")}>
+      <div className="mt-8 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={t("mi2.mode")} data-tour="mi-mode">
         {(["simulation", "practice"] as Mode[]).map((m) => (
           <button
             key={m}
@@ -220,7 +227,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
         <Loader2 className="mt-8 h-5 w-5 animate-spin text-muted-foreground" />
       ) : mode === "simulation" ? (
         /* ---------------- Full simulation ---------------- */
-        <section className="mt-8" aria-labelledby="sim-heading">
+        <section className="mt-8" aria-labelledby="sim-heading" data-tour="mi-content">
           <h2 id="sim-heading" className="font-semibold text-pine">{t("mi2.chooseProgram")}</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {simulations.map((b) => {
@@ -258,7 +265,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
         </section>
       ) : (
         /* ---------------- Practice ---------------- */
-        <div className="mt-8 grid gap-8 lg:grid-cols-[300px_1fr]">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[300px_1fr]" data-tour="mi-content">
           <aside className="h-fit space-y-5 rounded-md border bg-card p-5">
             <h2 className="font-semibold text-pine">{t("mi.settings")}</h2>
             <div className="grid grid-cols-2 gap-3">
@@ -443,7 +450,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-3">
           <span className="text-sm text-muted-foreground">{summary}</span>
-          <Button size="lg" onClick={start} disabled={!canStart}>
+          <Button size="lg" onClick={start} disabled={!canStart} data-tour="mi-start">
             {mode === "simulation" ? t("mi2.startSim") : t("mi.start")}
           </Button>
         </div>

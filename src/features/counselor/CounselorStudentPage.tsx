@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CalendarClock, Loader2, Pencil } from "lucide-react";
@@ -7,6 +7,8 @@ import StudentStatusDialog from "./StudentStatusDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
+import { COUNSELOR_STUDENT_GUIDE } from "@/features/guide/guides";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import StudentProfile from "@/components/college-planning/student-summary/StudentProfile";
 import ActivitiesSection from "@/components/college-planning/student-summary/ActivitiesSection";
@@ -110,6 +112,11 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
     },
   });
 
+  // one guide for all students: shown the first time a counselor opens any student
+  const [me, setMe] = useState<string | null | undefined>(undefined);
+  useEffect(() => { void supabase.auth.getUser().then(({ data }) => setMe(data.user?.id ?? null)); }, []);
+  const guide = useGuide("counselor-student", me, { auto: !isLoading && !!profile });
+
   if (isLoading || !profile) {
     return (
       <div className="flex justify-center py-24"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
@@ -123,12 +130,16 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
       <Link to="/counselor-dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> {t("cs.back")}
       </Link>
-      <header className="mt-3">
+      <Tour steps={COUNSELOR_STUDENT_GUIDE} open={guide.open} onClose={guide.close} />
+      <header className="mt-3" data-tour="student-header">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-serif text-3xl font-semibold text-pine">{profile.full_name}</h1>
-          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-            <Pencil className="mr-1.5 h-4 w-4" /> {t("st.edit")}
-          </Button>
+          <div className="flex items-center gap-1">
+            <GuideButton onClick={guide.start} />
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Pencil className="mr-1.5 h-4 w-4" /> {t("st.edit")}
+            </Button>
+          </div>
         </div>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
           <StudentKindBadge kind={studentKind(profile)} />
@@ -147,10 +158,10 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
 
       <Tabs value={tab} onValueChange={setTab} className="mt-6">
         <TabsList className="flex h-auto w-full flex-wrap justify-start sm:inline-flex sm:w-auto">
-          <TabsTrigger value="overview">{t("cs.tab.overview")}</TabsTrigger>
-          <TabsTrigger value="plan">{t("cs.tab.plan")}</TabsTrigger>
-          <TabsTrigger value="follow">{t("cs.tab.follow")}</TabsTrigger>
-          <TabsTrigger value="materials">{t("cs.tab.materials")}</TabsTrigger>
+          <TabsTrigger value="overview" data-tour="tab-overview">{t("cs.tab.overview")}</TabsTrigger>
+          <TabsTrigger value="plan" data-tour="tab-plan">{t("cs.tab.plan")}</TabsTrigger>
+          <TabsTrigger value="follow" data-tour="tab-follow">{t("cs.tab.follow")}</TabsTrigger>
+          <TabsTrigger value="materials" data-tour="tab-materials">{t("cs.tab.materials")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">

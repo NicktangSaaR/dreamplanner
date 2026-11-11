@@ -51,7 +51,7 @@ export default function LinkCounselorPrompt({ studentId }: { studentId: string }
   if (!unlinked) return null;
   return (
     <>
-      <div className="mt-6 flex flex-wrap items-center gap-3 rounded-lg border border-brass/40 bg-brass/10 px-4 py-3">
+      <div className="mt-6 flex flex-wrap items-center gap-3 rounded-lg border border-brass/40 bg-brass/10 px-4 py-3" data-tour="link-counselor">
         <UserPlus className="h-5 w-5 shrink-0 text-brass" />
         <div className="min-w-0 flex-1">
           <p className="font-medium">{L("先关联你的顾问", "Link your counselor first")}</p>
