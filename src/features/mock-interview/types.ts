@@ -58,6 +58,11 @@ export interface BankQuestion {
   preparation_time: number | null;
   response_time: number | null;
   sort_order: number;
+  /**
+   * Follow-up questions, asked one by one after the main answer. Each entry is
+   * one follow-up position with one or more wordings; one is picked at random.
+   */
+  follow_ups?: string[][];
 }
 
 /** A student's own question (table mock_interview_custom_questions). */
@@ -79,6 +84,37 @@ export interface SessionQuestion {
   prep: number; // seconds; with `combined`, the most thinking time inside `response`
   response: number; // seconds; with `combined`, the total time for the question
   combined?: boolean;
+  /** Follow-up positions still to be turned into questions (see expandFollowUps). */
+  followUpPool?: string[][];
+  /** Set on a follow-up: the main question it follows, and which follow-up it is. */
+  followUp?: { of: string; n: number; total: number };
+}
+
+/** Follow-up positions that have at least one wording. */
+export const cleanFollowUps = (f: unknown): string[][] =>
+  Array.isArray(f)
+    ? f.map((slot) => (Array.isArray(slot) ? slot.map((x) => String(x ?? "").trim()).filter(Boolean) : [])).filter((s) => s.length)
+    : [];
+
+/**
+ * Put each question's follow-ups right after it, one random wording per
+ * position. Follow-ups use the main question's type and timing.
+ */
+export function expandFollowUps(list: SessionQuestion[], rand: () => number = Math.random): SessionQuestion[] {
+  return list.flatMap((q) => {
+    const { followUpPool, ...main } = q;
+    const slots = cleanFollowUps(followUpPool);
+    if (!slots.length) return [main];
+    return [
+      main,
+      ...slots.map((options, i) => ({
+        ...main,
+        key: `${q.key}#f${i + 1}`,
+        text: options[Math.floor(rand() * options.length)],
+        followUp: { of: q.text, n: i + 1, total: slots.length },
+      })),
+    ];
+  });
 }
 
 /** A part that always asks the same question. */
@@ -228,10 +264,12 @@ export function drawFromBlueprint(
         prep: sec.prep,
         response: sec.response,
         combined: !!sec.combined,
+        followUpPool: q.follow_ups,
       });
     }
   }
-  return school.sim_shuffle ? shuffled(out) : out;
+  // follow-ups stay right after their question, even when the order is shuffled
+  return expandFollowUps(school.sim_shuffle ? shuffled(out) : out);
 }
 
 /** Random practice set: no repeated text, recently seen questions last. */
@@ -251,5 +289,5 @@ export function drawRandom(list: SessionQuestion[], n: number, recent: Set<strin
 /** How many questions a blueprint can actually draw with the pools as they are now. */
 export function blueprintAvailable(school: InterviewBank, questionsByPool: Record<string, BankQuestion[]>): number {
   // a dry run of the real draw, so shared and overlapping pools are counted right
-  return drawFromBlueprint({ ...school, sim_shuffle: false }, questionsByPool).length;
+  return drawFromBlueprint({ ...school, sim_shuffle: false }, questionsByPool).filter((q) => !q.followUp).length;
 }

@@ -5,6 +5,8 @@ export interface QuestionMeta {
   type?: QuestionType;
   prep?: number;
   response?: number;
+  /** From "追问1", "追问2"… columns; several wordings in one cell are split by | */
+  followUps?: string[][];
 }
 
 export interface ImportedFile {
@@ -77,6 +79,13 @@ export function rowsToQuestions(rows: unknown[][]): ImportedFile {
     if (k && cols[k] === undefined) cols[k] = i;
   });
 
+  // "追问1" / "Follow-up 2" … columns, in order
+  const followCols = rows[headerIdx]
+    .map((c, i) => ({ i, m: String(c ?? "").trim().match(/^(?:追问|follow[\s-]?up)\s*(\d*)/i) }))
+    .filter((x) => x.m)
+    .sort((a, b) => Number(a.m![1] || 0) - Number(b.m![1] || 0) || a.i - b.i)
+    .map((x) => x.i);
+
   for (const r of rows.slice(headerIdx + 1)) {
     const [title] = parsePastedQuestions(String(r[cols.title!] ?? ""));
     if (!title) continue;
@@ -86,7 +95,11 @@ export function rowsToQuestions(rows: unknown[][]): ImportedFile {
       prep: cols.prep !== undefined ? parseSeconds(r[cols.prep]) : undefined,
       response: cols.response !== undefined ? parseSeconds(r[cols.response]) : undefined,
     };
-    if (m.type || m.prep !== undefined || m.response !== undefined) meta[title] = m;
+    const followUps = followCols
+      .map((i) => String(r[i] ?? "").split(/[|｜\n]/).map((x) => x.trim()).filter(Boolean))
+      .filter((o) => o.length);
+    if (followUps.length) m.followUps = followUps;
+    if (m.type || m.prep !== undefined || m.response !== undefined || m.followUps) meta[title] = m;
   }
   return { titles, meta };
 }
@@ -112,14 +125,16 @@ export async function readQuestionFile(file: File): Promise<ImportedFile> {
 /** Download a CSV template that opens cleanly in Excel (UTF-8 with BOM). */
 export function downloadQuestionTemplate(lang: "zh" | "en") {
   const rows = lang === "zh"
-    ? [["题目", "题型", "准备时间(秒)", "回答时间(秒)"],
-       ["Tell us about yourself.", "视频", "30", "60"],
-       ["Why do you want to study {program} at {school}?", "视频", "30", "90"],
-       ["Describe a challenge you overcame in 150 words.", "书面", "60", "300"]]
-    : [["Question", "Type", "Prep (seconds)", "Response (seconds)"],
-       ["Tell us about yourself.", "video", "30", "60"],
-       ["Why do you want to study {program} at {school}?", "video", "30", "90"],
-       ["Describe a challenge you overcame in 150 words.", "written", "60", "300"]];
+    ? [["题目", "题型", "准备时间(秒)", "回答时间(秒)", "追问1（多种问法用 | 分隔，可不填）", "追问2"],
+       ["Tell us about yourself.", "视频", "30", "60", "", ""],
+       ["Why do you want to study {program} at {school}?", "视频", "30", "90", "", ""],
+       ["Why do some countries save much more than others?", "视频", "30", "120", "If interest rates rose, what would happen? | What about an ageing population?", "Can you think of a counterexample?"],
+       ["Describe a challenge you overcame in 150 words.", "书面", "60", "300", "", ""]]
+    : [["Question", "Type", "Prep (seconds)", "Answer (seconds)", "Follow-up 1 (separate wordings with |, optional)", "Follow-up 2"],
+       ["Tell us about yourself.", "video", "30", "60", "", ""],
+       ["Why do you want to study {program} at {school}?", "video", "30", "90", "", ""],
+       ["Why do some countries save much more than others?", "video", "30", "120", "If interest rates rose, what would happen? | What about an ageing population?", "Can you think of a counterexample?"],
+       ["Describe a challenge you overcame in 150 words.", "written", "60", "300", "", ""]];
   const csv = rows.map((r) => r.map((c) => (/[",\n]/.test(c) ? `"${c.replace(/"/g, '""')}"` : c)).join(",")).join("\r\n");
   const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);

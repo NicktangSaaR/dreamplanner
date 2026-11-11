@@ -16,7 +16,7 @@ import { useBankAdmin, useBankQuestions, useBanks, type BankInput } from "../use
 import {
   PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, blueprintTotal, formatSeconds,
   type BankKind, type BankQuestion, type BlueprintSection, type InterviewBank, type QuestionType,
-  sectionPools, withPools, isFixed, questionSeconds,
+  sectionPools, withPools, isFixed, questionSeconds, cleanFollowUps,
 } from "../types";
 import BulkQuestionInput, { useBulkQuestions } from "../BulkQuestionInput";
 
@@ -441,13 +441,19 @@ function QuestionRow({ q, bank }: { q: BankQuestion; bank: InterviewBank }) {
   const [type, setType] = useState<QuestionType>(q.question_type);
   const [prep, setPrep] = useState<number | null>(q.preparation_time);
   const [resp, setResp] = useState<number | null>(q.response_time);
+  // one text box per follow-up position, one wording per line
+  const [follow, setFollow] = useState<string[]>(() => cleanFollowUps(q.follow_ups).map((o) => o.join("\n")));
+  const saved = cleanFollowUps(q.follow_ups);
 
   const save = async () => {
     if (!title.trim()) return;
     try {
       await updateQuestion.mutateAsync({
         id: q.id,
-        input: { title: title.trim(), question_type: type, preparation_time: prep, response_time: resp },
+        input: {
+          title: title.trim(), question_type: type, preparation_time: prep, response_time: resp,
+          follow_ups: cleanFollowUps(follow.map((f) => f.split("\n"))),
+        },
       });
       setEditing(false);
       toast.success(t("mi.admin.saved"));
@@ -469,6 +475,23 @@ function QuestionRow({ q, bank }: { q: BankQuestion; bank: InterviewBank }) {
     return (
       <li className="space-y-3 bg-muted/40 px-4 py-3">
         <Textarea rows={2} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={1000} />
+        <div className="space-y-2 rounded-md border bg-background p-3">
+          <div className="text-sm font-medium">{t("mi3.followUps")}</div>
+          <p className="text-xs text-muted-foreground">{t("mi3.followUpsHint")}</p>
+          {follow.map((f, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="mt-2 w-16 shrink-0 text-xs text-muted-foreground">{t("mi3.followUpN", { n: i + 1 })}</span>
+              <Textarea rows={2} value={f} placeholder={t("mi3.followUpPlaceholder")}
+                onChange={(e) => setFollow(follow.map((x, j) => (j === i ? e.target.value : x)))} />
+              <Button variant="ghost" size="icon" aria-label={t("mi.delete")} onClick={() => setFollow(follow.filter((_, j) => j !== i))}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => setFollow([...follow, ""])}>
+            <Plus className="mr-1 h-4 w-4" />{t("mi3.addFollowUp")}
+          </Button>
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           <TypeSelect value={type} onChange={setType} />
           <TimeSelect value={prep} options={PREP_OPTIONS} onChange={setPrep} allowDefault defaultLabel={`${t("mi.admin.useDefault")} (${formatSeconds(bank.preparation_time)})`} />
@@ -490,6 +513,12 @@ function QuestionRow({ q, bank }: { q: BankQuestion; bank: InterviewBank }) {
           {q.question_type === "written" ? t("mi.written") : t("mi.video")} · {t("mi.prep")}{" "}
           {formatSeconds(q.preparation_time ?? bank.preparation_time)} · {t("mi.response")}{" "}
           {formatSeconds(q.response_time ?? bank.response_time)}
+          {saved.length > 0 && (
+            <span className="text-brass">
+              {" · "}{t("mi3.followUpSummary", { n: saved.length })}
+              {saved.some((o) => o.length > 1) && t("mi3.followUpVariants", { n: saved.reduce((n, o) => n + o.length, 0) })}
+            </span>
+          )}
         </p>
       </div>
       <Button variant="ghost" size="icon" onClick={() => setEditing(true)} aria-label={t("mi.admin.editQuestion")}>
@@ -526,6 +555,7 @@ function ImportPanel({ bank, existing }: { bank: InterviewBank; existing: BankQu
             question_type: m.type ?? type,
             preparation_time: m.prep ?? prep,
             response_time: m.response ?? resp,
+            ...(m.followUps ? { follow_ups: m.followUps } : {}),
           };
         }),
       });
