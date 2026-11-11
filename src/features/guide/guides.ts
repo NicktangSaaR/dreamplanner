@@ -56,8 +56,8 @@ export const COUNSELOR_HOME_GUIDE: TourStep[] = [
   },
   {
     target: "invite-student",
-    zh: { title: "邀请学生", body: "输入新学生的邮箱，系统会给学生发一封注册邀请邮件。学生注册后，在主页点「选择我的顾问」选择你，就完成关联。" },
-    en: { title: "Invite a student", body: "Enter a new student's email and they get a sign-up invitation. Once registered, they click “Choose my counselor” on their home page and pick you." },
+    zh: { title: "添加学生", body: "两种方式：\n直接创建账号——填学生姓名和用户名，系统生成初始密码，你把登录信息发给学生；学生第一次登录时会被要求完善资料、绑定邮箱。\n发邮件邀请——输入学生邮箱，学生注册后在主页选择你作为顾问。" },
+    en: { title: "Add a student", body: "Two ways:\nCreate an account — enter the name and a username, a starting password is generated, and you send the login details; on first login the student completes their profile and adds an email.\nInvite by email — they sign up and pick you as their counselor on their home page." },
   },
   {
     target: "counselor-attention",

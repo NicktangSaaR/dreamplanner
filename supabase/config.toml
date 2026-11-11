@@ -51,3 +51,9 @@ verify_jwt = true
 
 [functions.meeting-assistant]
 verify_jwt = true
+
+[functions.create-student]
+verify_jwt = true
+
+[functions.request-password-reset]
+verify_jwt = false

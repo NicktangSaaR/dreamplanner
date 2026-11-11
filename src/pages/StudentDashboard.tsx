@@ -8,6 +8,7 @@ import AuthCheck from "@/components/college-planning/dashboard/AuthCheck";
 import CounselorCheck from "@/components/college-planning/dashboard/CounselorCheck";
 import ProfileWarnings from "@/components/college-planning/dashboard/ProfileWarnings";
 import DashboardContent from "@/components/college-planning/dashboard/DashboardContent";
+import CompleteProfile from "@/features/accounts/CompleteProfile";
 
 export default function StudentDashboard() {
   const { studentId } = useParams();
@@ -29,6 +30,15 @@ export default function StudentDashboard() {
   const handleCounselorCheck = (relationship: any) => {
     setCounselorRelationship(relationship);
   };
+
+  // Accounts a counselor created: the student fills in their details first.
+  if (profile && (profile as { must_complete_profile?: boolean }).must_complete_profile) {
+    return (
+      <AuthCheck queryClient={queryClient}>
+        <CompleteProfile profile={profile} />
+      </AuthCheck>
+    );
+  }
 
   return (
     <AuthCheck queryClient={queryClient}>

@@ -21,16 +21,21 @@ export default function ForgotPassword() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setIsLoading(false);
-    // Rate limits are the only error worth surfacing; for anything else show
-    // the same confirmation so the page doesn't reveal which emails exist.
-    if (error && error.status === 429) {
-      setError(t("forgot.rateLimited"));
-      return;
+    // Works with an email or a student's username; the link goes to the email
+    // on the account. Same confirmation either way, so the page doesn't reveal
+    // which accounts exist.
+    const redirect_to = `${window.location.origin}/reset-password`;
+    const { error } = await supabase.functions.invoke("request-password-reset", { body: { identifier: email.trim(), redirect_to } });
+    if (error && email.includes("@")) {
+      // the function couldn't be reached: fall back to the built-in email reset
+      const { error: e2 } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: redirect_to });
+      if (e2 && e2.status === 429) {
+        setIsLoading(false);
+        setError(t("forgot.rateLimited"));
+        return;
+      }
     }
+    setIsLoading(false);
     setSent(true);
   };
 
@@ -54,17 +59,20 @@ export default function ForgotPassword() {
           {sent ? (
             <div className="flex flex-col items-center gap-3 text-center text-sm text-muted-foreground">
               <MailCheck className="h-10 w-10 text-primary" />
-              <p>{t("forgot.sentBody", { email })}</p>
+              <p>{t("forgot.sentAny")}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">{t("auth.email")}</Label>
+                <Label htmlFor="email">{t("login.identifier")}</Label>
+                <p className="text-xs text-muted-foreground">{t("forgot.identifierHint")}</p>
                 <Input
                   id="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@example.com"
+                  type="text"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  placeholder={t("login.identifierPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

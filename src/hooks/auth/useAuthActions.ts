@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { UserType } from "./types";
+import { loginAddress } from "@/features/accounts/studentLogin";
 
 export const useAuthActions = () => {
   const navigate = useNavigate();
@@ -13,8 +14,9 @@ export const useAuthActions = () => {
     try {
       console.log("Starting login process...");
       
+      // an email, or a student's username
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: loginAddress(email),
         password,
       });
 
@@ -133,7 +135,7 @@ export const useAuthActions = () => {
     if (error.message.includes("Email not confirmed")) {
       toast.error("Please verify your email first. Check your inbox for the verification link.");
     } else if (error.message.includes("Invalid login credentials")) {
-      toast.error("Incorrect email or password. Please try again or sign up for a new account.");
+      toast.error("账号或密码不对，请再试一次 · Incorrect username/email or password.");
     } else {
       toast.error(error.message);
     }
