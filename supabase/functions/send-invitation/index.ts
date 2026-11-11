@@ -1,4 +1,5 @@
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,9 @@ interface EmailRequest {
   isHtml?: boolean; // New: support HTML content directly
 }
 
+const deny = (status: number, error: string) =>
+  new Response(JSON.stringify({ error }), { status, headers: { "Content-Type": "application/json", ...corsHeaders } });
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -33,9 +37,28 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Email service not configured. Please add RESEND_API_KEY.");
     }
     
-    const resend = new Resend(apiKey);
     const requestData: EmailRequest = await req.json();
     const { email, token, expirationDate, subject, content, isHtml } = requestData;
+
+    // Only signed-in staff may send: counselors and admins can send student
+    // invitations; only admins can send emails with their own subject and content.
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const asUser = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user } } = await asUser.auth.getUser();
+    if (!user) return deny(401, "请先登录");
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: profile } = await admin.from("profiles").select("user_type").eq("id", user.id).maybeSingle();
+    const role = profile?.user_type;
+    const isGeneral = !!(subject && content);
+    if (isGeneral ? role !== "admin" : role !== "admin" && role !== "counselor") {
+      console.warn("send-invitation refused", { user: user.id, role, isGeneral });
+      return deny(403, "没有权限发送这封邮件");
+    }
+    if (typeof email !== "string" || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)) return deny(400, "邮箱格式不对");
+
+    const resend = new Resend(apiKey);
     
     console.log("Received request data:", { email, hasToken: !!token, hasSubject: !!subject, isHtml });
 
