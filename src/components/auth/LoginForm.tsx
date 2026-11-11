@@ -27,12 +27,15 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleLogin} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">{t("auth.email")}</Label>
+        <Label htmlFor="email">{t("login.identifier")}</Label>
         <Input
           id="email"
-          type="email"
-          placeholder="you@example.com"
-          autoComplete="email"
+          type="text"
+          inputMode="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          placeholder={t("login.identifierPlaceholder")}
+          autoComplete="username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
