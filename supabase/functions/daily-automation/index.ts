@@ -347,6 +347,70 @@ Deno.serve(async (req) => {
   }
   report.reportRequests = { remindStudents: remindIds.length, overdue: overdueIds.length };
 
+  // ---------- 5) Daily: 3 weeks since the last meeting -> time to book the next ----------
+  // One digest per staff member (lead counselor and 跟进老师), once per
+  // meeting. Skipped when the last meeting already set a next meeting date
+  // that hasn't passed, for completed students, and for students who have
+  // never had a meeting.
+  const FOLLOW_GAP_DAYS = 21;
+  const { data: meetingRows } = await db
+    .from("student_meetings")
+    .select("id, student_id, meeting_date, next_meeting_date")
+    .not("meeting_date", "is", null)
+    .order("meeting_date", { ascending: false });
+  const lastMeeting = new Map<string, { id: string; date: string; next: string | null }>();
+  for (const m of meetingRows || []) {
+    if (!lastMeeting.has(m.student_id)) {
+      lastMeeting.set(m.student_id, { id: m.id, date: String(m.meeting_date).slice(0, 10), next: m.next_meeting_date ? String(m.next_meeting_date).slice(0, 10) : null });
+    }
+  }
+  const dueFollow: { studentId: string; meetingId: string; last: string; days: number }[] = [];
+  for (const [studentId, m] of lastMeeting) {
+    if (completed.has(studentId)) continue;
+    if (m.next && m.next >= today) continue; // already booked
+    if (addDays(m.date, FOLLOW_GAP_DAYS) > today) continue;
+    if (await alreadyRan(`meeting-followup:${m.id}`)) continue;
+    const days = Math.round((Date.parse(today) - Date.parse(m.date)) / 86400000);
+    dueFollow.push({ studentId, meetingId: m.id, last: m.date, days });
+  }
+  if (dueFollow.length) {
+    const { data: followStudents } = await db.from("profiles").select("id, full_name").in("id", dueFollow.map((d) => d.studentId));
+    const nameOf = new Map((followStudents || []).map((x) => [x.id, x.full_name || "学生"]));
+    // lead counselor + 跟进老师 (collaborators with the follow-up role)
+    const byStaff = new Map<string, typeof dueFollow>();
+    for (const d of dueFollow) {
+      const ids = [leadOf.get(d.studentId), ...(teamOf.get(d.studentId) || []).filter((t) => t.role === "followup").map((t) => t.id)];
+      for (const id of new Set(ids.filter(Boolean) as string[])) {
+        byStaff.set(id, [...(byStaff.get(id) || []), d]);
+      }
+    }
+    for (const [staffId, list] of byStaff) {
+      const who = people.get(staffId);
+      if (!who?.email) continue;
+      const rows = (lang: "zh" | "en") => list
+        .sort((a, b) => b.days - a.days)
+        .map((d) => `<li style="margin:6px 0"><a href="${SITE}/counselor-dashboard/student/${d.studentId}" style="color:#173f38;font-weight:600">${esc(nameOf.get(d.studentId) || "")}</a> — ${
+          lang === "zh" ? `上次会议 ${esc(d.last)}（已过 ${d.days} 天）` : `last meeting ${esc(d.last)} (${d.days} days ago)`
+        }</li>`).join("");
+      const hi = esc(who.full_name || "");
+      outbox.push({
+        to: who.email,
+        subject: `该约下次会议了：${list.length} 位学生 · Time to book the next meeting`,
+        html: layout(
+          "该约下次会议了 · Time to book the next meeting",
+          `<p>${hi ? `${hi}，` : ""}你好！以下学生距离上次会议已经满 3 周，请尽快和学生约好下一次会议：</p>
+           <ul style="padding-left:18px">${rows("zh")}</ul>
+           <p style="color:#6b7c78;font-size:13px">约好后，在学生的「跟进」页记录会议，或在上次会议记录里填写「下次会议日期」，就不会再收到这个提醒。</p>
+           <hr style="border:none;border-top:1px dashed #dfe7e4;margin:20px 0">
+           <p>Hi${hi ? ` ${hi}` : ""}, it's been 3 weeks since these students' last meeting. Please book the next one:</p>
+           <ul style="padding-left:18px">${rows("en")}</ul>
+           <p style="color:#6b7c78;font-size:13px">Once booked, log the meeting on the student's Follow-up tab, or set the next meeting date on the last meeting, and this reminder stops.</p>`,
+        ),
+      });
+    }
+  }
+  report.meetingFollowUp = dueFollow.map((d) => ({ student: d.studentId, last: d.last, days: d.days }));
+
   // ---------- send ----------
   const sent: string[] = [];
   const failed: string[] = [];
@@ -361,6 +425,9 @@ Deno.serve(async (req) => {
     }
     if (remindIds.length) await db.from("academic_report_requests").update({ student_reminded: true }).in("id", remindIds);
     if (overdueIds.length) await db.from("academic_report_requests").update({ overdue_notified: true }).in("id", overdueIds);
+    if (failed.length === 0) {
+      for (const d of dueFollow) await markRan(`meeting-followup:${d.meetingId}`, { student: d.studentId, last: d.last });
+    }
     if (milestones?.length && failed.length === 0) {
       await db.from("planning_milestones").update({ reminder_sent: true }).in("id", milestones.map((m) => m.id));
     }
