@@ -154,6 +154,7 @@ export interface Answer {
 
 export const PREP_OPTIONS = [0, 15, 30, 45, 60, 90, 120, 180, 300];
 export const RESPONSE_OPTIONS = [30, 45, 60, 90, 120, 180, 240, 300, 600];
+export const READING_OPTIONS = [30, 60, 90, 120, 180, 240, 300, 600, 900];
 
 export function formatSeconds(total: number): string {
   const s = Math.max(0, Math.round(total));

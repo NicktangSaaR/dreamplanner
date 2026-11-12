@@ -8,7 +8,7 @@ import { useLanguage } from "@/i18n/LanguageProvider";
 import { fillPlaceholders, formatSeconds, type Answer, type SessionQuestion, type SessionSettings } from "./types";
 
 /** "reading": the question is read aloud twice; prep time starts after. */
-type Phase = "check" | "reading" | "prep" | "answer" | "done";
+type Phase = "check" | "material" | "reading" | "prep" | "answer" | "done";
 type CameraState = "pending" | "ready" | "denied" | "missing" | "busy" | "unsupported" | "skipped";
 
 interface Props {
@@ -189,11 +189,8 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
     }
   };
 
-  /** New question: read it aloud twice, then start the prep countdown. */
-  const beginPrep = useCallback(() => {
-    setPlaybackUrl(null);
-    setWritten("");
-    setAttempts(0);
+  /** Read the question aloud twice, then start the prep countdown. */
+  const startReading = () => {
     setEndsAt(null);
     setPhase("reading");
     setReading(1);
@@ -202,6 +199,20 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
       onRead: setReading,
       onDone: startPrep,
     });
+  };
+
+  /** New question: material to read first (if any), then the question. */
+  const beginPrep = useCallback(() => {
+    setPlaybackUrl(null);
+    setWritten("");
+    setAttempts(0);
+    if (question.material && (question.readingTime ?? 0) > 0) {
+      setPhase("material");
+      setNow(Date.now());
+      setEndsAt(Date.now() + (question.readingTime ?? 0) * 1000);
+      return;
+    }
+    startReading();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [question]);
 
@@ -245,7 +256,8 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
   // Auto-advance when a countdown runs out.
   useEffect(() => {
     if (endsAt === null || remaining > 0) return;
-    if (phase === "prep") beginAnswer();
+    if (phase === "material") startReading();
+    else if (phase === "prep") beginAnswer();
     else if (phase === "answer") finishAnswer();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remaining, endsAt, phase]);
@@ -285,11 +297,12 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
   const cameraProblem = camera !== "pending" && camera !== "ready" && camera !== "skipped";
   const text = fillPlaceholders(question.text, settings.school, settings.program);
   const phaseLabel =
-    phase === "reading" ? t("mi.reading", { n: reading })
+    phase === "material" ? t("mi.readingMaterial")
+    : phase === "reading" ? t("mi.reading", { n: reading })
     : phase === "prep" ? (question.combined ? t("mi.thinking", { total: formatSeconds(question.response) }) : t("mi.preparing"))
     : phase === "answer" ? (isWritten ? t("mi.writing") : t("mi.recording"))
     : phase === "done" ? t("mi.answered") : t("mi.cameraCheck");
-  const ringTotal = phase === "prep" ? (question.combined ? Math.min(question.prep, question.response) : question.prep) : answerTotal || question.response;
+  const ringTotal = phase === "material" ? question.readingTime ?? 1 : phase === "prep" ? (question.combined ? Math.min(question.prep, question.response) : question.prep) : answerTotal || question.response;
   const wordCount = written.trim() ? written.trim().split(/\s+/).length : 0;
 
   return (
@@ -328,7 +341,15 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
               {t("mi.followUpContext")}{question.followUp.of}
             </p>
           )}
-          {phase === "check" && !started ? (
+          {question.material && (phase !== "check" || started) && (
+            <div className="mt-3 max-h-80 overflow-y-auto rounded-md border border-brass/40 bg-brass/5 p-4">
+              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-brass">{t("mi.material")}</div>
+              <div className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">{question.material}</div>
+            </div>
+          )}
+          {phase === "material" ? (
+            <p className="mt-4 text-sm text-muted-foreground">{t("mi.materialHint")}</p>
+          ) : phase === "check" && !started ? (
             <>
               <h2 className="mt-3 font-serif text-2xl font-semibold text-pine">{t("mi.cameraCheck")}</h2>
               <p className="mt-3 leading-relaxed text-muted-foreground">{t("mi.cameraCheckBody")}</p>
@@ -395,8 +416,8 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
 
           {/* Controls */}
           <div className="flex flex-wrap items-center gap-4 border-t p-4">
-            {(phase === "prep" || phase === "answer") && (
-              <Ring remaining={remaining} total={ringTotal} tone={phase === "prep" ? "prep" : "rec"} />
+            {(phase === "material" || phase === "prep" || phase === "answer") && (
+              <Ring remaining={remaining} total={ringTotal} tone={phase === "answer" ? "rec" : "prep"} />
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 font-semibold">
@@ -419,6 +440,7 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
                   </Button>
                 </>
               )}
+              {phase === "material" && <Button onClick={startReading}>{t("mi.doneReading")}</Button>}
               {phase === "reading" && <Button variant="outline" onClick={startPrep}>{t("mi.skipReading")}</Button>}
               {phase === "prep" && <Button onClick={beginAnswer}>{t("mi.startNow")}</Button>}
               {phase === "answer" && <Button onClick={finishAnswer}>{t("mi.finish")}</Button>}
