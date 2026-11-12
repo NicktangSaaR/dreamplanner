@@ -6,17 +6,8 @@ alter table public.todos add column if not exists title_zh text;
 alter table public.todos add column if not exists title_en text;
 alter table public.todos add column if not exists title_source text;
 
--- The function is called with the same secret as the daily automation job,
--- kept in Vault so it isn't written into function definitions.
-do $$
-begin
-  if not exists (select 1 from vault.secrets where name = 'cron_secret') then
-    perform vault.create_secret(
-      (select (regexp_match(command, '''x-cron-secret''\s*,\s*''([^'']+)'''))[1] from cron.job where jobname = 'dreamplanner-daily-automation'),
-      'cron_secret',
-      'Shared secret for scheduled / internal edge function calls');
-  end if;
-end $$;
+-- The function is called with the same secret as the daily automation job;
+-- it is read from that job at call time rather than stored a second time.
 
 -- Ask for translations of new or renamed to-dos, once per statement (an
 -- import of 30 to-dos is one call). Never blocks or fails the write.
@@ -36,7 +27,8 @@ begin
   if ids is null then
     return null;
   end if;
-  select decrypted_secret into secret from vault.decrypted_secrets where name = 'cron_secret';
+  select (regexp_match(command, '''x-cron-secret''\s*,\s*''([^'']+)'''))[1] into secret
+    from cron.job where jobname = 'dreamplanner-daily-automation';
   if secret is null then
     return null;
   end if;
