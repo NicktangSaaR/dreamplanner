@@ -27,22 +27,25 @@ export class ReminderService {
       // Get todos
       console.log("Fetching uncompleted todos for student:", studentId);
       const todos = await this.dbService.getUncompletedTodos(studentId);
+      // the counselor's own open tasks for this student go in the counselor's email
+      const counselorTasks = customEmail ? [] : await this.dbService.getCounselorTasks(studentId);
       
-      if (!todos || todos.length === 0) {
-        console.log("No uncompleted todos found for student:", studentId);
+      if ((!todos || todos.length === 0) && counselorTasks.length === 0) {
+        console.log("Nothing open for student or counselor:", studentId);
         return { message: "No uncompleted todos to remind about" };
       }
       
-      console.log(`Found ${todos.length} uncompleted todos for student:`, studentId);
+      console.log(`Found ${todos.length} student to-dos and ${counselorTasks.length} counselor tasks for:`, studentId);
       
       // Get student information
-      const studentInfo = todos.length > 0 ? todos[0].profiles : null;
+      const studentInfo = todos.length > 0 ? todos[0].profiles : await this.dbService.getStudentProfile(studentId);
       
       // Log student email information for debugging
       console.log("Student email:", studentInfo?.email);
       
       // If customEmail is provided, send only to that email
       if (customEmail) {
+        if (!todos.length) return { message: "No uncompleted todos to remind about" };
         console.log("Custom email provided, sending to:", customEmail);
         return await this.emailManager.sendCustomEmail(todos, studentInfo, customEmail);
       }
@@ -53,7 +56,7 @@ export class ReminderService {
       console.log("Counselor email:", counselorInfo?.email);
       
       // Send emails to student and counselor
-      return await this.emailManager.sendReminderEmails(todos, studentInfo, counselorInfo);
+      return await this.emailManager.sendReminderEmails(todos, studentInfo, counselorInfo, counselorTasks);
     } catch (error) {
       console.error("Error in processReminder:", error);
       console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));

@@ -37,11 +37,11 @@ const KEYDATE_PREFIX = "📌";
 export async function loadTasks(studentId: string): Promise<UnifiedTask[]> {
   const [{ data: todos }, { data: items }, { data: hist }] = await Promise.all([
     db.from("todos").select(`id, ${TODO_TITLE_COLUMNS}, completed, due_date, created_at`).eq("author_id", studentId),
-    db.from("meeting_action_items").select("id, meeting_id, title, owner, due_date, completed, todo_id").eq("student_id", studentId),
+    db.from("meeting_action_items").select(`id, meeting_id, ${TODO_TITLE_COLUMNS}, owner, due_date, completed, todo_id`).eq("student_id", studentId),
     db.from("task_postponements").select("task_id, old_due, new_due, reason, via, created_at").eq("student_id", studentId).order("created_at"),
   ]);
   const historyOf = (id: string) => ((hist || []) as (Postponement & { task_id: string })[]).filter((h) => h.task_id === id);
-  const itemRows = (items || []) as { id: string; meeting_id: string | null; title: string; owner: Owner; due_date: string | null; completed: boolean | null; todo_id: string | null }[];
+  const itemRows = (items || []) as (BilingualTitle & { id: string; meeting_id: string | null; owner: Owner; due_date: string | null; completed: boolean | null; todo_id: string | null })[];
   const meetingIds = [...new Set(itemRows.map((i) => i.meeting_id).filter(Boolean))] as string[];
   const { data: meetings } = meetingIds.length
     ? await db.from("student_meetings").select("id, meeting_date, title").in("id", meetingIds)
@@ -66,7 +66,7 @@ export async function loadTasks(studentId: string): Promise<UnifiedTask[]> {
       };
     }),
     ...itemRows.filter((i) => !i.todo_id).map((i) => ({
-      key: `a-${i.id}`, table: "meeting_action_items" as const, id: i.id, title: i.title, owner: i.owner, history: historyOf(i.id),
+      key: `a-${i.id}`, table: "meeting_action_items" as const, id: i.id, title: i.title, titles: { zh: todoTitle(i, "zh"), en: todoTitle(i, "en") }, owner: i.owner, history: historyOf(i.id),
       due: day(i.due_date), completed: !!i.completed,
       source: (i.meeting_id ? { kind: "meeting", label: meetingLabel.get(i.meeting_id) || "" } : { kind: "manual" }) as TaskSource,
     })),

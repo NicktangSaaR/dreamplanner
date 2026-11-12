@@ -97,17 +97,33 @@ export function studentEmail(todos: Todo[], studentName: string) {
   return { subject: `待办提醒 · To-do reminder：${studentName}`, html: page(zh, en) };
 }
 
-/** Email to the counselor about one student. */
-export function counselorEmail(todos: Todo[], studentName: string, counselorName: string) {
+/** A titled list, or a short line when it's empty. */
+function block(lang: "zh" | "en", title: string, items: Todo[], empty: string) {
+  return `<h2 style="margin:20px 0 8px;font-size:16px;line-height:1.4;color:${C.ink};font-weight:600;">${title}</h2>
+    ${items.length ? list(items, lang) : `<p style="margin:0;font-size:14px;color:${C.muted};">${empty}</p>`}`;
+}
+
+/** Email to the counselor about one student: the student's to-dos and the counselor's own tasks. */
+export function counselorEmail(todos: Todo[], studentName: string, counselorName: string, mine: Todo[] = []) {
   const s = esc(studentName), c = esc(counselorName);
-  const n = todos.length;
-  const zh = section("zh", "学生待办提醒",
-    `${c}，你好！你的学生 <strong>${s}</strong> 还有 <strong>${n}</strong> 项待办没有完成，我们也已经给学生发了提醒：`,
-    todos, { href: `${SITE}/counselor-dashboard`, label: "打开顾问工作台" },
-    "可以在学生的「跟进」页查看进度、修改日期或处理延期申请。");
-  const en = section("en", "Student to-do reminder",
-    `Hi ${c}, your student <strong>${s}</strong> still has <strong>${n}</strong> to-do${n === 1 ? "" : "s"} open. We've sent them a reminder too:`,
-    todos, { href: `${SITE}/counselor-dashboard`, label: "Open your workspace" },
-    "Use the student's Follow-up tab to check progress, change dates or answer extension requests.");
-  return { subject: `学生待办提醒 · Student to-do reminder：${studentName}`, html: page(zh, en) };
+  const n = todos.length, m = mine.length;
+  const part = (lang: "zh" | "en") => {
+    const zh = lang === "zh";
+    const intro = zh
+      ? `${c}，你好！关于学生 <strong>${s}</strong>：学生还有 <strong>${n}</strong> 项待办${n ? "（已同时提醒学生）" : ""}，你还有 <strong>${m}</strong> 项要做的事。`
+      : `Hi ${c}, about your student <strong>${s}</strong>: they have <strong>${n}</strong> open to-do${n === 1 ? "" : "s"}${n ? " (we've reminded them too)" : ""}, and you have <strong>${m}</strong> task${m === 1 ? "" : "s"} of your own.`;
+    const button = zh ? { href: `${SITE}/counselor-dashboard`, label: "打开顾问工作台" } : { href: `${SITE}/counselor-dashboard`, label: "Open your workspace" };
+    return `
+  <div lang="${zh ? "zh-CN" : "en"}" style="padding:24px;">
+    <h1 style="margin:0 0 12px;font-size:20px;line-height:1.4;color:${C.brand};font-weight:600;">${zh ? "待办提醒" : "To-do reminder"}</h1>
+    <p style="margin:0;font-size:15px;line-height:1.7;color:${C.ink};">${intro}</p>
+    ${block(lang, zh ? `你要做的事（${m}）` : `Your tasks (${m})`, mine, zh ? "你没有未完成的事。" : "Nothing open for you.")}
+    ${block(lang, zh ? `学生要做的事（${n}）` : `The student's to-dos (${n})`, todos, zh ? "学生的待办都完成了。" : "The student has finished everything.")}
+    <p style="margin:20px 0 0;"><a href="${button.href}" style="display:inline-block;background:${C.brand};color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;font-size:15px;">${button.label}</a></p>
+    <p style="margin:16px 0 0;font-size:14px;line-height:1.7;color:${C.muted};">${zh
+      ? "可以在学生的「跟进」页查看进度、修改日期或处理延期申请。"
+      : "Use the student's Follow-up tab to check progress, change dates or answer extension requests."}</p>
+  </div>`;
+  };
+  return { subject: `待办提醒 · To-do reminder：${studentName}`, html: page(part("zh"), part("en")) };
 }

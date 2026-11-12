@@ -4,6 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.14.0";
 export interface DatabaseService {
   getUncompletedTodos(studentId: string): Promise<any[]>;
   getCounselorForStudent(studentId: string): Promise<any>;
+  getCounselorTasks(studentId: string): Promise<any[]>;
+  getStudentProfile(studentId: string): Promise<any>;
 }
 
 export class SupabaseDatabaseService implements DatabaseService {
@@ -48,6 +50,28 @@ export class SupabaseDatabaseService implements DatabaseService {
     }));
   }
 
+  /** The counselor's own open tasks for this student (task board, owner = counselor). */
+  async getCounselorTasks(studentId: string): Promise<any[]> {
+    const { data, error } = await this.supabase
+      .from("meeting_action_items")
+      .select("id, title, title_zh, title_en, title_source, due_date")
+      .eq("student_id", studentId)
+      .eq("owner", "counselor")
+      .is("todo_id", null)
+      .or("completed.is.null,completed.eq.false");
+    if (error) {
+      console.error("Error fetching counselor tasks:", error);
+      return [];
+    }
+    return data || [];
+  }
+
+  /** The student's profile (name and email). */
+  async getStudentProfile(studentId: string): Promise<any> {
+    const { data } = await this.supabase.from("profiles").select("id, email, full_name, user_type").eq("id", studentId).maybeSingle();
+    return data || null;
+  }
+
   async getCounselorForStudent(studentId: string): Promise<any> {
     try {
       console.log(`Fetching counselor for student: ${studentId}`);
@@ -59,7 +83,9 @@ export class SupabaseDatabaseService implements DatabaseService {
           counselor_id
         `)
         .eq("student_id", studentId)
-        .single();
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
       
       if (relationshipError) {
         console.error("Error fetching counselor relationship:", relationshipError);
