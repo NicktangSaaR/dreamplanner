@@ -1,8 +1,10 @@
 // Fill in the Chinese and English versions of to-do titles.
 // Called by the todos trigger (new or renamed to-dos) and for backfills.
 //
-// POST { ids?: string[], backfill?: boolean }   header x-cron-secret: CRON_SECRET
-//   ids: translate these to-dos; backfill: the next batch still missing a translation.
+// POST { table?: "todos" | "meeting_action_items", ids?: string[], backfill?: boolean }
+//   header x-cron-secret: CRON_SECRET
+//   ids: translate these rows; backfill: the next batch still missing a translation.
+//   table defaults to todos (meeting_action_items holds the counselor's own tasks).
 //   -> { translated, remaining? }
 //
 // A title already in one language is kept as that language's version; only
@@ -53,11 +55,12 @@ Deno.serve(async (req) => {
   if (!key) return json({ error: "AI not configured" }, 500);
 
   const body = await req.json().catch(() => ({}));
+  const table = body.table === "meeting_action_items" ? "meeting_action_items" : "todos";
   const ids: string[] = Array.isArray(body.ids) ? body.ids.filter((x: unknown) => typeof x === "string").slice(0, 200) : [];
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 
   // rows whose translation is missing or out of date
-  let q = db.from("todos").select("id, title, title_source").not("title", "is", null);
+  let q = db.from(table).select("id, title, title_source").not("title", "is", null);
   q = ids.length ? q.in("id", ids) : q.or("title_source.is.null,title_zh.is.null,title_en.is.null").order("created_at", { ascending: false }).limit(120);
   const { data, error } = await q;
   if (error) return json({ error: error.message }, 500);
@@ -82,14 +85,14 @@ Deno.serve(async (req) => {
       const en = isZh ? t.en : r.title;
       if (!zh || !en) continue;
       // only if nobody renamed it meanwhile
-      const { error: upErr } = await db.from("todos").update({ title_zh: zh, title_en: en, title_source: r.title }).eq("id", r.id).eq("title", r.title);
+      const { error: upErr } = await db.from(table).update({ title_zh: zh, title_en: en, title_source: r.title }).eq("id", r.id).eq("title", r.title);
       if (upErr) console.error("translate-todos update", upErr);
       else translated++;
     }
   }
 
   if (body.backfill) {
-    const { count } = await db.from("todos").select("id", { count: "exact", head: true }).or("title_source.is.null,title_zh.is.null,title_en.is.null");
+    const { count } = await db.from(table).select("id", { count: "exact", head: true }).or("title_source.is.null,title_zh.is.null,title_en.is.null");
     return json({ translated, remaining: count ?? null });
   }
   return json({ translated });

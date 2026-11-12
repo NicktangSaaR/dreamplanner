@@ -1,3 +1,4 @@
+import { TODO_TITLE_COLUMNS, todoTitle, type BilingualTitle } from "@/shared/todoTitle";
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ClipboardList, FileUp, Loader2, Lock, Mail, Plus, Sparkles, Trash2 } from "lucide-react";
@@ -18,7 +19,7 @@ import { rescheduleTask } from "./followData";
 import { academicYear, currentQuarter, db, fmtDate, parseGoals, todayIso, type Goal, type QuarterKey } from "@/features/counselor/plan/planData";
 
 export type Owner = "student" | "counselor" | "parent";
-export type Task = { id: string; title: string; owner: Owner; due_date: string | null; completed: boolean; todo_id: string | null };
+export type Task = BilingualTitle & { id: string; owner: Owner; due_date: string | null; completed: boolean; todo_id: string | null };
 export type Meeting = {
   id: string;
   meeting_date: string;
@@ -50,7 +51,7 @@ export async function loadMeetings(studentId: string, limit?: number): Promise<M
   if (!list.length) return [];
   const ids = list.map((m) => m.id);
   const [{ data: items }, { data: privs }] = await Promise.all([
-    db.from("meeting_action_items").select("id, meeting_id, title, owner, due_date, completed, todo_id, created_at").in("meeting_id", ids).order("created_at"),
+    db.from("meeting_action_items").select(`id, meeting_id, ${TODO_TITLE_COLUMNS}, owner, due_date, completed, todo_id, created_at`).in("meeting_id", ids).order("created_at"),
     db.from("meeting_private").select("meeting_id, team_note").in("meeting_id", ids),
   ]);
   const todoIds = (items || []).map((i: { todo_id: string | null }) => i.todo_id).filter(Boolean);
@@ -101,7 +102,7 @@ export function MeetingBody({ meeting: m, onToggleTask, onDelete, onChanged }: {
             {m.tasks.map((t) => (
               <li key={t.id} className="flex flex-wrap items-center gap-3 px-3 py-2">
                 <Checkbox checked={t.completed} onCheckedChange={() => onToggleTask(t)} />
-                <span className={cn("min-w-0 flex-1", t.completed && "text-muted-foreground line-through")}>{t.title}</span>
+                <span className={cn("min-w-0 flex-1", t.completed && "text-muted-foreground line-through")}>{todoTitle(t, lang)}</span>
                 <Badge variant="outline" className="font-normal">{OWNER[t.owner] || t.owner}</Badge>
                 <ReschedulePopover current={t.due_date}
                   onConfirm={async (d, r) => {
@@ -307,7 +308,7 @@ export function RecordMeetingDialog({
                   {lastMeeting.tasks.map((t) => (
                     <li key={t.id} className="flex items-center gap-2">
                       <Checkbox checked={t.completed} onCheckedChange={async () => { await toggleMeetingTask(t); void refetchLast(); }} />
-                      <span className={cn("flex-1", t.completed && "text-muted-foreground line-through")}>{t.title}</span>
+                      <span className={cn("flex-1", t.completed && "text-muted-foreground line-through")}>{todoTitle(t, lang)}</span>
                       <span className="text-xs text-muted-foreground">{OWNER[t.owner] || t.owner}{t.due_date && ` · ${t.due_date}`}</span>
                       {!t.completed && overdue(t.due_date) && <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10">{L("已逾期", "Overdue")}</Badge>}
                     </li>

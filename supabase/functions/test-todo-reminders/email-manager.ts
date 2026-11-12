@@ -75,7 +75,7 @@ export class EmailManager {
   /**
    * Sends reminder emails to student and counselor
    */
-  async sendReminderEmails(todos: any[], studentInfo: any, counselorInfo: any) {
+  async sendReminderEmails(todos: any[], studentInfo: any, counselorInfo: any, counselorTasks: any[] = []) {
     const studentName = studentInfo?.full_name || '学生';
     // a staff-created student's internal login address receives no mail
     const real = (e: string | null | undefined) => (e && !e.toLowerCase().endsWith("@student.dreamplaneredu.com") ? e : null);
@@ -84,7 +84,7 @@ export class EmailManager {
     const counselorName = counselorInfo?.full_name || "顾问";
     
     const forStudent = studentTemplate(todos, studentName);
-    const forCounselor = counselorTemplate(todos, studentName, counselorName);
+    const forCounselor = counselorTemplate(todos, studentName, counselorName, counselorTasks);
     const studentHtmlContent = forStudent.html;
     const counselorHtmlContent = forCounselor.html;
     
@@ -92,8 +92,8 @@ export class EmailManager {
     let emailSendingErrors = [];
     
     try {
-      // Send email to student
-      if (studentEmail) {
+      // Send email to student (only when they have something open)
+      if (studentEmail && todos.length) {
         console.log(`Sending email to student: ${studentEmail} using domain: ${this.domain}`);
         
         const studentEmailResult = await this.emailService.sendReminderEmail(
