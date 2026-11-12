@@ -26,6 +26,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useProfile } from "@/hooks/useProfile";
 import { useStudentTodos } from "@/hooks/todos/useStudentTodos";
 import type { Todo } from "@/hooks/todos/useTodoQuery";
+import { todoTitle, type BilingualTitle } from "@/shared/todoTitle";
 import { useStudentQuarters } from "@/components/engines/hooks/useStudentQuarters";
 import SharedFolderDialog from "@/components/college-planning/SharedFolderDialog";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
@@ -192,7 +193,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   // ---- one list ----
   const { open, done } = useMemo(() => {
     const items: Item[] = [
-      ...todos.map((todo): Item => ({ kind: "todo", key: `t-${todo.id}`, title: todo.title.replace(/^📌\s*/u, ""), done: !!todo.completed, due: dueTime(todo.due_date), todo })),
+      ...todos.map((todo): Item => ({ kind: "todo", key: `t-${todo.id}`, title: todoTitle(todo as BilingualTitle, lang).replace(/^📌\s*/u, ""), done: !!todo.completed, due: dueTime(todo.due_date), todo })),
       ...goals.map((goal): Item => ({ kind: "goal", key: `g-${goal.id}`, title: goal.text, done: !!goal.completed, due: null, goal })),
     ];
     const rank = (i: Item) => (i.due !== null ? 0 : i.kind === "goal" ? 1 : 2);

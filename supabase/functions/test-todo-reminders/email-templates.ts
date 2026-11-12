@@ -8,7 +8,18 @@ const SITE = "https://dreamplaneredu.com";
 const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', Arial, sans-serif";
 const C = { ink: "#1f2d2a", muted: "#5f6f6b", line: "#e3ebe8", brand: "#1f5c4d", soft: "#f3f7f5", late: "#b42318" };
 
-type Todo = { title?: string | null; due_date?: string | null; starred?: boolean | null };
+type Todo = {
+  title?: string | null;
+  title_zh?: string | null;
+  title_en?: string | null;
+  /** The title the translations were made from; if it differs, show the title as typed. */
+  title_source?: string | null;
+  due_date?: string | null;
+  starred?: boolean | null;
+};
+
+const titleIn = (t: Todo, lang: "zh" | "en") =>
+  (t.title_source === t.title ? (lang === "zh" ? t.title_zh : t.title_en) : null) || t.title;
 
 const esc = (s: unknown) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
@@ -38,7 +49,7 @@ function list(todos: Todo[], lang: "zh" | "en") {
         }</div>`
       : "";
     return `<tr><td style="padding:10px 12px;border-top:1px solid ${C.line};font-size:15px;line-height:1.5;color:${C.ink};word-break:break-word;overflow-wrap:anywhere;">
-      ${t.starred ? "★ " : ""}${esc(t.title) || (lang === "zh" ? "（未命名待办）" : "(untitled to-do)")}${when}</td></tr>`;
+      ${t.starred ? "★ " : ""}${esc(titleIn(t, lang)) || (lang === "zh" ? "（未命名待办）" : "(untitled to-do)")}${when}</td></tr>`;
   });
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid ${C.line};border-radius:6px;">${rows.join("")}</table>`;
 }

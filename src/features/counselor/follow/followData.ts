@@ -1,3 +1,4 @@
+import { TODO_TITLE_COLUMNS, todoTitle, type BilingualTitle } from "@/shared/todoTitle";
 import { db, todayIso } from "@/features/counselor/plan/planData";
 import type { Owner } from "./meetings";
 
@@ -17,19 +18,25 @@ export type UnifiedTask = {
   key: string;
   table: "todos" | "meeting_action_items";
   id: string;
+  /** As typed (used for editing). */
   title: string;
+  /** To-dos: the title in each language, for display. */
+  titles?: { zh: string; en: string };
   owner: Owner;
   due: string | null;
   completed: boolean;
   source: TaskSource;
 };
 
+/** A task's title in the current language. */
+export const taskTitle = (t: UnifiedTask, lang: string) => (lang === "en" ? t.titles?.en : t.titles?.zh) || t.title;
+
 const day = (v: string | null | undefined) => (v ? String(v).slice(0, 10) : null);
 const KEYDATE_PREFIX = "📌";
 
 export async function loadTasks(studentId: string): Promise<UnifiedTask[]> {
   const [{ data: todos }, { data: items }, { data: hist }] = await Promise.all([
-    db.from("todos").select("id, title, completed, due_date, created_at").eq("author_id", studentId),
+    db.from("todos").select(`id, ${TODO_TITLE_COLUMNS}, completed, due_date, created_at`).eq("author_id", studentId),
     db.from("meeting_action_items").select("id, meeting_id, title, owner, due_date, completed, todo_id").eq("student_id", studentId),
     db.from("task_postponements").select("task_id, old_due, new_due, reason, via, created_at").eq("student_id", studentId).order("created_at"),
   ]);
@@ -45,7 +52,7 @@ export async function loadTasks(studentId: string): Promise<UnifiedTask[]> {
   const fromMeeting = new Map(itemRows.filter((i) => i.todo_id && i.meeting_id).map((i) => [i.todo_id as string, i.meeting_id as string]));
 
   const list: UnifiedTask[] = [
-    ...((todos || []) as { id: string; title: string; completed: boolean | null; due_date: string | null }[]).map((t) => {
+    ...((todos || []) as (BilingualTitle & { id: string; completed: boolean | null; due_date: string | null })[]).map((t) => {
       const mid = fromMeeting.get(t.id);
       const source: TaskSource = mid
         ? { kind: "meeting", label: meetingLabel.get(mid) || "" }
@@ -53,6 +60,8 @@ export async function loadTasks(studentId: string): Promise<UnifiedTask[]> {
       return {
         key: `t-${t.id}`, table: "todos" as const, id: t.id, history: historyOf(t.id),
         title: t.title.replace(new RegExp(`^${KEYDATE_PREFIX}\\s*`, "u"), ""),
+        // shown in the current language; `title` stays the text that was typed (for editing)
+        titles: { zh: todoTitle(t, "zh").replace(new RegExp(`^${KEYDATE_PREFIX}\\s*`, "u"), ""), en: todoTitle(t, "en").replace(new RegExp(`^${KEYDATE_PREFIX}\\s*`, "u"), "") },
         owner: "student" as Owner, due: day(t.due_date), completed: !!t.completed, source,
       };
     }),
