@@ -15,7 +15,7 @@ import { useBankQuestions, useBanks, useCustomQuestionMutations, useCustomQuesti
 import {
   PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, drawFromBlueprint, drawRandom, recentQuestionKeys, rememberQuestions, fillPlaceholders, formatSeconds,
   type InterviewBank, type QuestionType, type SessionQuestion, type SessionSettings,
-  sectionPools, isFixed, questionSeconds, cleanFollowUps, expandFollowUps,
+  sectionPools, isFixed, questionSeconds, cleanFollowUps, expandFollowUps, materialOf,
 } from "./types";
 import type { SessionMeta } from "./sessionLog";
 
@@ -86,13 +86,14 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
     if (!banksLoading && !questionsLoading && simulations.length === 0) setMode("practice");
   }, [banksLoading, questionsLoading, simulations.length]);
 
-  const toSession = (b: InterviewBank | null, q: { id: string; title: string; question_type: QuestionType; preparation_time: number | null; response_time: number | null; follow_ups?: string[][] }, key: string): SessionQuestion => ({
+  const toSession = (b: InterviewBank | null, q: { id: string; title: string; question_type: QuestionType; preparation_time: number | null; response_time: number | null; follow_ups?: string[][]; material?: string | null; reading_time?: number | null }, key: string): SessionQuestion => ({
     key,
     text: q.title,
     type: q.question_type,
     prep: q.preparation_time ?? b?.preparation_time ?? 30,
     response: q.response_time ?? b?.response_time ?? 60,
     followUpPool: q.follow_ups,
+    ...materialOf(q),
   });
 
   // Practice pool
@@ -135,7 +136,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
         : poolQuestions.slice(0, Math.min(randomCount, poolQuestions.length));
   const practiceCount = pick === "random" ? Math.min(randomCount, poolQuestions.length) : practiceChosen.length;
   // each follow-up takes as long as its question
-  const practiceTime = withTiming(practiceChosen).reduce((s, q) => s + questionSeconds(q) * (1 + cleanFollowUps(q.followUpPool).length), 0);
+  const practiceTime = withTiming(practiceChosen).reduce((s, q) => s + (q.readingTime ?? 0) + questionSeconds(q) * (1 + cleanFollowUps(q.followUpPool).length), 0);
 
   const start = () => {
     if (mode === "simulation") {

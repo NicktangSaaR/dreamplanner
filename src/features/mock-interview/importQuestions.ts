@@ -7,6 +7,9 @@ export interface QuestionMeta {
   response?: number;
   /** From "追问1", "追问2"… columns; several wordings in one cell are split by | */
   followUps?: string[][];
+  /** Passage the student reads before the question appears. */
+  material?: string;
+  readingTime?: number;
 }
 
 export interface ImportedFile {
@@ -21,6 +24,8 @@ const HEADER_ALIASES = {
   title: ["question", "questions", "title", "prompt", "题目", "问题", "面试题", "题干"],
   type: ["type", "question type", "题型", "类型"],
   prep: ["prep", "preparation", "prep time", "preparation time", "准备", "准备时间", "准备时间(秒)", "准备时间（秒）"],
+  material: ["material", "passage", "材料", "阅读材料"],
+  readingTime: ["reading time", "reading", "阅读时间", "阅读时间(秒)", "阅读时间（秒）"],
   response: ["response", "answer", "response time", "answer time", "答题", "作答", "答题时间", "答题时间(秒)", "答题时间（秒）", "回答时间", "回答时间(秒)", "回答时间（秒）"],
 } as const;
 
@@ -99,7 +104,13 @@ export function rowsToQuestions(rows: unknown[][]): ImportedFile {
       .map((i) => String(r[i] ?? "").split(/[|｜\n]/).map((x) => x.trim()).filter(Boolean))
       .filter((o) => o.length);
     if (followUps.length) m.followUps = followUps;
-    if (m.type || m.prep !== undefined || m.response !== undefined || m.followUps) meta[title] = m;
+    const material = cols.material !== undefined ? String(r[cols.material] ?? "").trim() : "";
+    if (material) {
+      m.material = material;
+      const rt = cols.readingTime !== undefined ? parseSeconds(r[cols.readingTime]) : undefined;
+      if (rt && rt >= 10) m.readingTime = rt;
+    }
+    if (m.type || m.prep !== undefined || m.response !== undefined || m.followUps || m.material) meta[title] = m;
   }
   return { titles, meta };
 }
@@ -125,16 +136,18 @@ export async function readQuestionFile(file: File): Promise<ImportedFile> {
 /** Download a CSV template that opens cleanly in Excel (UTF-8 with BOM). */
 export function downloadQuestionTemplate(lang: "zh" | "en") {
   const rows = lang === "zh"
-    ? [["题目", "题型", "准备时间(秒)", "回答时间(秒)", "追问1（多种问法用 | 分隔，可不填）", "追问2"],
-       ["Tell us about yourself.", "视频", "30", "60", "", ""],
-       ["Why do you want to study {program} at {school}?", "视频", "30", "90", "", ""],
-       ["Why do some countries save much more than others?", "视频", "30", "120", "If interest rates rose, what would happen? | What about an ageing population?", "Can you think of a counterexample?"],
-       ["Describe a challenge you overcame in 150 words.", "书面", "60", "300", "", ""]]
-    : [["Question", "Type", "Prep (seconds)", "Answer (seconds)", "Follow-up 1 (separate wordings with |, optional)", "Follow-up 2"],
-       ["Tell us about yourself.", "video", "30", "60", "", ""],
-       ["Why do you want to study {program} at {school}?", "video", "30", "90", "", ""],
-       ["Why do some countries save much more than others?", "video", "30", "120", "If interest rates rose, what would happen? | What about an ageing population?", "Can you think of a counterexample?"],
-       ["Describe a challenge you overcame in 150 words.", "written", "60", "300", "", ""]];
+    ? [["题目", "题型", "准备时间(秒)", "回答时间(秒)", "追问1（多种问法用 | 分隔，可不填）", "追问2", "材料（可不填）", "阅读时间(秒)"],
+       ["Tell us about yourself.", "视频", "30", "60", "", "", "", ""],
+       ["Why do you want to study {program} at {school}?", "视频", "30", "90", "", "", "", ""],
+       ["Why do some countries save much more than others?", "视频", "30", "120", "If interest rates rose, what would happen? | What about an ageing population?", "Can you think of a counterexample?", "", ""],
+       ["What does this table suggest, and what else would you want to know?", "视频", "0", "300", "Could anything else explain the pattern?", "", "Town A: 2019 bus fare £2, riders 10,000/day. 2023 fare £1, riders 13,000/day.", "120"],
+       ["Describe a challenge you overcame in 150 words.", "书面", "60", "300", "", "", "", ""]]
+    : [["Question", "Type", "Prep (seconds)", "Answer (seconds)", "Follow-up 1 (separate wordings with |, optional)", "Follow-up 2", "Material (optional)", "Reading time (seconds)"],
+       ["Tell us about yourself.", "video", "30", "60", "", "", "", ""],
+       ["Why do you want to study {program} at {school}?", "video", "30", "90", "", "", "", ""],
+       ["Why do some countries save much more than others?", "video", "30", "120", "If interest rates rose, what would happen? | What about an ageing population?", "Can you think of a counterexample?", "", ""],
+       ["What does this table suggest, and what else would you want to know?", "video", "0", "300", "Could anything else explain the pattern?", "", "Town A: 2019 bus fare £2, riders 10,000/day. 2023 fare £1, riders 13,000/day.", "120"],
+       ["Describe a challenge you overcame in 150 words.", "written", "60", "300", "", "", "", ""]];
   const csv = rows.map((r) => r.map((c) => (/[",\n]/.test(c) ? `"${c.replace(/"/g, '""')}"` : c)).join(",")).join("\r\n");
   const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);

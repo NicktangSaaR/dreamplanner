@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { useBankAdmin, useBankQuestions, useBanks, type BankInput } from "../useInterviewData";
 import {
-  PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, blueprintTotal, formatSeconds,
+  PREP_OPTIONS, READING_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, blueprintTotal, formatSeconds,
   type BankKind, type BankQuestion, type BlueprintSection, type InterviewBank, type QuestionType,
   sectionPools, withPools, isFixed, questionSeconds, cleanFollowUps,
 } from "../types";
@@ -444,6 +444,8 @@ function QuestionRow({ q, bank }: { q: BankQuestion; bank: InterviewBank }) {
   // one text box per follow-up position, one wording per line
   const [follow, setFollow] = useState<string[]>(() => cleanFollowUps(q.follow_ups).map((o) => o.join("\n")));
   const saved = cleanFollowUps(q.follow_ups);
+  const [material, setMaterial] = useState(q.material ?? "");
+  const [readSecs, setReadSecs] = useState<number | null>(q.reading_time ?? 120);
 
   const save = async () => {
     if (!title.trim()) return;
@@ -453,6 +455,8 @@ function QuestionRow({ q, bank }: { q: BankQuestion; bank: InterviewBank }) {
         input: {
           title: title.trim(), question_type: type, preparation_time: prep, response_time: resp,
           follow_ups: cleanFollowUps(follow.map((f) => f.split("\n"))),
+          material: material.trim() || null,
+          reading_time: material.trim() ? readSecs ?? 120 : null,
         },
       });
       setEditing(false);
@@ -475,6 +479,17 @@ function QuestionRow({ q, bank }: { q: BankQuestion; bank: InterviewBank }) {
     return (
       <li className="space-y-3 bg-muted/40 px-4 py-3">
         <Textarea rows={2} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={1000} />
+        <div className="space-y-2 rounded-md border bg-background p-3">
+          <div className="text-sm font-medium">{t("mi3.materialLabel")}</div>
+          <p className="text-xs text-muted-foreground">{t("mi3.materialHint")}</p>
+          <Textarea rows={4} value={material} onChange={(e) => setMaterial(e.target.value)} maxLength={8000} />
+          {material.trim() && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">{t("mi3.readingTime")}</span>
+              <TimeSelect value={readSecs} options={READING_OPTIONS} onChange={setReadSecs} />
+            </div>
+          )}
+        </div>
         <div className="space-y-2 rounded-md border bg-background p-3">
           <div className="text-sm font-medium">{t("mi3.followUps")}</div>
           <p className="text-xs text-muted-foreground">{t("mi3.followUpsHint")}</p>
@@ -513,6 +528,9 @@ function QuestionRow({ q, bank }: { q: BankQuestion; bank: InterviewBank }) {
           {q.question_type === "written" ? t("mi.written") : t("mi.video")} · {t("mi.prep")}{" "}
           {formatSeconds(q.preparation_time ?? bank.preparation_time)} · {t("mi.response")}{" "}
           {formatSeconds(q.response_time ?? bank.response_time)}
+          {q.material?.trim() && (
+            <span className="text-brass">{" · "}{t("mi.material")} {formatSeconds(q.reading_time ?? 120)}</span>
+          )}
           {saved.length > 0 && (
             <span className="text-brass">
               {" · "}{t("mi3.followUpSummary", { n: saved.length })}
@@ -556,6 +574,7 @@ function ImportPanel({ bank, existing }: { bank: InterviewBank; existing: BankQu
             preparation_time: m.prep ?? prep,
             response_time: m.response ?? resp,
             ...(m.followUps ? { follow_ups: m.followUps } : {}),
+            ...(m.material ? { material: m.material, reading_time: m.readingTime ?? 120 } : {}),
           };
         }),
       });
