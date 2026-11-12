@@ -218,12 +218,12 @@ Deno.serve(async (req) => {
     };
 
     const openaiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openaiKey) return await fail("AI 服务未配置");
+    const deepseekKey = Deno.env.get("DEEPSEEK_API_KEY");
+    if (!openaiKey && !deepseekKey) return await fail("AI 服务未配置");
 
     const { data: file, error: dlError } = await admin.storage.from("academic-reports").download(report.file_path);
     if (dlError || !file) return await fail("无法读取上传的文件");
     const bytes = new Uint8Array(await file.arrayBuffer());
-    const dataUrl = `data:${report.mime_type};base64,${toBase64(bytes)}`;
 
     const { data: previous } = await admin
       .from("academic_report_briefs")
@@ -234,10 +234,6 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-
-    const filePart = report.mime_type === "application/pdf"
-      ? { type: "file", file: { filename: report.file_name, file_data: dataUrl } }
-      : { type: "image_url", image_url: { url: dataUrl } };
 
     const instructions = `你是一位资深升学顾问的助理。请阅读这份学生成绩单（可能是 PDF、照片或截图），只依据文件中能看到的信息，输出 JSON：
 {
@@ -254,30 +250,84 @@ Deno.serve(async (req) => {
       ? `上一次成绩单的提取结果（用于比较）：${JSON.stringify(previous.data).slice(0, 6000)}`
       : "这是该学生第一次上传成绩单。";
 
-    const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${openaiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        response_format: { type: "json_object" },
-        temperature: 0.2,
+    // A PDF with a text layer is read here and sent as text (DeepSeek, or OpenAI
+    // if that's the only key); scans and photos need OpenAI's vision model.
+    let pdfText = "";
+    if (report.mime_type === "application/pdf") {
+      try {
+        const { extractText, getDocumentProxy } = await import("npm:unpdf@0.12.1");
+        const doc = await getDocumentProxy(bytes);
+        const { text } = await extractText(doc, { mergePages: true });
+        pdfText = String(text || "").replace(/[ \t]+\n/g, "\n").trim();
+      } catch (e) {
+        console.error("PDF text extraction failed", e);
+      }
+    }
+    const hasText = pdfText.replace(/\s/g, "").length >= 80;
+
+    /** Ask for JSON; retry briefly when the service is busy (429 / 5xx). */
+    const askJson = async (url: string, key: string, payload: Record<string, unknown>) => {
+      let last = { status: 0, detail: "" };
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+          // GPT-5 models only accept the default temperature
+          body: JSON.stringify({ ...payload, response_format: { type: "json_object" }, ...(String(payload.model).startsWith("gpt-5") ? {} : { temperature: 0.2 }) }),
+        });
+        if (res.ok) return { ok: true as const, data: await res.json() };
+        last = { status: res.status, detail: (await res.text()).slice(0, 500) };
+        console.error("AI error", url, last.status, last.detail);
+        if (last.status !== 429 && last.status < 500) break;
+        if (/insufficient_quota/.test(last.detail)) break;
+        await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+      }
+      return { ok: false as const, ...last };
+    };
+
+    let result;
+    if (hasText && deepseekKey) {
+      result = await askJson("https://api.deepseek.com/v1/chat/completions", deepseekKey, {
+        model: "deepseek-chat",
         messages: [
           { role: "system", content: instructions },
-          { role: "user", content: [{ type: "text", text: prevNote }, filePart] },
+          { role: "user", content: `${prevNote}\n\n成绩单文字内容：\n${pdfText.slice(0, 30000)}` },
         ],
-      }),
-    });
-    if (!aiRes.ok) {
-      const detail = await aiRes.text();
-      console.error("OpenAI error", aiRes.status, detail.slice(0, 500));
-      return await fail(`AI 读取失败（${aiRes.status}）`);
+      });
+    } else if (openaiKey) {
+      const dataUrl = `data:${report.mime_type};base64,${toBase64(bytes)}`;
+      const filePart = hasText
+        ? { type: "text", text: `成绩单文字内容：\n${pdfText.slice(0, 30000)}` }
+        : report.mime_type === "application/pdf"
+          ? { type: "file", file: { filename: report.file_name, file_data: dataUrl } }
+          : { type: "image_url", image_url: { url: dataUrl } };
+      const messages = [
+        { role: "system", content: instructions },
+        { role: "user", content: [{ type: "text", text: prevNote }, filePart] },
+      ];
+      // GPT-5 nano is the cheapest model that reads images and PDFs; fall back
+      // to gpt-4o-mini if it rejects the request (but not when out of quota).
+      result = await askJson("https://api.openai.com/v1/chat/completions", openaiKey, { model: "gpt-5-nano", reasoning_effort: "minimal", messages });
+      if (!result.ok && result.status !== 429 && !/insufficient_quota/.test(result.detail)) {
+        result = await askJson("https://api.openai.com/v1/chat/completions", openaiKey, { model: "gpt-4o-mini", messages });
+      }
+    } else {
+      return await fail("这是扫描件或照片，需要图片识别服务，目前没有配置。请上传带文字的 PDF，或联系管理员。");
     }
-    const ai = await aiRes.json();
+    if (!result.ok) {
+      const msg = /insufficient_quota/.test(result.detail)
+        ? "AI 服务额度不足，请联系网站管理员"
+        : result.status === 429
+          ? "AI 服务暂时繁忙，请稍后点「重新读取」"
+          : `AI 读取失败（${result.status}），请稍后点「重新读取」`;
+      return await fail(msg);
+    }
+    const ai = result.data;
     let parsed: BriefData;
     try {
       parsed = JSON.parse(ai.choices?.[0]?.message?.content || "{}");
     } catch {
-      return await fail("AI 返回格式错误");
+      return await fail("AI 返回格式错误，请稍后点「重新读取」");
     }
     const brief = renderBrief(parsed);
 
