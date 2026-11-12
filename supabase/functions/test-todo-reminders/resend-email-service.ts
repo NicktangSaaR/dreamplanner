@@ -107,7 +107,7 @@ export class ResendEmailService implements EmailService {
   ): Promise<any> {
     try {
       // Prefer explicit FROM address from env (recommended for production)
-      // Example: "DreamPlane Education <reminder@dreamplaneredu.com>"
+      // Example: "DreamPlanner <reminder@dreamplaneredu.com>"
       const envFrom = Deno.env.get("RESEND_FROM")?.trim();
       const envDomain = Deno.env.get("RESEND_DOMAIN")?.trim();
 
@@ -117,7 +117,7 @@ export class ResendEmailService implements EmailService {
       // If not verified, Resend test mode will only allow sending to the account owner's email.
       const fromAddress =
         envFrom ||
-        `DreamPlane Education <reminder@${effectiveDomain}>`;
+        `DreamPlanner <reminder@${effectiveDomain}>`;
 
       console.log(`Sending email to ${to}`);
       console.log(`Using from address: ${fromAddress}`);

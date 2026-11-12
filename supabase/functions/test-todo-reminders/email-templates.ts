@@ -1,168 +1,102 @@
+// To-do reminder emails, for the student and their counselor. Each email has a
+// complete Chinese version followed by a complete English version.
+//
+// Styles are inline (many mail apps drop <style> blocks), the font list covers
+// Chinese on every platform, and long titles wrap instead of being cut off.
 
-/**
- * Generates HTML email content for a custom recipient
- */
-export function generateCustomEmailContent(
-  todos: any[],
-  studentName: string
-) {
-  // Create HTML list of todos
-  const todoListHtml = todos.map(todo => `
-    <li style="margin-bottom: 8px;">
-      <strong>${todo.title}</strong>
-      ${todo.due_date ? ` - 截止日期 Due: ${new Date(todo.due_date).toLocaleDateString()}` : ''}
-      ${todo.starred ? ' ⭐' : ''}
-    </li>
-  `).join('');
-  
-  return `
-    <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          h1 { color: #2563eb; font-size: 24px; }
-          .greeting { font-size: 16px; margin-bottom: 20px; }
-          ul { padding-left: 20px; }
-          .contact { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; }
-          .footer { margin-top: 30px; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 15px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h1>DreamPlane 待办事项提醒 / Todo Reminder</h1>
-          
-          <p class="greeting">
-            Dear ${studentName}，<br><br>
-            请记得确认完成如下待办工作：<br>
-            Please remember to complete the following pending tasks:
-          </p>
-          
-          <ul>
-            ${todoListHtml}
-          </ul>
-          
-          <div class="contact">
-            <p style="margin: 0;">
-              <strong>如有疑问，请第一时间联系我们。</strong><br>
-              <strong>If you have any questions, please contact us immediately.</strong>
-            </p>
-          </div>
-          
-          <div class="footer">
-            <p>此邮件由 DreamPlane Education 自动发送，请勿回复。</p>
-            <p>This email was sent automatically by DreamPlane Education. Please do not reply.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
+const SITE = "https://dreamplaneredu.com";
+const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', Arial, sans-serif";
+const C = { ink: "#1f2d2a", muted: "#5f6f6b", line: "#e3ebe8", brand: "#1f5c4d", soft: "#f3f7f5", late: "#b42318" };
+
+type Todo = { title?: string | null; due_date?: string | null; starred?: boolean | null };
+
+const esc = (s: unknown) =>
+  String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
+const today = () => new Date().toISOString().slice(0, 10);
+const day = (d?: string | null) => (d ? String(d).slice(0, 10) : "");
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const zhDate = (d: string) => `${Number(d.slice(0, 4))}年${Number(d.slice(5, 7))}月${Number(d.slice(8, 10))}日`;
+const enDate = (d: string) => `${MONTHS[Number(d.slice(5, 7)) - 1]} ${Number(d.slice(8, 10))}, ${d.slice(0, 4)}`;
+
+/** Dated items first (soonest first), then undated; starred first within a day. */
+function sorted(todos: Todo[]) {
+  return [...todos].sort((a, b) => {
+    const da = day(a.due_date) || "9999", db = day(b.due_date) || "9999";
+    return da === db ? Number(!!b.starred) - Number(!!a.starred) : da < db ? -1 : 1;
+  });
 }
 
-/**
- * Generates HTML email content for both student and counselor
- */
-export function generateEmailContent(
-  todos: any[],
-  studentName: string,
-  counselorName: string
-) {
-  // Create HTML list of todos
-  const todoListHtml = todos.map(todo => `
-    <li style="margin-bottom: 8px;">
-      <strong>${todo.title}</strong>
-      ${todo.due_date ? ` - 截止日期 Due: ${new Date(todo.due_date).toLocaleDateString()}` : ''}
-      ${todo.starred ? ' ⭐' : ''}
-    </li>
-  `).join('');
-  
-  // Create student email HTML template with bilingual format
-  const studentHtmlContent = `
-    <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          h1 { color: #2563eb; font-size: 24px; }
-          .greeting { font-size: 16px; margin-bottom: 20px; }
-          ul { padding-left: 20px; }
-          .contact { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; }
-          .footer { margin-top: 30px; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 15px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h1>DreamPlane 待办事项提醒 / Todo Reminder</h1>
-          
-          <p class="greeting">
-            Dear ${studentName}，<br><br>
-            请记得确认完成如下待办工作：<br>
-            Please remember to complete the following pending tasks:
-          </p>
-          
-          <ul>
-            ${todoListHtml}
-          </ul>
-          
-          <div class="contact">
-            <p style="margin: 0;">
-              <strong>如有疑问，请第一时间联系我们。</strong><br>
-              <strong>If you have any questions, please contact us immediately.</strong>
-            </p>
-          </div>
-          
-          <div class="footer">
-            <p>此邮件由 DreamPlane Education 自动发送，请勿回复。</p>
-            <p>This email was sent automatically by DreamPlane Education. Please do not reply.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
-  
-  // Create counselor email HTML template with bilingual format
-  const counselorHtmlContent = `
-    <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          h1 { color: #2563eb; font-size: 24px; }
-          .greeting { font-size: 16px; margin-bottom: 20px; }
-          ul { padding-left: 20px; }
-          .contact { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; }
-          .footer { margin-top: 30px; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 15px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h1>DreamPlane 学生待办提醒 / Student Todo Reminder</h1>
-          
-          <p class="greeting">
-            Dear ${counselorName}，<br><br>
-            您的学生 <strong>${studentName}</strong> 有以下待办工作需要完成：<br>
-            Your student <strong>${studentName}</strong> has the following pending tasks to complete:
-          </p>
-          
-          <ul>
-            ${todoListHtml}
-          </ul>
-          
-          <div class="contact">
-            <p style="margin: 0;">
-              <strong>请提醒学生及时完成。</strong><br>
-              <strong>Please remind the student to complete on time.</strong>
-            </p>
-          </div>
-          
-          <div class="footer">
-            <p>此邮件由 DreamPlane Education 自动发送，请勿回复。</p>
-            <p>This email was sent automatically by DreamPlane Education. Please do not reply.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
-  
-  return { studentHtmlContent, counselorHtmlContent };
+function list(todos: Todo[], lang: "zh" | "en") {
+  const now = today();
+  const rows = sorted(todos).map((t) => {
+    const d = day(t.due_date);
+    const late = d && d < now;
+    const when = d
+      ? `<div style="margin-top:2px;font-size:13px;color:${late ? C.late : C.muted};">${
+          lang === "zh" ? `截止：${zhDate(d)}${late ? "（已逾期）" : ""}` : `Due ${enDate(d)}${late ? " (overdue)" : ""}`
+        }</div>`
+      : "";
+    return `<tr><td style="padding:10px 12px;border-top:1px solid ${C.line};font-size:15px;line-height:1.5;color:${C.ink};word-break:break-word;overflow-wrap:anywhere;">
+      ${t.starred ? "★ " : ""}${esc(t.title) || (lang === "zh" ? "（未命名待办）" : "(untitled to-do)")}${when}</td></tr>`;
+  });
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid ${C.line};border-radius:6px;">${rows.join("")}</table>`;
+}
+
+function section(lang: "zh" | "en", heading: string, intro: string, todos: Todo[], button: { href: string; label: string }, closing: string) {
+  return `
+  <div lang="${lang === "zh" ? "zh-CN" : "en"}" style="padding:24px;">
+    <h1 style="margin:0 0 12px;font-size:20px;line-height:1.4;color:${C.brand};font-weight:600;">${heading}</h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:${C.ink};">${intro}</p>
+    ${list(todos, lang)}
+    <p style="margin:20px 0 0;"><a href="${button.href}" style="display:inline-block;background:${C.brand};color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;font-size:15px;">${button.label}</a></p>
+    <p style="margin:16px 0 0;font-size:14px;line-height:1.7;color:${C.muted};">${closing}</p>
+  </div>`;
+}
+
+function page(zh: string, en: string) {
+  return `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:${C.soft};font-family:${FONT};">
+  <div style="max-width:600px;margin:0 auto;padding:16px;">
+    <div style="background:#ffffff;border:1px solid ${C.line};border-radius:8px;font-family:${FONT};">
+      ${zh}
+      <div style="border-top:1px dashed ${C.line};margin:0 24px;"></div>
+      ${en}
+    </div>
+    <p style="margin:12px 4px 0;font-size:12px;line-height:1.6;color:${C.muted};font-family:${FONT};">
+      此邮件由 DreamPlanner 自动发送，请勿直接回复。<br>This email was sent automatically by DreamPlanner. Please don't reply to it.
+    </p>
+  </div>
+</body></html>`;
+}
+
+/** Email to the student (also used when sending to another address for this student). */
+export function studentEmail(todos: Todo[], studentName: string) {
+  const name = esc(studentName);
+  const n = todos.length;
+  const zh = section("zh", "待办提醒",
+    `${name}，你好！你还有 <strong>${n}</strong> 项待办没有完成，请记得按时完成：`,
+    todos, { href: `${SITE}/login`, label: "打开 DreamPlanner" },
+    "完成后在 DreamPlanner 里打勾即可。顾问布置的任务如果需要更多时间，可以点任务旁的「申请延期」。有问题请随时联系你的顾问。");
+  const en = section("en", "To-do reminder",
+    `Hi ${name}, you still have <strong>${n}</strong> to-do${n === 1 ? "" : "s"} to finish:`,
+    todos, { href: `${SITE}/login`, label: "Open DreamPlanner" },
+    "Tick each one off in DreamPlanner when it's done. Need more time on a task from your counselor? Use “Ask for more time” next to it. Questions? Contact your counselor any time.");
+  return { subject: `待办提醒 · To-do reminder：${studentName}`, html: page(zh, en) };
+}
+
+/** Email to the counselor about one student. */
+export function counselorEmail(todos: Todo[], studentName: string, counselorName: string) {
+  const s = esc(studentName), c = esc(counselorName);
+  const n = todos.length;
+  const zh = section("zh", "学生待办提醒",
+    `${c}，你好！你的学生 <strong>${s}</strong> 还有 <strong>${n}</strong> 项待办没有完成，我们也已经给学生发了提醒：`,
+    todos, { href: `${SITE}/counselor-dashboard`, label: "打开顾问工作台" },
+    "可以在学生的「跟进」页查看进度、修改日期或处理延期申请。");
+  const en = section("en", "Student to-do reminder",
+    `Hi ${c}, your student <strong>${s}</strong> still has <strong>${n}</strong> to-do${n === 1 ? "" : "s"} open. We've sent them a reminder too:`,
+    todos, { href: `${SITE}/counselor-dashboard`, label: "Open your workspace" },
+    "Use the student's Follow-up tab to check progress, change dates or answer extension requests.");
+  return { subject: `学生待办提醒 · Student to-do reminder：${studentName}`, html: page(zh, en) };
 }
