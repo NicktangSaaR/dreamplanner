@@ -63,6 +63,10 @@ export interface BankQuestion {
    * one follow-up position with one or more wordings; one is picked at random.
    */
   follow_ups?: string[][];
+  /** A passage, data or problem the student reads before the question appears. */
+  material?: string | null;
+  /** Seconds to read the material. */
+  reading_time?: number | null;
 }
 
 /** A student's own question (table mock_interview_custom_questions). */
@@ -84,11 +88,19 @@ export interface SessionQuestion {
   prep: number; // seconds; with `combined`, the most thinking time inside `response`
   response: number; // seconds; with `combined`, the total time for the question
   combined?: boolean;
+  /** Read before the question appears (and kept on screen while answering). */
+  material?: string;
+  /** Seconds to read `material`; 0 = shown without a reading step (follow-ups). */
+  readingTime?: number;
   /** Follow-up positions still to be turned into questions (see expandFollowUps). */
   followUpPool?: string[][];
   /** Set on a follow-up: the main question it follows, and which follow-up it is. */
   followUp?: { of: string; n: number; total: number };
 }
+
+/** A bank question's material for a session question. */
+export const materialOf = (q: { material?: string | null; reading_time?: number | null }) =>
+  q.material?.trim() ? { material: q.material.trim(), readingTime: q.reading_time ?? 120 } : {};
 
 /** Follow-up positions that have at least one wording. */
 export const cleanFollowUps = (f: unknown): string[][] =>
@@ -109,6 +121,7 @@ export function expandFollowUps(list: SessionQuestion[], rand: () => number = Ma
       main,
       ...slots.map((options, i) => ({
         ...main,
+        readingTime: 0, // the material stays on screen, but isn't read again
         key: `${q.key}#f${i + 1}`,
         text: options[Math.floor(rand() * options.length)],
         followUp: { of: q.text, n: i + 1, total: slots.length },
@@ -265,6 +278,7 @@ export function drawFromBlueprint(
         response: sec.response,
         combined: !!sec.combined,
         followUpPool: q.follow_ups,
+        ...materialOf(q),
       });
     }
   }
