@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import {
   addTask, changeOwner, decideExtension, isOverdue, loadExtensionRequests, loadTasks, postponeSummary, removeTask, renameTask, rescheduleTask,
   setTaskDone, sortTasks, type UnifiedTask,
+  taskTitle,
 } from "./followData";
 import ReschedulePopover from "./ReschedulePopover";
 import { useOwnerLabels, type Owner } from "./meetings";
@@ -79,7 +80,7 @@ export default function TaskBoard({ studentId }: { studentId: string }) {
     refresh();
   };
   const remove = async (t: UnifiedTask) => {
-    if (!window.confirm(L(`删除任务「${t.title}」？`, `Delete "${t.title}"?`))) return;
+    if (!window.confirm(L(`删除任务「${taskTitle(t, lang)}」？`, `Delete "${taskTitle(t, lang)}"?`))) return;
     try {
       await removeTask(t);
     } catch {
@@ -147,9 +148,9 @@ export default function TaskBoard({ studentId }: { studentId: string }) {
     }
     return (
       <li key={t.key} className="group flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5">
-        <Checkbox checked={t.completed} onCheckedChange={() => void toggle(t)} aria-label={t.title} />
+        <Checkbox checked={t.completed} onCheckedChange={() => void toggle(t)} aria-label={taskTitle(t, lang)} />
         <span className={cn("min-w-0 flex-1 text-sm", t.completed && "text-muted-foreground line-through")}>
-          {t.title}
+          {taskTitle(t, lang)}
           {ps.times > 0 && (
             <span className="ml-2 inline-flex items-center gap-0.5 whitespace-nowrap rounded bg-brass/10 px-1.5 py-0.5 text-xs text-brass"
               title={t.history.map((h) => `${fmtShort(h.old_due)} → ${fmtShort(h.new_due)}${h.via === "request" ? L("（学生申请）", " (student request)") : h.via === "student" ? L("（学生改期）", " (student)") : ""}${h.reason ? `：${h.reason}` : ""}`).join("\n")}>

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ChevronDown, ChevronRight, Clock, Globe, HelpCircle, LogOut, Menu, Search, User } from "lucide-react";
 import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
 import { COUNSELOR_HOME_GUIDE } from "@/features/guide/guides";
+import { TODO_TITLE_COLUMNS, todoTitle } from "@/shared/todoTitle";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -91,7 +92,7 @@ export default function CounselorHome() {
         db.from("student_quarters").select("student_id, quarter_kpi").in("student_id", ids).eq("academic_year", academicYear()).eq("quarter", quarterKey()),
         db.from("academic_report_requests").select("student_id, due_date").in("student_id", ids).is("fulfilled_at", null),
         db.from("planning_milestones").select("student_id, title, due_date").in("student_id", ids).gte("due_date", today).lte("due_date", isoDay(7)),
-        db.from("todos").select("author_id, title, due_date, completed, created_at").in("author_id", ids),
+        db.from("todos").select(`author_id, ${TODO_TITLE_COLUMNS}, due_date, completed, created_at`).in("author_id", ids),
         db.from("notes").select("author_id, created_at").in("author_id", ids),
         db.from("academic_reports").select("student_id, created_at").in("student_id", ids),
       ]);
@@ -144,9 +145,9 @@ export default function CounselorHome() {
         if (todo.completed || !todo.due_date || completed.has(todo.author_id)) continue;
         const due = String(todo.due_date).slice(0, 10);
         if (due < today) {
-          alerts.push({ key: `todo-${todo.author_id}-${todo.title}`, studentId: todo.author_id, name: nameOf.get(todo.author_id) || "—", level: "urgent", text: t("ch.alert.todoOverdue", { title: todo.title, date: due }), sort: 1 });
+          alerts.push({ key: `todo-${todo.author_id}-${todo.title}`, studentId: todo.author_id, name: nameOf.get(todo.author_id) || "—", level: "urgent", text: t("ch.alert.todoOverdue", { title: todoTitle(todo, lang), date: due }), sort: 1 });
         } else if (due <= isoDay(3)) {
-          alerts.push({ key: `todo-${todo.author_id}-${todo.title}`, studentId: todo.author_id, name: nameOf.get(todo.author_id) || "—", level: "soon", text: t("ch.alert.todoSoon", { title: todo.title, date: due }), sort: 3 });
+          alerts.push({ key: `todo-${todo.author_id}-${todo.title}`, studentId: todo.author_id, name: nameOf.get(todo.author_id) || "—", level: "soon", text: t("ch.alert.todoSoon", { title: todoTitle(todo, lang), date: due }), sort: 3 });
         }
       }
       for (const m of milestones.data || []) {

@@ -1,6 +1,6 @@
 
 import { createEmailService } from "./email-service.ts";
-import { generateEmailContent, generateCustomEmailContent } from "./email-templates.ts";
+import { counselorEmail as counselorTemplate, studentEmail as studentTemplate } from "./email-templates.ts";
 import { formatErrorResponse } from "./error-handling.ts";
 
 /**
@@ -21,15 +21,15 @@ export class EmailManager {
   async sendCustomEmail(todos: any[], studentInfo: any, customEmail: string) {
     const studentName = studentInfo?.full_name || '学生';
     
-    // Generate email content for custom recipient
-    const htmlContent = generateCustomEmailContent(todos, studentName);
+    // Same email the student gets, sent to another address
+    const { subject: customSubject, html: htmlContent } = studentTemplate(todos, studentName);
     
     try {
       console.log(`Sending custom email to: ${customEmail} using domain: ${this.domain}`);
       
       const emailResult = await this.emailService.sendReminderEmail(
         customEmail,
-        `待办事项提醒 - ${studentName}`,
+        customSubject,
         htmlContent,
         this.domain
       );
@@ -77,16 +77,16 @@ export class EmailManager {
    */
   async sendReminderEmails(todos: any[], studentInfo: any, counselorInfo: any) {
     const studentName = studentInfo?.full_name || '学生';
-    const studentEmail = studentInfo?.email || null;
-    const counselorEmail = counselorInfo?.email || null;
-    const counselorName = counselorInfo?.full_name || "辅导员";
+    // a staff-created student's internal login address receives no mail
+    const real = (e: string | null | undefined) => (e && !e.toLowerCase().endsWith("@student.dreamplaneredu.com") ? e : null);
+    const studentEmail = real(studentInfo?.email);
+    const counselorEmail = real(counselorInfo?.email);
+    const counselorName = counselorInfo?.full_name || "顾问";
     
-    // Generate email content
-    const { studentHtmlContent, counselorHtmlContent } = generateEmailContent(
-      todos,
-      studentName,
-      counselorName
-    );
+    const forStudent = studentTemplate(todos, studentName);
+    const forCounselor = counselorTemplate(todos, studentName, counselorName);
+    const studentHtmlContent = forStudent.html;
+    const counselorHtmlContent = forCounselor.html;
     
     const sentEmails = [];
     let emailSendingErrors = [];
@@ -98,7 +98,7 @@ export class EmailManager {
         
         const studentEmailResult = await this.emailService.sendReminderEmail(
           studentEmail,
-          `待办事项提醒 - ${studentName}`,
+          forStudent.subject,
           studentHtmlContent,
           this.domain
         );
@@ -120,7 +120,7 @@ export class EmailManager {
         
         const counselorEmailResult = await this.emailService.sendReminderEmail(
           counselorEmail,
-          `学生待办事项提醒 - ${studentName}`,
+          forCounselor.subject,
           counselorHtmlContent,
           this.domain
         );
@@ -130,7 +130,7 @@ export class EmailManager {
         if (counselorEmailResult.success) {
           sentEmails.push("counselor");
         } else if (counselorEmailResult.error) {
-          emailSendingErrors.push(`辅导员邮件错误: ${counselorEmailResult.message || JSON.stringify(counselorEmailResult.error)}`);
+          emailSendingErrors.push(`顾问邮件错误: ${counselorEmailResult.message || JSON.stringify(counselorEmailResult.error)}`);
         }
       } else {
         console.log("No counselor email available, skipping counselor email");

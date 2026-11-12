@@ -17,7 +17,7 @@ export class SupabaseDatabaseService implements DatabaseService {
     // First get the todos
     const { data: todos, error: todosError } = await this.supabase
       .from("todos")
-      .select("id, title, completed, starred, due_date, author_id")
+      .select("id, title, title_zh, title_en, title_source, completed, starred, due_date, author_id")
       .eq("author_id", studentId)
       .eq("completed", false);
     
