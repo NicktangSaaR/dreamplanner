@@ -272,7 +272,8 @@ Deno.serve(async (req) => {
         const res = await fetch(url, {
           method: "POST",
           headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ ...payload, response_format: { type: "json_object" }, temperature: 0.2 }),
+          // GPT-5 models only accept the default temperature
+          body: JSON.stringify({ ...payload, response_format: { type: "json_object" }, ...(String(payload.model).startsWith("gpt-5") ? {} : { temperature: 0.2 }) }),
         });
         if (res.ok) return { ok: true as const, data: await res.json() };
         last = { status: res.status, detail: (await res.text()).slice(0, 500) };
@@ -300,13 +301,16 @@ Deno.serve(async (req) => {
         : report.mime_type === "application/pdf"
           ? { type: "file", file: { filename: report.file_name, file_data: dataUrl } }
           : { type: "image_url", image_url: { url: dataUrl } };
-      result = await askJson("https://api.openai.com/v1/chat/completions", openaiKey, {
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: instructions },
-          { role: "user", content: [{ type: "text", text: prevNote }, filePart] },
-        ],
-      });
+      const messages = [
+        { role: "system", content: instructions },
+        { role: "user", content: [{ type: "text", text: prevNote }, filePart] },
+      ];
+      // GPT-5 nano is the cheapest model that reads images and PDFs; fall back
+      // to gpt-4o-mini if it rejects the request (but not when out of quota).
+      result = await askJson("https://api.openai.com/v1/chat/completions", openaiKey, { model: "gpt-5-nano", reasoning_effort: "minimal", messages });
+      if (!result.ok && result.status !== 429 && !/insufficient_quota/.test(result.detail)) {
+        result = await askJson("https://api.openai.com/v1/chat/completions", openaiKey, { model: "gpt-4o-mini", messages });
+      }
     } else {
       return await fail("这是扫描件或照片，需要图片识别服务，目前没有配置。请上传带文字的 PDF，或联系管理员。");
     }
