@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, Check, Loader2, MessagesSquare, Sparkles, Trash2 } from "lucide-react";
+import { CalendarClock, Check, CornerDownRight, Loader2, MessagesSquare, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -160,6 +161,45 @@ export default function QuarterCard({
   };
   const showReminder = quarter === nowQ && daysLeft <= 21;
 
+  // ---- postpone one goal to a chosen later quarter ----
+  const laterQuarters = useMemo(() => {
+    const out: { quarter: QuarterKey; year: string }[] = [];
+    let q = { quarter, year };
+    for (let i = 0; i < 4; i++) { q = nextQuarter(q.quarter, q.year); out.push(q); }
+    return out;
+  }, [quarter, year]);
+  const quarterLabel = (q: { quarter: QuarterKey; year: string }) =>
+    `${QUARTERS.find((x) => x.key === q.quarter)!.short}${q.year !== year ? ` · ${q.year}` : ""}`;
+  const postpone = async (g: Goal, to: { quarter: QuarterKey; year: string }) => {
+    try {
+      const { data: target } = await db.from("student_quarters").select("id, quarter_kpi")
+        .eq("student_id", studentId).eq("academic_year", to.year).eq("quarter", to.quarter).maybeSingle();
+      const existing = parseGoals(target?.quarter_kpi);
+      const kpi = JSON.stringify([...existing, { id: newGoalId(), text: g.text, completed: false, from: qMeta.short, postponed: true }]);
+      const res = target
+        ? await db.from("student_quarters").update({ quarter_kpi: kpi }).eq("id", target.id).select("id")
+        : await db.from("student_quarters").insert({ student_id: studentId, academic_year: to.year, quarter: to.quarter, quarter_kpi: kpi }).select("id");
+      if (res.error || !res.data?.length) throw res.error || new Error("not saved");
+      await saveGoals(goals.filter((x) => x.id !== g.id));
+      queryClient.invalidateQueries({ queryKey: ["plan-quarters", studentId] });
+      toast.success(L(`已推迟到 ${quarterLabel(to)}`, `Moved to ${quarterLabel(to)}`));
+    } catch {
+      toast.error(L("推迟失败", "Couldn't move the goal"));
+    }
+  };
+
+  // ---- edit a goal's wording ----
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const startEdit = (g: Goal) => { setEditingId(g.id); setEditText(g.text); };
+  const finishEdit = async () => {
+    const id = editingId;
+    const text = editText.trim();
+    setEditingId(null);
+    if (!id || !text || goals.find((g) => g.id === id)?.text === text) return;
+    await saveGoals(goals.map((g) => (g.id === id ? { ...g, text } : g)));
+  };
+
   // ---- generate goals ----
   const [genOpen, setGenOpen] = useState(false);
   const [genDoc, setGenDoc] = useState<string>("none");
@@ -291,11 +331,41 @@ export default function QuarterCard({
                   {goals.map((g) => (
                     <li key={g.id} className="group flex items-center gap-3 px-3 py-2.5">
                       <Checkbox checked={g.completed} onCheckedChange={(v) => void saveGoals(goals.map((x) => (x.id === g.id ? { ...x, completed: !!v } : x)))} />
-                      <span className={cn("flex-1 text-sm", g.completed && "text-muted-foreground line-through")}>
-                        {g.text}
-                        {g.from && <span className="ml-2 whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{L(`顺延自 ${g.from}`, `from ${g.from}`)}</span>}
-                        {g.carried && !g.completed && <span className="ml-2 whitespace-nowrap text-xs text-muted-foreground">{L("已顺延到下季度", "carried over")}</span>}
-                      </span>
+                      {editingId === g.id ? (
+                        <Input autoFocus className="h-8 flex-1 text-sm" value={editText} aria-label={L("修改目标", "Edit goal")}
+                          onChange={(e) => setEditText(e.target.value)}
+                          onBlur={() => void finishEdit()}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") { e.preventDefault(); void finishEdit(); }
+                            if (e.key === "Escape") setEditingId(null);
+                          }} />
+                      ) : (
+                        <span className={cn("flex-1 text-sm", g.completed && "text-muted-foreground line-through")} onDoubleClick={() => startEdit(g)}>
+                          {g.text}
+                          {g.from && <span className="ml-2 whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{g.postponed ? L(`推迟自 ${g.from}`, `moved from ${g.from}`) : L(`顺延自 ${g.from}`, `from ${g.from}`)}</span>}
+                          {g.carried && !g.completed && <span className="ml-2 whitespace-nowrap text-xs text-muted-foreground">{L("已顺延到下季度", "carried over")}</span>}
+                        </span>
+                      )}
+                      {editingId !== g.id && (
+                        <button className="text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100" aria-label={L("修改", "Edit")} onClick={() => startEdit(g)}>
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                      )}
+                      {!g.completed && editingId !== g.id && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100" aria-label={L("推迟到后面的季度", "Move to a later quarter")}>
+                              <CornerDownRight className="h-4 w-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>{L("推迟到", "Move to")}</DropdownMenuLabel>
+                            {laterQuarters.map((q) => (
+                              <DropdownMenuItem key={`${q.year}-${q.quarter}`} onSelect={() => void postpone(g, q)}>{quarterLabel(q)}</DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                       <button className="text-muted-foreground opacity-0 hover:text-destructive focus:opacity-100 group-hover:opacity-100" aria-label={L("删除", "Delete")}
                         onClick={() => void saveGoals(goals.filter((x) => x.id !== g.id))}>
                         <Trash2 className="h-4 w-4" />

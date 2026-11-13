@@ -86,7 +86,20 @@ export function useActivityMutations(studentId: string) {
     onSuccess: refresh,
   });
 
-  return { save, remove, reorder, review };
+  /** Add several entries at the end of the list (from pasted text). */
+  const addMany = useMutation({
+    mutationFn: async (drafts: ActivityDraft[]) => {
+      const { data: last } = await db.from("extracurricular_activities").select("sort_order")
+        .eq("student_id", studentId).order("sort_order", { ascending: false }).limit(1).maybeSingle();
+      const start = (last?.sort_order ?? 0) + 1;
+      const { error } = await db.from("extracurricular_activities")
+        .insert(drafts.map((d, i) => ({ ...d, student_id: studentId, sort_order: start + i })));
+      if (error) throw error;
+    },
+    onSuccess: refresh,
+  });
+
+  return { save, remove, reorder, review, addMany };
 }
 
 /** Counselor asks the student to update their portfolio: a to-do with a due date, and an email. */
@@ -121,4 +134,20 @@ export function useActivityHistory(studentId: string, enabled: boolean) {
       return data ?? [];
     },
   });
+}
+
+export type ParsedEntry = {
+  name: string; name_en: string; category: string; status: "ongoing" | "ended" | "planned";
+  start_date: string | null; end_date: string | null; hours_per_week: number | null; weeks_per_year: number | null;
+  role: string; organization: string; level: string; description: string; description_en: string;
+};
+
+/** Pasted notes → separate entries, for the counselor to review before adding. */
+export async function parseActivities(studentId: string, text: string): Promise<ParsedEntry[]> {
+  const { data, error } = await supabase.functions.invoke("activity-assist", { body: { student_id: studentId, action: "parse", text } });
+  if (error) {
+    const msg = await (error as { context?: Response }).context?.json?.().then((b: { error?: string }) => b?.error).catch(() => null);
+    throw new Error(msg || "AI 暂时不可用，请稍后再试");
+  }
+  return (data?.entries ?? []) as ParsedEntry[];
 }
