@@ -290,8 +290,9 @@ function AskDialog({ studentId, onClose }: { studentId: string; onClose: () => v
     setBusy(true);
     try {
       const r = await requestUpdate(studentId, due, note);
-      if (r.emailed) toast.success(L("已发送：学生的待办里多了一条，并收到了邮件", "Sent: added to their to-dos and emailed"));
-      else toast.success(L("已加到学生的待办里。学生还没有可用邮箱，所以没有发邮件", "Added to their to-dos. No email address on file, so no email was sent"));
+      const team = r.followups?.length ? L(`；已通知跟进老师 ${r.followups.join("、")}`, `; follow-up teacher ${r.followups.join(", ")} notified`) : "";
+      if (r.emailed) toast.success(L(`已发送：学生收到了邮件和待办${team}`, `Sent: the student got an email and a to-do${team}`));
+      else toast.success(L(`已加到学生的待办里，但学生没有可用邮箱，没有发邮件${team}`, `Added to the student's to-dos; no email address, so no email${team}`));
       onClose();
     } catch {
       toast.error(L("发送失败", "Couldn't send"));
@@ -303,7 +304,7 @@ function AskDialog({ studentId, onClose }: { studentId: string; onClose: () => v
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader><DialogTitle>{L("请学生更新活动档案", "Ask the student to update")}</DialogTitle></DialogHeader>
-        <p className="text-sm text-muted-foreground">{L("学生会收到一封邮件，待办里也会出现一条「更新活动档案」，点「去填写」就能填，完成后自动勾掉。", "The student gets an email and a to-do that opens the portfolio and ticks itself off when they're done.")}</p>
+        <p className="text-sm text-muted-foreground">{L("学生会收到一封邮件，待办里也会出现一条「更新活动档案」，点「去填写」就能填，完成后自动勾掉。学生的跟进老师也会收到邮件，协助提醒。", "The student gets an email and a to-do that opens the portfolio and ticks itself off when they're done.")}</p>
         <div className="space-y-1.5">
           <Label htmlFor="ask-due">{L("截止日期", "Due")}</Label>
           <Input id="ask-due" type="date" value={due} onChange={(e) => setDue(e.target.value)} />

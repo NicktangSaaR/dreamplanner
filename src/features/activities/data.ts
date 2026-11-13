@@ -90,7 +90,7 @@ export function useActivityMutations(studentId: string) {
 }
 
 /** Counselor asks the student to update their portfolio: a to-do with a due date, and an email. */
-export async function requestUpdate(studentId: string, due: string, note?: string): Promise<{ emailed: boolean; reason?: string }> {
+export async function requestUpdate(studentId: string, due: string, note?: string): Promise<{ emailed: boolean; reason?: string; followups?: string[] }> {
   const { data, error } = await supabase.functions.invoke("activity-request", { body: { student_id: studentId, due, note } });
   if (error) throw error;
   return data;

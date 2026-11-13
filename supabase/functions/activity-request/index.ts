@@ -1,8 +1,9 @@
 // A counselor asks a student to update their activity portfolio: adds an
-// assigned to-do and emails the student (Chinese, then English).
+// assigned to-do, emails the student, and emails the student's follow-up
+// teachers so they can help chase it (Chinese, then English).
 //
 // POST { student_id, due?: "YYYY-MM-DD", note?: string }  (the counselor's session)
-//   -> { ok: true, emailed: boolean, reason?: string }
+//   -> { ok: true, emailed: boolean, reason?: string, followups: string[] }
 // The student's counselors, team teachers and admins only.
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 
@@ -43,21 +44,66 @@ export function requestEmail(studentName: string, counselorName: string, due: st
     <p style="margin:0;"><a href="${SITE}/login" style="display:inline-block;background:${C.brand};color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;font-size:15px;">${zh ? "打开 DreamPlanner" : "Open DreamPlanner"}</a></p>
   </div>`;
   };
-  const html = `<!doctype html>
+  return { subject: `请更新活动档案 · Please update your activity portfolio`, html: page(block("zh"), block("en")) };
+}
+
+function page(zh: string, en: string) {
+  return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="margin:0;padding:0;background:${C.soft};font-family:${FONT};">
   <div style="max-width:600px;margin:0 auto;padding:16px;">
     <div style="background:#ffffff;border:1px solid ${C.line};border-radius:8px;font-family:${FONT};">
-      ${block("zh")}
+      ${zh}
       <div style="border-top:1px dashed ${C.line};margin:0 24px;"></div>
-      ${block("en")}
+      ${en}
     </div>
     <p style="margin:12px 4px 0;font-size:12px;line-height:1.6;color:${C.muted};font-family:${FONT};">
       此邮件由 DreamPlanner 自动发送，请勿直接回复。<br>This email was sent automatically by DreamPlanner. Please don't reply to it.
     </p>
   </div>
 </body></html>`;
-  return { subject: `请更新活动档案 · Please update your activity portfolio`, html };
+}
+
+/** To a follow-up teacher: the request went out; please help the student get it done. */
+export function followupEmail(teacherName: string, studentName: string, counselorName: string, due: string | null, note: string, studentEmailed: boolean) {
+  const t = esc(teacherName), s = esc(studentName), c = esc(counselorName), n = esc(note);
+  const zhDue = due ? `${Number(due.slice(0, 4))}年${Number(due.slice(5, 7))}月${Number(due.slice(8, 10))}日` : "";
+  const enDue = due ? `${MONTHS[Number(due.slice(5, 7)) - 1]} ${Number(due.slice(8, 10))}, ${due.slice(0, 4)}` : "";
+  const block = (lang: "zh" | "en") => {
+    const zh = lang === "zh";
+    return `
+  <div lang="${zh ? "zh-CN" : "en"}" style="padding:24px;">
+    <h1 style="margin:0 0 12px;font-size:20px;line-height:1.4;color:${C.brand};font-weight:600;">${zh ? `请协助跟进：${s} 的活动档案` : `Please help follow up: ${s}'s activity portfolio`}</h1>
+    <p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:${C.ink};">${zh
+      ? `${t}，你好！${c}已请学生 <strong>${s}</strong> 更新活动档案${zhDue ? `，截止 <strong>${zhDue}</strong>` : ""}。${studentEmailed ? "学生已收到邮件和待办。" : "学生还没有绑定邮箱，只收到了待办，请直接联系学生。"}请协助提醒学生按时完成。`
+      : `Hi ${t}, ${c} has asked <strong>${s}</strong> to update their activity portfolio${enDue ? ` by <strong>${enDue}</strong>` : ""}. ${studentEmailed ? "The student has been emailed and given a to-do." : "The student has no email address yet and only got a to-do, so please contact them directly."} Please help make sure it gets done.`}</p>
+    ${n ? `<p style="margin:0 0 12px;padding:10px 12px;background:${C.soft};border-radius:6px;font-size:14px;line-height:1.6;color:${C.ink};">${zh ? "留言：" : "Note: "}${n}</p>` : ""}
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:${C.ink};">${zh
+      ? "学生更新后，可以在学生页面的「资料」→「活动档案」里查看和补充。"
+      : "Once updated, you'll find it under the student's Materials tab → Activity portfolio."}</p>
+    <p style="margin:0;"><a href="${SITE}/counselor-dashboard" style="display:inline-block;background:${C.brand};color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;font-size:15px;">${zh ? "打开顾问工作台" : "Open your workspace"}</a></p>
+  </div>`;
+  };
+  return { subject: `请协助跟进 · Please help follow up：${studentName}`, html: page(block("zh"), block("en")) };
+}
+
+const realEmail = (e: string | null | undefined) =>
+  e && !e.toLowerCase().endsWith("@student.dreamplaneredu.com") ? e : null;
+
+async function send(key: string, to: string, subject: string, html: string) {
+  const from = Deno.env.get("RESEND_FROM")?.trim() || "DreamPlanner <reminder@dreamplaneredu.com>";
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to, subject, html }),
+    });
+    if (!res.ok) console.error("activity-request email", res.status, await res.text());
+    return res.ok;
+  } catch (e) {
+    console.error("activity-request email", e);
+    return false;
+  }
 }
 
 if (import.meta.main) Deno.serve(async (req) => {
@@ -103,27 +149,33 @@ if (import.meta.main) Deno.serve(async (req) => {
     return json({ error: "没能创建待办" }, 500);
   }
 
-  // Accounts made with a username have a placeholder address until the student adds a real one.
-  const to = student.email && !student.email.toLowerCase().endsWith("@student.dreamplaneredu.com") ? student.email : null;
-  if (!to) return json({ ok: true, emailed: false, reason: "no_email" });
   const key = Deno.env.get("RESEND_API_KEY");
-  if (!key) return json({ ok: true, emailed: false, reason: "email_not_configured" });
+  if (!key) return json({ ok: true, emailed: false, reason: "email_not_configured", followups: [] });
 
-  const { subject, html } = requestEmail(student.full_name || "同学", me?.full_name || "你的顾问", due, note);
-  const from = Deno.env.get("RESEND_FROM")?.trim() || "DreamPlanner <reminder@dreamplaneredu.com>";
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to, subject, html }),
-    });
-    if (!res.ok) {
-      console.error("activity-request email", res.status, await res.text());
-      return json({ ok: true, emailed: false, reason: "send_failed" });
-    }
-  } catch (e) {
-    console.error("activity-request email", e);
-    return json({ ok: true, emailed: false, reason: "send_failed" });
+  // Student. Accounts made with a username have a placeholder address until the student adds a real one.
+  const counselorName = me?.full_name || "你的顾问";
+  const to = realEmail(student.email);
+  let emailed = false;
+  if (to) {
+    const { subject, html } = requestEmail(student.full_name || "同学", counselorName, due, note);
+    emailed = await send(key, to, subject, html);
   }
-  return json({ ok: true, emailed: true });
+
+  // Follow-up teachers, other than whoever sent the request.
+  const { data: team } = await admin.from("counselor_collaborations")
+    .select("collaborator_id").eq("student_id", studentId).eq("role", "followup").neq("collaborator_id", user.id);
+  const ids = [...new Set((team ?? []).map((m: { collaborator_id: string }) => m.collaborator_id))];
+  const { data: teachers } = ids.length
+    ? await admin.from("profiles").select("full_name, email").in("id", ids)
+    : { data: [] as { full_name: string | null; email: string | null }[] };
+  const followups: string[] = [];
+  for (const t of teachers ?? []) {
+    const email = realEmail(t.email);
+    if (!email) continue;
+    const name = t.full_name || "老师";
+    const { subject, html } = followupEmail(name, student.full_name || "学生", counselorName, due, note, emailed);
+    if (await send(key, email, subject, html)) followups.push(name);
+  }
+
+  return json({ ok: true, emailed, reason: to ? (emailed ? undefined : "send_failed") : "no_email", followups });
 });
