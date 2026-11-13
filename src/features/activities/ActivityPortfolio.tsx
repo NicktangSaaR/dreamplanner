@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, ClipboardCopy, History, Pencil, Plus, Send, Sparkles, Trash2 } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, ClipboardCopy, ClipboardPaste, History, Pencil, Plus, Send, Sparkles, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/i18n/LanguageProvider";
-import { type ActivityDraft, assist, requestUpdate, useActivities, useActivityHistory, useActivityMutations } from "./data";
+import { type ActivityDraft, assist, parseActivities, type ParsedEntry, requestUpdate, useActivities, useActivityHistory, useActivityMutations } from "./data";
 import {
   type Activity, byOrder, CATEGORIES, type Category, exportText, fromMonth, LEVELS, type Level,
   period, staleness, STATUSES, type Status, TIMINGS, type Timing, toMonth,
@@ -29,6 +30,8 @@ export default function ActivityPortfolio({ studentId }: { studentId: string }) 
   const [edit, setEdit] = useState<Activity | "new" | null>(null);
   const [asking, setAsking] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [pasting, setPasting] = useState(false);
+  const [parsed, setParsed] = useState<ParsedEntry[] | null>(null);
   const sorted = useMemo(() => [...activities].sort(byOrder), [activities]);
   const flagged = sorted.filter((a) => a.needs_review).length;
 
@@ -61,6 +64,7 @@ export default function ActivityPortfolio({ studentId }: { studentId: string }) 
           <Button variant="ghost" size="sm" onClick={() => copy(exportText(sorted))} disabled={!sorted.length}><ClipboardCopy className="mr-1.5 h-4 w-4" />{L("复制全部（英文）", "Copy all")}</Button>
           <Button variant="ghost" size="sm" onClick={() => setShowHistory(true)}><History className="mr-1.5 h-4 w-4" />{L("修改记录", "History")}</Button>
           <Button variant="outline" size="sm" onClick={() => setAsking(true)}><Send className="mr-1.5 h-4 w-4" />{L("请学生更新", "Ask student to update")}</Button>
+          <Button variant="outline" size="sm" onClick={() => setPasting(true)}><ClipboardPaste className="mr-1.5 h-4 w-4" />{L("粘贴文字，AI 整理", "Paste & organise")}</Button>
           <Button size="sm" onClick={() => setEdit("new")}><Plus className="mr-1.5 h-4 w-4" />{L("添加", "Add")}</Button>
         </div>
       </CardHeader>
@@ -118,6 +122,17 @@ export default function ActivityPortfolio({ studentId }: { studentId: string }) 
       )}
       {asking && <AskDialog studentId={studentId} onClose={() => setAsking(false)} />}
       {showHistory && <HistoryDialog studentId={studentId} onClose={() => setShowHistory(false)} />}
+      {pasting && <PasteDialog studentId={studentId} onClose={() => setPasting(false)} onParsed={(list) => { setPasting(false); setParsed(list); }} />}
+      {parsed && <ReviewParsed items={parsed} onClose={() => setParsed(null)}
+        onAdd={async (list) => {
+          await m.addMany.mutateAsync(list.map((e) => ({
+            name: e.name, name_en: e.name_en || null, category: e.category as Category, status: e.status,
+            start_date: e.start_date, end_date: e.end_date, hours_per_week: e.hours_per_week, weeks_per_year: e.weeks_per_year,
+            role: e.role || null, organization: e.organization || null, level: (e.level || null) as Level | null,
+            description: e.description || null, description_en: e.description_en || null,
+          })));
+          toast.success(L(`已加入 ${list.length} 条，可以继续修改细节`, `Added ${list.length}; edit details as needed`));
+        }} />}
     </Card>
   );
 }
@@ -358,6 +373,84 @@ function HistoryDialog({ studentId, onClose }: { studentId: string; onClose: () 
             })}
           </ul>
         )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PasteDialog({ studentId, onClose, onParsed }: { studentId: string; onClose: () => void; onParsed: (list: ParsedEntry[]) => void }) {
+  const { lang } = useLanguage();
+  const L = (zh: string, en: string) => (lang === "zh" ? zh : en);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const go = async () => {
+    setBusy(true);
+    try {
+      const list = await parseActivities(studentId, text);
+      if (!list.length) toast.info(L("没有从这段文字里找到活动", "No entries found in the text"));
+      else onParsed(list);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Dialog open onOpenChange={(o) => !o && !busy && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader><DialogTitle>{L("粘贴活动信息", "Paste activities")}</DialogTitle></DialogHeader>
+        <Label htmlFor="act-paste" className="text-sm font-normal text-muted-foreground">
+          {L("从简历、聊天记录或笔记里直接复制过来，中英文、格式都不限。AI 会拆成一条条活动，你确认后再加入。", "Copy from a résumé, chat or notes, any language or format. AI splits it into entries for you to confirm.")}
+        </Label>
+        <Textarea id="act-paste" rows={12} value={text} onChange={(e) => setText(e.target.value)} maxLength={20000}
+          placeholder={L("例：\n2024.9 至今 学校机器人社社长，每周 6 小时，带队拿了省赛第三\n2025 暑假 UBC 化学实验室研究助理 6 周\nAMC 12 2025 Distinction", "e.g. Robotics club captain since Sep 2024, 6 h/week, 3rd at provincials")} />
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={busy}>{L("取消", "Cancel")}</Button>
+          <Button onClick={() => void go()} disabled={busy || !text.trim()}>
+            <Sparkles className="mr-1.5 h-4 w-4" />{busy ? L("AI 整理中…", "Working…") : L("AI 整理", "Organise")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReviewParsed({ items, onClose, onAdd }: { items: ParsedEntry[]; onClose: () => void; onAdd: (list: ParsedEntry[]) => Promise<void> }) {
+  const { lang } = useLanguage();
+  const L = (zh: string, en: string) => (lang === "zh" ? zh : en);
+  const [rows, setRows] = useState(() => items.map((e) => ({ ...e, on: true })));
+  const [busy, setBusy] = useState(false);
+  const set = (i: number, patch: Partial<(typeof rows)[number]>) => setRows((r) => r.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const chosen = rows.filter((r) => r.on && r.name.trim());
+  return (
+    <Dialog open onOpenChange={(o) => !o && !busy && onClose()}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader><DialogTitle>{L(`AI 整理出 ${items.length} 条`, `${items.length} entries found`)}</DialogTitle></DialogHeader>
+        <p className="text-sm text-muted-foreground">{L("可以直接改名称和类型，取消不需要的。加入后，其他细节在列表里点「修改」补充，学生也能修改。", "Fix names and types here, untick what you don't want. Edit other details from the list afterwards.")}</p>
+        <ul className="space-y-2">
+          {rows.map((e, i) => (
+            <li key={i} className="rounded-md border p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Checkbox checked={e.on} onCheckedChange={(v) => set(i, { on: !!v })} aria-label={L("加入", "Include")} />
+                <Input value={e.name} onChange={(x) => set(i, { name: x.target.value })} className="h-8 min-w-[200px] flex-1" aria-label={L("名称", "Name")} />
+                <Select value={e.category} onValueChange={(v) => set(i, { category: v })}>
+                  <SelectTrigger className="h-8 w-[8.5rem]" aria-label={L("类型", "Type")}><SelectValue /></SelectTrigger>
+                  <SelectContent>{(Object.keys(CATEGORIES) as Category[]).map((k) => <SelectItem key={k} value={k}>{CATEGORIES[k][lang]}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <p className="mt-1.5 pl-6 text-xs text-muted-foreground">
+                {[STATUSES[e.status][lang], period(e, lang), e.role, e.organization, e.hours_per_week != null ? L(`每周 ${e.hours_per_week} 小时`, `${e.hours_per_week} h/wk`) : ""].filter(Boolean).join(" · ")}
+              </p>
+              {(e.description || e.description_en) && <p className="mt-1 pl-6 text-sm text-foreground/80">{lang === "zh" ? e.description || e.description_en : e.description_en || e.description}</p>}
+            </li>
+          ))}
+        </ul>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={busy}>{L("取消", "Cancel")}</Button>
+          <Button disabled={busy || !chosen.length} onClick={async () => { setBusy(true); try { await onAdd(chosen.map(({ on: _on, ...e }) => e)); onClose(); } catch { toast.error(L("加入失败", "Couldn't add")); } finally { setBusy(false); } }}>
+            {L(`加入 ${chosen.length} 条`, `Add ${chosen.length}`)}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

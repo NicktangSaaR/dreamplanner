@@ -6,7 +6,7 @@
 //   -> { suggestion, provider }
 // Staff of that student (or admins) only. DeepSeek first, OpenAI if it fails.
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
-import { type ActivityInput, normalize, SYSTEM, userMessage } from "./logic.ts";
+import { type ActivityInput, cleanEntries, normalize, PARSE_PROMPT, SYSTEM, userMessage } from "./logic.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -22,7 +22,7 @@ async function ask(p: Provider, messages: { role: string; content: string }[]) {
     method: "POST",
     headers: { Authorization: `Bearer ${p.key}`, "Content-Type": "application/json" },
     body: JSON.stringify({ model: p.model, temperature: 0.3, response_format: { type: "json_object" }, messages }),
-    signal: AbortSignal.timeout(45_000),
+    signal: AbortSignal.timeout(90_000),
   });
   if (!res.ok) throw new Error(`${p.name} ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const out = await res.json();
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
   const { data: { user } } = await asCaller.auth.getUser();
   if (!user) return json({ error: "请先登录" }, 401);
 
-  let body: { student_id?: string; activity?: ActivityInput };
+  let body: { student_id?: string; activity?: ActivityInput; action?: string; text?: string };
   try {
     body = await req.json();
   } catch {
@@ -48,7 +48,10 @@ Deno.serve(async (req) => {
   }
   const studentId = String(body.student_id ?? "");
   const activity = body.activity ?? {};
-  if (!studentId || !(activity.name || activity.description)) return json({ error: "请先填写活动名称或描述" }, 400);
+  const parsing = body.action === "parse";
+  const text = String(body.text ?? "").trim().slice(0, 20_000);
+  if (!studentId) return json({ error: "student_id required" }, 400);
+  if (parsing ? !text : !(activity.name || activity.description)) return json({ error: parsing ? "请先粘贴内容" : "请先填写活动名称或描述" }, 400);
 
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
   const [{ data: allowed }, { data: isAdmin }] = await Promise.all([
@@ -63,6 +66,20 @@ Deno.serve(async (req) => {
   if (ds) providers.push({ name: "deepseek", url: "https://api.deepseek.com/v1/chat/completions", key: ds, model: "deepseek-chat" });
   if (oa) providers.push({ name: "openai", url: "https://api.openai.com/v1/chat/completions", key: oa, model: "gpt-4o-mini" });
   if (!providers.length) return json({ error: "AI 服务没有配置" }, 500);
+
+  // pasted notes → separate entries for the counselor to review
+  if (parsing) {
+    const today = new Date().toISOString().slice(0, 10);
+    for (const p of providers) {
+      try {
+        const entries = cleanEntries(await ask(p, [{ role: "system", content: PARSE_PROMPT(today) }, { role: "user", content: text }]));
+        return json({ entries, provider: p.name });
+      } catch (e) {
+        console.error("activity-assist parse", p.name, e);
+      }
+    }
+    return json({ error: "AI 暂时不可用，请稍后再试" }, 502);
+  }
 
   const messages = [{ role: "system", content: SYSTEM }, { role: "user", content: userMessage(activity) }];
   for (const p of providers) {

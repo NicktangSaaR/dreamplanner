@@ -57,3 +57,20 @@ describe("AI answer clean-up", () => {
     expect(s.description_en).toBe("Did things.");
   });
 });
+
+import { cleanEntries } from "../../../supabase/functions/activity-assist/logic";
+describe("pasted activities", () => {
+  it("keeps facts, fixes formats, drops nameless entries", () => {
+    const out = cleanEntries({ entries: [
+      { name: "机器人社社长", name_en: "Robotics Club", category: "activity", status: "ongoing", start_month: "2024-09", end_month: "2025-06", hours_per_week: "6", role: "Captain", description: "带队省赛第三" },
+      { name: "AMC 12", category: "honor", status: "ended", start_month: "2025-11", end_month: "2025-11", level: "international", hours_per_week: 999 },
+      { name: "", name_en: "" },
+      { name: "暑期研究", category: "lab", status: "weird", start_month: "Summer 2025" },
+    ] });
+    expect(out).toHaveLength(3);
+    expect(out[0]).toMatchObject({ start_date: "2024-09-01", end_date: null, hours_per_week: 6, role: "Captain" }); // ongoing has no end
+    expect(out[1]).toMatchObject({ category: "honor", level: "international", end_date: "2025-11-01", hours_per_week: null });
+    expect(out[2]).toMatchObject({ category: "activity", status: "ended", start_date: null });
+    expect(cleanEntries(undefined)).toEqual([]);
+  });
+});

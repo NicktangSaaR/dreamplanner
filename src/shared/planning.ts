@@ -5,7 +5,7 @@
 
 export type QuarterKey = "Q1_fall" | "Q2_winter" | "Q3_spring" | "Q4_summer";
 /** `from`: the quarter it was carried over from (e.g. "Q1"); `carried`: already copied to the next quarter. */
-export type Goal = { id: string; text: string; completed: boolean; from?: string; carried?: boolean };
+export type Goal = { id: string; text: string; completed: boolean; from?: string; carried?: boolean; postponed?: boolean };
 export type Phase = "exploration" | "positioning" | "consolidation" | "application";
 
 export const QUARTERS: { key: QuarterKey; short: string; zh: string; en: string; rangeZh: string; rangeEn: string }[] = [
