@@ -38,7 +38,7 @@ export const useProfile = () => {
 
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("id, user_type, email")
+          .select("id, user_type, email, is_verified")
           .eq("id", user.id)
           .maybeSingle();
 
@@ -61,7 +61,8 @@ export const useProfile = () => {
         return {
           id: profileData.id,
           user_type: userType,
-          email: profileData.email
+          email: profileData.email,
+          is_verified: profileData.is_verified,
         };
       } catch (error) {
         console.error("Unexpected error in profile query:", error);
