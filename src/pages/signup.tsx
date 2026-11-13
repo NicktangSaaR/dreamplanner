@@ -170,6 +170,7 @@ export default function SignUp() {
       console.log("Signup successful:", data);
 
       if (formData.userType === "counselor") {
+        await supabase.auth.signOut();
         toast({
           title: "Registration Pending",
           description:
