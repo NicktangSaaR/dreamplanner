@@ -86,7 +86,9 @@ export function cleanEntries(raw: unknown): ParsedEntry[] {
   const list = Array.isArray((raw as { entries?: unknown })?.entries) ? (raw as { entries: Record<string, unknown>[] }).entries : [];
   const str = (v: unknown, max = 300) => String(v ?? "").trim().slice(0, max);
   return list.flatMap((e) => {
-    const name = str(e.name, 200) || str(e.name_en, 200);
+    // every entry needs a name to show in the list: fall back to the description's opening words
+    const desc = str(e.description, 2000) || str(e.description_en, 2000);
+    const name = str(e.name, 200) || str(e.name_en, 200) || (desc ? desc.slice(0, 30) + (desc.length > 30 ? "…" : "") : "");
     if (!name) return [];
     const cat = str(e.category);
     const status = ["ongoing", "ended", "planned"].includes(str(e.status)) ? (str(e.status) as ParsedEntry["status"]) : "ended";
