@@ -1,17 +1,20 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import ApplicationInfo from "@/features/application-info/ApplicationInfo";
 import { useApplicationOpen } from "@/features/application-info/data";
 
 /** The student's application information form. */
 export default function ApplicationInfoPage() {
-  const { profile } = useProfile();
+  // the signed-in account, from the same lookup the page guard uses (always fresh after sign-in)
+  const { profile } = useAuth();
   const { lang } = useLanguage();
   const L = (zh: string, en: string) => (lang === "zh" ? zh : en);
   const { data: open, isLoading } = useApplicationOpen(profile?.id);
-  if (!profile?.id || isLoading) return null;
+  if (!profile?.id || isLoading) {
+    return <main className="container mx-auto max-w-5xl px-4 py-8 text-sm text-muted-foreground">{L("加载中…", "Loading…")}</main>;
+  }
   return (
     <main className="container mx-auto max-w-5xl px-4 py-8">
       <Link to={`/student-dashboard/${profile.id}`} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
