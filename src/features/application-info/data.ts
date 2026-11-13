@@ -23,9 +23,11 @@ const key = (id: string) => ["application-profile", id];
 const COLS = "student_id, applicant_type, systems, data, reviews, open_early, updated_at, updated_by";
 
 /** Starting answers from what the student already told us at sign-up. */
-export function prefill(p: { english_name?: string | null; email?: string | null; school?: string | null; interested_majors?: string | null; applicant_type?: string | null; status?: string | null; grade?: string | null }): { applicant_type: Applicant; systems: System[]; data: Answers } {
+export function prefill(p: { english_name?: string | null; email?: string | null; school?: string | null; interested_majors?: string[] | string | null; applicant_type?: string | null; status?: string | null; grade?: string | null }): { applicant_type: Applicant; systems: System[]; data: Answers } {
   const email = p.email && !p.email.toLowerCase().endsWith("@student.dreamplaneredu.com") ? p.email : "";
-  const majors = (p.interested_majors ?? "").split(",").map((s) => s.trim()).filter((s) => s && s !== "Undecided").join("; ");
+  // stored as a list (older rows may hold one comma-separated string)
+  const raw = Array.isArray(p.interested_majors) ? p.interested_majors : String(p.interested_majors ?? "").split(",");
+  const majors = raw.map((s) => String(s ?? "").trim()).filter((s) => s && s !== "Undecided").join("; ");
   const data: Answers = {};
   const put = (s: string, k: string, v: string) => { if (v) (data[s] ??= {})[k] = v; };
   put("personal", "preferred_name", (p.english_name ?? "").trim());
