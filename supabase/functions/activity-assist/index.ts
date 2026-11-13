@@ -1,7 +1,6 @@
-// Draft the application-ready English for one activity: English name,
-// position, organization, a fuller description, the Common App (150) and UC
-// (350) versions and the two category labels. The counselor reviews the draft
-// before it is saved; nothing is written here.
+// Draft the English for one activity: English name, position, organization
+// and a short description. The counselor reviews the draft before it is
+// saved; nothing is written here.
 //
 // POST { student_id, activity: {...} }  (Authorization: the counselor's session)
 //   -> { suggestion, provider }
