@@ -11,7 +11,7 @@ import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
 import { COUNSELOR_STUDENT_GUIDE } from "@/features/guide/guides";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import StudentProfile from "@/components/college-planning/student-summary/StudentProfile";
-import ActivitiesSection from "@/components/college-planning/student-summary/ActivitiesSection";
+import ActivityPortfolio from "@/features/activities/ActivityPortfolio";
 import SharedFolderSection from "@/components/college-planning/student-summary/SharedFolderSection";
 import TaskBoard from "@/features/counselor/follow/TaskBoard";
 import MeetingLog from "@/features/counselor/follow/MeetingLog";
@@ -56,7 +56,7 @@ const isoDay = (offset: number) => {
  */
 export default function CounselorStudentPage({ studentId }: { studentId: string }) {
   const { t, lang } = useLanguage();
-  const { profile, activities, isLoading } = useStudentData(studentId);
+  const { profile, isLoading } = useStudentData(studentId);
   const track: Track = {
     applicantType: profile?.applicant_type === "graduate" ? "graduate" : "undergrad",
     gradStatus: (profile?.grad_status as GradStatus) || null,
@@ -228,7 +228,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
 
         <TabsContent value="materials" className="mt-6 space-y-6">
           <StudentProfile profile={profile} statusText={track.applicantType === "graduate" ? gradSummary(track, lang).split(" · ").slice(1).join(" · ") : undefined} />
-          {track.applicantType !== "graduate" && <ActivitiesSection activities={activities || []} />}
+          <ActivityPortfolio studentId={studentId} />
           <SharedFolderSection studentId={studentId} />
           <StudentCustomQuestionsCard studentId={studentId} />
           {canManage && (

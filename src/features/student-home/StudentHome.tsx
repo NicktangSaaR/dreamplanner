@@ -10,7 +10,7 @@ import {
   BarChart3,
   CalendarClock, ChevronDown, Download, ExternalLink, FileText, FolderOpen, Globe, LogOut, Menu,
   NotebookPen, Pencil, Plus, Trash2, Upload, User, Video, FileUser,
-  HelpCircle,
+  HelpCircle, Trophy,
 } from "lucide-react";
 import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
 import { STUDENT_HOME_GUIDE } from "@/features/guide/guides";
@@ -31,6 +31,8 @@ import { useStudentQuarters } from "@/components/engines/hooks/useStudentQuarter
 import SharedFolderDialog from "@/components/college-planning/SharedFolderDialog";
 import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
 import StudentReportCards from "@/features/grades/StudentReportCards";
+import StudentActivities from "@/features/activities/StudentActivities";
+import { isActivityRequest } from "@/features/activities/model";
 import { REPORT_CARD_ACCEPT, ReportCardError, db, uploadReportCard, type UploadRequest } from "@/features/grades/reportCards";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
@@ -91,7 +93,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("");
   const [showDone, setShowDone] = useState(false);
-  const [panel, setPanel] = useState<"grades" | "resume" | null>(null);
+  const [panel, setPanel] = useState<"grades" | "resume" | "activities" | null>(null);
   const [dialog, setDialog] = useState<"doc" | "folder" | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -226,6 +228,13 @@ export default function StudentHome({ studentId }: { studentId: string }) {
     await saveGoals(goals.map((g) => (g.id === goal.id ? { ...g, text: text.slice(0, 300) } : g)));
   };
   const [addAs, setAddAs] = useState<"todo" | "goal">("todo");
+  // a counselor's "update your activity portfolio" requests still open
+  const activityRequests = (todos ?? []).filter((x: Todo) => !x.completed && isActivityRequest(x.title));
+  const finishActivityRequests = () => {
+    activityRequests.forEach((x: Todo) => toggleTodoStatus.mutate({ id: x.id, completed: true }));
+    setPanel(null);
+    toast.success(lang === "zh" ? "已完成，顾问会看到你的更新" : "Done — your counselor will see your updates");
+  };
 
   const toggle = (item: Item) =>
     item.kind === "todo"
@@ -353,6 +362,11 @@ export default function StudentHome({ studentId }: { studentId: string }) {
             )}
           </label>
         )}
+        {item.kind === "todo" && !item.done && isActivityRequest(item.todo.title) && (
+          <Button size="sm" variant="outline" className="h-7 shrink-0" onClick={() => setPanel("activities")}>
+            {lang === "zh" ? "去填写" : "Open"}
+          </Button>
+        )}
         {item.due !== null && (
           <span className={`shrink-0 text-sm ${overdue ? "font-medium text-destructive" : "text-muted-foreground"}`}>
             {overdue ? t("home3.overdue", { date: fmtDue(item.due) || "" }) : fmtDue(item.due)}
@@ -444,6 +458,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem className="sm:hidden" onSelect={guide.start}><HelpCircle className="mr-2 h-4 w-4" />{lang === "zh" ? "使用指南" : "Guide"}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setPanel("grades")}><Upload className="mr-2 h-4 w-4" />{t("grades.tab")}</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setPanel("activities")}><Trophy className="mr-2 h-4 w-4" />{lang === "zh" ? "活动档案" : "Activities"}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setPanel("resume")}><FileUser className="mr-2 h-4 w-4" />{t("dash.info.resume")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setDialog("folder")}><FolderOpen className="mr-2 h-4 w-4" />{folderUrl ? t("plan.folder.edit") : t("plan.folder.add")}</DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -538,12 +553,15 @@ export default function StudentHome({ studentId }: { studentId: string }) {
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
           <SheetHeader>
             <SheetTitle className="font-serif text-pine">
-              {panel === "grades" ? t("grades.tab") : t("dash.info.resume")}
+              {panel === "grades" ? t("grades.tab") : panel === "activities" ? (lang === "zh" ? "活动档案" : "Activities") : t("dash.info.resume")}
             </SheetTitle>
           </SheetHeader>
           <div className="mt-6">
             {panel === "grades" && <StudentReportCards studentId={studentId} />}
             {panel === "resume" && <StudentResumeForm />}
+            {panel === "activities" && studentId && (
+              <StudentActivities studentId={studentId} onFinished={activityRequests.length ? finishActivityRequests : undefined} />
+            )}
           </div>
         </SheetContent>
       </Sheet>
