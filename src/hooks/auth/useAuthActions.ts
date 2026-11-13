@@ -34,6 +34,7 @@ export const useAuthActions = () => {
       
       // Refresh user data
       await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
       
       // Get latest profile
       const { data: profileData, error: profileError } = await supabase

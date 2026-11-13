@@ -37,8 +37,11 @@ const initializeAuth = async () => {
         // Clear any auth-related cache on sign out
         queryClient.clear()
       } else if (event === 'SIGNED_IN' && session) {
-        // Refresh relevant queries on sign in
+        // Refresh relevant queries on sign in. Both profile caches may hold an
+        // empty result from before signing in (the nav looks the user up on
+        // public pages), so refresh both.
         queryClient.invalidateQueries({ queryKey: ["user-profile"] })
+        queryClient.invalidateQueries({ queryKey: ["profile"] })
       }
     })
 
