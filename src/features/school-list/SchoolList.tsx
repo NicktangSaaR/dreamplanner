@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { CalendarCheck, ListChecks, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { CalendarCheck, ChevronDown, ClipboardPaste, FileUp, ListChecks, NotebookText, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import {
-  addTodos, CATEGORY_LABEL, type Category, daysUntil, type Draft, extractSchools, ROUNDS, type School, type Status, STATUS_LABEL,
+  addTodos, CATEGORY_LABEL, type Category, daysUntil, type Draft, extractFromFile, extractFromText, extractSchools, ROUNDS, UPLOAD_ACCEPT, type School, type Status, STATUS_LABEL,
   type Suggested, type SuggestedTodo, suggestTodos, SYSTEM_LABEL, type SystemCode, useSchoolList, useSchoolMutations,
 } from "./data";
 
@@ -31,12 +33,14 @@ export default function SchoolList({ studentId }: { studentId: string }) {
   const [planning, setPlanning] = useState(false);
   const [todos, setTodos] = useState<SuggestedTodo[] | null>(null);
 
-  const extract = async () => {
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [pasting, setPasting] = useState(false);
+  const extract = async (from: { file?: File; text?: string } = {}) => {
     setExtracting(true);
     try {
-      const r = await extractSchools(studentId);
-      if (r.empty) return toast.info(L("这位学生还没有规划文档、规划报告或会议纪要，没有可以读的资料。", "No planning documents, reports or meeting notes to read yet."));
-      if (!r.schools.length) return toast.info(L(`读了 ${r.sources.meetings} 次会议、${r.sources.reports} 份报告、${r.sources.documents} 份文档，没有找到明确的目标学校。`, "No target schools found in the materials."));
+      const r = from.file ? await extractFromFile(studentId, from.file) : from.text ? await extractFromText(studentId, from.text) : await extractSchools(studentId);
+      if (r.empty) return toast.info(from.file || from.text ? L("没有读到内容。", "Nothing to read.") : L("这位学生还没有规划文档、规划报告或会议纪要，没有可以读的资料。", "No planning documents, reports or meeting notes to read yet."));
+      if (!r.schools.length) return toast.info(from.file || from.text ? L("没有在里面找到学校。", "No schools found.") : L(`读了 ${r.sources.meetings ?? 0} 次会议、${r.sources.reports ?? 0} 份报告、${r.sources.documents ?? 0} 份文档，没有找到明确的目标学校。`, "No target schools found in the materials."));
       setSuggested(r.schools);
     } catch (e) {
       toast.error((e as Error).message);
@@ -66,9 +70,20 @@ export default function SchoolList({ studentId }: { studentId: string }) {
           {L("选校单", "School list")}<span className="ml-2 text-sm font-normal text-muted-foreground">{list.length}</span>
         </CardTitle>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={extract} disabled={extracting}>
-            <Sparkles className="mr-1.5 h-4 w-4" />{extracting ? L("正在读资料…", "Reading…") : L("从资料生成", "Draft from notes")}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" disabled={extracting}>
+                <Sparkles className="mr-1.5 h-4 w-4" />{extracting ? L("AI 正在读…", "Reading…") : L("AI 生成选校单", "AI draft")}<ChevronDown className="ml-1 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuItem onSelect={() => void extract()}><NotebookText className="mr-2 h-4 w-4" />{L("从规划资料和会议纪要", "From planning notes")}</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => fileInput.current?.click()}><FileUp className="mr-2 h-4 w-4" />{L("上传选校单文件（Excel / Word / PDF）", "Upload a school list file")}</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setPasting(true)}><ClipboardPaste className="mr-2 h-4 w-4" />{L("粘贴选校单文字", "Paste a school list")}</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <input ref={fileInput} type="file" accept={UPLOAD_ACCEPT} className="hidden" aria-hidden="true" tabIndex={-1}
+            onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void extract({ file: f }); }} />
           <Button variant="outline" size="sm" onClick={plan} disabled={planning || !list.length}>
             <ListChecks className="mr-1.5 h-4 w-4" />{planning ? L("生成中…", "Working…") : L("生成待办", "Draft to-dos")}
           </Button>
@@ -82,7 +97,7 @@ export default function SchoolList({ studentId }: { studentId: string }) {
           </p>
         )}
         {isLoading ? null : list.length === 0 ? (
-          <p className="py-6 text-sm text-muted-foreground">{L("还没有学校。点「从资料生成」，AI 会从这位学生的规划文档、规划报告和会议纪要里整理出选校单，你确认后再加入。", "No schools yet. “Draft from notes” builds a list from the student's planning documents, reports and meeting notes for you to confirm.")}</p>
+          <p className="py-6 text-sm text-muted-foreground">{L("还没有学校。点「AI 生成选校单」：可以让 AI 从这位学生的规划资料和会议纪要里整理，也可以上传或粘贴你已经做好的选校单。你确认后才会加入。", "No schools yet. Use “AI draft” to build the list from planning notes, or from a list you upload or paste. You confirm before anything is added.")}</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border">
             <table className="w-full min-w-[720px] text-sm">
@@ -148,6 +163,7 @@ export default function SchoolList({ studentId }: { studentId: string }) {
           })));
           toast.success(L(`已加入 ${rows.length} 所学校`, `Added ${rows.length} schools`));
         }} />}
+      {pasting && <PasteDialog lang={lang} onClose={() => setPasting(false)} onSubmit={(text) => { setPasting(false); void extract({ text }); }} />}
       {todos && <ReviewTodos items={todos} lang={lang} onClose={() => setTodos(null)}
         onAdd={async (items) => {
           const r = await addTodos(studentId, items);
@@ -280,6 +296,25 @@ function ReviewTodos({ items, lang, onClose, onAdd }: { items: SuggestedTodo[]; 
           <Button disabled={busy || !chosen.length} onClick={async () => { setBusy(true); try { await onAdd(chosen.map(({ on: _on, ...t }) => t)); onClose(); } catch { toast.error(L("加入失败", "Couldn't add")); } finally { setBusy(false); } }}>
             {L(`加入 ${chosen.length} 条待办`, `Add ${chosen.length}`)}
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PasteDialog({ lang, onClose, onSubmit }: { lang: "zh" | "en"; onClose: () => void; onSubmit: (text: string) => void }) {
+  const L = (zh: string, en: string) => (lang === "zh" ? zh : en);
+  const [text, setText] = useState("");
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader><DialogTitle>{L("粘贴选校单", "Paste a school list")}</DialogTitle></DialogHeader>
+        <Label htmlFor="paste-list" className="text-sm font-normal text-muted-foreground">{L("从表格、文档或聊天里复制过来就行，格式不限。", "Copy from a sheet, document or chat; any format.")}</Label>
+        <Textarea id="paste-list" rows={10} value={text} onChange={(e) => setText(e.target.value)} maxLength={20000}
+          placeholder={L("例：\n1. UCLA — Economics — RD\n2. University of Toronto — Rotman Commerce\n3. LSE — BSc Economics", "e.g.\n1. UCLA — Economics — RD")} />
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>{L("取消", "Cancel")}</Button>
+          <Button disabled={!text.trim()} onClick={() => onSubmit(text)}>{L("让 AI 整理", "Read it")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

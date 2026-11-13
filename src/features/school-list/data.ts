@@ -118,8 +118,23 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
   }
   return data as T;
 }
-export const extractSchools = (studentId: string) =>
-  call<{ schools: Suggested[]; sources: { meetings: number; reports: number; documents: number }; empty?: boolean }>({ action: "extract", student_id: studentId });
+type Extracted = { schools: Suggested[]; sources: { meetings?: number; reports?: number; documents?: number; uploaded?: number }; empty?: boolean };
+/** From the student's planning documents, reports and meeting notes. */
+export const extractSchools = (studentId: string) => call<Extracted>({ action: "extract", student_id: studentId });
+/** From a school list the counselor pasted. */
+export const extractFromText = (studentId: string, text: string) => call<Extracted>({ action: "extract", student_id: studentId, text });
+export const UPLOAD_ACCEPT = ".xlsx,.xls,.csv,.docx,.pdf,.txt";
+/** From a school list file the counselor uploaded (up to 5 MB). */
+export async function extractFromFile(studentId: string, file: File) {
+  if (file.size > 5 * 1024 * 1024) throw new Error("文件太大，请小于 5 MB");
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
+    r.onerror = () => reject(new Error("没能读取文件"));
+    r.readAsDataURL(file);
+  });
+  return call<Extracted>({ action: "extract", student_id: studentId, file: { name: file.name, base64 } });
+}
 export const suggestTodos = (studentId: string) => call<{ todos: SuggestedTodo[]; empty?: boolean }>({ action: "todos", student_id: studentId });
 
 /** Add the chosen to-dos: the student's go on their to-do list, the counselor's on the counselor task list. */

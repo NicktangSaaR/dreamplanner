@@ -4,6 +4,9 @@
 // POST { action: "extract", student_id }
 //   Reads the student's planning documents, planning reports and meeting
 //   notes and returns the schools they mention: { schools: [...], sources }.
+// POST { action: "extract", student_id, text } or { ..., file: { name, base64 } }
+//   Same, from a school list the counselor pasted or uploaded
+//   (.xlsx .xls .csv .docx .pdf .txt, up to 5 MB).
 // POST { action: "todos", student_id }
 //   Reads the confirmed school list and returns to-dos counted back from each
 //   deadline, for the student or the counselor: { todos: [...] }.
@@ -11,6 +14,7 @@
 // DeepSeek first, OpenAI if it fails.
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 import { cleanSchools, cleanTodos, EXTRACT_PROMPT, TODOS_PROMPT } from "./logic.ts";
+import { fileText } from "./files.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -61,7 +65,7 @@ Deno.serve(async (req) => {
   const { data: { user } } = await asCaller.auth.getUser();
   if (!user) return json({ error: "请先登录" }, 401);
 
-  let body: { action?: string; student_id?: string };
+  let body: { action?: string; student_id?: string; text?: string; file?: { name?: string; base64?: string } };
   try {
     body = await req.json();
   } catch {
@@ -80,6 +84,22 @@ Deno.serve(async (req) => {
   const today = new Date().toISOString().slice(0, 10);
 
   try {
+    if (body.action === "extract" && (body.text || body.file)) {
+      let text = String(body.text ?? "");
+      if (body.file?.base64) {
+        try {
+          text = await fileText(String(body.file.name ?? ""), body.file.base64);
+        } catch (e) {
+          console.error("school-list-assist file", e);
+          return json({ error: "没能读取这个文件，请换成 Excel、Word、PDF 或直接粘贴文字" }, 400);
+        }
+      }
+      text = text.trim().slice(0, SOURCE_LIMIT);
+      if (!text) return json({ schools: [], sources: { uploaded: 1 }, empty: true });
+      const raw = await ask(EXTRACT_PROMPT(today), `The counselor's own school list for this student (treat every school in it as a target):\n\n${text}`);
+      return json({ schools: cleanSchools(raw), sources: { uploaded: 1 } });
+    }
+
     if (body.action === "extract") {
       // newest material first, so the latest list survives the length limit
       const [docs, reports, meetings, prof] = await Promise.all([
@@ -122,3 +142,4 @@ Deno.serve(async (req) => {
     return json({ error: "AI 暂时不可用，请稍后再试" }, 502);
   }
 });
+
