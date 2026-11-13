@@ -24,7 +24,7 @@ export default function ApplicationInfoPage() {
       </p>
       <div className="mt-6">
         {open ? <ApplicationInfo studentId={profile.id} mode="student" />
-          : <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">{L("申请信息会在你进入申请阶段后开放，到时顾问会通知你。", "This opens when you reach the application stage; your counselor will let you know.")}</p>}
+          : <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">{L("申请信息会在你进入申请季后开放，到时顾问会通知你。", "This opens when you start your applications; your counselor will let you know.")}</p>}
       </div>
     </main>
   );

@@ -93,12 +93,16 @@ drop trigger if exists application_profile_keep_settings on public.application_p
 create trigger application_profile_keep_settings before update on public.application_profiles
   for each row execute function public.application_profile_keep_settings();
 
--- Students see the form once they're in the application stage, or earlier if their counselor opened it.
+-- Students see the form once their status is College Bound or Transfer Student
+-- (G12 counts too: seniors from before the automatic College Bound switch),
+-- master's students once they reach the application or admission stage,
+-- or anyone earlier if their counselor opened it.
 create or replace function public.application_info_open(p_student uuid) returns boolean
 language sql stable security definer set search_path = public as $$
   select (auth.uid() = p_student or public.can_access_student_data(auth.uid(), p_student) or public.is_admin(auth.uid()))
      and (
-       exists (select 1 from public.student_phases where student_id = p_student and current_phase in ('application', 'grad_application', 'grad_admission'))
+       exists (select 1 from public.profiles where id = p_student and status in ('College Bound', 'Transfer Student', 'G12'))
+       or exists (select 1 from public.student_phases where student_id = p_student and current_phase in ('grad_application', 'grad_admission'))
        or exists (select 1 from public.application_profiles where student_id = p_student and open_early)
      );
 $$;
