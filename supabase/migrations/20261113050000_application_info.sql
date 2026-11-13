@@ -74,3 +74,31 @@ begin
        else reviews - p_section end
    where student_id = p_student;
 end $$;
+
+-- Who decides what: the counselor sets the applicant type, the systems and
+-- whether to open the form early; students fill in answers only.
+alter table public.application_profiles add column if not exists open_early boolean not null default false;
+
+create or replace function public.application_profile_keep_settings() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() = new.student_id and tg_op = 'UPDATE' then
+    new.applicant_type := old.applicant_type;
+    new.systems := old.systems;
+    new.open_early := old.open_early;
+  end if;
+  return new;
+end $$;
+drop trigger if exists application_profile_keep_settings on public.application_profiles;
+create trigger application_profile_keep_settings before update on public.application_profiles
+  for each row execute function public.application_profile_keep_settings();
+
+-- Students see the form once they're in the application stage, or earlier if their counselor opened it.
+create or replace function public.application_info_open(p_student uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select (auth.uid() = p_student or public.can_access_student_data(auth.uid(), p_student) or public.is_admin(auth.uid()))
+     and (
+       exists (select 1 from public.student_phases where student_id = p_student and current_phase in ('application', 'grad_application', 'grad_admission'))
+       or exists (select 1 from public.application_profiles where student_id = p_student and open_early)
+     );
+$$;

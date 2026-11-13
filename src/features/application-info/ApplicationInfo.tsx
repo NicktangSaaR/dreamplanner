@@ -8,13 +8,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import StudentActivities from "../activities/StudentActivities";
 import { useActivities } from "../activities/data";
 import { byOrder, CATEGORIES, period } from "../activities/model";
-import { type AppProfile, useApplicationMutations, useApplicationProfile } from "./data";
+import { type AppProfile, useApplicationMutations, useApplicationOpen, useApplicationProfile } from "./data";
 import { buildExport, exportAsText } from "./exportData";
 import {
   type Address, type Answers, type Applicant, APPLICANTS, countsToward, type Field, isFilled, type Kind, problem, progress,
@@ -37,7 +38,8 @@ export default function ApplicationInfo({ studentId, mode }: { studentId: string
   const m = useApplicationMutations(studentId);
   const [active, setActive] = useState<string>("personal");
 
-  const sections = useMemo(() => (profile ? visibleSections(profile.systems, profile.applicant_type) : []), [profile]);
+  const sections = useMemo(() => (profile ? visibleSections(profile.systems, profile.applicant_type, profile.data) : []), [profile]);
+  const { data: open } = useApplicationOpen(mode === "counselor" ? studentId : null);
   const prog = useMemo(() => progress(sections, profile?.data ?? {}), [sections, profile?.data]);
   const current = sections.find((s) => s.key === active) ?? sections[0];
 
@@ -49,13 +51,19 @@ export default function ApplicationInfo({ studentId, mode }: { studentId: string
 
   return (
     <div className="space-y-6">
-      <Setup profile={profile} lang={lang} onChange={(patch) => m.saveSettings.mutate(patch, { onError: () => toast.error(L("没能保存", "Couldn't save")) })} />
-
-      {profile.systems.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-          {L("先在上面勾选要申请的系统，下面会出现需要填写的内容。", "Tick the application systems above to see what to fill in.")}
-        </p>
+      {mode === "counselor" ? (
+        <Setup profile={profile} lang={lang} open={open} onChange={(patch) => m.saveSettings.mutate(patch, { onError: () => toast.error(L("没能保存", "Couldn't save")) })} />
       ) : (
+        <p className="rounded-md bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+          {profile.systems.length
+            ? L(`下面只列出你需要填的内容（${APPLICANTS[profile.applicant_type].zh}；${SYSTEMS.filter((s) => profile.systems.includes(s.key)).map((s) => s.zh).join("、")}）。`,
+                `Only what you need to fill in is shown (${APPLICANTS[profile.applicant_type].en}; ${SYSTEMS.filter((s) => profile.systems.includes(s.key)).map((s) => s.en).join(", ")}).`)
+            : L("下面是所有申请都需要的基础信息。顾问确定你要申请的系统后，这里会自动加上对应的内容。",
+                "These are the basics every application needs. Once your counselor sets your application systems, anything extra appears here.")}
+        </p>
+      )}
+
+      {(
         <>
           <div className="flex flex-wrap items-center gap-4">
             <div className="min-w-[200px] flex-1">
@@ -116,7 +124,7 @@ export default function ApplicationInfo({ studentId, mode }: { studentId: string
   );
 }
 
-function Setup({ profile, lang, onChange }: { profile: AppProfile; lang: "zh" | "en"; onChange: (p: { applicant_type?: Applicant; systems?: System[] }) => void }) {
+function Setup({ profile, lang, open, onChange }: { profile: AppProfile; lang: "zh" | "en"; open?: boolean; onChange: (p: { applicant_type?: Applicant; systems?: System[]; open_early?: boolean }) => void }) {
   const L = (zh: string, en: string) => (lang === "zh" ? zh : en);
   const offered = SYSTEMS.filter((s) => s.who.includes(profile.applicant_type));
   const toggle = (k: System, on: boolean) => onChange({ systems: on ? [...profile.systems, k] : profile.systems.filter((x) => x !== k) });
@@ -139,7 +147,7 @@ function Setup({ profile, lang, onChange }: { profile: AppProfile; lang: "zh" | 
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>{L("要申请的系统（可多选，之后可以再改）", "Application systems (choose all that apply)")}</Label>
+        <Label>{L("要申请的系统（可多选；学生只会看到这些系统需要的字段，没选时只看到基础信息）", "Application systems (students only see what these need; with none, just the basics)")}</Label>
         <div className="grid gap-2 sm:grid-cols-3">
           {offered.map((s) => (
             <label key={s.key} className="flex items-center gap-2 text-sm">
@@ -148,6 +156,17 @@ function Setup({ profile, lang, onChange }: { profile: AppProfile; lang: "zh" | 
             </label>
           ))}
         </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3 border-t pt-3">
+        <label className="flex items-center gap-2 text-sm">
+          <Switch checked={profile.open_early} onCheckedChange={(on) => onChange({ open_early: on })} />
+          {L("提前开放给学生", "Open to the student early")}
+        </label>
+        <span className="text-xs text-muted-foreground">
+          {open
+            ? L("学生现在能在菜单里看到「申请信息」。", "The student can see it now.")
+            : L("学生现在看不到。进入申请阶段后会自动开放，或打开上面的开关。", "Hidden from the student until the application stage, or switch it on.")}
+        </span>
       </div>
     </div>
   );

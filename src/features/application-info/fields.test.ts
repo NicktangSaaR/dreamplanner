@@ -7,7 +7,7 @@ const keys = (secs: ReturnType<typeof visibleSections>) => secs.flatMap((s) => s
 
 describe("which fields show", () => {
   it("UCAS-only first-year sees UCAS things and not Common App things", () => {
-    const k = keys(visibleSections(["UK"], "first_year"));
+    const k = keys(visibleSections(["UK"], "first_year", { schools: { curriculum: "A-Level" } }));
     expect(k).toEqual(expect.arrayContaining(["legal_first", "uk_residency", "ucas_choices", "predicted", "recommenders"]));
     expect(k).not.toContain("household");
     expect(k).not.toContain("sat_act");
@@ -21,8 +21,24 @@ describe("which fields show", () => {
     expect(g).not.toContain("parents");
     expect(g).not.toContain("transcript");
   });
-  it("nothing shows without a system", () => {
-    expect(visibleSections([], "first_year")).toEqual([]);
+  it("before systems are chosen, only the basics every system asks for", () => {
+    const k = keys(visibleSections([], "first_year"));
+    expect(k).toEqual(expect.arrayContaining(["legal_first", "dob", "email", "address", "current_school", "english_test", "recommenders", "intended_major"]));
+    expect(k).not.toContain("household");
+    expect(k).not.toContain("ucas_choices");
+    expect(k).not.toContain("sat_act");
+    expect(keys(visibleSections([], "graduate"))).toEqual(expect.arrayContaining(["degrees", "gre_gmat"]));
+  });
+  it("curriculum-specific fields appear only for that curriculum", () => {
+    const none = keys(visibleSections(["BC", "UK"], "first_year"));
+    expect(none).not.toContain("bc_pen");
+    expect(none).not.toContain("predicted");
+    const bc = keys(visibleSections(["BC", "UK"], "first_year", { schools: { curriculum: "BC Dogwood" } }));
+    expect(bc).toEqual(expect.arrayContaining(["bc_pen", "bc_grades"]));
+    expect(bc).not.toContain("predicted");
+    const ib = keys(visibleSections(["BC", "UK"], "first_year", { schools: { curriculum: "IB Diploma" } }));
+    expect(ib).toEqual(expect.arrayContaining(["predicted", "ib"]));
+    expect(ib).not.toContain("bc_pen");
   });
   it("every section and field has both languages", () => {
     for (const s of SECTIONS) for (const f of s.fields) { expect(f.zh).toBeTruthy(); expect(f.en).toBeTruthy(); }
@@ -59,6 +75,9 @@ describe("prefill and export", () => {
   it("starts from sign-up details, skipping placeholder emails", () => {
     const p = prefill({ english_name: "Amy", email: "amy@student.dreamplaneredu.com", school: "Byng", interested_majors: "Economics,Undecided", applicant_type: "graduate" });
     expect(p.applicant_type).toBe("graduate");
+    expect(p.systems).toEqual(["GR"]);
+    expect(prefill({ status: "Transfer Student" }).applicant_type).toBe("transfer");
+    expect(prefill({ grade: "11" })).toMatchObject({ applicant_type: "first_year", systems: [] });
     expect(p.data.personal.preferred_name).toBe("Amy");
     expect(p.data.contact).toBeUndefined();
     expect(p.data.choices.intended_major).toBe("Economics");

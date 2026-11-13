@@ -32,6 +32,8 @@ export type Field = {
   /** 普通 normal · 敏感 sensitive (team only) · 不收集 not collected (student enters it in the application) */
   level: "normal" | "sensitive" | "skip";
   help?: string; options?: string[]; subs?: Sub[]; placeholder?: string;
+  /** Only ask when the student's other answers make it relevant. */
+  showIf?: (a: Answers) => boolean;
 };
 export type Section = { key: string; zh: string; en: string; note?: string; fields: Field[] };
 
@@ -41,8 +43,10 @@ const sys = (s: string) => s.split(" ") as System[];
 const WHO: Record<string, Applicant[]> = { F: ["first_year"], T: ["transfer"], G: ["graduate"], FT: ["first_year", "transfer"], FTG: ["first_year", "transfer", "graduate"] };
 
 function f(key: string, zh: string, en: string, kind: Field["kind"], o: Partial<Omit<Field, "who">> & { who?: string } = {}): Field {
-  return { key, zh, en, kind, systems: o.systems ?? ALL, who: WHO[o.who ?? "FTG"], level: o.level ?? "normal", help: o.help, options: o.options, subs: o.subs, placeholder: o.placeholder };
+  return { key, zh, en, kind, systems: o.systems ?? ALL, who: WHO[o.who ?? "FTG"], level: o.level ?? "normal", help: o.help, options: o.options, subs: o.subs, placeholder: o.placeholder, showIf: o.showIf };
 }
+const curriculum = (a: Answers) => String(a.schools?.curriculum ?? "");
+const studies = (...c: string[]) => (a: Answers) => c.includes(curriculum(a));
 const sub = (key: string, zh: string, en: string, o: Partial<Sub> = {}): Sub => ({ key, zh, en, ...o });
 const FROM_TO = [sub("from", "开始", "From", { kind: "month" }), sub("to", "结束", "To", { kind: "month" })];
 
@@ -91,8 +95,8 @@ export const SECTIONS: Section[] = [
       f("years_in_country", "在当前国家/地区居住年数", "Years lived in current country", "number", { systems: sys("CA CO UC OU BC") }),
       f("years_english_school", "在英语授课学校就读年数", "Years in English-medium schooling", "number", { help: "影响是否需要提交语言成绩" }),
       f("passport_number", "护照号码", "Passport number", "text", { systems: sys("HK SG UK GR"), level: "skip" }),
-      f("bc_pen", "BC 个人教育号（PEN）", "BC Personal Education Number", "text", { systems: sys("BC"), help: "BC 省中学生成绩单上可以找到，9 位数字" }),
-      f("ontario_oen", "安省学生号（OEN）", "Ontario Education Number", "text", { systems: sys("OU"), who: "F", help: "在安省读过中学才有" }),
+      f("bc_pen", "BC 个人教育号（PEN）", "BC Personal Education Number", "text", { systems: sys("BC"), showIf: studies("BC Dogwood"), help: "BC 省中学生成绩单上可以找到，9 位数字" }),
+      f("ontario_oen", "安省学生号（OEN）", "Ontario Education Number", "text", { systems: sys("OU"), who: "F", showIf: studies("Ontario OSSD"), help: "在安省读过中学才有" }),
     ],
   },
   {
@@ -161,11 +165,11 @@ export const SECTIONS: Section[] = [
         who: "FT", subs: [sub("course", "课程名", "Course"), sub("level", "级别", "Level", { kind: "select", options: ["Regular", "Honors", "AP", "IB HL", "IB SL", "A-Level", "Dual credit", "Other"] }), sub("term", "学期", "Term")],
       }),
       f("predicted", "预估成绩", "Predicted grades", "repeat", {
-        systems: sys("UK HK SG"), who: "FT", help: "A-Level / IB 由学校给出的预估分",
+        systems: sys("UK HK SG"), who: "FT", showIf: studies("IB Diploma", "A-Level"), help: "A-Level / IB 由学校给出的预估分",
         subs: [sub("qualification", "考试体系", "Qualification"), sub("subject", "科目", "Subject"), sub("grade", "预估分", "Predicted")],
       }),
       f("bc_grades", "BC 11/12 年级课程成绩", "BC Grade 11/12 courses and marks", "repeat", {
-        systems: sys("BC OU"), who: "FT",
+        systems: sys("BC OU"), who: "FT", showIf: studies("BC Dogwood"),
         subs: [sub("course", "课程", "Course"), sub("grade_level", "年级", "Grade", { kind: "select", options: ["11", "12"] }), sub("mark", "分数（%）", "Mark (%)", { kind: "number" }), sub("status", "状态", "Status", { kind: "select", options: ["Completed", "In progress", "Planned"] })],
       }),
     ],
@@ -182,11 +186,11 @@ export const SECTIONS: Section[] = [
         subs: [sub("subject", "科目", "Subject"), sub("year", "年份", "Year", { kind: "number" }), sub("score", "分数", "Score", { kind: "select", options: ["5", "4", "3", "2", "1", "Planned"] })],
       }),
       f("ib", "IB 成绩/预估分", "IB scores", "repeat", {
-        systems: sys("CA CO UC UK HK SG OU BC"), who: "FT",
+        systems: sys("CA CO UC UK HK SG OU BC"), who: "FT", showIf: studies("IB Diploma"),
         subs: [sub("subject", "科目", "Subject"), sub("level", "HL/SL", "Level", { kind: "select", options: ["HL", "SL"] }), sub("predicted", "预估", "Predicted"), sub("final", "最终", "Final")],
       }),
       f("alevel", "A-Level / IGCSE", "A-Level / IGCSE", "repeat", {
-        systems: sys("CA UC UK HK SG OU BC"), who: "FT",
+        systems: sys("CA UC UK HK SG OU BC"), who: "FT", showIf: studies("A-Level"),
         subs: [sub("qualification", "类型", "Type", { kind: "select", options: ["A-Level", "AS", "IGCSE", "GCSE"] }), sub("subject", "科目", "Subject"), sub("board", "考试局", "Board"), sub("predicted", "预估", "Predicted"), sub("final", "最终", "Final")],
       }),
       f("english_test", "语言考试", "English tests", "repeat", {
@@ -284,12 +288,19 @@ export const SECTIONS: Section[] = [
   },
 ];
 
-/** Fields this applicant needs to see for the systems they chose. */
-export function visibleFields(section: Section, systems: System[], who: Applicant) {
-  return section.fields.filter((fl) => fl.who.includes(who) && fl.systems.some((s) => systems.includes(s)));
+/**
+ * Fields this applicant needs. With systems chosen: what those systems ask
+ * for. With none chosen yet: only what every system for this kind of
+ * applicant asks for. Fields that depend on other answers (e.g. the
+ * curriculum) appear once those answers make them relevant.
+ */
+export function visibleFields(section: Section, systems: System[], who: Applicant, answers: Answers = {}) {
+  const offered = SYSTEMS.filter((s) => s.who.includes(who)).map((s) => s.key);
+  const wanted = (fl: Field) => (systems.length ? fl.systems.some((s) => systems.includes(s)) : offered.every((s) => fl.systems.includes(s)));
+  return section.fields.filter((fl) => fl.who.includes(who) && wanted(fl) && (!fl.showIf || fl.showIf(answers)));
 }
-export function visibleSections(systems: System[], who: Applicant) {
-  return SECTIONS.map((s) => ({ ...s, fields: visibleFields(s, systems, who) })).filter((s) => s.fields.length > 0);
+export function visibleSections(systems: System[], who: Applicant, answers: Answers = {}) {
+  return SECTIONS.map((s) => ({ ...s, fields: visibleFields(s, systems, who, answers) })).filter((s) => s.fields.length > 0);
 }
 
 export type Answers = Record<string, Record<string, unknown>>;

@@ -22,7 +22,7 @@ export function activityRows(list: Activity[]) {
 /** { system, applicant, sections: { "Personal details": { "Legal first/given name": "…", … } }, activities } */
 export function buildExport(system: System, who: Applicant, answers: Answers, activities: Activity[]) {
   const out: Record<string, Row> = {};
-  for (const s of visibleSections([system], who)) {
+  for (const s of visibleSections([system], who, answers)) {
     const block: Row = {};
     for (const fl of s.fields) {
       if (fl.level === "skip" || fl.kind === "external") continue;

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Answers, Applicant, System } from "./fields";
+import { studentKind } from "@/shared/planning";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -12,15 +13,16 @@ export type AppProfile = {
   systems: System[];
   data: Answers;
   reviews: Record<string, Review>;
+  open_early: boolean;
   updated_at: string;
   updated_by: string | null;
 };
 
 const key = (id: string) => ["application-profile", id];
-const COLS = "student_id, applicant_type, systems, data, reviews, updated_at, updated_by";
+const COLS = "student_id, applicant_type, systems, data, reviews, open_early, updated_at, updated_by";
 
 /** Starting answers from what the student already told us at sign-up. */
-export function prefill(p: { english_name?: string | null; email?: string | null; school?: string | null; interested_majors?: string | null; applicant_type?: string | null }): { applicant_type: Applicant; data: Answers } {
+export function prefill(p: { english_name?: string | null; email?: string | null; school?: string | null; interested_majors?: string | null; applicant_type?: string | null; status?: string | null; grade?: string | null }): { applicant_type: Applicant; systems: System[]; data: Answers } {
   const email = p.email && !p.email.toLowerCase().endsWith("@student.dreamplaneredu.com") ? p.email : "";
   const majors = (p.interested_majors ?? "").split(",").map((s) => s.trim()).filter((s) => s && s !== "Undecided").join("; ");
   const data: Answers = {};
@@ -29,7 +31,10 @@ export function prefill(p: { english_name?: string | null; email?: string | null
   put("contact", "email", email);
   put("schools", "current_school", (p.school ?? "").trim());
   put("choices", "intended_major", majors);
-  return { applicant_type: p.applicant_type === "graduate" ? "graduate" : "first_year", data };
+  // the student's status decides what kind of applicant they are
+  const kind = studentKind(p);
+  const applicant_type: Applicant = kind === "graduate" ? "graduate" : kind === "transfer" ? "transfer" : "first_year";
+  return { applicant_type, systems: applicant_type === "graduate" ? ["GR"] : [], data };
 }
 
 export function useApplicationProfile(studentId: string) {
@@ -41,10 +46,10 @@ export function useApplicationProfile(studentId: string) {
       if (error) throw error;
       if (data) return data;
       // first visit: create it, starting from the sign-up details
-      const { data: p } = await db.from("profiles").select("english_name, email, school, interested_majors, applicant_type").eq("id", studentId).maybeSingle();
+      const { data: p } = await db.from("profiles").select("english_name, email, school, interested_majors, applicant_type, status, grade").eq("id", studentId).maybeSingle();
       const start = prefill(p ?? {});
       const { data: created, error: e2 } = await db.from("application_profiles")
-        .upsert({ student_id: studentId, applicant_type: start.applicant_type, data: start.data }, { onConflict: "student_id", ignoreDuplicates: true })
+        .upsert({ student_id: studentId, applicant_type: start.applicant_type, systems: start.systems, data: start.data }, { onConflict: "student_id", ignoreDuplicates: true })
         .select(COLS).maybeSingle();
       if (e2) throw e2;
       if (created) return created;
@@ -69,7 +74,7 @@ export function useApplicationMutations(studentId: string) {
   });
 
   const saveSettings = useMutation({
-    mutationFn: async (patch: { applicant_type?: Applicant; systems?: System[] }) => {
+    mutationFn: async (patch: { applicant_type?: Applicant; systems?: System[]; open_early?: boolean }) => {
       const { error } = await db.from("application_profiles").update(patch).eq("student_id", studentId);
       if (error) throw error;
     },
@@ -85,4 +90,17 @@ export function useApplicationMutations(studentId: string) {
   });
 
   return { saveSection, saveSettings, review, refresh: () => qc.invalidateQueries({ queryKey: key(studentId) }) };
+}
+
+/** Whether the student can see the form yet: application stage, or opened early by their counselor. */
+export function useApplicationOpen(studentId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["application-open", studentId],
+    enabled: !!studentId,
+    queryFn: async (): Promise<boolean> => {
+      const { data, error } = await db.rpc("application_info_open", { p_student: studentId });
+      if (error) throw error;
+      return !!data;
+    },
+  });
 }
