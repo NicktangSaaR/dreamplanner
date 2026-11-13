@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,12 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function StudentProfilePage() {
   const navigate = useNavigate();
-  const { profile } = useProfile();
+  const { profile, isLoading } = useProfile();
 
-  if (!profile || profile.user_type !== 'student') {
-    navigate('/counselor-profile');
-    return null;
-  }
+  // Only students use this page; wait until the profile has loaded before deciding.
+  useEffect(() => {
+    if (!isLoading && profile && profile.user_type !== "student") navigate("/counselor-profile", { replace: true });
+  }, [isLoading, profile, navigate]);
 
   const { data: relationship, refetch: refetchRelationship } = useQuery({
     queryKey: ["counselor-relationship", profile?.id],
@@ -41,6 +42,10 @@ export default function StudentProfilePage() {
       return data;
     },
   });
+
+  if (isLoading || !profile || profile.user_type !== "student") {
+    return <div className="container mx-auto p-4 text-sm text-muted-foreground">Loading…</div>;
+  }
 
   const handleBack = () => {
     navigate(`/student-dashboard/${profile?.id}`);

@@ -34,6 +34,7 @@ import StudentReportCards from "@/features/grades/StudentReportCards";
 import StudentActivities from "@/features/activities/StudentActivities";
 import { isActivityRequest } from "@/features/activities/model";
 import { useApplicationOpen } from "@/features/application-info/data";
+import ApplicationWelcome from "@/features/application-info/ApplicationWelcome";
 import { REPORT_CARD_ACCEPT, ReportCardError, db, uploadReportCard, type UploadRequest } from "@/features/grades/reportCards";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
@@ -552,6 +553,9 @@ export default function StudentHome({ studentId }: { studentId: string }) {
       )}
 
       {/* Menu panels */}
+      {profile?.id === studentId && (
+        <ApplicationWelcome studentId={studentId} seenAt={(profile as { application_welcome_seen_at?: string | null }).application_welcome_seen_at} />
+      )}
       <Sheet open={panel !== null} onOpenChange={(o) => !o && setPanel(null)}>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
           <SheetHeader>
