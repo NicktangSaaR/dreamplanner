@@ -104,6 +104,11 @@ export const COUNSELOR_STUDENT_GUIDE: TourStep[] = [
     en: { title: "Follow-up", body: "Give tasks (due dates, rescheduling, extension requests), log each meeting, and keep counselor-only notes." },
   },
   {
+    target: "tab-application",
+    zh: { title: "申请信息", body: "学生填写的网申信息（个人、家庭、学校、成绩、考试、推荐人）。逐个板块核对，并可按申请系统导出给 AI 填表。" },
+    en: { title: "Application info", body: "What the student filled in for application forms. Check each section and export it per application system." },
+  },
+  {
     target: "tab-materials",
     zh: { title: "资料", body: "学生的基本资料、课外活动、共享文件夹、学生自己添加的面试题和简历都在这里。" },
     en: { title: "Materials", body: "Profile, activities, the shared folder, the student's own interview questions and the résumé." },

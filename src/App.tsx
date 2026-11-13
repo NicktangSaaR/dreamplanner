@@ -19,6 +19,7 @@ import Index from "@/pages/Index";
 import Articles from "@/pages/Articles";
 import ArticleDetail from "@/pages/ArticleDetail";
 import AdminDashboard from "@/pages/AdminDashboard";
+import ApplicationInfoPage from "@/pages/ApplicationInfoPage";
 
 
 import PublicResumeForm from "@/pages/PublicResumeForm";
@@ -78,6 +79,11 @@ export default function App() {
             <Route path="/student-dashboard/:studentId" element={
               <ProtectedRoute allowedUserTypes={["student"]}>
                 <StudentDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/application-info" element={
+              <ProtectedRoute allowedUserTypes={["student"]}>
+                <ApplicationInfoPage />
               </ProtectedRoute>
             } />
             <Route path="/admin-dashboard" element={
