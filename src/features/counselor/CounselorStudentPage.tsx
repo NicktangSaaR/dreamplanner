@@ -12,6 +12,7 @@ import { COUNSELOR_STUDENT_GUIDE } from "@/features/guide/guides";
 import { useStudentData } from "@/hooks/student/useStudentData";
 import StudentProfile from "@/components/college-planning/student-summary/StudentProfile";
 import ActivityPortfolio from "@/features/activities/ActivityPortfolio";
+import ApplicationInfo from "@/features/application-info/ApplicationInfo";
 import SharedFolderSection from "@/components/college-planning/student-summary/SharedFolderSection";
 import TaskBoard from "@/features/counselor/follow/TaskBoard";
 import MeetingLog from "@/features/counselor/follow/MeetingLog";
@@ -162,6 +163,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
           <TabsTrigger value="plan" data-tour="tab-plan">{t("cs.tab.plan")}</TabsTrigger>
           <TabsTrigger value="follow" data-tour="tab-follow">{t("cs.tab.follow")}</TabsTrigger>
           <TabsTrigger value="materials" data-tour="tab-materials">{t("cs.tab.materials")}</TabsTrigger>
+          <TabsTrigger value="application" data-tour="tab-application">{lang === "zh" ? "申请信息" : "Application info"}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
@@ -224,6 +226,10 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
           <TaskBoard studentId={studentId} />
           <MeetingLog studentId={studentId} />
           <NotesCard studentId={studentId} />
+        </TabsContent>
+
+        <TabsContent value="application" className="mt-6">
+          <ApplicationInfo studentId={studentId} mode="counselor" />
         </TabsContent>
 
         <TabsContent value="materials" className="mt-6 space-y-6">

@@ -10,7 +10,7 @@ import {
   BarChart3,
   CalendarClock, ChevronDown, Download, ExternalLink, FileText, FolderOpen, Globe, LogOut, Menu,
   NotebookPen, Pencil, Plus, Trash2, Upload, User, Video, FileUser,
-  HelpCircle, Trophy,
+  HelpCircle, Trophy, ClipboardList,
 } from "lucide-react";
 import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
 import { STUDENT_HOME_GUIDE } from "@/features/guide/guides";
@@ -33,6 +33,7 @@ import StudentResumeForm from "@/components/student/resume/StudentResumeForm";
 import StudentReportCards from "@/features/grades/StudentReportCards";
 import StudentActivities from "@/features/activities/StudentActivities";
 import { isActivityRequest } from "@/features/activities/model";
+import { useApplicationOpen } from "@/features/application-info/data";
 import { REPORT_CARD_ACCEPT, ReportCardError, db, uploadReportCard, type UploadRequest } from "@/features/grades/reportCards";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
@@ -88,6 +89,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   const queryClient = useQueryClient();
   const { profile } = useProfile();
   const { todos, createTodo, toggleTodoStatus, deleteTodo } = useStudentTodos(studentId);
+  const { data: applicationOpen } = useApplicationOpen(studentId);
   const { quarters } = useStudentQuarters(studentId);
   const uploadRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
@@ -458,6 +460,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem className="sm:hidden" onSelect={guide.start}><HelpCircle className="mr-2 h-4 w-4" />{lang === "zh" ? "使用指南" : "Guide"}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setPanel("grades")}><Upload className="mr-2 h-4 w-4" />{t("grades.tab")}</DropdownMenuItem>
+              {applicationOpen && <DropdownMenuItem onSelect={() => navigate("/application-info")}><ClipboardList className="mr-2 h-4 w-4" />{lang === "zh" ? "申请信息" : "Application info"}</DropdownMenuItem>}
               <DropdownMenuItem onSelect={() => setPanel("activities")}><Trophy className="mr-2 h-4 w-4" />{lang === "zh" ? "活动档案" : "Activities"}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setPanel("resume")}><FileUser className="mr-2 h-4 w-4" />{t("dash.info.resume")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setDialog("folder")}><FolderOpen className="mr-2 h-4 w-4" />{folderUrl ? t("plan.folder.edit") : t("plan.folder.add")}</DropdownMenuItem>
