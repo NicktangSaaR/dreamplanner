@@ -165,7 +165,7 @@ function Setup({ profile, lang, open, onChange }: { profile: AppProfile; lang: "
         <span className="text-xs text-muted-foreground">
           {open
             ? L("学生现在能在菜单里看到「申请信息」。", "The student can see it now.")
-            : L("学生现在看不到。状态变成 College Bound 或 Transfer Student 后会自动开放，也可以打开这个开关提前开放。", "Hidden until the student is College Bound or a Transfer Student, or switch it on.")}
+            : L("学生现在看不到。状态变成 College Bound 后会自动开放（转学和硕士学生一直开放），也可以打开这个开关提前开放。", "Hidden until the student is College Bound (always open for transfer and master's students), or switch it on.")}
         </span>
       </div>
     </div>
