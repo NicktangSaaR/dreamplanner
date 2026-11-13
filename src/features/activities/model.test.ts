@@ -74,3 +74,12 @@ describe("pasted activities", () => {
     expect(cleanEntries(undefined)).toEqual([]);
   });
 });
+
+describe("pasted entries without a name", () => {
+  it("take their name from the description", () => {
+    const out = cleanEntries({ entries: [{ description: "周末在社区图书馆给小朋友读绘本，坚持了一年多，还组织了暑期读书会" }, {}] });
+    expect(out).toHaveLength(1);
+    expect(out[0].name.startsWith("周末在社区图书馆")).toBe(true);
+    expect(out[0].name.endsWith("…")).toBe(true);
+  });
+});

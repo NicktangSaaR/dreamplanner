@@ -421,7 +421,8 @@ function ReviewParsed({ items, onClose, onAdd }: { items: ParsedEntry[]; onClose
   const [rows, setRows] = useState(() => items.map((e) => ({ ...e, on: true })));
   const [busy, setBusy] = useState(false);
   const set = (i: number, patch: Partial<(typeof rows)[number]>) => setRows((r) => r.map((x, j) => (j === i ? { ...x, ...patch } : x)));
-  const chosen = rows.filter((r) => r.on && r.name.trim());
+  // a cleared name becomes 未命名活动 rather than dropping the entry
+  const chosen = rows.filter((r) => r.on).map((r) => ({ ...r, name: r.name.trim() || (lang === "zh" ? "未命名活动" : "Untitled activity") }));
   return (
     <Dialog open onOpenChange={(o) => !o && !busy && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
