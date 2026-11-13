@@ -10,6 +10,8 @@ import { ArticleCategory } from "@/types/article";
 import { GETOFFERS_URL } from "@/lib/siteLinks";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import LanguageToggle from "@/i18n/LanguageToggle";
+import { useProfile } from "@/hooks/useProfile";
+import { homePath } from "@/shared/homePath";
 
 interface MainNavProps {
   isAuthenticated: boolean;
@@ -30,7 +32,9 @@ function Brand() {
 export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useLanguage();
-  const dashboardLink = isAuthenticated && userId ? `/student-dashboard/${userId}` : "/login";
+  const { profile } = useProfile();
+  // counselors, follow-up teachers and admins have their own dashboards
+  const dashboardLink = isAuthenticated && userId ? (profile?.user_type ? homePath(profile.user_type, userId) : "/") : "/login";
 
   const { data: categories } = useQuery({
     queryKey: ["article-categories"],

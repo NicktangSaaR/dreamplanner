@@ -1,6 +1,7 @@
 import { Home, LogOut, Settings, ArrowLeft, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { homePath } from "@/shared/homePath";
 import { Profile } from "@/types/profile";
 
 interface InterviewHeaderProps {
@@ -59,7 +60,7 @@ const InterviewHeader = ({
             <Home className="h-5 w-5" />
           </Button>
         </Link>
-        <Link to={`/student-dashboard/${profile?.id}`}>
+        <Link to={homePath(profile?.user_type, profile?.id)}>
           <Button variant="ghost" size="icon" className="w-10 h-10">
             <LayoutDashboard className="h-5 w-5" />
           </Button>
