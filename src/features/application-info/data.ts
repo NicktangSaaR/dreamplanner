@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Answers, Applicant, System } from "./fields";
 import { studentKind } from "@/shared/planning";
+import { systemsOf } from "../school-list/data";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -48,6 +49,9 @@ export function useApplicationProfile(studentId: string) {
       // first visit: create it, starting from the sign-up details
       const { data: p } = await db.from("profiles").select("english_name, email, school, interested_majors, applicant_type, status, grade").eq("id", studentId).maybeSingle();
       const start = prefill(p ?? {});
+      // systems already on the school list
+      const { data: schools } = await db.from("college_applications").select("application_system, status").eq("student_id", studentId);
+      start.systems = [...new Set([...start.systems, ...systemsOf(schools ?? [])])] as System[];
       const { data: created, error: e2 } = await db.from("application_profiles")
         .upsert({ student_id: studentId, applicant_type: start.applicant_type, systems: start.systems, data: start.data }, { onConflict: "student_id", ignoreDuplicates: true })
         .select(COLS).maybeSingle();

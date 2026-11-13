@@ -104,6 +104,11 @@ export const COUNSELOR_STUDENT_GUIDE: TourStep[] = [
     en: { title: "Follow-up", body: "Give tasks (due dates, rescheduling, extension requests), log each meeting, and keep counselor-only notes." },
   },
   {
+    target: "tab-schools",
+    zh: { title: "选校单", body: "点「从资料生成」，AI 会从规划文档、规划报告和会议纪要里整理出目标学校，你确认后加入；再点「生成待办」，按截止日期倒推生成学生和顾问的待办。" },
+    en: { title: "School list", body: "“Draft from notes” builds the list from planning documents, reports and meeting notes for you to confirm; “Draft to-dos” plans the work back from each deadline." },
+  },
+  {
     target: "tab-application",
     zh: { title: "申请信息", body: "学生填写的网申信息（个人、家庭、学校、成绩、考试、推荐人）。逐个板块核对，并可按申请系统导出给 AI 填表。" },
     en: { title: "Application info", body: "What the student filled in for application forms. Check each section and export it per application system." },
