@@ -78,6 +78,9 @@ describe("prefill and export", () => {
     expect(p.systems).toEqual(["GR"]);
     expect(prefill({ status: "Transfer Student" }).applicant_type).toBe("transfer");
     expect(prefill({ grade: "11" })).toMatchObject({ applicant_type: "first_year", systems: [] });
+    // majors come back from the database as a list
+    expect(prefill({ interested_majors: ["Economics", "Undecided", "Computer Science"] }).data.choices.intended_major).toBe("Economics; Computer Science");
+    expect(prefill({ interested_majors: null }).data.choices).toBeUndefined();
     expect(p.data.personal.preferred_name).toBe("Amy");
     expect(p.data.contact).toBeUndefined();
     expect(p.data.choices.intended_major).toBe("Economics");
