@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Activity, applicationLists, exportText, isActivityRequest, period, requestTitle, staleness } from "./model";
+import { type Activity, exportText, isActivityRequest, period, requestTitle, staleness } from "./model";
 import { fit, normalize } from "../../../supabase/functions/activity-assist/logic";
 
 let n = 0;
@@ -11,29 +11,18 @@ const act = (p: Partial<Activity>): Activity => ({
   updated_at: new Date().toISOString(), updated_by: null, created_at: new Date(2026, 0, n).toISOString(), ...p,
 });
 
-describe("application lists", () => {
-  it("splits activities and honours, keeps order, drops planned, applies limits", () => {
-    const all = [
-      ...Array.from({ length: 12 }, (_, i) => act({ sort_order: 20 - i })),
-      act({ category: "honor", sort_order: 1 }),
-      act({ category: "competition", level: "national", sort_order: 2 }),
-      act({ category: "competition", sort_order: 3 }),
-      act({ status: "planned", sort_order: 0 }),
-    ];
-    const l = applicationLists(all);
-    expect(l.commonApp).toHaveLength(10);
-    expect(l.commonApp[0].sort_order).toBe(3); // competition without a level counts as an activity
-    expect(l.honors.map((a) => a.category)).toEqual(["honor", "competition"]);
-    expect(l.uc).toHaveLength(15);
-    expect(l.uc.some((a) => a.status === "planned")).toBe(false);
-  });
-
-  it("exports a pasteable list", () => {
-    const t = exportText([act({ name: "机器人社", name_en: "Robotics Club", role: "Captain", ca_text: "Led 6", ca_type: "Robotics", hours_per_week: 5, weeks_per_year: 30 })], "commonApp");
-    expect(t).toContain("1. Robotics Club");
-    expect(t).toContain("Type: Robotics");
-    expect(t).toContain("Description: Led 6");
-    expect(t).toContain("5 hr/wk · 30 wk/yr");
+describe("export", () => {
+  it("lists every entry in English, falling back to the student's words", () => {
+    const list = Array.from({ length: 25 }, (_, i) => act({ name: `活动${i}` }));
+    list[0] = act({ name: "机器人社", name_en: "Robotics Club", role: "Captain", organization: "Byng", description_en: "Led 6", hours_per_week: 5, start_date: "2025-09-01" });
+    list[1] = act({ name: "图书馆志愿者", description: "周末读书" });
+    const t = exportText(list);
+    expect(t).toContain("1. Robotics Club · Captain · Byng");
+    expect(t).toContain("Activity · Ongoing · Sep 2025 – present · 5 hr/wk");
+    expect(t).toContain("Led 6");
+    expect(t).toContain("2. 图书馆志愿者");
+    expect(t).toContain("周末读书");
+    expect(t).toContain("25. 活动24"); // no limit
   });
 });
 
@@ -60,13 +49,11 @@ describe("AI answer clean-up", () => {
     const out = fit(s, 60);
     expect(out.length).toBeLessThanOrEqual(60);
     expect(s.startsWith(out)).toBe(true);
-    expect(out.endsWith(";")).toBe(false);
   });
-  it("normalises categories and reports over-long fields", () => {
-    const { s, over } = normalize({ name_en: "Robotics", ca_text: "x ".repeat(100), ca_type: "robotics", uc_category: "nonsense" });
-    expect(s.ca_type).toBe("Robotics");
-    expect(s.uc_category).toBe("Extracurricular activity");
-    expect(over).toEqual(["ca_text"]);
-    expect(s.ca_text.length).toBeLessThanOrEqual(150);
+  it("keeps the four fields and reports over-long ones", () => {
+    const { s, over } = normalize({ name_en: "x".repeat(120), position: "Captain", description_en: " Did things. " });
+    expect(Object.keys(s).sort()).toEqual(["description_en", "name_en", "organization", "position"]);
+    expect(over).toEqual(["name_en"]);
+    expect(s.description_en).toBe("Did things.");
   });
 });

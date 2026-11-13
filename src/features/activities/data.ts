@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ACTIVITY_COLUMNS, type Activity, requestTitle } from "./model";
+import { ACTIVITY_COLUMNS, type Activity } from "./model";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -89,19 +89,14 @@ export function useActivityMutations(studentId: string) {
   return { save, remove, reorder, review };
 }
 
-/** Counselor asks the student to update their portfolio: a to-do with a due date. */
-export async function requestUpdate(studentId: string, due: string, note?: string) {
-  const { data: { user } } = await supabase.auth.getUser();
-  const { error } = await db.from("todos").insert({
-    author_id: studentId, title: requestTitle(note), due_date: due || null, completed: false, assigned_by: user?.id ?? null,
-  });
+/** Counselor asks the student to update their portfolio: a to-do with a due date, and an email. */
+export async function requestUpdate(studentId: string, due: string, note?: string): Promise<{ emailed: boolean; reason?: string }> {
+  const { data, error } = await supabase.functions.invoke("activity-request", { body: { student_id: studentId, due, note } });
   if (error) throw error;
+  return data;
 }
 
-export type Suggestion = {
-  name_en: string; position: string; organization: string; description_en: string;
-  ca_text: string; uc_text: string; ca_type: string; uc_category: string;
-};
+export type Suggestion = { name_en: string; position: string; organization: string; description_en: string };
 
 export async function assist(studentId: string, activity: ActivityDraft): Promise<Suggestion> {
   const { data, error } = await supabase.functions.invoke("activity-assist", { body: { student_id: studentId, activity } });

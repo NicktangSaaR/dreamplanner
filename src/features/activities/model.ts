@@ -69,21 +69,7 @@ export const LEVELS: Record<Level, L> = {
   international: { zh: "国际级", en: "International" },
 };
 
-/** Awards count as honours on the Common App; competition results usually do too when there is a level. */
-export const isHonor = (a: Pick<Activity, "category" | "level">) =>
-  a.category === "honor" || (a.category === "competition" && !!a.level);
-
 export const byOrder = (a: Activity, b: Activity) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at);
-
-/** What goes on each form, in the counselor's order. Planned entries are left out. */
-export function applicationLists(all: Activity[]) {
-  const real = all.filter((a) => a.status !== "planned").sort(byOrder);
-  return {
-    commonApp: real.filter((a) => !isHonor(a)).slice(0, 10),
-    honors: real.filter(isHonor).slice(0, 5),
-    uc: real.slice(0, 20),
-  };
-}
 
 const MS_DAY = 86_400_000;
 /** Ongoing entries untouched for 90 days, or past their end date, need updating. */
@@ -105,28 +91,21 @@ export function period(a: Pick<Activity, "start_date" | "end_date" | "status">, 
   return s && e ? `${s} – ${e}` : s || e;
 }
 
-/** Plain-text list for pasting into the Common App / UC, or for the AI form filler. */
-export function exportText(list: Activity[], kind: "commonApp" | "honors" | "uc") {
+/** The whole list as plain text in English (falls back to the student's own words), for copying. */
+export function exportText(list: Activity[]) {
   return list
     .map((a, i) => {
-      const lines = [`${i + 1}. ${a.name_en || a.name}`];
-      if (kind === "honors") {
-        lines.push(`   Level: ${a.level ? LEVELS[a.level].en : "—"}`, `   Grades: ${(a.grade_levels ?? []).join(", ") || "—"}`);
-      } else {
-        if (kind === "commonApp") lines.push(`   Type: ${a.ca_type || "—"}`);
-        else lines.push(`   Category: ${a.uc_category || "—"}`);
-        lines.push(`   Position: ${a.role || "—"}`, `   Organization: ${a.organization || "—"}`);
-        lines.push(`   Description: ${(kind === "commonApp" ? a.ca_text : a.uc_text) || a.description_en || "—"}`);
-        lines.push(`   Grades: ${(a.grade_levels ?? []).join(", ") || "—"} · Timing: ${a.timing ? TIMINGS[a.timing].en : "—"}`);
-        lines.push(`   ${a.hours_per_week ?? "—"} hr/wk · ${a.weeks_per_year ?? "—"} wk/yr · Continue in college: ${a.continue_in_college == null ? "—" : a.continue_in_college ? "Yes" : "No"}`);
-      }
-      return lines.join("\n");
+      const head = [a.name_en || a.name, a.role, a.organization].filter(Boolean).join(" · ");
+      const meta = [
+        CATEGORIES[a.category].en, STATUSES[a.status].en, period(a, "en"),
+        a.hours_per_week != null ? `${a.hours_per_week} hr/wk` : "", a.weeks_per_year != null ? `${a.weeks_per_year} wk/yr` : "",
+        a.timing ? TIMINGS[a.timing].en : "", a.level ? LEVELS[a.level].en : "",
+        a.grade_levels?.length ? `Grades ${a.grade_levels.join(", ")}` : "",
+      ].filter(Boolean).join(" · ");
+      return [`${i + 1}. ${head}`, `   ${meta}`, `   ${a.description_en || a.description || "—"}`].join("\n");
     })
     .join("\n\n");
 }
-
-export const CA_LIMIT = 150;
-export const UC_LIMIT = 350;
 
 /** The to-do a counselor's request creates; the student page finds it by this prefix. */
 export const REQUEST_PREFIX = "📋 ";
