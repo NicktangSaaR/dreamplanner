@@ -10,7 +10,7 @@ Return JSON {"schools":[...]} where each item has:
 - application_system: one of ${SYSTEMS.join(", ")} — CA Common App, CO Coalition, UC University of California, OU OUAC (Ontario), BC EducationPlannerBC (BC incl. UBC, SFU, UVic), UK UCAS, HK Hong Kong university portal, SG Singapore university portal, GR graduate school portal, OTHER
 - country: e.g. "US", "Canada", "UK", "Hong Kong", "Singapore"
 - category: "reach", "target", "safety" or "" — only if the notes say so
-- deadline: "YYYY-MM-DD" for this application cycle if the notes state it, or your best knowledge of the usual deadline for that round in the cycle after ${today.slice(0, 4)}; else null
+- deadline: "YYYY-MM-DD". If the notes give a deadline for this school, use exactly that date, even if it differs from what you believe the deadline is. Only if the notes give none, use your best knowledge of the usual deadline for that round in the cycle after ${today.slice(0, 4)}; else null
 - deadline_from_notes: true only if the date came from the notes
 - evidence: where in the notes this school appears, a short quote (≤ 20 words)
 Most important first if the notes rank them.`;
