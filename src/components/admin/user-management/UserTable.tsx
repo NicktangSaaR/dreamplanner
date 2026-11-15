@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { Edit2, Save, X, CheckCircle, XCircle, Trash2, UserPlus } from "lucide-react";
+import { Edit2, Save, X, CheckCircle, XCircle, Trash2, UserPlus, KeyRound } from "lucide-react";
 import { UserTypeSelect } from "./UserTypeSelect";
 import { Badge } from "@/components/ui/badge";
 
@@ -32,6 +32,7 @@ interface UserTableProps {
   onFormChange: (field: string, value: string) => void;
   onVerifyUser?: (userId: string) => void;
   onAssociateCounselor?: (studentId: string, studentName: string | null) => void;
+  onSendPasswordReset?: (userId: string, userName: string | null, email: string | null) => void;
 }
 
 export const UserTable = ({
@@ -46,6 +47,7 @@ export const UserTable = ({
   onFormChange,
   onVerifyUser,
   onAssociateCounselor,
+  onSendPasswordReset,
 }: UserTableProps) => {
   return (
     <Table>
@@ -174,6 +176,17 @@ export const UserTable = ({
                         title="Associate counselor"
                       >
                         <UserPlus className="h-4 w-4 text-blue-600" />
+                      </Button>
+                    )}
+                    {onSendPasswordReset && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onSendPasswordReset(user.id, user.full_name, user.email)}
+                        title="发送重置密码邮件"
+                        aria-label="发送重置密码邮件"
+                      >
+                        <KeyRound className="h-4 w-4" />
                       </Button>
                     )}
                     <Button
