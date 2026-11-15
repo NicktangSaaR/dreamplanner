@@ -35,6 +35,25 @@ const UserManagement = () => {
     email: "",
   });
   const [userToDelete, setUserToDelete] = useState<{id: string; name: string | null; type: string} | null>(null);
+  const [resetFor, setResetFor] = useState<{ id: string; name: string | null; email: string | null } | null>(null);
+  const [sendingReset, setSendingReset] = useState(false);
+  const sendPasswordReset = async () => {
+    if (!resetFor) return;
+    setSendingReset(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-send-password-reset", { body: { user_id: resetFor.id } });
+      if (error) {
+        const msg = await (error as { context?: Response }).context?.json?.().then((b: { error?: string }) => b?.error).catch(() => null);
+        throw new Error(msg || "发送失败，请稍后再试");
+      }
+      toast.success(`已发送重置密码邮件到 ${data?.sent_to ?? resetFor.email ?? "用户邮箱"}`);
+      setResetFor(null);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSendingReset(false);
+    }
+  };
   const [studentForCounselor, setStudentForCounselor] = useState<{id: string; name: string | null} | null>(null);
 
   const { data: users = [], isLoading, refetch } = useUsersQuery();
@@ -162,7 +181,25 @@ const UserManagement = () => {
         onFormChange={handleFormChange}
         onVerifyUser={handleVerifyUser}
         onAssociateCounselor={handleAssociateCounselor}
+        onSendPasswordReset={(id, name, email) => setResetFor({ id, name, email })}
       />
+
+      <AlertDialog open={!!resetFor} onOpenChange={(open) => { if (!open && !sendingReset) setResetFor(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>发送重置密码邮件</AlertDialogTitle>
+            <AlertDialogDescription>
+              将给{resetFor?.name ? ` ${resetFor.name} ` : "该用户"}{resetFor?.email ? `（${resetFor.email}）` : ""}发送一封邮件，邀请其设置新密码，链接 1 小时内有效。用户设置新密码之前，原密码仍然可以使用。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={sendingReset}>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); void sendPasswordReset(); }} disabled={sendingReset}>
+              {sendingReset ? "发送中…" : "发送邮件"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
         <AlertDialogContent>
