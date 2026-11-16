@@ -80,34 +80,11 @@ export function AssociateCounselorDialog({
   const handleAssociateCounselor = async (counselorId: string) => {
     setIsLoading(true);
     try {
-      // Check if there's an existing relationship to replace
-      if (existingRelationship) {
-        // Delete existing relationship
-        const { error: deleteError } = await supabase
-          .from("counselor_student_relationships")
-          .delete()
-          .eq("student_id", studentId)
-          .eq("counselor_id", existingRelationship.counselor_id);
-
-        if (deleteError) {
-          console.error("Error removing existing relationship:", deleteError);
-          toast.error("Failed to update counselor relationship");
-          return;
-        }
-      }
-
-      // Create new relationship
-      const { error: insertError } = await supabase
-        .from("counselor_student_relationships")
-        .insert({
-          counselor_id: counselorId,
-          student_id: studentId,
-          added_by: (await supabase.auth.getUser()).data.user?.id,
-        });
-
-      if (insertError) {
-        console.error("Error creating relationship:", insertError);
-        toast.error("Failed to associate counselor");
+      // One step on the server: replaces any current lead and re-points the team.
+      const { error } = await (supabase as any).rpc("set_lead_counselor", { p_student: studentId, p_counselor: counselorId });
+      if (error) {
+        console.error("Error setting lead counselor:", error);
+        toast.error(`Failed to change counselor: ${error.message}`);
         return;
       }
 
