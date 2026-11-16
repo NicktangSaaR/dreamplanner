@@ -22,10 +22,20 @@ export default function ForgotPassword() {
     setIsLoading(true);
     setError(null);
     // Works with an email or a student's username; the link goes to the email
-    // on the account. Same confirmation either way, so the page doesn't reveal
-    // which accounts exist.
+    // on the account. Says so when nothing matches, so a typo isn't mistaken
+    // for a lost email.
     const redirect_to = `${window.location.origin}/reset-password`;
-    const { error } = await supabase.functions.invoke("request-password-reset", { body: { identifier: email.trim(), redirect_to } });
+    const { data, error } = await supabase.functions.invoke("request-password-reset", { body: { identifier: email.trim(), redirect_to } });
+    if (!error && data?.found === false) {
+      setIsLoading(false);
+      setError(t("forgot.notFound"));
+      return;
+    }
+    if (!error && data?.sent === false) {
+      setIsLoading(false);
+      setError(t("forgot.sendFailed"));
+      return;
+    }
     if (error && email.includes("@")) {
       // the function couldn't be reached: fall back to the built-in email reset
       const { error: e2 } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: redirect_to });
