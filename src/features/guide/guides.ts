@@ -32,14 +32,19 @@ export const STUDENT_HOME_GUIDE: TourStep[] = [
     en: { title: "From your counselor", body: "Your plan, meeting notes, planning reports and shared folder appear here. Open one to read or download it." },
   },
   {
+    target: "student-tools",
+    zh: { title: "我的资料", body: "常用的功能都在这一排：申请信息（进入申请季后出现）、我的选校单、活动档案、成绩单、简历、共享文件夹和模拟面试，点一下就能打开。" },
+    en: { title: "Your materials", body: "Everything you use is in this row: application info (from application season), your school list, activities, report cards, résumé, shared folder and mock interviews." },
+  },
+  {
     target: "mock-interview-button",
     zh: { title: "模拟面试", body: "按学校的真实面试形式练习录像面试：系统会读题、计时、录像，练完可以回看自己的回答。会在新标签页打开。" },
     en: { title: "Mock interview", body: "Practise video interviews the way each school runs them: questions are read out, timed and recorded, and you can watch yourself back. Opens in a new tab." },
   },
   {
     target: "student-menu",
-    zh: { title: "更多功能", body: "菜单里可以上传成绩单、填写简历、添加共享文件夹、修改个人资料、切换中英文和退出登录。" },
-    en: { title: "More", body: "The menu has report-card upload, your résumé, the shared folder, your profile, language and sign out." },
+    zh: { title: "个人设置", body: "右上角的菜单里可以修改个人资料、切换中英文和退出登录。" },
+    en: { title: "Settings", body: "The menu at the top right has your profile, language and sign out." },
   },
   {
     target: "guide-button",
