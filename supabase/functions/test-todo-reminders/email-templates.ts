@@ -1,8 +1,10 @@
-// To-do reminder emails, for the student and their counselor. Each email has a
-// complete Chinese version followed by a complete English version.
+// To-do reminder emails, for the student and their counselor. Written in the
+// reader's email language: English only, Chinese only, or both (English first).
 //
 // Styles are inline (many mail apps drop <style> blocks), the font list covers
 // Chinese on every platform, and long titles wrap instead of being cut off.
+
+import { type EmailLang, inOrder, subjectFor } from "../_shared/emailLang.ts";
 
 const SITE = "https://dreamplaneredu.com";
 const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', Arial, sans-serif";
@@ -65,25 +67,25 @@ function section(lang: "zh" | "en", heading: string, intro: string, todos: Todo[
   </div>`;
 }
 
-function page(zh: string, en: string) {
+function page(lang: EmailLang, zh: string, en: string) {
+  const divider = `<div style="border-top:1px dashed ${C.line};margin:0 24px;"></div>`;
+  const footer = inOrder(lang, "此邮件由 DreamPlanner 自动发送，请勿直接回复。", "This email was sent automatically by DreamPlanner. Please don't reply to it.").join("<br>");
   return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="margin:0;padding:0;background:${C.soft};font-family:${FONT};">
   <div style="max-width:600px;margin:0 auto;padding:16px;">
     <div style="background:#ffffff;border:1px solid ${C.line};border-radius:8px;font-family:${FONT};">
-      ${zh}
-      <div style="border-top:1px dashed ${C.line};margin:0 24px;"></div>
-      ${en}
+      ${inOrder(lang, zh, en).join(divider)}
     </div>
     <p style="margin:12px 4px 0;font-size:12px;line-height:1.6;color:${C.muted};font-family:${FONT};">
-      此邮件由 DreamPlanner 自动发送，请勿直接回复。<br>This email was sent automatically by DreamPlanner. Please don't reply to it.
+      ${footer}
     </p>
   </div>
 </body></html>`;
 }
 
 /** Email to the student (also used when sending to another address for this student). */
-export function studentEmail(todos: Todo[], studentName: string) {
+export function studentEmail(todos: Todo[], studentName: string, lang: EmailLang = "both") {
   const name = esc(studentName);
   const n = todos.length;
   const zh = section("zh", "待办提醒",
@@ -94,7 +96,7 @@ export function studentEmail(todos: Todo[], studentName: string) {
     `Hi ${name}, you still have <strong>${n}</strong> to-do${n === 1 ? "" : "s"} to finish:`,
     todos, { href: `${SITE}/login`, label: "Open DreamPlanner" },
     "Tick each one off in DreamPlanner when it's done. Need more time on a task from your counselor? Use “Ask for more time” next to it. Questions? Contact your counselor any time.");
-  return { subject: `待办提醒 · To-do reminder：${studentName}`, html: page(zh, en) };
+  return { subject: `${subjectFor(lang, "待办提醒", "To-do reminder")}: ${studentName}`, html: page(lang, zh, en) };
 }
 
 /** A titled list, or a short line when it's empty. */
@@ -104,7 +106,7 @@ function block(lang: "zh" | "en", title: string, items: Todo[], empty: string) {
 }
 
 /** Email to the counselor about one student: the student's to-dos and the counselor's own tasks. */
-export function counselorEmail(todos: Todo[], studentName: string, counselorName: string, mine: Todo[] = []) {
+export function counselorEmail(todos: Todo[], studentName: string, counselorName: string, mine: Todo[] = [], lang: EmailLang = "both") {
   const s = esc(studentName), c = esc(counselorName);
   const n = todos.length, m = mine.length;
   const part = (lang: "zh" | "en") => {
@@ -125,5 +127,5 @@ export function counselorEmail(todos: Todo[], studentName: string, counselorName
       : "Use the student's Follow-up tab to check progress, change dates or answer extension requests."}</p>
   </div>`;
   };
-  return { subject: `待办提醒 · To-do reminder：${studentName}`, html: page(part("zh"), part("en")) };
+  return { subject: `${subjectFor(lang, "待办提醒", "To-do reminder")}: ${studentName}`, html: page(lang, part("zh"), part("en")) };
 }

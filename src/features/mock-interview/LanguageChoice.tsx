@@ -26,7 +26,7 @@ export default function LanguageChoice() {
   const [never, setNever] = useState(false);
 
   const choose = (l: "zh" | "en") => {
-    setLang(l);
+    setLang(l, { email: false });
     if (never) {
       try {
         window.localStorage.setItem(NEVER_KEY, "never");

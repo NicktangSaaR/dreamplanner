@@ -16,6 +16,8 @@
 // Query params for testing: ?dry=1 (report only, no writes or emails),
 // ?today=YYYY-MM-DD (pretend it is that date in Vancouver).
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { emailLang } from "../_shared/emailLang.ts";
+import { transcriptEmail } from "../_shared/transcriptEmail.ts";
 
 const PHASES = ["exploration", "positioning", "consolidation", "application"] as const;
 const PHASE_ZH: Record<string, string> = {
@@ -313,7 +315,7 @@ Deno.serve(async (req) => {
   const overdueIds: string[] = [];
   if (openRequests?.length) {
     const ids = [...new Set(openRequests.map((r) => r.student_id))];
-    const { data: reqStudents } = await db.from("profiles").select("id, full_name, email").in("id", ids);
+    const { data: reqStudents } = await db.from("profiles").select("id, full_name, email, email_language").in("id", ids);
     const info = new Map((reqStudents || []).map((s) => [s.id, s]));
     const soon = addDays(today, 2);
     for (const r of openRequests) {
@@ -321,14 +323,8 @@ Deno.serve(async (req) => {
       const s = info.get(r.student_id);
       if (!r.student_reminded && r.due_date <= soon && r.due_date >= today && s?.email) {
         remindIds.push(r.id);
-        outbox.push({
-          to: s.email,
-          subject: `提醒：请在 ${r.due_date} 前上传最新成绩单`,
-          html: layout(
-            "别忘了上传成绩单",
-            `<p>${esc(s.full_name || "同学")}，你好：</p><p>请在 <strong>${esc(r.due_date)}</strong> 前登录 DreamPlanner，在「我的信息 → 成绩单」上传最新的成绩单（PDF、照片或截图都可以）。</p>`,
-          ).replace(`${SITE}/counselor-dashboard`, `${SITE}/student-dashboard/${r.student_id}`).replace("打开 DreamPlanner", "去上传"),
-        });
+        const mail = transcriptEmail({ studentId: r.student_id, name: s.full_name, due: r.due_date, message: r.message, reminder: true, lang: emailLang(s.email_language) });
+        outbox.push({ to: s.email, subject: mail.subject, html: mail.html });
       }
       if (!r.overdue_notified && r.due_date < today) {
         overdueIds.push(r.id);

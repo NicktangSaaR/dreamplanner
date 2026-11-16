@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import ProfileSection from "@/components/college-planning/ProfileSection";
 import { useEffect } from "react";
+import EmailLanguageSetting from "@/features/email-language/EmailLanguageSetting";
 
 export default function CounselorProfilePage() {
   const navigate = useNavigate();
@@ -49,6 +50,8 @@ export default function CounselorProfilePage() {
       <div className="bg-[#D3E4FD] p-4 rounded-lg">
         <ProfileSection />
       </div>
+
+      <EmailLanguageSetting />
     </div>
   );
 }

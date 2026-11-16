@@ -1,11 +1,12 @@
 // A counselor asks a student to update their activity portfolio: adds an
 // assigned to-do, emails the student, and emails the student's follow-up
-// teachers so they can help chase it (Chinese, then English).
+// teachers so they can help chase it, in each reader's email language.
 //
 // POST { student_id, due?: "YYYY-MM-DD", note?: string }  (the counselor's session)
 //   -> { ok: true, emailed: boolean, reason?: string, followups: string[] }
 // The student's counselors, team teachers and admins only.
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { type EmailLang, emailLang, inOrder, subjectFor } from "../_shared/emailLang.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -25,7 +26,7 @@ export function requestTitle(note?: string) {
   return `📋 更新活动档案：把参加过的活动、比赛和奖项加进来，每条大约 1 分钟${note?.trim() ? `（${note.trim()}）` : ""}`;
 }
 
-export function requestEmail(studentName: string, counselorName: string, due: string | null, note: string) {
+export function requestEmail(studentName: string, counselorName: string, due: string | null, note: string, lang: EmailLang = "both") {
   const s = esc(studentName), c = esc(counselorName), n = esc(note);
   const zhDue = due ? `${Number(due.slice(0, 4))}年${Number(due.slice(5, 7))}月${Number(due.slice(8, 10))}日` : "";
   const enDue = due ? `${MONTHS[Number(due.slice(5, 7)) - 1]} ${Number(due.slice(8, 10))}, ${due.slice(0, 4)}` : "";
@@ -44,28 +45,27 @@ export function requestEmail(studentName: string, counselorName: string, due: st
     <p style="margin:0;"><a href="${SITE}/login" style="display:inline-block;background:${C.brand};color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;font-size:15px;">${zh ? "打开 DreamPlanner" : "Open DreamPlanner"}</a></p>
   </div>`;
   };
-  return { subject: `请更新活动档案 · Please update your activity portfolio`, html: page(block("zh"), block("en")) };
+  return { subject: subjectFor(lang, "请更新活动档案", "Please update your activity portfolio"), html: page(lang, block("zh"), block("en")) };
 }
 
-function page(zh: string, en: string) {
+function page(lang: EmailLang, zh: string, en: string) {
+  const divider = `<div style="border-top:1px dashed ${C.line};margin:0 24px;"></div>`;
   return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="margin:0;padding:0;background:${C.soft};font-family:${FONT};">
   <div style="max-width:600px;margin:0 auto;padding:16px;">
     <div style="background:#ffffff;border:1px solid ${C.line};border-radius:8px;font-family:${FONT};">
-      ${zh}
-      <div style="border-top:1px dashed ${C.line};margin:0 24px;"></div>
-      ${en}
+      ${inOrder(lang, zh, en).join(divider)}
     </div>
     <p style="margin:12px 4px 0;font-size:12px;line-height:1.6;color:${C.muted};font-family:${FONT};">
-      此邮件由 DreamPlanner 自动发送，请勿直接回复。<br>This email was sent automatically by DreamPlanner. Please don't reply to it.
+      ${inOrder(lang, "此邮件由 DreamPlanner 自动发送，请勿直接回复。", "This email was sent automatically by DreamPlanner. Please don't reply to it.").join("<br>")}
     </p>
   </div>
 </body></html>`;
 }
 
 /** To a follow-up teacher: the request went out; please help the student get it done. */
-export function followupEmail(teacherName: string, studentName: string, counselorName: string, due: string | null, note: string, studentEmailed: boolean) {
+export function followupEmail(teacherName: string, studentName: string, counselorName: string, due: string | null, note: string, studentEmailed: boolean, lang: EmailLang = "both") {
   const t = esc(teacherName), s = esc(studentName), c = esc(counselorName), n = esc(note);
   const zhDue = due ? `${Number(due.slice(0, 4))}年${Number(due.slice(5, 7))}月${Number(due.slice(8, 10))}日` : "";
   const enDue = due ? `${MONTHS[Number(due.slice(5, 7)) - 1]} ${Number(due.slice(8, 10))}, ${due.slice(0, 4)}` : "";
@@ -84,7 +84,7 @@ export function followupEmail(teacherName: string, studentName: string, counselo
     <p style="margin:0;"><a href="${SITE}/counselor-dashboard" style="display:inline-block;background:${C.brand};color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;font-size:15px;">${zh ? "打开顾问工作台" : "Open your workspace"}</a></p>
   </div>`;
   };
-  return { subject: `请协助跟进 · Please help follow up：${studentName}`, html: page(block("zh"), block("en")) };
+  return { subject: `${subjectFor(lang, "请协助跟进", "Please help follow up")}: ${studentName}`, html: page(lang, block("zh"), block("en")) };
 }
 
 const realEmail = (e: string | null | undefined) =>
@@ -136,7 +136,7 @@ if (import.meta.main) Deno.serve(async (req) => {
   if (!allowed && !isAdmin) return json({ error: "只有这位学生的顾问可以发送" }, 403);
 
   const [{ data: student }, { data: me }] = await Promise.all([
-    admin.from("profiles").select("full_name, email, user_type").eq("id", studentId).maybeSingle(),
+    admin.from("profiles").select("full_name, email, user_type, email_language").eq("id", studentId).maybeSingle(),
     admin.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
   ]);
   if (student?.user_type !== "student") return json({ error: "not a student" }, 400);
@@ -157,7 +157,7 @@ if (import.meta.main) Deno.serve(async (req) => {
   const to = realEmail(student.email);
   let emailed = false;
   if (to) {
-    const { subject, html } = requestEmail(student.full_name || "同学", counselorName, due, note);
+    const { subject, html } = requestEmail(student.full_name || "同学", counselorName, due, note, emailLang(student.email_language));
     emailed = await send(key, to, subject, html);
   }
 
@@ -166,14 +166,14 @@ if (import.meta.main) Deno.serve(async (req) => {
     .select("collaborator_id").eq("student_id", studentId).eq("role", "followup").neq("collaborator_id", user.id);
   const ids = [...new Set((team ?? []).map((m: { collaborator_id: string }) => m.collaborator_id))];
   const { data: teachers } = ids.length
-    ? await admin.from("profiles").select("full_name, email").in("id", ids)
-    : { data: [] as { full_name: string | null; email: string | null }[] };
+    ? await admin.from("profiles").select("full_name, email, email_language").in("id", ids)
+    : { data: [] as { full_name: string | null; email: string | null; email_language: string | null }[] };
   const followups: string[] = [];
   for (const t of teachers ?? []) {
     const email = realEmail(t.email);
     if (!email) continue;
     const name = t.full_name || "老师";
-    const { subject, html } = followupEmail(name, student.full_name || "学生", counselorName, due, note, emailed);
+    const { subject, html } = followupEmail(name, student.full_name || "学生", counselorName, due, note, emailed, emailLang(t.email_language));
     if (await send(key, email, subject, html)) followups.push(name);
   }
 

@@ -35,7 +35,7 @@ export class SupabaseDatabaseService implements DatabaseService {
     // Get student profile separately
     const { data: profile, error: profileError } = await this.supabase
       .from("profiles")
-      .select("id, email, full_name, user_type")
+      .select("id, email, full_name, user_type, email_language")
       .eq("id", studentId)
       .single();
     
@@ -68,7 +68,7 @@ export class SupabaseDatabaseService implements DatabaseService {
 
   /** The student's profile (name and email). */
   async getStudentProfile(studentId: string): Promise<any> {
-    const { data } = await this.supabase.from("profiles").select("id, email, full_name, user_type").eq("id", studentId).maybeSingle();
+    const { data } = await this.supabase.from("profiles").select("id, email, full_name, user_type, email_language").eq("id", studentId).maybeSingle();
     return data || null;
   }
 
@@ -105,7 +105,8 @@ export class SupabaseDatabaseService implements DatabaseService {
         .select(`
           id,
           full_name,
-          email
+          email,
+          email_language
         `)
         .eq("id", relationship.counselor_id)
         .single();

@@ -7,6 +7,7 @@ import ProfileSection from "@/components/college-planning/ProfileSection";
 import SelectCounselorDialog from "@/components/college-planning/SelectCounselorDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import EmailLanguageSetting from "@/features/email-language/EmailLanguageSetting";
 
 export default function StudentProfilePage() {
   const navigate = useNavigate();
@@ -67,6 +68,8 @@ export default function StudentProfilePage() {
       <div className="bg-[#D3E4FD] p-4 rounded-lg">
         <ProfileSection />
       </div>
+
+      <EmailLanguageSetting />
 
       <div className="space-y-4">
         {relationship ? (
