@@ -10,7 +10,7 @@ import {
   BarChart3,
   CalendarClock, ChevronDown, Download, ExternalLink, FileText, FolderOpen, Globe, LogOut, Menu,
   NotebookPen, Pencil, Plus, Trash2, Upload, User, Video, FileUser,
-  HelpCircle, Trophy, ClipboardList,
+  HelpCircle, Trophy, ClipboardList, School,
 } from "lucide-react";
 import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
 import { STUDENT_HOME_GUIDE } from "@/features/guide/guides";
@@ -35,6 +35,8 @@ import StudentActivities from "@/features/activities/StudentActivities";
 import { isActivityRequest } from "@/features/activities/model";
 import { useApplicationOpen } from "@/features/application-info/data";
 import ApplicationWelcome from "@/features/application-info/ApplicationWelcome";
+import StudentSchoolList from "@/features/school-list/StudentSchoolList";
+import { useSchoolList } from "@/features/school-list/data";
 import { REPORT_CARD_ACCEPT, ReportCardError, db, uploadReportCard, type UploadRequest } from "@/features/grades/reportCards";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
@@ -91,12 +93,14 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   const { profile } = useProfile();
   const { todos, createTodo, toggleTodoStatus, deleteTodo } = useStudentTodos(studentId);
   const { data: applicationOpen } = useApplicationOpen(studentId);
+  const { data: schools } = useSchoolList(studentId ?? "");
+  const schoolCount = (schools ?? []).filter((s) => s.status !== "withdrawn").length;
   const { quarters } = useStudentQuarters(studentId);
   const uploadRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("");
   const [showDone, setShowDone] = useState(false);
-  const [panel, setPanel] = useState<"grades" | "resume" | "activities" | null>(null);
+  const [panel, setPanel] = useState<"grades" | "resume" | "activities" | "schools" | null>(null);
   const [dialog, setDialog] = useState<"doc" | "folder" | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -462,6 +466,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
               <DropdownMenuItem className="sm:hidden" onSelect={guide.start}><HelpCircle className="mr-2 h-4 w-4" />{lang === "zh" ? "使用指南" : "Guide"}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setPanel("grades")}><Upload className="mr-2 h-4 w-4" />{t("grades.tab")}</DropdownMenuItem>
               {applicationOpen && <DropdownMenuItem onSelect={() => navigate("/application-info")}><ClipboardList className="mr-2 h-4 w-4" />{lang === "zh" ? "申请信息" : "Application info"}</DropdownMenuItem>}
+              {schoolCount > 0 && <DropdownMenuItem onSelect={() => setPanel("schools")}><School className="mr-2 h-4 w-4" />{lang === "zh" ? "我的选校单" : "My school list"}</DropdownMenuItem>}
               <DropdownMenuItem onSelect={() => setPanel("activities")}><Trophy className="mr-2 h-4 w-4" />{lang === "zh" ? "活动档案" : "Activities"}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setPanel("resume")}><FileUser className="mr-2 h-4 w-4" />{t("dash.info.resume")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setDialog("folder")}><FolderOpen className="mr-2 h-4 w-4" />{folderUrl ? t("plan.folder.edit") : t("plan.folder.add")}</DropdownMenuItem>
@@ -560,12 +565,13 @@ export default function StudentHome({ studentId }: { studentId: string }) {
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
           <SheetHeader>
             <SheetTitle className="font-serif text-pine">
-              {panel === "grades" ? t("grades.tab") : panel === "activities" ? (lang === "zh" ? "活动档案" : "Activities") : t("dash.info.resume")}
+              {panel === "grades" ? t("grades.tab") : panel === "activities" ? (lang === "zh" ? "活动档案" : "Activities") : panel === "schools" ? (lang === "zh" ? "我的选校单" : "My school list") : t("dash.info.resume")}
             </SheetTitle>
           </SheetHeader>
           <div className="mt-6">
             {panel === "grades" && <StudentReportCards studentId={studentId} />}
             {panel === "resume" && <StudentResumeForm />}
+            {panel === "schools" && studentId && <StudentSchoolList studentId={studentId} />}
             {panel === "activities" && studentId && (
               <StudentActivities studentId={studentId} onFinished={activityRequests.length ? finishActivityRequests : undefined} />
             )}
