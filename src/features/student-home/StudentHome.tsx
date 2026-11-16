@@ -431,15 +431,15 @@ export default function StudentHome({ studentId }: { studentId: string }) {
 
   const Z = (zh: string, en: string) => (lang === "zh" ? zh : en);
   const tools = [
-    applicationOpen && { key: "application", icon: ClipboardList, label: Z("申请信息", "Application info"), hint: Z("网申要用的资料", "For application forms"), onClick: () => navigate("/application-info"), highlight: true },
-    schoolCount > 0 && { key: "schools", icon: School, label: Z("我的选校单", "My school list"), hint: Z(`${schoolCount} 所学校`, `${schoolCount} schools`), onClick: () => setPanel("schools") },
-    { key: "activities", icon: Trophy, label: Z("活动档案", "Activities"), hint: Z("活动、比赛、奖项", "Activities & awards"), onClick: () => setPanel("activities") },
-    { key: "grades", icon: Upload, label: t("grades.tab"), hint: Z("上传和查看成绩单", "Upload report cards"), onClick: () => setPanel("grades") },
+    applicationOpen && { key: "application", icon: ClipboardList, label: Z("申请信息", "Application info"), onClick: () => navigate("/application-info"), highlight: true },
+    schoolCount > 0 && { key: "schools", icon: School, label: Z("我的选校单", "My school list"), count: schoolCount, onClick: () => setPanel("schools") },
+    { key: "activities", icon: Trophy, label: Z("活动档案", "Activities"), onClick: () => setPanel("activities") },
+    { key: "grades", icon: Upload, label: t("grades.tab"), onClick: () => setPanel("grades") },
     { key: "resume", icon: FileUser, label: t("dash.info.resume"), onClick: () => setPanel("resume") },
     { key: "folder", icon: FolderOpen, label: folderUrl ? t("plan.folder.title") : t("plan.folder.add"), onClick: () => setDialog("folder") },
     // opens in its own tab so the home page stays put
-    { key: "interview", icon: Video, label: t("dash.mockInterview"), hint: Z("在新标签页打开", "Opens in a new tab"), href: "/mock-interview", tour: "mock-interview-button" },
-  ].filter(Boolean) as { key: string; icon: typeof FileText; label: string; hint?: string; onClick?: () => void; href?: string; highlight?: boolean; tour?: string }[];
+    { key: "interview", icon: Video, label: t("dash.mockInterview"), href: "/mock-interview", tour: "mock-interview-button" },
+  ].filter(Boolean) as { key: string; icon: typeof FileText; label: string; count?: number; onClick?: () => void; href?: string; highlight?: boolean; tour?: string }[];
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:pt-12">
@@ -479,20 +479,18 @@ export default function StudentHome({ studentId }: { studentId: string }) {
       </header>
 
       {/* Everything the student can open, in plain view rather than behind the menu. */}
-      <nav aria-label={lang === "zh" ? "我的资料" : "My materials"} className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3" data-tour="student-tools">
+      <nav aria-label={lang === "zh" ? "我的资料" : "My materials"} className="mt-5 flex flex-wrap gap-2" data-tour="student-tools">
         {tools.map((x) => {
           const inner = (
             <>
-              <x.icon className={`h-5 w-5 shrink-0 ${x.highlight ? "text-brass" : "text-primary"}`} aria-hidden="true" />
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-medium">{x.label}</span>
-                {x.hint && <span className="block truncate text-xs text-muted-foreground">{x.hint}</span>}
-              </span>
+              <x.icon className={`h-4 w-4 shrink-0 ${x.highlight ? "text-brass" : "text-primary"}`} aria-hidden="true" />
+              <span>{x.label}</span>
+              {x.count != null && <span className="text-xs text-muted-foreground">{x.count}</span>}
             </>
           );
-          const cls = `flex min-h-[52px] items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-muted/60 ${x.highlight ? "border-brass/50 bg-brass/5" : "bg-card"}`;
+          const cls = `inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors hover:bg-muted/60 ${x.highlight ? "border-brass/50 bg-brass/5 font-medium" : "bg-card"}`;
           return x.href ? (
-            <a key={x.key} href={x.href} target="_blank" rel="noopener noreferrer" className={cls} data-tour={x.tour}>{inner}</a>
+            <a key={x.key} href={x.href} target="_blank" rel="noopener noreferrer" className={cls} data-tour={x.tour} title={lang === "zh" ? "在新标签页打开" : "Opens in a new tab"}>{inner}</a>
           ) : (
             <button key={x.key} type="button" onClick={x.onClick} className={cls} data-tour={x.tour}>{inner}</button>
           );
