@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -429,6 +429,18 @@ export default function StudentHome({ studentId }: { studentId: string }) {
     folderUrl && { key: "folder", icon: FolderOpen, label: t("plan.folder.title"), href: folderUrl },
   ].filter(Boolean) as { key: string; icon: typeof FileText; label: string; onClick?: () => void; href?: string }[];
 
+  const Z = (zh: string, en: string) => (lang === "zh" ? zh : en);
+  const tools = [
+    applicationOpen && { key: "application", icon: ClipboardList, label: Z("申请信息", "Application info"), hint: Z("网申要用的资料", "For application forms"), onClick: () => navigate("/application-info"), highlight: true },
+    schoolCount > 0 && { key: "schools", icon: School, label: Z("我的选校单", "My school list"), hint: Z(`${schoolCount} 所学校`, `${schoolCount} schools`), onClick: () => setPanel("schools") },
+    { key: "activities", icon: Trophy, label: Z("活动档案", "Activities"), hint: Z("活动、比赛、奖项", "Activities & awards"), onClick: () => setPanel("activities") },
+    { key: "grades", icon: Upload, label: t("grades.tab"), hint: Z("上传和查看成绩单", "Upload report cards"), onClick: () => setPanel("grades") },
+    { key: "resume", icon: FileUser, label: t("dash.info.resume"), onClick: () => setPanel("resume") },
+    { key: "folder", icon: FolderOpen, label: folderUrl ? t("plan.folder.title") : t("plan.folder.add"), onClick: () => setDialog("folder") },
+    // opens in its own tab so the home page stays put
+    { key: "interview", icon: Video, label: t("dash.mockInterview"), hint: Z("在新标签页打开", "Opens in a new tab"), href: "/mock-interview", tour: "mock-interview-button" },
+  ].filter(Boolean) as { key: string; icon: typeof FileText; label: string; hint?: string; onClick?: () => void; href?: string; highlight?: boolean; tour?: string }[];
+
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:pt-12">
       <input ref={uploadRef} type="file" accept={REPORT_CARD_ACCEPT} className="hidden" onChange={onUpload} />
@@ -450,12 +462,6 @@ export default function StudentHome({ studentId }: { studentId: string }) {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <GuideButton onClick={guide.start} className="hidden sm:inline-flex" />
-          {/* Mock interview opens in its own tab so the home page stays put. */}
-          <Button variant="outline" size="sm" asChild data-tour="mock-interview-button">
-            <a href="/mock-interview" target="_blank" rel="noopener noreferrer">
-              <Video className="mr-1.5 h-4 w-4" /> {t("dash.mockInterview")}
-            </a>
-          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" aria-label={t("home3.menu")} data-tour="student-menu">
@@ -464,13 +470,6 @@ export default function StudentHome({ studentId }: { studentId: string }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem className="sm:hidden" onSelect={guide.start}><HelpCircle className="mr-2 h-4 w-4" />{lang === "zh" ? "使用指南" : "Guide"}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setPanel("grades")}><Upload className="mr-2 h-4 w-4" />{t("grades.tab")}</DropdownMenuItem>
-              {applicationOpen && <DropdownMenuItem onSelect={() => navigate("/application-info")}><ClipboardList className="mr-2 h-4 w-4" />{lang === "zh" ? "申请信息" : "Application info"}</DropdownMenuItem>}
-              {schoolCount > 0 && <DropdownMenuItem onSelect={() => setPanel("schools")}><School className="mr-2 h-4 w-4" />{lang === "zh" ? "我的选校单" : "My school list"}</DropdownMenuItem>}
-              <DropdownMenuItem onSelect={() => setPanel("activities")}><Trophy className="mr-2 h-4 w-4" />{lang === "zh" ? "活动档案" : "Activities"}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setPanel("resume")}><FileUser className="mr-2 h-4 w-4" />{t("dash.info.resume")}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setDialog("folder")}><FolderOpen className="mr-2 h-4 w-4" />{folderUrl ? t("plan.folder.edit") : t("plan.folder.add")}</DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => navigate("/student-profile")}><User className="mr-2 h-4 w-4" />{t("dash.profile")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setLang(lang === "zh" ? "en" : "zh")}><Globe className="mr-2 h-4 w-4" />{lang === "zh" ? "English" : "中文"}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => void logout()}><LogOut className="mr-2 h-4 w-4" />{t("dash.logout")}</DropdownMenuItem>
@@ -478,6 +477,27 @@ export default function StudentHome({ studentId }: { studentId: string }) {
           </DropdownMenu>
         </div>
       </header>
+
+      {/* Everything the student can open, in plain view rather than behind the menu. */}
+      <nav aria-label={lang === "zh" ? "我的资料" : "My materials"} className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3" data-tour="student-tools">
+        {tools.map((x) => {
+          const inner = (
+            <>
+              <x.icon className={`h-5 w-5 shrink-0 ${x.highlight ? "text-brass" : "text-primary"}`} aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-medium">{x.label}</span>
+                {x.hint && <span className="block truncate text-xs text-muted-foreground">{x.hint}</span>}
+              </span>
+            </>
+          );
+          const cls = `flex min-h-[52px] items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-muted/60 ${x.highlight ? "border-brass/50 bg-brass/5" : "bg-card"}`;
+          return x.href ? (
+            <a key={x.key} href={x.href} target="_blank" rel="noopener noreferrer" className={cls} data-tour={x.tour}>{inner}</a>
+          ) : (
+            <button key={x.key} type="button" onClick={x.onClick} className={cls} data-tour={x.tour}>{inner}</button>
+          );
+        })}
+      </nav>
 
       <LinkCounselorPrompt studentId={studentId} />
 
