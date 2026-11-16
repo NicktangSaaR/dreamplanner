@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Trash2, UserPlus, Users } from "lucide-react";
+import { ArrowLeftRight, Loader2, Trash2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,8 @@ export default function StudentTeamCard({ studentId }: { studentId: string }) {
   const [newId, setNewId] = useState("");
   const [newRole, setNewRole] = useState<TeamRole>("followup");
   const [busy, setBusy] = useState(false);
+  const [changingLead, setChangingLead] = useState(false);
+  const [leadPick, setLeadPick] = useState("");
   const key = ["student-team", studentId];
 
   const { data, isLoading } = useQuery({
@@ -56,9 +58,11 @@ export default function StudentTeamCard({ studentId }: { studentId: string }) {
       (!!data?.leadId && data.leadId === profile.id) ||
       (data?.members || []).some((m) => m.collaborator_id === profile.id && m.role === "followup"));
 
+  const isAdmin = profile?.user_type === "admin";
+
   const { data: staffList = [] } = useQuery({
     queryKey: ["staff-list"],
-    enabled: adding,
+    enabled: adding || changingLead,
     queryFn: async () => {
       const { data: rows } = await (supabase as any).rpc("staff_directory");
       return ((rows || []) as (Staff & { user_type: string })[]).filter((r) => r.user_type === "counselor");
@@ -86,6 +90,23 @@ export default function StudentTeamCard({ studentId }: { studentId: string }) {
     setAdding(false);
     setNewId("");
     refresh();
+  };
+
+  // Admins only: swap the lead counselor (a team member chosen as lead leaves the team list).
+  const changeLead = async () => {
+    if (!leadPick || leadPick === data?.leadId) return;
+    setBusy(true);
+    const { error } = await (supabase as any).rpc("set_lead_counselor", { p_student: studentId, p_counselor: leadPick });
+    setBusy(false);
+    if (error) {
+      toast.error(t("team.leadFailed"));
+      return;
+    }
+    toast.success(t("team.leadChanged"));
+    setChangingLead(false);
+    setLeadPick("");
+    refresh();
+    queryClient.invalidateQueries({ queryKey: ["counselor-students"] });
   };
 
   const changeRole = async (id: string, role: string) => {
@@ -124,8 +145,33 @@ export default function StudentTeamCard({ studentId }: { studentId: string }) {
                 <p className="truncate text-sm font-medium">{data?.lead ? name(data.lead) : t("team.noLead")}</p>
                 {data?.lead?.email && <p className="truncate text-xs text-muted-foreground">{data.lead.email}</p>}
               </div>
-              <Badge>{t("team.role.lead")}</Badge>
+              <div className="flex shrink-0 items-center gap-1">
+                {isAdmin && !changingLead && (
+                  <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setChangingLead(true); setLeadPick(""); }}>
+                    <ArrowLeftRight className="mr-1 h-3.5 w-3.5" /> {t("team.changeLead")}
+                  </Button>
+                )}
+                <Badge>{t("team.role.lead")}</Badge>
+              </div>
             </li>
+            {changingLead && (
+              <li className="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center">
+                <Select value={leadPick} onValueChange={setLeadPick}>
+                  <SelectTrigger className="sm:flex-1" aria-label={t("team.pickLead")}>
+                    <SelectValue placeholder={t("team.pickLead")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {staffList.filter((s) => s.id !== data?.leadId).map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{name(s)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex gap-2">
+                  <Button size="sm" disabled={!leadPick || busy} onClick={() => void changeLead()}>{t("team.confirmLead")}</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setChangingLead(false)}>{t("team.cancel")}</Button>
+                </div>
+              </li>
+            )}
             {(data?.members || []).map((m) => (
               <li key={m.id} className="flex items-center justify-between gap-3 py-2.5">
                 <div className="min-w-0">
