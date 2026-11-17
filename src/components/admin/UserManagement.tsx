@@ -179,7 +179,7 @@ const UserManagement = () => {
         </Badge>
       </div>
       <div className="text-sm text-muted-foreground">
-        模拟面试已开通 {users.filter((u: any) => u.user_type === 'student' && u.mock_interview_enabled).length} / {users.filter(u => u.user_type === 'student').length} 名学生。学生默认不能使用，在「模拟面试」一列打开开关即可开通；顾问和管理员始终可用。
+        模拟面试已开通 {users.filter((u: any) => u.user_type === 'student' && u.mock_interview_enabled).length} / {users.filter(u => u.user_type === 'student').length} 名学生。学生默认可以使用，在「模拟面试」一列关掉开关即可停用；顾问和管理员始终可用。
       </div>
       
       <UserTable

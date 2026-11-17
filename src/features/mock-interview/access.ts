@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-/** Counselors and admins always; students only once an admin turns it on. */
+/** Counselors and admins always; students unless an admin has turned it off. */
 export const canUseMockInterview = (p: { user_type?: string | null; mock_interview_enabled?: boolean | null } | null | undefined) =>
   !!p && (p.user_type === "admin" || p.user_type === "counselor" || p.mock_interview_enabled === true);
 

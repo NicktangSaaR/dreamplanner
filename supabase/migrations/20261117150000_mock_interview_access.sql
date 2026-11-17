@@ -1,10 +1,10 @@
--- Mock interview is for students an admin has turned it on for (paid students).
--- Counselors and admins can always use it. Off by default for every student.
+-- Mock interview access. On by default for every student; an admin can turn it
+-- off for a student by hand. Counselors and admins can always use it.
 
 alter table public.profiles
-  add column if not exists mock_interview_enabled boolean not null default false;
+  add column if not exists mock_interview_enabled boolean not null default true;
 comment on column public.profiles.mock_interview_enabled is
-  'Student may use the mock interview (set by an admin). Counselors and admins always may.';
+  'Student may use the mock interview (default on; an admin can turn it off). Counselors and admins always may.';
 
 create or replace function public.can_use_mock_interview(uid uuid)
 returns boolean
@@ -76,7 +76,7 @@ begin
     end if;
     new.is_verified := false;
     new.username := null;
-    new.mock_interview_enabled := false;
+    new.mock_interview_enabled := true;
     return new;
   end if;
 
