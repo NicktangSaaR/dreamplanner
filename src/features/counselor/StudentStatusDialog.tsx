@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { GRAD_DEGREE_LABEL, GRAD_STATUSES, GRAD_STATUS_LABEL } from "@/shared/planning";
+import { EMAIL_LANGUAGES, emailLanguageLabel, toEmailLanguage } from "@/features/email-language/emailLanguage";
 
 export const GRADE_OPTIONS = ["Pre-9", "G9", "G10", "G11", "G12"];
 export const SERVICE_OPTIONS = ["College Bound", "Transfer Student", "Completed"];
@@ -27,6 +28,7 @@ type StudentProfile = {
   grad_degree?: string | null;
   target_entry_year?: number | null;
   target_entry_term?: string | null;
+  email_language?: string | null;
 };
 
 const ENTRY_YEARS = Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 1 + i);
@@ -58,6 +60,7 @@ export default function StudentStatusDialog({
     grad_degree: profile.grad_degree || "",
     entry_year: profile.target_entry_year ? String(profile.target_entry_year) : "",
     entry_term: profile.target_entry_term || "fall",
+    email_language: toEmailLanguage(profile.email_language) as string,
   });
   const isGrad = form.applicant_type === "graduate";
   const [saving, setSaving] = useState(false);
@@ -71,6 +74,7 @@ export default function StudentStatusDialog({
       interested_majors: form.majors.split(/[,，]/).map((m) => m.trim()).filter(Boolean),
       graduation_school: form.graduation_school.trim() || null,
       background_intro: form.background_intro.trim() || null,
+      email_language: form.email_language,
     };
     if (canChangeStatus) {
       if (isGrad) {
@@ -115,6 +119,14 @@ export default function StudentStatusDialog({
           <div className="grid gap-1.5">
             <Label htmlFor="st-name">{t("st.name")}</Label>
             <Input id="st-name" value={form.full_name} onChange={(e) => set("full_name")(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>{L("邮件语言", "Email language")}</Label>
+            <Select value={form.email_language} onValueChange={set("email_language")}>
+              <SelectTrigger aria-label={L("邮件语言", "Email language")}><SelectValue /></SelectTrigger>
+              <SelectContent>{EMAIL_LANGUAGES.map((v) => <SelectItem key={v} value={v}>{emailLanguageLabel(v, lang)}</SelectItem>)}</SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">{L("发给这位学生的提醒邮件用这个语言。学生在网站上切换语言时也会自动更新。", "Emails to this student use this language. It also updates when the student switches the site language.")}</p>
           </div>
           {canChangeStatus && (
             <div className="grid gap-1.5">

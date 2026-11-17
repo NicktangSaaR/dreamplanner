@@ -12,6 +12,8 @@
 // Caller must be signed in. "analyze": the student themself or their team.
 // "request": the student's team or an admin.
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { emailLang } from "../_shared/emailLang.ts";
+import { transcriptEmail } from "../_shared/transcriptEmail.ts";
 
 const SITE = "https://dreamplaneredu.com";
 const FROM = "DreamPlanner <noreply@dreamplaneredu.com>";
@@ -142,20 +144,10 @@ Deno.serve(async (req) => {
       .single();
     if (error) return json({ error: error.message }, 500);
 
-    const { data: student } = await admin.from("profiles").select("email, full_name").eq("id", studentId).maybeSingle();
+    const { data: student } = await admin.from("profiles").select("email, full_name, email_language").eq("id", studentId).maybeSingle();
     if (student?.email) {
-      await sendEmail(
-        [student.email],
-        `请在 ${due} 前上传最新成绩单`,
-        layout(
-          "请上传最新成绩单",
-          `<p>${esc(student.full_name || "同学")}，你好：</p>
-           <p>你的升学顾问请你在 <strong>${esc(due)}</strong> 前，在 DreamPlanner「我的信息 → 成绩单」上传最新的成绩单（PDF、照片或截图都可以）。</p>
-           ${message ? `<p style="border-left:3px solid #2C6E63;padding-left:10px;color:#3b4a47">${esc(message)}</p>` : ""}`,
-          `${SITE}/student-dashboard/${studentId}`,
-          "去上传",
-        ),
-      );
+      const mail = transcriptEmail({ studentId, name: student.full_name, due, message, lang: emailLang(student.email_language) });
+      await sendEmail([student.email], mail.subject, mail.html);
     }
     return json({ ok: true, id: request.id });
   }

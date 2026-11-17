@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 import { Resend } from "npm:resend@2.0.0";
 import { resetEmail } from "./email.ts";
+import { emailLang } from "../_shared/emailLang.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -36,7 +37,7 @@ Deno.serve(async (req) => {
   if (!userId) return json({ error: "user_id required" }, 400);
 
   const [{ data: profile }, { data: authUser }] = await Promise.all([
-    admin.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
+    admin.from("profiles").select("full_name, email, email_language").eq("id", userId).maybeSingle(),
     admin.auth.admin.getUserById(userId),
   ]);
   const loginEmail = authUser?.user?.email;
@@ -53,7 +54,7 @@ Deno.serve(async (req) => {
   }
   const key = Deno.env.get("RESEND_API_KEY");
   if (!key) return json({ error: "邮件服务没有配置" }, 500);
-  const { subject, html } = resetEmail(profile?.full_name || "", link.properties.action_link);
+  const { subject, html } = resetEmail(profile?.full_name || "", link.properties.action_link, emailLang(profile?.email_language));
   const { error: sendErr } = await new Resend(key).emails.send({ from: "DreamPlanner <noreply@dreamplaneredu.com>", to: [to], subject, html });
   if (sendErr) {
     console.error("admin-send-password-reset send", sendErr);

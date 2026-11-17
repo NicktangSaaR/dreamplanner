@@ -2,6 +2,7 @@
 import { createEmailService } from "./email-service.ts";
 import { counselorEmail as counselorTemplate, studentEmail as studentTemplate } from "./email-templates.ts";
 import { formatErrorResponse } from "./error-handling.ts";
+import { emailLang } from "../_shared/emailLang.ts";
 
 /**
  * Email Manager - handles all email sending operations and related logic
@@ -22,7 +23,7 @@ export class EmailManager {
     const studentName = studentInfo?.full_name || '学生';
     
     // Same email the student gets, sent to another address
-    const { subject: customSubject, html: htmlContent } = studentTemplate(todos, studentName);
+    const { subject: customSubject, html: htmlContent } = studentTemplate(todos, studentName, emailLang(studentInfo?.email_language));
     
     try {
       console.log(`Sending custom email to: ${customEmail} using domain: ${this.domain}`);
@@ -83,8 +84,8 @@ export class EmailManager {
     const counselorEmail = real(counselorInfo?.email);
     const counselorName = counselorInfo?.full_name || "顾问";
     
-    const forStudent = studentTemplate(todos, studentName);
-    const forCounselor = counselorTemplate(todos, studentName, counselorName, counselorTasks);
+    const forStudent = studentTemplate(todos, studentName, emailLang(studentInfo?.email_language));
+    const forCounselor = counselorTemplate(todos, studentName, counselorName, counselorTasks, emailLang(counselorInfo?.email_language));
     const studentHtmlContent = forStudent.html;
     const counselorHtmlContent = forCounselor.html;
     
