@@ -1,3 +1,5 @@
+import LastReminder, { lastReminderKey } from "@/features/reminders/LastReminder";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, ClipboardCopy, ClipboardPaste, History, Pencil, Plus, Send, Sparkles, Trash2 } from "lucide-react";
@@ -67,6 +69,7 @@ export default function ActivityPortfolio({ studentId }: { studentId: string }) 
           <Button variant="outline" size="sm" onClick={() => setPasting(true)}><ClipboardPaste className="mr-1.5 h-4 w-4" />{L("粘贴文字，AI 整理", "Paste & organise")}</Button>
           <Button size="sm" onClick={() => setEdit("new")}><Plus className="mr-1.5 h-4 w-4" />{L("添加", "Add")}</Button>
         </div>
+        <LastReminder studentId={studentId} kind="activity" className="w-full text-right" />
       </CardHeader>
       <CardContent>
 
@@ -301,10 +304,12 @@ function AskDialog({ studentId, onClose }: { studentId: string; onClose: () => v
   const [due, setDue] = useState(inAWeek);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const queryClient = useQueryClient();
   const send = async () => {
     setBusy(true);
     try {
       const r = await requestUpdate(studentId, due, note);
+      void queryClient.invalidateQueries({ queryKey: lastReminderKey(studentId, "activity") });
       const team = r.followups?.length ? L(`；已通知跟进老师 ${r.followups.join("、")}`, `; follow-up teacher ${r.followups.join(", ")} notified`) : "";
       if (r.emailed) toast.success(L(`已发送：学生收到了邮件和待办${team}`, `Sent: the student got an email and a to-do${team}`));
       else toast.success(L(`已加到学生的待办里，但学生没有可用邮箱，没有发邮件${team}`, `Added to the student's to-dos; no email address, so no email${team}`));

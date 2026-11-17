@@ -177,5 +177,9 @@ if (import.meta.main) Deno.serve(async (req) => {
     if (await send(key, email, subject, html)) followups.push(name);
   }
 
+  // Lets the team see when the student was last asked.
+  const { error: logError } = await admin.from("student_reminder_log").insert({ student_id: studentId, kind: "activity", sent_by: user.id, emailed });
+  if (logError) console.error("activity-request log", logError.message);
+
   return json({ ok: true, emailed, reason: to ? (emailed ? undefined : "send_failed") : "no_email", followups });
 });
