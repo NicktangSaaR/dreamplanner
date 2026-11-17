@@ -149,6 +149,16 @@ const UserManagement = () => {
     }
   };
 
+  const handleToggleInterview = async (userId: string, enabled: boolean) => {
+    const { error } = await (supabase as any).from("profiles").update({ mock_interview_enabled: enabled }).eq("id", userId);
+    if (error) {
+      toast.error(`没能更新模拟面试权限：${error.message}`);
+      return;
+    }
+    toast.success(enabled ? "已开通模拟面试" : "已关闭模拟面试");
+    refetch();
+  };
+
   const handleAssociateCounselor = (studentId: string, studentName: string | null) => {
     setStudentForCounselor({
       id: studentId,
@@ -168,6 +178,9 @@ const UserManagement = () => {
           {users.length} Users ({users.filter(u => u.user_type === 'counselor' && !u.is_verified).length} pending verification)
         </Badge>
       </div>
+      <div className="text-sm text-muted-foreground">
+        模拟面试已开通 {users.filter((u: any) => u.user_type === 'student' && u.mock_interview_enabled).length} / {users.filter(u => u.user_type === 'student').length} 名学生。学生默认不能使用，在「模拟面试」一列打开开关即可开通；顾问和管理员始终可用。
+      </div>
       
       <UserTable
         users={users}
@@ -182,6 +195,7 @@ const UserManagement = () => {
         onVerifyUser={handleVerifyUser}
         onAssociateCounselor={handleAssociateCounselor}
         onSendPasswordReset={(id, name, email) => setResetFor({ id, name, email })}
+        onToggleInterview={handleToggleInterview}
       />
 
       <AlertDialog open={!!resetFor} onOpenChange={(open) => { if (!open && !sendingReset) setResetFor(null); }}>

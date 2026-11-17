@@ -35,6 +35,7 @@ export const useAuthActions = () => {
       // Refresh user data
       await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await queryClient.invalidateQueries({ queryKey: ["mock-interview-access"] });
       
       // Get latest profile
       const { data: profileData, error: profileError } = await supabase

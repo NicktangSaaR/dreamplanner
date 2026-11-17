@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { Edit2, Save, X, CheckCircle, XCircle, Trash2, UserPlus, KeyRound } from "lucide-react";
 import { UserTypeSelect } from "./UserTypeSelect";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 
 interface EditableUser {
   id: string;
@@ -33,6 +34,7 @@ interface UserTableProps {
   onVerifyUser?: (userId: string) => void;
   onAssociateCounselor?: (studentId: string, studentName: string | null) => void;
   onSendPasswordReset?: (userId: string, userName: string | null, email: string | null) => void;
+  onToggleInterview?: (userId: string, enabled: boolean) => void;
 }
 
 export const UserTable = ({
@@ -48,6 +50,7 @@ export const UserTable = ({
   onVerifyUser,
   onAssociateCounselor,
   onSendPasswordReset,
+  onToggleInterview,
 }: UserTableProps) => {
   return (
     <Table>
@@ -58,6 +61,7 @@ export const UserTable = ({
           <TableHead>Password</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead>模拟面试</TableHead>
           <TableHead>School</TableHead>
           <TableHead>Joined</TableHead>
           <TableHead className="w-[100px]">Actions</TableHead>
@@ -133,6 +137,23 @@ export const UserTable = ({
                     </div>
                   )}
                 </>
+              )}
+            </TableCell>
+            <TableCell>
+              {user.user_type === 'student' ? (
+                <label className="flex items-center gap-2 text-sm">
+                  <Switch
+                    checked={!!user.mock_interview_enabled}
+                    onCheckedChange={(v) => onToggleInterview?.(user.id, v)}
+                    disabled={!onToggleInterview}
+                    aria-label={`模拟面试：${user.full_name || user.email || ''}`}
+                  />
+                  <span className={user.mock_interview_enabled ? 'text-foreground' : 'text-muted-foreground'}>
+                    {user.mock_interview_enabled ? '已开通' : '未开通'}
+                  </span>
+                </label>
+              ) : (
+                <span className="text-sm text-muted-foreground">始终可用</span>
               )}
             </TableCell>
             <TableCell>{user.school || 'N/A'}</TableCell>

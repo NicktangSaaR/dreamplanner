@@ -12,6 +12,7 @@ import { useLanguage } from "@/i18n/LanguageProvider";
 import LanguageToggle from "@/i18n/LanguageToggle";
 import { useProfile } from "@/hooks/useProfile";
 import { homePath } from "@/shared/homePath";
+import { useMockInterviewAccess } from "@/features/mock-interview/access";
 
 interface MainNavProps {
   isAuthenticated: boolean;
@@ -32,6 +33,7 @@ function Brand() {
 export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useLanguage();
+  const interviewAccess = useMockInterviewAccess();
   const { profile } = useProfile();
   // counselors, follow-up teachers and admins have their own dashboards
   const dashboardLink = isAuthenticated && userId ? (profile?.user_type ? homePath(profile.user_type, userId) : "/") : "/login";
@@ -94,9 +96,11 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
             <LanguageToggle />
             {isAuthenticated ? (
               <>
-                <Button asChild variant="ghost">
-                  <Link to="/mock-interview">{t("nav.mockInterview")}</Link>
-                </Button>
+                {interviewAccess.allowed && (
+                  <Button asChild variant="ghost">
+                    <Link to="/mock-interview">{t("nav.mockInterview")}</Link>
+                  </Button>
+                )}
                 <Button asChild>
                   <Link to={dashboardLink}>{t("nav.dashboard")}</Link>
                 </Button>
@@ -155,9 +159,11 @@ export default function MainNav({ isAuthenticated, userId, onLogout }: MainNavPr
                     <Button asChild onClick={closeMobile}>
                       <Link to={dashboardLink}>{t("nav.dashboard")}</Link>
                     </Button>
-                    <Button asChild variant="outline" onClick={closeMobile}>
-                      <Link to="/mock-interview">{t("nav.mockInterview")}</Link>
-                    </Button>
+                    {interviewAccess.allowed && (
+                      <Button asChild variant="outline" onClick={closeMobile}>
+                        <Link to="/mock-interview">{t("nav.mockInterview")}</Link>
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       onClick={() => {

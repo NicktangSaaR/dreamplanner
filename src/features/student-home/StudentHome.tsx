@@ -41,6 +41,7 @@ import { REPORT_CARD_ACCEPT, ReportCardError, db, uploadReportCard, type UploadR
 import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
 import { isSafeHttpUrl } from "@/lib/safeUrl";
+import { useMockInterviewAccess } from "@/features/mock-interview/access";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -93,6 +94,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   const { profile } = useProfile();
   const { todos, createTodo, toggleTodoStatus, deleteTodo } = useStudentTodos(studentId);
   const { data: applicationOpen } = useApplicationOpen(studentId);
+  const interviewAccess = useMockInterviewAccess();
   const { data: schools } = useSchoolList(studentId ?? "");
   const schoolCount = (schools ?? []).filter((s) => s.status !== "withdrawn").length;
   const { quarters } = useStudentQuarters(studentId);
@@ -438,7 +440,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
     { key: "resume", icon: FileUser, label: t("dash.info.resume"), onClick: () => setPanel("resume") },
     { key: "folder", icon: FolderOpen, label: folderUrl ? t("plan.folder.title") : t("plan.folder.add"), onClick: () => setDialog("folder") },
     // opens in its own tab so the home page stays put
-    { key: "interview", icon: Video, label: t("dash.mockInterview"), href: "/mock-interview", tour: "mock-interview-button" },
+    interviewAccess.allowed && { key: "interview", icon: Video, label: t("dash.mockInterview"), href: "/mock-interview", tour: "mock-interview-button" },
   ].filter(Boolean) as { key: string; icon: typeof FileText; label: string; count?: number; onClick?: () => void; href?: string; highlight?: boolean; tour?: string }[];
 
   return (
