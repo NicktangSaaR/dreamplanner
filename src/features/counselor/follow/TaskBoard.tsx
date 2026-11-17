@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { useTodoReminder } from "@/hooks/todos/useTodoReminder";
+import LastReminder, { lastReminderKey } from "@/features/reminders/LastReminder";
 import { cn } from "@/lib/utils";
 import {
   addTask, changeOwner, decideExtension, isOverdue, loadExtensionRequests, loadTasks, postponeSummary, removeTask, renameTask, rescheduleTask,
@@ -30,6 +31,14 @@ export default function TaskBoard({ studentId }: { studentId: string }) {
   const key = ["follow-tasks", studentId];
   const { data: tasks = [], isLoading } = useQuery({ queryKey: key, queryFn: () => loadTasks(studentId) });
   const { sendReminder, isLoading: reminding } = useTodoReminder(studentId);
+  const reminderClient = useQueryClient();
+  const remind = async () => {
+    try {
+      await sendReminder();
+    } finally {
+      void reminderClient.invalidateQueries({ queryKey: lastReminderKey(studentId, "todo") });
+    }
+  };
 
   const [filter, setFilter] = useState<Filter>("all");
   const [showDone, setShowDone] = useState(false);
@@ -190,9 +199,12 @@ export default function TaskBoard({ studentId }: { studentId: string }) {
               {L(`未完成 ${count("all")}`, `${count("all")} open`)}{overdueN > 0 && <span className="text-destructive"> · {L(`逾期 ${overdueN}`, `${overdueN} overdue`)}</span>}
             </span>
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={() => void sendReminder()} disabled={reminding}>
-            {reminding ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <BellRing className="mr-1.5 h-4 w-4" />}{L("提醒学生", "Remind student")}
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <Button variant="outline" size="sm" onClick={() => void remind()} disabled={reminding}>
+              {reminding ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <BellRing className="mr-1.5 h-4 w-4" />}{L("提醒学生", "Remind student")}
+            </Button>
+            <LastReminder studentId={studentId} kind="todo" />
+          </div>
         </div>
         <div className="flex flex-wrap gap-1.5 pt-1" role="tablist">
           {(["all", "student", "counselor", "parent", "overdue"] as Filter[]).map((f) => (

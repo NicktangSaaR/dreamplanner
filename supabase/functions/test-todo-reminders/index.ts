@@ -2,6 +2,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./cors.ts";
 import { processReminderRequest } from "./handlers.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.14.0";
+
+/** Record the send so the team can see when the student was last reminded. Best effort. */
+async function logReminder(req: Request, studentId: string) {
+  try {
+    const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+    const { data } = token ? await db.auth.getUser(token) : { data: { user: null } };
+    const { error } = await db.from("student_reminder_log").insert({ student_id: studentId, kind: "todo", sent_by: data?.user?.id ?? null });
+    if (error) console.error("reminder log", error.message);
+  } catch (e) {
+    console.error("reminder log", e);
+  }
+}
 
 /**
  * Main Edge Function handler
@@ -29,6 +43,7 @@ serve(async (req) => {
     
     // Log the result for debugging
     console.log("Result from processReminderRequest:", JSON.stringify(result));
+    if (result?.success && requestBody?.studentId && !requestBody?.customEmail) await logReminder(req, String(requestBody.studentId));
     
     // Determine appropriate status code
     let statusCode = 200;
