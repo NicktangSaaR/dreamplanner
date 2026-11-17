@@ -41,6 +41,8 @@ import { REPORT_CARD_ACCEPT, ReportCardError, db, uploadReportCard, type UploadR
 import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
 import { isSafeHttpUrl } from "@/lib/safeUrl";
+import { useMockInterviewAccess } from "@/features/mock-interview/access";
+import InterviewLockedDialog from "@/features/mock-interview/InterviewLockedDialog";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -93,6 +95,8 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   const { profile } = useProfile();
   const { todos, createTodo, toggleTodoStatus, deleteTodo } = useStudentTodos(studentId);
   const { data: applicationOpen } = useApplicationOpen(studentId);
+  const interviewAccess = useMockInterviewAccess();
+  const [interviewLocked, setInterviewLocked] = useState(false);
   const { data: schools } = useSchoolList(studentId ?? "");
   const schoolCount = (schools ?? []).filter((s) => s.status !== "withdrawn").length;
   const { quarters } = useStudentQuarters(studentId);
@@ -438,8 +442,10 @@ export default function StudentHome({ studentId }: { studentId: string }) {
     { key: "resume", icon: FileUser, label: t("dash.info.resume"), onClick: () => setPanel("resume") },
     { key: "folder", icon: FolderOpen, label: folderUrl ? t("plan.folder.title") : t("plan.folder.add"), onClick: () => setDialog("folder") },
     // opens in its own tab so the home page stays put
-    { key: "interview", icon: Video, label: t("dash.mockInterview"), href: "/mock-interview", tour: "mock-interview-button" },
-  ].filter(Boolean) as { key: string; icon: typeof FileText; label: string; count?: number; onClick?: () => void; href?: string; highlight?: boolean; tour?: string }[];
+    interviewAccess.locked
+      ? { key: "interview", icon: Video, label: t("dash.mockInterview"), onClick: () => setInterviewLocked(true), tour: "mock-interview-button", disabled: true }
+      : { key: "interview", icon: Video, label: t("dash.mockInterview"), href: "/mock-interview", tour: "mock-interview-button" },
+  ].filter(Boolean) as { key: string; icon: typeof FileText; label: string; count?: number; onClick?: () => void; href?: string; highlight?: boolean; tour?: string; disabled?: boolean }[];
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:pt-12">
@@ -483,12 +489,12 @@ export default function StudentHome({ studentId }: { studentId: string }) {
         {tools.map((x) => {
           const inner = (
             <>
-              <x.icon className={`h-4 w-4 shrink-0 ${x.highlight ? "text-brass" : "text-primary"}`} aria-hidden="true" />
+              <x.icon className={`h-4 w-4 shrink-0 ${x.disabled ? "text-muted-foreground" : x.highlight ? "text-brass" : "text-primary"}`} aria-hidden="true" />
               <span>{x.label}</span>
               {x.count != null && <span className="text-xs text-muted-foreground">{x.count}</span>}
             </>
           );
-          const cls = `inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors hover:bg-muted/60 ${x.highlight ? "border-brass/50 bg-brass/5 font-medium" : "bg-card"}`;
+          const cls = `inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors hover:bg-muted/60 ${x.disabled ? "bg-muted/40 text-muted-foreground" : x.highlight ? "border-brass/50 bg-brass/5 font-medium" : "bg-card"}`;
           return x.href ? (
             <a key={x.key} href={x.href} target="_blank" rel="noopener noreferrer" className={cls} data-tour={x.tour} title={lang === "zh" ? "在新标签页打开" : "Opens in a new tab"}>{inner}</a>
           ) : (
@@ -496,6 +502,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
           );
         })}
       </nav>
+      <InterviewLockedDialog open={interviewLocked} onOpenChange={setInterviewLocked} />
 
       <LinkCounselorPrompt studentId={studentId} />
 

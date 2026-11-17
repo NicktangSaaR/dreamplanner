@@ -42,6 +42,7 @@ const initializeAuth = async () => {
         // public pages), so refresh both.
         queryClient.invalidateQueries({ queryKey: ["user-profile"] })
         queryClient.invalidateQueries({ queryKey: ["profile"] })
+        queryClient.invalidateQueries({ queryKey: ["mock-interview-access"] })
       }
     })
 
