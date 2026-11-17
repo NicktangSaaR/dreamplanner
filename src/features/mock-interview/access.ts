@@ -18,5 +18,6 @@ export function useMockInterviewAccess() {
       return canUseMockInterview(data);
     },
   });
-  return { allowed: data === true, loading: isLoading };
+  // `locked` only once we know, so the button doesn't flash grey while loading.
+  return { allowed: data === true, loading: isLoading, locked: !isLoading && data !== true };
 }
