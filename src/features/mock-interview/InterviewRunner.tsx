@@ -112,14 +112,17 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
     }
   }, []);
 
+  // Practice without recording: never ask for the camera.
+  const recordOn = settings.record !== false;
   useEffect(() => {
-    connectCamera();
+    if (recordOn) connectCamera();
+    else setCamera("skipped");
     return () => {
       stopReading.current();
       if (recorderRef.current?.state === "recording") recorderRef.current.stop();
       streamRef.current?.getTracks().forEach((tr) => tr.stop());
     };
-  }, [connectCamera]);
+  }, [connectCamera, recordOn]);
 
   // Attach the live stream whenever the preview element is shown.
   useEffect(() => {
@@ -300,8 +303,8 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
     phase === "material" ? t("mi.readingMaterial")
     : phase === "reading" ? t("mi.reading", { n: reading })
     : phase === "prep" ? (question.combined ? t("mi.thinking", { total: formatSeconds(question.response) }) : t("mi.preparing"))
-    : phase === "answer" ? (isWritten ? t("mi.writing") : t("mi.recording"))
-    : phase === "done" ? t("mi.answered") : t("mi.cameraCheck");
+    : phase === "answer" ? (isWritten ? t("mi.writing") : camera === "ready" ? t("mi.recording") : t("mi5.answering"))
+    : phase === "done" ? t("mi.answered") : recordOn ? t("mi.cameraCheck") : t("mi5.practiceReady");
   const ringTotal = phase === "material" ? question.readingTime ?? 1 : phase === "prep" ? (question.combined ? Math.min(question.prep, question.response) : question.prep) : answerTotal || question.response;
   const wordCount = written.trim() ? written.trim().split(/\s+/).length : 0;
 
@@ -403,7 +406,7 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
                 <video ref={liveRef} autoPlay muted playsInline className="h-full w-full -scale-x-100 object-cover" />
               ) : (
                 <div className="flex h-full items-center justify-center p-6 text-center text-sm text-white/80">
-                  {camera === "pending" ? "…" : camera === "skipped" ? t("mi.noRecordingNote") : cameraMessage[camera as keyof typeof cameraMessage]}
+                  {camera === "pending" ? "…" : camera === "skipped" ? (recordOn ? t("mi.noRecordingNote") : t("mi5.practiceNote")) : cameraMessage[camera as keyof typeof cameraMessage]}
                 </div>
               )}
               {phase === "answer" && !isWritten && camera === "ready" && (
