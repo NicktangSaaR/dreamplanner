@@ -12,12 +12,12 @@ export function useMockInterviewAccess() {
     staleTime: 60_000,
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return false;
+      if (!session) return { ok: false, staff: false };
       const { data } = await (supabase as any)
         .from("profiles").select("user_type, mock_interview_enabled").eq("id", session.user.id).maybeSingle();
-      return canUseMockInterview(data);
+      return { ok: canUseMockInterview(data), staff: data?.user_type === "admin" || data?.user_type === "counselor" };
     },
   });
   // `locked` only once we know, so the button doesn't flash grey while loading.
-  return { allowed: data === true, loading: isLoading, locked: !isLoading && data !== true };
+  return { allowed: data?.ok === true, staff: data?.staff === true, loading: isLoading, locked: !isLoading && data?.ok !== true };
 }

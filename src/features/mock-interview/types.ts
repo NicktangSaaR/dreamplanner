@@ -142,6 +142,8 @@ export interface SessionSettings {
   program: string;
   retakes: number; // 99 = unlimited
   shuffle: boolean;
+  /** false = practice without recording: no camera, just the timed questions (e.g. a counselor coaching a student). */
+  record?: boolean;
 }
 
 export interface Answer {

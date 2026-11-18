@@ -41,7 +41,8 @@ export default function MockInterviewPage() {
   // The record of the current run (for the student's counselors), if it could be created.
   const sessionId = useRef<Promise<string | null> | null>(null);
   const begin = (questions: SessionQuestion[], meta: SessionMeta) => {
-    sessionId.current = startSession(meta, questions);
+    // Counselors practising (or coaching) aren't students: nothing to log.
+    sessionId.current = access.staff ? null : startSession(meta, questions);
     setStage({ name: "interview", questions, run: Date.now(), meta });
   };
   const log = (questions: SessionQuestion[], answers: Answer[], status?: "completed" | "exited") => {
@@ -109,6 +110,7 @@ export default function MockInterviewPage() {
           userId={userId}
           initialSettings={settings}
           initialSelection={selection}
+          staff={access.staff}
           onStart={(questions, s, sel, meta) => {
             setSettings(s);
             setSelection(sel);

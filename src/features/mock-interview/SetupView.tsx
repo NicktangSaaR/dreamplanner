@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,8 @@ interface Props {
   userId: string;
   initialSettings: SessionSettings;
   initialSelection: string[];
+  /** Counselor or admin: starts in custom practice, without recording. */
+  staff?: boolean;
   onStart: (questions: SessionQuestion[], settings: SessionSettings, selection: string[], meta: SessionMeta) => void;
 }
 
@@ -39,7 +42,7 @@ const DEFAULT = "default";
  *  - Practice: pick one question, several, or a random set from any bank or
  *    the student's own questions, and choose the preparation and answer time.
  */
-export default function SetupView({ userId, initialSettings, onStart }: Props) {
+export default function SetupView({ userId, initialSettings, staff = false, onStart }: Props) {
   const { t } = useLanguage();
   const guide = useGuide("mock-interview", userId);
   const { data: banks = [], isLoading: banksLoading } = useBanks();
@@ -60,7 +63,9 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
     [banks, bankQuestions],
   );
 
-  const [mode, setMode] = useState<Mode>("simulation");
+  const [mode, setMode] = useState<Mode>(staff ? "practice" : "simulation");
+  // Recording on by default for students; counselors usually coach without it.
+  const [record, setRecord] = useState(staff ? false : initialSettings.record !== false);
   const [simId, setSimId] = useState("");
   const [pool, setPool] = useState(ALL);
   const [pick, setPick] = useState<Pick>("multiple");
@@ -144,7 +149,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
       const drawn = drawFromBlueprint(sim, bankQuestions, recentQuestionKeys());
       if (!drawn.length) return;
       rememberQuestions(drawn.filter((q) => !q.followUp).map((q) => q.key));
-      onStart(drawn, { school: sim.school || "", program: sim.program || "", retakes: sim.sim_retakes, shuffle: false }, [], {
+      onStart(drawn, { school: sim.school || "", program: sim.program || "", retakes: sim.sim_retakes, shuffle: false, record }, [], {
         mode: "simulation",
         title: [sim.school, sim.program].filter(Boolean).join(" · ") || sim.title,
       });
@@ -161,7 +166,7 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
       toast.error(t("mi.selectAtLeastOne"));
       return;
     }
-    onStart(expandFollowUps(withTiming(qs)), { school, program, retakes, shuffle: false }, qs.map((q) => q.key), {
+    onStart(expandFollowUps(withTiming(qs)), { school, program, retakes, shuffle: false, record }, qs.map((q) => q.key), {
       mode: "practice",
       title: pool === ALL ? "" : pool === MINE ? t("mi.tabMine") : poolTitle[pool] || "",
     });
@@ -471,7 +476,12 @@ export default function SetupView({ userId, initialSettings, onStart }: Props) {
       {/* Sticky summary bar */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-3">
-          <span className="text-sm text-muted-foreground">{summary}</span>
+          <span className="min-w-0 flex-1 text-sm text-muted-foreground">{summary}</span>
+          <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm" title={t("mi5.recordHint")}>
+            <Switch checked={record} onCheckedChange={setRecord} aria-describedby="mi-record-hint" />
+            <span>{record ? t("mi5.recordOn") : t("mi5.recordOff")}</span>
+            <span id="mi-record-hint" className="sr-only">{t("mi5.recordHint")}</span>
+          </label>
           <Button size="lg" onClick={start} disabled={!canStart} data-tour="mi-start">
             {mode === "simulation" ? t("mi2.startSim") : t("mi.start")}
           </Button>

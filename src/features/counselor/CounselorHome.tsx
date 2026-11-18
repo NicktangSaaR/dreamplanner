@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ChevronDown, ChevronRight, Clock, Globe, HelpCircle, LogOut, Menu, Search, User } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronRight, Clock, Globe, HelpCircle, LogOut, Menu, Search, User, Video } from "lucide-react";
 import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
 import { COUNSELOR_HOME_GUIDE } from "@/features/guide/guides";
 import { TODO_TITLE_COLUMNS, todoTitle } from "@/shared/todoTitle";
@@ -252,6 +252,9 @@ export default function CounselorHome() {
         <h1 className="font-serif text-3xl font-semibold text-pine">{greeting}{firstName ? `，${firstName}` : ""}</h1>
         <div className="flex items-center gap-2">
           <GuideButton onClick={guide.start} className="hidden sm:inline-flex" />
+          <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
+            <Link to="/mock-interview"><Video className="mr-1.5 h-4 w-4" aria-hidden="true" />{t("dash.mockInterview")}</Link>
+          </Button>
           {data?.me?.id && <span data-tour="invite-student"><InviteStudentDialog counselorId={data.me.id} /></span>}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -259,6 +262,7 @@ export default function CounselorHome() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem className="sm:hidden" onSelect={guide.start}><HelpCircle className="mr-2 h-4 w-4" />{lang === "zh" ? "使用指南" : "Guide"}</DropdownMenuItem>
+              <DropdownMenuItem className="sm:hidden" onSelect={() => navigate("/mock-interview")}><Video className="mr-2 h-4 w-4" />{t("dash.mockInterview")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => navigate("/counselor-profile")}><User className="mr-2 h-4 w-4" />{t("dash.profile")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setLang(lang === "zh" ? "en" : "zh")}><Globe className="mr-2 h-4 w-4" />{lang === "zh" ? "English" : "中文"}</DropdownMenuItem>
               <DropdownMenuSeparator />
