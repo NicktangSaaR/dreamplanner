@@ -120,6 +120,19 @@ export default function SignUp() {
         ? ["Undecided"]
         : interestedMajors;
 
+      // One account per email: also covers students whose counselor already made
+      // them a username account with this email.
+      const { data: taken } = await (supabase as any).rpc("email_registered", { p_email: formData.email.trim() });
+      if (taken === true) {
+        toast({
+          variant: "destructive",
+          title: "Account Already Exists · 邮箱已注册",
+          description: "This email already has an account. Please log in, or use “Forgot password” to reset it. 这个邮箱已经有账号了，请直接登录；忘记密码可以用邮箱重置。",
+        });
+        setTimeout(() => navigate("/login"), 2500);
+        return;
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: formData.email.trim(),
         password: formData.password,
@@ -149,11 +162,11 @@ export default function SignUp() {
       if (error) {
         console.error("Signup error:", error);
 
-        if (error.message.includes("User already registered")) {
+        if (error.message.includes("User already registered") || error.message.includes("Database error saving new user")) {
           toast({
             variant: "destructive",
-            title: "Account Already Exists",
-            description: "This email is already registered. Please log in instead.",
+            title: "Account Already Exists · 邮箱已注册",
+            description: "This email already has an account. Please log in, or use “Forgot password” to reset it. 这个邮箱已经有账号了，请直接登录；忘记密码可以用邮箱重置。",
           });
           setTimeout(() => navigate("/login"), 2000);
           return;
