@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ChevronDown, ChevronRight, Clock, Globe, HelpCircle, LogOut, Menu, Search, User, Video } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, Clock, Globe, HelpCircle, LogOut, Menu, Search, User, Video } from "lucide-react";
 import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
 import { COUNSELOR_HOME_GUIDE } from "@/features/guide/guides";
-import { TODO_TITLE_COLUMNS, todoTitle } from "@/shared/todoTitle";
+import { TODO_TITLE_COLUMNS } from "@/shared/todoTitle";
+import { loadTasksFor, taskTitle } from "@/features/counselor/follow/followData";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,8 @@ type Row = {
   goalsTotal: number;
   lastActive: string | null;
 };
+const ALERTS_PER_PAGE = 10;
+
 type Alert = { key: string; studentId: string; name: string; level: "urgent" | "soon" | "quiet"; text: string; sort: number };
 
 /**
@@ -67,6 +70,7 @@ export default function CounselorHome() {
   const [search, setSearch] = useState("");
   const [grade, setGrade] = useState("all");
   const [showDone, setShowDone] = useState(false);
+  const [alertPage, setAlertPage] = useState(0);
 
   const { data, isLoading } = useQuery({
     queryKey: ["counselor-home"],
@@ -86,7 +90,7 @@ export default function CounselorHome() {
       if (ids.length === 0) return { me: meProfile, rows: [] as Row[], alerts: [] as Alert[] };
 
       const today = isoDay(0);
-      const [students, phases, quarters, requests, milestones, todos, notes, reports] = await Promise.all([
+      const [students, phases, quarters, requests, milestones, todos, notes, reports, tasksBy] = await Promise.all([
         db.from("profiles").select("*").in("id", ids),
         db.from("student_phases").select("student_id, current_phase").in("student_id", ids),
         db.from("student_quarters").select("student_id, quarter_kpi").in("student_id", ids).eq("academic_year", academicYear()).eq("quarter", quarterKey()),
@@ -95,6 +99,7 @@ export default function CounselorHome() {
         db.from("todos").select(`author_id, ${TODO_TITLE_COLUMNS}, due_date, completed, created_at`).in("author_id", ids),
         db.from("notes").select("author_id, created_at").in("author_id", ids),
         db.from("academic_reports").select("student_id, created_at").in("student_id", ids),
+        loadTasksFor(ids),
       ]);
 
       const nameOf = new Map<string, string>((students.data || []).map((s: { id: string; full_name: string | null }) => [s.id, s.full_name || "—"]));
@@ -141,14 +146,22 @@ export default function CounselorHome() {
           alerts.push({ key: `req-${r.student_id}`, studentId: r.student_id, name: nameOf.get(r.student_id) || "—", level: "urgent", text: t("ch.alert.reportOverdue", { date: r.due_date }), sort: 0 });
         }
       }
-      for (const todo of todos.data || []) {
-        if (todo.completed || !todo.due_date || completed.has(todo.author_id)) continue;
-        const due = String(todo.due_date).slice(0, 10);
-        if (due < today) {
-          alerts.push({ key: `todo-${todo.author_id}-${todo.title}`, studentId: todo.author_id, name: nameOf.get(todo.author_id) || "—", level: "urgent", text: t("ch.alert.todoOverdue", { title: todoTitle(todo, lang), date: due }), sort: 1 });
-        } else if (due <= isoDay(3)) {
-          alerts.push({ key: `todo-${todo.author_id}-${todo.title}`, studentId: todo.author_id, name: nameOf.get(todo.author_id) || "—", level: "soon", text: t("ch.alert.todoSoon", { title: todoTitle(todo, lang), date: due }), sort: 3 });
-        }
+      // One line per student for tasks (student, counselor and parent) overdue or due within 7 days,
+      // so one busy student can't push everyone else off the list.
+      const week = isoDay(7);
+      for (const [sid, list] of tasksBy) {
+        if (completed.has(sid)) continue;
+        const open = list.filter((x) => !x.completed && x.due && x.due <= week).sort((a, b) => a.due!.localeCompare(b.due!));
+        if (!open.length) continue;
+        const overdue = open.filter((x) => x.due! < today).length;
+        const soon = open.length - overdue;
+        const first = open[0];
+        const counts = [overdue ? t("ch.alert.nOverdue", { n: overdue }) : "", soon ? t("ch.alert.nSoon", { n: soon }) : ""].filter(Boolean).join(" · ");
+        alerts.push({
+          key: `tasks-${sid}`, studentId: sid, name: nameOf.get(sid) || "—", level: overdue ? "urgent" : "soon",
+          text: `${counts} — ${t("ch.alert.earliest", { title: taskTitle(first, lang), date: first.due! })}`,
+          sort: overdue ? 1 : 3,
+        });
       }
       for (const m of milestones.data || []) {
         if (completed.has(m.student_id)) continue;
@@ -282,7 +295,7 @@ export default function CounselorHome() {
           <p className="mt-3 text-muted-foreground">{t("ch.allClear")}</p>
         ) : (
           <ul className="mt-3 divide-y rounded-md border bg-card">
-            {data.alerts.slice(0, 12).map((a) => {
+            {data.alerts.slice(alertPage * ALERTS_PER_PAGE, (alertPage + 1) * ALERTS_PER_PAGE).map((a) => {
               const Icon = icon[a.level];
               return (
                 <li key={a.key}>
@@ -297,6 +310,21 @@ export default function CounselorHome() {
             })}
           </ul>
         )}
+        {!!data?.alerts && data.alerts.length > ALERTS_PER_PAGE && (() => {
+          const pages = Math.ceil(data.alerts.length / ALERTS_PER_PAGE);
+          const page = Math.min(alertPage, pages - 1);
+          return (
+            <nav className="mt-2 flex items-center justify-end gap-2 text-sm" aria-label={t("ch.pages")}>
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setAlertPage(page - 1)}>
+                <ChevronLeft className="mr-1 h-4 w-4" aria-hidden="true" />{t("ch.prevPage")}
+              </Button>
+              <span className="tabular-nums text-muted-foreground" aria-live="polite">{t("ch.pageOf", { n: page + 1, total: pages })}</span>
+              <Button variant="outline" size="sm" disabled={page >= pages - 1} onClick={() => setAlertPage(page + 1)}>
+                {t("ch.nextPage")}<ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
+              </Button>
+            </nav>
+          );
+        })()}
       </section>
 
       <section className="mt-10" aria-labelledby="students-heading" data-tour="counselor-students">
