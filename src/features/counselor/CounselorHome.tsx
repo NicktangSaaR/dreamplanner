@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ChevronDown, ChevronRight, Clock, Globe, HelpCircle, LogOut, Menu, Search, User, Video } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, Clock, Globe, HelpCircle, LogOut, Menu, Search, User, Video } from "lucide-react";
 import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
 import { COUNSELOR_HOME_GUIDE } from "@/features/guide/guides";
 import { TODO_TITLE_COLUMNS } from "@/shared/todoTitle";
@@ -56,7 +56,7 @@ type Row = {
   goalsTotal: number;
   lastActive: string | null;
 };
-const ALERT_PREVIEW = 15;
+const ALERTS_PER_PAGE = 10;
 
 type Alert = { key: string; studentId: string; name: string; level: "urgent" | "soon" | "quiet"; text: string; sort: number };
 
@@ -70,7 +70,7 @@ export default function CounselorHome() {
   const [search, setSearch] = useState("");
   const [grade, setGrade] = useState("all");
   const [showDone, setShowDone] = useState(false);
-  const [showAllAlerts, setShowAllAlerts] = useState(false);
+  const [alertPage, setAlertPage] = useState(0);
 
   const { data, isLoading } = useQuery({
     queryKey: ["counselor-home"],
@@ -295,7 +295,7 @@ export default function CounselorHome() {
           <p className="mt-3 text-muted-foreground">{t("ch.allClear")}</p>
         ) : (
           <ul className="mt-3 divide-y rounded-md border bg-card">
-            {(showAllAlerts ? data.alerts : data.alerts.slice(0, ALERT_PREVIEW)).map((a) => {
+            {data.alerts.slice(alertPage * ALERTS_PER_PAGE, (alertPage + 1) * ALERTS_PER_PAGE).map((a) => {
               const Icon = icon[a.level];
               return (
                 <li key={a.key}>
@@ -310,12 +310,21 @@ export default function CounselorHome() {
             })}
           </ul>
         )}
-        {!!data?.alerts && data.alerts.length > ALERT_PREVIEW && (
-          <button type="button" onClick={() => setShowAllAlerts((v) => !v)} aria-expanded={showAllAlerts} className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ChevronDown className={`h-4 w-4 transition-transform ${showAllAlerts ? "rotate-180" : ""}`} />
-            {showAllAlerts ? t("ch.showFewer") : t("ch.showAll", { n: data.alerts.length })}
-          </button>
-        )}
+        {!!data?.alerts && data.alerts.length > ALERTS_PER_PAGE && (() => {
+          const pages = Math.ceil(data.alerts.length / ALERTS_PER_PAGE);
+          const page = Math.min(alertPage, pages - 1);
+          return (
+            <nav className="mt-2 flex items-center justify-end gap-2 text-sm" aria-label={t("ch.pages")}>
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setAlertPage(page - 1)}>
+                <ChevronLeft className="mr-1 h-4 w-4" aria-hidden="true" />{t("ch.prevPage")}
+              </Button>
+              <span className="tabular-nums text-muted-foreground" aria-live="polite">{t("ch.pageOf", { n: page + 1, total: pages })}</span>
+              <Button variant="outline" size="sm" disabled={page >= pages - 1} onClick={() => setAlertPage(page + 1)}>
+                {t("ch.nextPage")}<ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
+              </Button>
+            </nav>
+          );
+        })()}
       </section>
 
       <section className="mt-10" aria-labelledby="students-heading" data-tour="counselor-students">
