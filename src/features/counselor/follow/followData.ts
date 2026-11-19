@@ -35,13 +35,25 @@ const day = (v: string | null | undefined) => (v ? String(v).slice(0, 10) : null
 const KEYDATE_PREFIX = "📌";
 
 export async function loadTasks(studentId: string): Promise<UnifiedTask[]> {
+  return (await loadTasksFor([studentId])).get(studentId) ?? [];
+}
+
+/** Tasks for several students at once (counselor home), keyed by student. */
+export async function loadTasksFor(studentIds: string[]): Promise<Map<string, UnifiedTask[]>> {
+  const out = new Map<string, UnifiedTask[]>(studentIds.map((id) => [id, []]));
+  if (!studentIds.length) return out;
   const [{ data: todos }, { data: items }, { data: hist }] = await Promise.all([
-    db.from("todos").select(`id, ${TODO_TITLE_COLUMNS}, completed, due_date, created_at`).eq("author_id", studentId),
-    db.from("meeting_action_items").select(`id, meeting_id, ${TODO_TITLE_COLUMNS}, owner, due_date, completed, todo_id`).eq("student_id", studentId),
-    db.from("task_postponements").select("task_id, old_due, new_due, reason, via, created_at").eq("student_id", studentId).order("created_at"),
+    db.from("todos").select(`id, author_id, ${TODO_TITLE_COLUMNS}, completed, due_date, created_at`).in("author_id", studentIds),
+    db.from("meeting_action_items").select(`id, student_id, meeting_id, ${TODO_TITLE_COLUMNS}, owner, due_date, completed, todo_id`).in("student_id", studentIds),
+    db.from("task_postponements").select("task_id, old_due, new_due, reason, via, created_at").in("student_id", studentIds).order("created_at"),
   ]);
-  const historyOf = (id: string) => ((hist || []) as (Postponement & { task_id: string })[]).filter((h) => h.task_id === id);
-  const itemRows = (items || []) as (BilingualTitle & { id: string; meeting_id: string | null; owner: Owner; due_date: string | null; completed: boolean | null; todo_id: string | null })[];
+  const histBy = new Map<string, Postponement[]>();
+  for (const h of (hist || []) as (Postponement & { task_id: string })[]) {
+    if (!histBy.has(h.task_id)) histBy.set(h.task_id, []);
+    histBy.get(h.task_id)!.push(h);
+  }
+  const historyOf = (id: string) => histBy.get(id) ?? [];
+  const itemRows = (items || []) as (BilingualTitle & { id: string; student_id: string; meeting_id: string | null; owner: Owner; due_date: string | null; completed: boolean | null; todo_id: string | null })[];
   const meetingIds = [...new Set(itemRows.map((i) => i.meeting_id).filter(Boolean))] as string[];
   const { data: meetings } = meetingIds.length
     ? await db.from("student_meetings").select("id, meeting_date, title").in("id", meetingIds)
@@ -50,28 +62,29 @@ export async function loadTasks(studentId: string): Promise<UnifiedTask[]> {
     ((meetings || []) as { id: string; meeting_date: string; title: string | null }[]).map((m) => [m.id, `${m.meeting_date.slice(5, 10).replace("-", "/")} ${m.title || ""}`.trim()]),
   );
   const fromMeeting = new Map(itemRows.filter((i) => i.todo_id && i.meeting_id).map((i) => [i.todo_id as string, i.meeting_id as string]));
+  const strip = (v: string) => v.replace(new RegExp(`^${KEYDATE_PREFIX}\\s*`, "u"), "");
 
-  const list: UnifiedTask[] = [
-    ...((todos || []) as (BilingualTitle & { id: string; completed: boolean | null; due_date: string | null })[]).map((t) => {
-      const mid = fromMeeting.get(t.id);
-      const source: TaskSource = mid
-        ? { kind: "meeting", label: meetingLabel.get(mid) || "" }
-        : t.title.startsWith(KEYDATE_PREFIX) ? { kind: "keydate" } : { kind: "manual" };
-      return {
-        key: `t-${t.id}`, table: "todos" as const, id: t.id, history: historyOf(t.id),
-        title: t.title.replace(new RegExp(`^${KEYDATE_PREFIX}\\s*`, "u"), ""),
-        // shown in the current language; `title` stays the text that was typed (for editing)
-        titles: { zh: todoTitle(t, "zh").replace(new RegExp(`^${KEYDATE_PREFIX}\\s*`, "u"), ""), en: todoTitle(t, "en").replace(new RegExp(`^${KEYDATE_PREFIX}\\s*`, "u"), "") },
-        owner: "student" as Owner, due: day(t.due_date), completed: !!t.completed, source,
-      };
-    }),
-    ...itemRows.filter((i) => !i.todo_id).map((i) => ({
-      key: `a-${i.id}`, table: "meeting_action_items" as const, id: i.id, title: i.title, titles: { zh: todoTitle(i, "zh"), en: todoTitle(i, "en") }, owner: i.owner, history: historyOf(i.id),
+  for (const t of (todos || []) as (BilingualTitle & { id: string; author_id: string; completed: boolean | null; due_date: string | null })[]) {
+    const mid = fromMeeting.get(t.id);
+    const source: TaskSource = mid
+      ? { kind: "meeting", label: meetingLabel.get(mid) || "" }
+      : t.title.startsWith(KEYDATE_PREFIX) ? { kind: "keydate" } : { kind: "manual" };
+    out.get(t.author_id)?.push({
+      key: `t-${t.id}`, table: "todos", id: t.id, history: historyOf(t.id),
+      title: strip(t.title),
+      // shown in the current language; `title` stays the text that was typed (for editing)
+      titles: { zh: strip(todoTitle(t, "zh")), en: strip(todoTitle(t, "en")) },
+      owner: "student", due: day(t.due_date), completed: !!t.completed, source,
+    });
+  }
+  for (const i of itemRows.filter((r) => !r.todo_id)) {
+    out.get(i.student_id)?.push({
+      key: `a-${i.id}`, table: "meeting_action_items", id: i.id, title: i.title, titles: { zh: todoTitle(i, "zh"), en: todoTitle(i, "en") }, owner: i.owner, history: historyOf(i.id),
       due: day(i.due_date), completed: !!i.completed,
       source: (i.meeting_id ? { kind: "meeting", label: meetingLabel.get(i.meeting_id) || "" } : { kind: "manual" }) as TaskSource,
-    })),
-  ];
-  return list;
+    });
+  }
+  return out;
 }
 
 /** Open first (overdue, then by due date, undated last), then done. */
