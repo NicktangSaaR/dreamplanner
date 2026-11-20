@@ -16,7 +16,7 @@ import { useBankQuestions, useBanks, useCustomQuestionMutations, useCustomQuesti
 import {
   PREP_OPTIONS, RESPONSE_OPTIONS, blueprintAvailable, blueprintSeconds, drawFromBlueprint, drawRandom, recentQuestionKeys, rememberQuestions, fillPlaceholders, formatSeconds,
   type InterviewBank, type QuestionType, type SessionQuestion, type SessionSettings,
-  sectionPools, isFixed, questionSeconds, cleanFollowUps, expandFollowUps, materialOf,
+  sectionPools, isFixed, questionSeconds, cleanFollowUps, expandFollowUps, materialOf, bankTitle, bankDescription,
 } from "./types";
 import type { SessionMeta } from "./sessionLog";
 
@@ -43,7 +43,7 @@ const DEFAULT = "default";
  *    the student's own questions, and choose the preparation and answer time.
  */
 export default function SetupView({ userId, initialSettings, staff = false, onStart }: Props) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const guide = useGuide("mock-interview", userId);
   const { data: banks = [], isLoading: banksLoading } = useBanks();
   const { data: bankQuestions = {}, isLoading: questionsLoading } = useBankQuestions();
@@ -54,7 +54,7 @@ export default function SetupView({ userId, initialSettings, staff = false, onSt
     () => banks.filter((b) => b.kind === "pool" && b.is_active && (bankQuestions[b.id]?.length ?? 0) > 0),
     [banks, bankQuestions],
   );
-  const poolTitle = useMemo(() => Object.fromEntries(banks.map((b) => [b.id, b.title])), [banks]);
+  const poolTitle = useMemo(() => Object.fromEntries(banks.map((b) => [b.id, bankTitle(b, lang)])), [banks, lang]);
   const simulations = useMemo(
     () =>
       banks
@@ -254,7 +254,7 @@ export default function SetupView({ userId, initialSettings, staff = false, onSt
                     simId === b.id ? "border-primary ring-1 ring-primary" : "hover:border-primary/50",
                   )}
                 >
-                  <span className="block font-semibold">{b.school || b.title}</span>
+                  <span className="block font-semibold">{b.school || bankTitle(b, lang)}</span>
                   {b.program && <span className="block text-sm">{b.program}</span>}
                   <span className="mt-2 block text-xs text-muted-foreground">
                     {t("mi2.nQuestions", { n })} · {t("mi3.about", { time: formatSeconds(blueprintSeconds(b.blueprint)) })} ·{" "}
@@ -272,7 +272,7 @@ export default function SetupView({ userId, initialSettings, staff = false, onSt
               );
             })}
           </div>
-          {sim?.description && <p className="mt-4 max-w-3xl text-sm text-muted-foreground">{sim.description}</p>}
+          {sim && bankDescription(sim, lang) && <p className="mt-4 max-w-3xl text-sm text-muted-foreground">{bankDescription(sim, lang)}</p>}
           <p className="mt-4 text-sm text-muted-foreground">{t("mi3.simDraw")} {t("mi2.simRules")}</p>
         </section>
       ) : (
@@ -344,7 +344,7 @@ export default function SetupView({ userId, initialSettings, staff = false, onSt
                   <SelectContent>
                     <SelectItem value={ALL}>{t("mi2.allBanks")}</SelectItem>
                     {usableBanks.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>{b.title} ({bankQuestions[b.id]?.length ?? 0})</SelectItem>
+                      <SelectItem key={b.id} value={b.id}>{bankTitle(b, lang)} ({bankQuestions[b.id]?.length ?? 0})</SelectItem>
                     ))}
                     <SelectItem value={MINE}>{t("mi.tabMine")} ({custom.length})</SelectItem>
                   </SelectContent>

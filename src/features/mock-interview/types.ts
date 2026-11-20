@@ -36,6 +36,9 @@ export interface InterviewBank {
   kind: BankKind;
   title: string;
   description: string | null;
+  /** English name/description, shown when the site is in English. */
+  title_en?: string | null;
+  description_en?: string | null;
   school: string | null;
   program: string | null;
   preparation_time: number;
@@ -308,3 +311,9 @@ export function blueprintAvailable(school: InterviewBank, questionsByPool: Recor
   // a dry run of the real draw, so shared and overlapping pools are counted right
   return drawFromBlueprint({ ...school, sim_shuffle: false }, questionsByPool).filter((q) => !q.followUp).length;
 }
+
+/** A bank's name in the site language (English falls back to the original). */
+export const bankTitle = (b: Pick<InterviewBank, "title" | "title_en">, lang: string) =>
+  (lang === "en" && b.title_en?.trim()) || b.title;
+export const bankDescription = (b: Pick<InterviewBank, "description" | "description_en">, lang: string) =>
+  (lang === "en" && b.description_en?.trim()) || b.description;
