@@ -66,8 +66,6 @@ const emptyInput = (kind: BankKind, bank: InterviewBank | null): BankInput => ({
   kind,
   title: bank?.title ?? "",
   description: bank?.description ?? "",
-  title_en: bank?.title_en ?? "",
-  description_en: bank?.description_en ?? "",
   school: bank?.school ?? "",
   program: bank?.program ?? "",
   preparation_time: bank?.preparation_time ?? 30,
@@ -90,7 +88,7 @@ function PoolDialog({
     try {
       await saveBank.mutateAsync({
         id: bank?.id,
-        input: { ...form, title: form.title.trim(), description: form.description?.trim() || null, title_en: form.title_en?.trim() || null, description_en: form.description_en?.trim() || null, school: null, program: null },
+        input: { ...form, title: form.title.trim(), description: form.description?.trim() || null, school: null, program: null },
       });
       toast.success(t("mi.admin.saved"));
       onOpenChange(false);
@@ -113,15 +111,6 @@ function PoolDialog({
           <div className="space-y-2">
             <Label htmlFor="pool-desc">{t("mi.admin.description")}</Label>
             <Textarea id="pool-desc" rows={2} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="pool-title-en">{t("mi6.titleEn")}</Label>
-            <Input id="pool-title-en" value={form.title_en ?? ""} placeholder="e.g. Teamwork Scenarios" onChange={(e) => setForm({ ...form, title_en: e.target.value })} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="pool-desc-en">{t("mi6.descriptionEn")}</Label>
-            <Textarea id="pool-desc-en" rows={2} value={form.description_en ?? ""} onChange={(e) => setForm({ ...form, description_en: e.target.value })} />
-            <p className="text-xs text-muted-foreground">{t("mi6.enHint")}</p>
           </div>
           <div className="flex flex-wrap gap-6">
             <div className="space-y-2">
@@ -268,7 +257,6 @@ function SchoolDialog({
           school,
           program,
           description: form.description?.trim() || null,
-          description_en: form.description_en?.trim() || null,
           preparation_time: form.blueprint[0]?.prep ?? 30,
           response_time: form.blueprint[0]?.response ?? 60,
         },
@@ -300,11 +288,6 @@ function SchoolDialog({
           <div className="space-y-2">
             <Label htmlFor="school-desc">{t("mi3.schoolNotes")}</Label>
             <Textarea id="school-desc" rows={2} value={form.description ?? ""} placeholder={t("mi3.schoolNotesPlaceholder")} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="school-desc-en">{t("mi6.descriptionEn")}</Label>
-            <Textarea id="school-desc-en" rows={2} value={form.description_en ?? ""} onChange={(e) => setForm({ ...form, description_en: e.target.value })} />
-            <p className="text-xs text-muted-foreground">{t("mi6.enHint")}</p>
           </div>
 
           <div className="space-y-2">

@@ -1,6 +1,11 @@
 -- English names for interview banks, so the setup page can show them in English.
+-- Filled by AI (translate-todos, table mock_interview_questions) whenever a
+-- bank's Chinese name or description is added or changed; current banks are
+-- filled below.
 alter table public.mock_interview_questions add column if not exists title_en text;
 alter table public.mock_interview_questions add column if not exists description_en text;
+-- title + newline + description the English was made from; a change re-translates.
+alter table public.mock_interview_questions add column if not exists en_source text;
 comment on column public.mock_interview_questions.title_en is 'English bank name (shown when the site is in English; falls back to title).';
 comment on column public.mock_interview_questions.description_en is 'English description (falls back to description).';
 
@@ -28,3 +33,47 @@ update public.mock_interview_questions set title_en = 'Oxbridge · Economics & M
 update public.mock_interview_questions set title_en = 'Opinion Questions (UofT Interview Q3)', description_en = 'Big issues — education, economy, environment, government, fairness, technology. No specialist knowledge; tests whether you can take a clear position and back it with reasons and examples' where title = '观点表达类（多大面试第三题）';
 update public.mock_interview_questions set title_en = 'Transfer Motivation', description_en = 'Why transfer, experience at your current school, plans after transferring' where title = '转学动机类';
 update public.mock_interview_questions set description_en = 'Oxbridge-style academic interview: 1 motivation question + 2 subject questions (may include material), each with 2–3 follow-ups. One overall timer per question; no retakes.' where kind = 'school' and title like 'Oxford / Cambridge%' and description like '牛剑风格学术面试%';
+
+update public.mock_interview_questions set en_source = title || chr(10) || coalesce(description, '')
+ where title_en is not null or description_en is not null;
+
+create or replace function public.request_bank_translations()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  ids uuid[];
+  secret text;
+begin
+  select array_agg(id) into ids
+    from new_rows
+   where (title ~ '[一-鿿]' or coalesce(description, '') ~ '[一-鿿]')
+     and en_source is distinct from title || chr(10) || coalesce(description, '');
+  if ids is null then
+    return null;
+  end if;
+  select (regexp_match(command, '''x-cron-secret''\s*,\s*''([^'']+)'''))[1] into secret
+    from cron.job where jobname = 'dreamplanner-daily-automation';
+  if secret is null then
+    return null;
+  end if;
+  perform net.http_post(
+    url := 'https://fyxnuhqzgkzfuldqurej.supabase.co/functions/v1/translate-todos',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret', secret),
+    body := jsonb_build_object('table', 'mock_interview_questions', 'ids', to_jsonb(ids)),
+    timeout_milliseconds := 60000
+  );
+  return null;
+exception when others then
+  raise warning 'request_bank_translations: %', sqlerrm;
+  return null;
+end $$;
+
+drop trigger if exists bank_translations_ins on public.mock_interview_questions;
+create trigger bank_translations_ins after insert on public.mock_interview_questions
+  referencing new table as new_rows for each statement execute function public.request_bank_translations();
+drop trigger if exists bank_translations_upd on public.mock_interview_questions;
+create trigger bank_translations_upd after update on public.mock_interview_questions
+  referencing new table as new_rows for each statement execute function public.request_bank_translations();

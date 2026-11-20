@@ -101,8 +101,6 @@ export interface BankInput {
   kind: BankKind;
   title: string;
   description: string | null;
-  title_en?: string | null;
-  description_en?: string | null;
   school: string | null;
   program: string | null;
   preparation_time: number;
