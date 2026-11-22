@@ -43,6 +43,8 @@ import type { MessageKey } from "@/i18n/translations";
 import { isSafeHttpUrl } from "@/lib/safeUrl";
 import { useMockInterviewAccess } from "@/features/mock-interview/access";
 import InterviewLockedDialog from "@/features/mock-interview/InterviewLockedDialog";
+import MessageList from "@/features/messages/MessageList";
+import { useStudentMessages } from "@/features/messages/data";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -96,6 +98,7 @@ export default function StudentHome({ studentId }: { studentId: string }) {
   const { todos, createTodo, toggleTodoStatus, deleteTodo } = useStudentTodos(studentId);
   const { data: applicationOpen } = useApplicationOpen(studentId);
   const interviewAccess = useMockInterviewAccess();
+  const { data: messages = [] } = useStudentMessages(studentId);
   const [interviewLocked, setInterviewLocked] = useState(false);
   const { data: schools } = useSchoolList(studentId ?? "");
   const schoolCount = (schools ?? []).filter((s) => s.status !== "withdrawn").length;
@@ -561,6 +564,13 @@ export default function StudentHome({ studentId }: { studentId: string }) {
           </div>
         )}
       </section>
+
+      {messages.length > 0 && (
+        <section className="mt-10" aria-labelledby="messages-heading">
+          <h2 id="messages-heading" className="font-serif text-xl font-semibold text-pine">{Z("顾问的消息", "Messages from your counselor")}</h2>
+          <div className="mt-4"><MessageList messages={messages} limit={3} /></div>
+        </section>
+      )}
 
       {/* From the counselor */}
       {shared.length > 0 && (

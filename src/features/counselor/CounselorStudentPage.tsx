@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CalendarClock, Loader2, Pencil } from "lucide-react";
+import { ArrowLeft, CalendarClock, Loader2, Pencil, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StudentStatusDialog from "./StudentStatusDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,8 @@ import { loadTasks } from "@/features/counselor/follow/followData";
 import PlanTab from "./plan/PlanTab";
 import { gradSummary, studentKind, type EntryTerm, type GradDegree, type GradStatus, type Track } from "@/shared/planning";
 import StudentTeamCard from "@/features/team/StudentTeamCard";
+import MessagesCard from "@/features/messages/MessagesCard";
+import SendMessageDialog from "@/features/messages/SendMessageDialog";
 import AcademicBriefCard from "@/features/grades/AcademicBriefCard";
 import InterviewHistoryCard from "@/features/counselor/InterviewHistoryCard";
 import StudentKindBadge from "@/components/StudentKindBadge";
@@ -70,6 +72,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
   const { phase } = useStudentPhase(studentId);
   const { quarters } = useStudentQuarters(studentId);
   const [editing, setEditing] = useState(false);
+  const [messaging, setMessaging] = useState(false);
   const [tab, setTab] = useState("overview");
 
   // Lead counselor, follow-up teachers and admins may change grade / service status.
@@ -138,6 +141,9 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
           <h1 className="font-serif text-3xl font-semibold text-pine">{profile.full_name}</h1>
           <div className="flex items-center gap-1">
             <GuideButton onClick={guide.start} />
+            <Button variant="outline" size="sm" onClick={() => setMessaging(true)}>
+              <Send className="mr-1.5 h-4 w-4" /> {lang === "zh" ? "发消息" : "Message"}
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
               <Pencil className="mr-1.5 h-4 w-4" /> {t("st.edit")}
             </Button>
@@ -154,6 +160,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
         </p>
       </header>
 
+      <SendMessageDialog open={messaging} onOpenChange={setMessaging} studentId={studentId} studentName={profile.full_name || ""} studentEmail={profile.email} parentEmail={(profile as { parent_email?: string | null }).parent_email} />
       {editing && (
         <StudentStatusDialog open={editing} onOpenChange={setEditing} profile={profile} canChangeStatus={canManage} />
       )}
@@ -226,6 +233,7 @@ export default function CounselorStudentPage({ studentId }: { studentId: string 
 
         <TabsContent value="follow" className="mt-6 space-y-6">
           <TaskBoard studentId={studentId} />
+          <MessagesCard studentId={studentId} studentName={profile.full_name || ""} studentEmail={profile.email} parentEmail={(profile as { parent_email?: string | null }).parent_email} />
           <MeetingLog studentId={studentId} />
           <NotesCard studentId={studentId} />
         </TabsContent>
