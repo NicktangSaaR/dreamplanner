@@ -8,7 +8,7 @@ import { sectionPools, withPools, type BankKind, type BankQuestion, type Bluepri
 const db = supabase as any;
 
 const BANK_COLUMNS =
-  "id, kind, title, description, school, program, preparation_time, response_time, is_active, created_at, blueprint, sim_shuffle, sim_retakes";
+  "id, kind, title, description, title_en, description_en, school, program, preparation_time, response_time, is_active, created_at, blueprint, sim_shuffle, sim_retakes";
 const QUESTION_COLUMNS =
   "id, bank_id, title, description, question_type, preparation_time, response_time, sort_order, follow_ups, material, reading_time";
 const CUSTOM_COLUMNS =

@@ -1,7 +1,10 @@
 // Fill in the Chinese and English versions of to-do titles.
 // Called by the todos trigger (new or renamed to-dos) and for backfills.
 //
-// POST { table?: "todos" | "meeting_action_items", ids?: string[], backfill?: boolean }
+// Also English names for interview question banks (table "mock_interview_questions"):
+// a Chinese title/description gets title_en/description_en.
+//
+// POST { table?: "todos" | "meeting_action_items" | "mock_interview_questions", ids?: string[], backfill?: boolean }
 //   header x-cron-secret: CRON_SECRET
 //   ids: translate these rows; backfill: the next batch still missing a translation.
 //   table defaults to todos (meeting_action_items holds the counselor's own tasks).
@@ -47,6 +50,57 @@ async function translate(items: { id: string; title: string }[], key: string) {
   return map;
 }
 
+const BANK_SYSTEM = `You translate the names and short descriptions of interview question banks on a university-admissions platform from Chinese into natural English for students.
+Rules: concise title case for names (e.g. "Teamwork Scenarios", "Oxbridge · Law"); keep "·" separators; 多大 = UofT, 牛剑 = Oxbridge; keep school, program and exam names in their usual English form; keep placeholders like {school} and {program} unchanged; don't add information.
+Return only JSON: {"items":[{"id":"…","title":"…","description":"…"}]} with every input id; description is "" when the input has none.`;
+
+/** English names for interview banks whose title/description has Chinese. */
+// deno-lint-ignore no-explicit-any
+async function translateBanks(db: any, ids: string[], key: string) {
+  let q = db.from("mock_interview_questions").select("id, title, description, en_source");
+  q = ids.length ? q.in("id", ids) : q.limit(200);
+  const { data, error } = await q;
+  if (error) throw error;
+  const sourceOf = (r: { title: string; description: string | null }) => `${r.title}\n${r.description ?? ""}`;
+  const todo = ((data ?? []) as { id: string; title: string; description: string | null; en_source: string | null }[])
+    .filter((r) => (CJK.test(r.title) || CJK.test(r.description ?? "")) && r.en_source !== sourceOf(r));
+  let translated = 0;
+  for (let i = 0; i < todo.length; i += 20) {
+    const batch = todo.slice(i, i + 20);
+    const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "deepseek-chat", temperature: 0.1, response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: BANK_SYSTEM },
+          { role: "user", content: JSON.stringify({ items: batch.map((r) => ({ id: r.id, title: r.title, description: r.description ?? "" })) }) },
+        ],
+      }),
+    });
+    if (!res.ok) {
+      console.error("translate banks", res.status, (await res.text()).slice(0, 200));
+      continue;
+    }
+    const out = await res.json();
+    const parsed = JSON.parse(out.choices?.[0]?.message?.content || "{}");
+    for (const r of Array.isArray(parsed.items) ? parsed.items : []) {
+      const row = batch.find((b) => b.id === r?.id);
+      if (!row) continue;
+      const title = CJK.test(row.title) ? String(r.title ?? "").trim() : row.title;
+      const description = row.description && CJK.test(row.description) ? String(r.description ?? "").trim() : row.description;
+      if (!title) continue;
+      // only if nobody edited it meanwhile
+      const { error: upErr } = await db.from("mock_interview_questions")
+        .update({ title_en: title, description_en: description || null, en_source: sourceOf(row) })
+        .eq("id", row.id).eq("title", row.title);
+      if (upErr) console.error("translate banks update", upErr);
+      else translated++;
+    }
+  }
+  return translated;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
   const secret = Deno.env.get("CRON_SECRET");
@@ -55,6 +109,15 @@ Deno.serve(async (req) => {
   if (!key) return json({ error: "AI not configured" }, 500);
 
   const body = await req.json().catch(() => ({}));
+  if (body.table === "mock_interview_questions") {
+    const bankIds: string[] = Array.isArray(body.ids) ? body.ids.filter((x: unknown) => typeof x === "string").slice(0, 200) : [];
+    const bankDb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+    try {
+      return json({ translated: await translateBanks(bankDb, bankIds, key) });
+    } catch (e) {
+      return json({ error: String(e) }, 500);
+    }
+  }
   const table = body.table === "meeting_action_items" ? "meeting_action_items" : "todos";
   const ids: string[] = Array.isArray(body.ids) ? body.ids.filter((x: unknown) => typeof x === "string").slice(0, 200) : [];
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
