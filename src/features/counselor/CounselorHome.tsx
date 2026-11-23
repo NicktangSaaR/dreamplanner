@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, Clock, Globe, HelpCircle, LogOut, Menu, Search, User, Video } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, Clock, Globe, HelpCircle, LogOut, Menu, Search, Send, User, Video } from "lucide-react";
 import { GuideButton, Tour, useGuide } from "@/features/guide/Tour";
 import { COUNSELOR_HOME_GUIDE } from "@/features/guide/guides";
 import { TODO_TITLE_COLUMNS } from "@/shared/todoTitle";
@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import InviteStudentDialog from "@/components/college-planning/InviteStudentDialog";
+import BulkMessageDialog from "@/features/messages/BulkMessageDialog";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import type { MessageKey } from "@/i18n/translations";
 import { roleLabelKey } from "@/features/team/teamRoles";
@@ -71,6 +72,7 @@ export default function CounselorHome() {
   const [grade, setGrade] = useState("all");
   const [showDone, setShowDone] = useState(false);
   const [alertPage, setAlertPage] = useState(0);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["counselor-home"],
@@ -345,7 +347,15 @@ export default function CounselorHome() {
               <SelectItem value="Graduate">{lang === "zh" ? "研究生" : "Graduate"}</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" onClick={() => setBulkOpen(true)} disabled={!rows.length}>
+            <Send className="mr-1.5 h-4 w-4" aria-hidden="true" />{lang === "zh" ? "群发消息" : "Message students"}
+          </Button>
         </div>
+        <BulkMessageDialog
+          open={bulkOpen}
+          onOpenChange={setBulkOpen}
+          students={rows.filter((r) => ACTIVE.includes(r.status || "") || !r.status).map((r) => ({ id: r.id, name: r.name, status: r.status, graduate: r.kind === "graduate" }))}
+        />
         <div className="mt-3">{table(active)}</div>
 
         {finished.length > 0 && (
