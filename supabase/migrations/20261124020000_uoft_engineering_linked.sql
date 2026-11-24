@@ -13,7 +13,7 @@ comment on column public.mock_interview_bank_questions.follow_up_linked is 'Foll
 insert into public.mock_interview_questions (id, kind, title, description, is_active, is_system, preparation_time, response_time)
 values ('7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f', 'pool', '多大工程 · 分析题 + 条件变化（第二、三题联动）',
   '多伦多大学工程视频面试新题型（练习题，非真题）：第二题是分析/估算题，第三题在第二题基础上改变一个条件，问你如何重新评估、方案（3 个变量）是否需要调整。答题思路：先说哪个变量受影响、怎样影响 → 是否要新增或替换变量 → 结论是否改变。',
-  true, true, 120, 180)
+  true, true, 60, 180)
 on conflict (id) do nothing;
 
 insert into public.mock_interview_bank_questions (bank_id, title, question_type, follow_ups, follow_up_linked, follow_up_prep, follow_up_response, sort_order) values
@@ -62,5 +62,5 @@ insert into public.mock_interview_bank_questions (bank_id, title, question_type,
 insert into public.mock_interview_questions (id, kind, title, school, program, description, is_active, is_system, preparation_time, response_time, blueprint, sim_shuffle, sim_retakes)
 values ('8d2e3f4a-5b6c-4d7e-9f0a-1b2c3d4e5f60', 'school', 'University of Toronto · Engineering (Q2–Q3 linked)', 'University of Toronto', 'Engineering (Q2–Q3 linked)',
   'New format: question 2 is an analytical / estimation problem; question 3 changes one condition of question 2 and asks how you would re-evaluate it and whether your solution and your 3 factors change. Practice questions, not real past questions.',
-  true, true, 60, 120, '[{"prep": 60, "count": 1, "pool_id": "1bc58cd2-ab56-4862-a6e2-73ae52f00256", "combined": false, "pool_ids": ["1bc58cd2-ab56-4862-a6e2-73ae52f00256", "e58f29f7-69cc-4d39-bf70-da7eb466f1b5", "f78fdc34-60c3-4336-aa72-f18e6f806ec8"], "response": 120, "question_type": "video"}, {"prep": 120, "count": 1, "pool_id": "7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f", "combined": false, "response": 180, "question_type": "video"}]'::jsonb, false, 0)
+  true, true, 60, 120, '[{"prep": 60, "count": 1, "pool_id": "1bc58cd2-ab56-4862-a6e2-73ae52f00256", "combined": false, "pool_ids": ["1bc58cd2-ab56-4862-a6e2-73ae52f00256", "e58f29f7-69cc-4d39-bf70-da7eb466f1b5", "f78fdc34-60c3-4336-aa72-f18e6f806ec8"], "response": 120, "question_type": "video"}, {"prep": 60, "count": 1, "pool_id": "7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f", "combined": false, "response": 180, "question_type": "video"}]'::jsonb, false, 0)
 on conflict (id) do nothing;
