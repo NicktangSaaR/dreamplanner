@@ -66,6 +66,11 @@ export interface BankQuestion {
    * one follow-up position with one or more wordings; one is picked at random.
    */
   follow_ups?: string[][];
+  /**
+   * The follow-ups are questions of their own, numbered and timed like the
+   * main one (e.g. UofT Engineering: Q3 adds a new condition to Q2).
+   */
+  follow_up_linked?: boolean;
   /** A passage, data or problem the student reads before the question appears. */
   material?: string | null;
   /** Seconds to read the material. */
@@ -97,8 +102,10 @@ export interface SessionQuestion {
   readingTime?: number;
   /** Follow-up positions still to be turned into questions (see expandFollowUps). */
   followUpPool?: string[][];
-  /** Set on a follow-up: the main question it follows, and which follow-up it is. */
-  followUp?: { of: string; n: number; total: number };
+  /** Turn the follow-ups into questions of their own (see BankQuestion.follow_up_linked). */
+  linkedFollowUps?: boolean;
+  /** Set on a follow-up: the main question it follows, and which follow-up it is. `linked` = counts as its own question. */
+  followUp?: { of: string; n: number; total: number; linked?: boolean };
 }
 
 /** A bank question's material for a session question. */
@@ -117,7 +124,7 @@ export const cleanFollowUps = (f: unknown): string[][] =>
  */
 export function expandFollowUps(list: SessionQuestion[], rand: () => number = Math.random): SessionQuestion[] {
   return list.flatMap((q) => {
-    const { followUpPool, ...main } = q;
+    const { followUpPool, linkedFollowUps, ...main } = q;
     const slots = cleanFollowUps(followUpPool);
     if (!slots.length) return [main];
     return [
@@ -127,7 +134,7 @@ export function expandFollowUps(list: SessionQuestion[], rand: () => number = Ma
         readingTime: 0, // the material stays on screen, but isn't read again
         key: `${q.key}#f${i + 1}`,
         text: options[Math.floor(rand() * options.length)],
-        followUp: { of: q.text, n: i + 1, total: slots.length },
+        followUp: { of: q.text, n: i + 1, total: slots.length, ...(linkedFollowUps ? { linked: true } : {}) },
       })),
     ];
   });
@@ -284,6 +291,7 @@ export function drawFromBlueprint(
         response: sec.response,
         combined: !!sec.combined,
         followUpPool: q.follow_ups,
+        linkedFollowUps: !!q.follow_up_linked,
         ...materialOf(q),
       });
     }
@@ -309,7 +317,7 @@ export function drawRandom(list: SessionQuestion[], n: number, recent: Set<strin
 /** How many questions a blueprint can actually draw with the pools as they are now. */
 export function blueprintAvailable(school: InterviewBank, questionsByPool: Record<string, BankQuestion[]>): number {
   // a dry run of the real draw, so shared and overlapping pools are counted right
-  return drawFromBlueprint({ ...school, sim_shuffle: false }, questionsByPool).filter((q) => !q.followUp).length;
+  return drawFromBlueprint({ ...school, sim_shuffle: false }, questionsByPool).filter((q) => !q.followUp || q.followUp.linked).length;
 }
 
 /** A bank's name in the site language (English falls back to the original). */

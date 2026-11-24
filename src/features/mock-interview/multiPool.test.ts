@@ -50,3 +50,16 @@ describe("fixed questions and combined timing", () => {
     expect(blueprintSeconds(b)).toBe(90 + 2 * 90);
   });
 });
+
+describe("linked follow-ups (UofT Engineering Q2 → Q3)", () => {
+  it("become their own numbered question with the same timing", async () => {
+    const { expandFollowUps } = await import("./types");
+    const out = expandFollowUps([
+      { key: "bank:a", text: "Estimate X", type: "video", prep: 30, response: 180, combined: true, followUpPool: [["Now suppose Y. Does your answer change?"]], linkedFollowUps: true },
+    ]);
+    expect(out).toHaveLength(2);
+    expect(out[1].followUp).toEqual({ of: "Estimate X", n: 1, total: 1, linked: true });
+    expect(out[1]).toMatchObject({ prep: 30, response: 180, combined: true });
+    expect("linkedFollowUps" in out[0]).toBe(false);
+  });
+});
