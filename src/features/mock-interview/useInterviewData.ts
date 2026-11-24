@@ -10,7 +10,7 @@ const db = supabase as any;
 const BANK_COLUMNS =
   "id, kind, title, description, title_en, description_en, school, program, preparation_time, response_time, is_active, created_at, blueprint, sim_shuffle, sim_retakes";
 const QUESTION_COLUMNS =
-  "id, bank_id, title, description, question_type, preparation_time, response_time, sort_order, follow_ups, material, reading_time";
+  "id, bank_id, title, description, question_type, preparation_time, response_time, sort_order, follow_ups, follow_up_linked, follow_up_prep, follow_up_response, material, reading_time";
 const CUSTOM_COLUMNS =
   "id, user_id, title, question_type, preparation_time, response_time, created_at";
 
@@ -117,6 +117,9 @@ export interface BankQuestionInput {
   preparation_time: number | null;
   response_time: number | null;
   follow_ups?: string[][];
+  follow_up_linked?: boolean;
+  follow_up_prep?: number | null;
+  follow_up_response?: number | null;
   material?: string | null;
   reading_time?: number | null;
 }

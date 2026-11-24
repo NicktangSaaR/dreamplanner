@@ -444,6 +444,9 @@ function QuestionRow({ q, bank }: { q: BankQuestion; bank: InterviewBank }) {
   // one text box per follow-up position, one wording per line
   const [follow, setFollow] = useState<string[]>(() => cleanFollowUps(q.follow_ups).map((o) => o.join("\n")));
   const saved = cleanFollowUps(q.follow_ups);
+  const [linked, setLinked] = useState(!!q.follow_up_linked);
+  const [fuPrep, setFuPrep] = useState<number | null>(q.follow_up_prep ?? null);
+  const [fuResp, setFuResp] = useState<number | null>(q.follow_up_response ?? null);
   const [material, setMaterial] = useState(q.material ?? "");
   const [readSecs, setReadSecs] = useState<number | null>(q.reading_time ?? 120);
 
@@ -455,6 +458,9 @@ function QuestionRow({ q, bank }: { q: BankQuestion; bank: InterviewBank }) {
         input: {
           title: title.trim(), question_type: type, preparation_time: prep, response_time: resp,
           follow_ups: cleanFollowUps(follow.map((f) => f.split("\n"))),
+          follow_up_linked: linked,
+          follow_up_prep: linked ? fuPrep : null,
+          follow_up_response: linked ? fuResp : null,
           material: material.trim() || null,
           reading_time: material.trim() ? readSecs ?? 120 : null,
         },
@@ -506,6 +512,19 @@ function QuestionRow({ q, bank }: { q: BankQuestion; bank: InterviewBank }) {
           <Button variant="outline" size="sm" onClick={() => setFollow([...follow, ""])}>
             <Plus className="mr-1 h-4 w-4" />{t("mi3.addFollowUp")}
           </Button>
+          {follow.some((f) => f.trim()) && (
+            <label className="flex items-center gap-2 pt-1 text-sm">
+              <input type="checkbox" className="h-4 w-4 accent-primary" checked={linked} onChange={(e) => setLinked(e.target.checked)} />
+              {t("mi7.linkedToggle")}
+            </label>
+          )}
+          {linked && follow.some((f) => f.trim()) && (
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-muted-foreground">{t("mi7.linkedTiming")}</span>
+              <TimeSelect value={fuPrep} options={PREP_OPTIONS} onChange={setFuPrep} allowDefault defaultLabel={`${t("mi.prep")}: ${t("mi7.sameAsMain")}`} />
+              <TimeSelect value={fuResp} options={RESPONSE_OPTIONS} onChange={setFuResp} allowDefault defaultLabel={`${t("mi.response")}: ${t("mi7.sameAsMain")}`} />
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <TypeSelect value={type} onChange={setType} />

@@ -91,13 +91,15 @@ export default function SetupView({ userId, initialSettings, staff = false, onSt
     if (!banksLoading && !questionsLoading && simulations.length === 0) setMode("practice");
   }, [banksLoading, questionsLoading, simulations.length]);
 
-  const toSession = (b: InterviewBank | null, q: { id: string; title: string; question_type: QuestionType; preparation_time: number | null; response_time: number | null; follow_ups?: string[][]; material?: string | null; reading_time?: number | null }, key: string): SessionQuestion => ({
+  const toSession = (b: InterviewBank | null, q: { id: string; title: string; question_type: QuestionType; preparation_time: number | null; response_time: number | null; follow_ups?: string[][]; follow_up_linked?: boolean; follow_up_prep?: number | null; follow_up_response?: number | null; material?: string | null; reading_time?: number | null }, key: string): SessionQuestion => ({
     key,
     text: q.title,
     type: q.question_type,
     prep: q.preparation_time ?? b?.preparation_time ?? 30,
     response: q.response_time ?? b?.response_time ?? 60,
     followUpPool: q.follow_ups,
+    linkedFollowUps: !!q.follow_up_linked,
+    linkedTiming: { prep: q.follow_up_prep, response: q.follow_up_response },
     ...materialOf(q),
   });
 

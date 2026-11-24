@@ -86,9 +86,10 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
   }, [answers]);
 
   const question = questions[index];
-  // Follow-ups belong to their question: count main questions only.
-  const mainTotal = questions.filter((q) => !q.followUp).length;
-  const mainNo = questions.slice(0, index + 1).filter((q) => !q.followUp).length;
+  // Follow-ups belong to their question: count main questions only (linked ones count on their own).
+  const counts = (q: SessionQuestion) => !q.followUp || !!q.followUp.linked;
+  const mainTotal = questions.filter(counts).length;
+  const mainNo = questions.slice(0, index + 1).filter(counts).length;
   const isWritten = question?.type === "written";
   const retakesLeft = settings.retakes >= 99 ? 99 : Math.max(0, settings.retakes - (attempts - 1));
 
@@ -322,7 +323,7 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
               key={q.key}
               className={cn(
                 "h-2 rounded-full",
-                q.followUp ? "w-2.5" : "w-6", // follow-ups: short marks after their question
+                q.followUp && !q.followUp.linked ? "w-2.5" : "w-6", // follow-ups: short marks after their question
                 i < index ? "bg-primary" : i === index ? "bg-brass" : "bg-muted",
               )}
             />
@@ -336,12 +337,12 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
         <section className="rounded-md border bg-card p-6">
           <div className="text-sm font-medium text-muted-foreground">
             {t("mi.questionOf", { n: mainNo, total: mainTotal })} ·{" "}
-            {question.followUp && <span className="text-brass">{t("mi.followUpOf", { n: question.followUp.n, total: question.followUp.total })} · </span>}
+            {question.followUp && <span className="text-brass">{question.followUp.linked ? t("mi7.linked") : t("mi.followUpOf", { n: question.followUp.n, total: question.followUp.total })} · </span>}
             {isWritten ? t("mi.written") : t("mi.video")}
           </div>
           {question.followUp && (phase !== "check" || started) && (
             <p className="mt-2 rounded-md bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
-              {t("mi.followUpContext")}{question.followUp.of}
+              {question.followUp.linked ? t("mi7.linkedContext") : t("mi.followUpContext")}{question.followUp.of}
             </p>
           )}
           {question.material && (phase !== "check" || started) && (
@@ -455,7 +456,7 @@ export default function InterviewRunner({ questions, settings, onFinish, onExit,
                     </Button>
                   )}
                   <Button onClick={goNext}>
-                    {index + 1 < questions.length ? (questions[index + 1].followUp ? t("mi.nextFollowUp") : t("mi.next")) : t("mi.finishInterview")}
+                    {index + 1 < questions.length ? (questions[index + 1].followUp && !questions[index + 1].followUp!.linked ? t("mi.nextFollowUp") : t("mi.next")) : t("mi.finishInterview")}
                   </Button>
                 </>
               )}
