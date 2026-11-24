@@ -63,3 +63,15 @@ describe("linked follow-ups (UofT Engineering Q2 → Q3)", () => {
     expect("linkedFollowUps" in out[0]).toBe(false);
   });
 });
+
+describe("linked follow-up timing", () => {
+  it("uses its own prep and answer time when set", async () => {
+    const { expandFollowUps } = await import("./types");
+    const out = expandFollowUps([
+      { key: "bank:a", text: "Q2", type: "video", prep: 120, response: 180, followUpPool: [["Q3"]], linkedFollowUps: true, linkedTiming: { prep: 30, response: 180 } },
+    ]);
+    expect(out[0]).toMatchObject({ prep: 120, response: 180 });
+    expect(out[1]).toMatchObject({ prep: 30, response: 180 });
+    expect("linkedTiming" in out[0]).toBe(false);
+  });
+});

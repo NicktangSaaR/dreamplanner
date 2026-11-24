@@ -71,6 +71,9 @@ export interface BankQuestion {
    * main one (e.g. UofT Engineering: Q3 adds a new condition to Q2).
    */
   follow_up_linked?: boolean;
+  /** Seconds for a linked follow-up (prep / answer); empty = same as the main question. */
+  follow_up_prep?: number | null;
+  follow_up_response?: number | null;
   /** A passage, data or problem the student reads before the question appears. */
   material?: string | null;
   /** Seconds to read the material. */
@@ -104,6 +107,8 @@ export interface SessionQuestion {
   followUpPool?: string[][];
   /** Turn the follow-ups into questions of their own (see BankQuestion.follow_up_linked). */
   linkedFollowUps?: boolean;
+  /** Timing of linked follow-ups, when it differs from the main question. */
+  linkedTiming?: { prep?: number | null; response?: number | null };
   /** Set on a follow-up: the main question it follows, and which follow-up it is. `linked` = counts as its own question. */
   followUp?: { of: string; n: number; total: number; linked?: boolean };
 }
@@ -124,7 +129,7 @@ export const cleanFollowUps = (f: unknown): string[][] =>
  */
 export function expandFollowUps(list: SessionQuestion[], rand: () => number = Math.random): SessionQuestion[] {
   return list.flatMap((q) => {
-    const { followUpPool, linkedFollowUps, ...main } = q;
+    const { followUpPool, linkedFollowUps, linkedTiming, ...main } = q;
     const slots = cleanFollowUps(followUpPool);
     if (!slots.length) return [main];
     return [
@@ -135,6 +140,8 @@ export function expandFollowUps(list: SessionQuestion[], rand: () => number = Ma
         key: `${q.key}#f${i + 1}`,
         text: options[Math.floor(rand() * options.length)],
         followUp: { of: q.text, n: i + 1, total: slots.length, ...(linkedFollowUps ? { linked: true } : {}) },
+        ...(linkedFollowUps && linkedTiming?.prep != null ? { prep: linkedTiming.prep } : {}),
+        ...(linkedFollowUps && linkedTiming?.response != null ? { response: linkedTiming.response } : {}),
       })),
     ];
   });
@@ -292,6 +299,7 @@ export function drawFromBlueprint(
         combined: !!sec.combined,
         followUpPool: q.follow_ups,
         linkedFollowUps: !!q.follow_up_linked,
+        linkedTiming: { prep: q.follow_up_prep, response: q.follow_up_response },
         ...materialOf(q),
       });
     }
